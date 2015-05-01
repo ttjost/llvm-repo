@@ -1,0 +1,243 @@
+//===-- VEXInstrInfo.td - Target Description for VEX Target -----------===//
+//
+// This file describes the VEX instructions in TableGen format.
+//
+//===----------------------------------------------------------------------===//
+
+//===----------------------------------------------------------------------===//
+// Instruction format superclass
+//===----------------------------------------------------------------------===//
+
+include "VEXInstrFormats.td"
+
+//===----------------------------------------------------------------------===//
+// Instruction Pattern Stuff
+//===----------------------------------------------------------------------===//
+
+//def simm9  : PatLeaf<(imm), [{ return isInt<9>(N->getSExtValue()); }]>;
+
+//def usimm9  : PatLeaf<(imm), [{ return isInt<9>(N->getZExtValue()); }]>;
+
+def simm9 : Operand<i32> {
+//  let DecoderMethod = "DecodeSIMM9";
+}
+
+//def usimm9Op : Operand<i32> {
+//  let DecoderMethod = "DecodeUSIMM9";
+//}
+
+// Addressing modes.
+def ADDRrr : ComplexPattern<iPTR, 2, "SelectADDRrr", [], []>;
+def ADDRri : ComplexPattern<iPTR, 2, "SelectADDRri", [frameindex], []>;
+
+// Address operands
+def VEXMEMrrAsmOperand : AsmOperandClass {
+  let Name = "MEMrr";
+  let ParserMethod = "parseMEMOperand";
+}
+
+def VEXMEMriAsmOperand : AsmOperandClass {
+  let Name = "MEMri";
+  let ParserMethod = "parseMEMOperand";
+} 
+
+def MEMrr : Operand<iPTR> {
+  let PrintMethod = "printMemOperand";
+  let MIOperandInfo = (ops ptr_rc, ptr_rc);
+  let ParserMatchClass = VEXMEMrrAsmOperand;
+}
+def MEMri : Operand<iPTR> {
+  let PrintMethod = "printMemOperand";
+  let MIOperandInfo = (ops ptr_rc, i32imm);
+  let ParserMatchClass = VEXMEMriAsmOperand;
+}
+
+def imm32      : Operand<i32> {
+    let DecoderMethod= "DecodeSimm16";
+}
+
+//def TLSSym : Operand<iPTR>;
+
+//===----------------------------------------------------------------------===//
+// VEX Profiles and Nodes
+//===----------------------------------------------------------------------===//
+
+def SDT_VEXMAX  : SDTypeProfile<1, 2, [SDTCisVT<0, untyped>, SDTCisInt<1>,
+                                    SDTCisSameAs<1, 2>]>;
+ 
+def SDT_VEXMIN  : SDTypeProfile<1, 2, [SDTCisVT<0, untyped>, SDTCisInt<1>,
+                                    SDTCisSameAs<1, 2>]>;
+
+def VEXMax   : SDNode<"VEXISD::MAX", SDT_VEXMAX>;
+def VEXMaxu  : SDNode<"VEXISD::MAX", SDT_VEXMAX>;
+def VEXMinu  : SDNode<"VEXISD::MAX", SDT_VEXMIN>;
+def VEXMin   : SDNode<"VEXISD::MIN", SDT_VEXMIN>;
+
+def andc;
+
+// Carry patterns
+def : Pat<(andc GPRegs:$lhs, GPRegs:$rhs),
+            (and GPRegs:$rhs, (not GPRegs:$lhs))>;
+
+//===----------------------------------------------------------------------===//
+// Instruction Class Templates
+//===----------------------------------------------------------------------===//
+
+class TYPE1_r <bits<8> op, string OpcStr,
+                list<dag> Pattern, InstrItinClass Itin = NoItinerary, bit isComm = 0>
+        : InstVEX<(outs IntRegs:$rd), (ins IntRegs:$rs, IntRegs:$rt),
+                    !strconcat(OpcStr, "\t$rd, $rs, $rt"),
+                    Pattern, Itin>{
+    let isCommutable = isComm;
+}
+
+class TYPE1_i <string OpcStr, Operand Od,
+bit isComm = 0, list<dag> Pattern,
+InstrItinClass Itin = NoItinerary>
+: InstVEX<(outs IntRegs:$rd), (ins IntRegs:$rs, Od:$rt),
+!strconcat(OpcStr, "\t$rd, $rs, $rt"),
+Pattern, Itin>{
+    let isCommutable = isComm;
+}
+
+class ArithLogicR<bits<8> opcode, string OpcStr, SDNode OpNode,
+                    RegisterClass RC, InstrItinClass Itin, bit isComm = 0>:
+    TYPE_1<opcode, !strconcat(OpcStr, "\t $rd, $rs, $rt"),
+            (outs RC:$rd), (ins RC:$rs, RC:$rt),
+            [(set RC:$rd, (OpNode RC:$rs, RC:$rt))], Itin> {
+    let isCommutable = isComm;
+    let isReMaterializable = 1;
+}
+
+class ArithLogicI<bits<8> opcode, string OpcStr, SDNode OpNode,
+                    RegisterClass RC, Operand Od,
+                    InstrItinClass Itin, bit isComm = 0>:
+    TYPE_1<opcode, !strconcat(OpcStr, "\t $rd, $rs, $imm32"),
+            (outs RC:$rd), (ins RC:$rs, Od:$imm32),
+            [(set RC:$rd, (OpNode RC:$rs, imm:$imm32))], Itin> {
+    let isCommutable = isComm;
+    let isReMaterializable = 1;
+}
+
+//===----------------------------------------------------------------------===//
+// Instructions
+//===----------------------------------------------------------------------===//
+
+
+// TYPE I Instruction Definitions
+
+// ADD Instruction
+def ADDr    : ArithLogicR<0b01100100, "add", add, GPRegs, NoItinerary, 1>;
+def ADDi    : ArithLogicI<0b01100100, "add", add, GPRegs, i32imm , NoItinerary, 1>;
+
+//// AND Instruction
+def ANDr    : ArithLogicR<0b01100011, "and", and, GPRegs, NoItinerary, 1>;
+def ANDi    : ArithLogicI<0b01100011, "and", and, GPRegs, i32imm , NoItinerary, 1>;
+//def ANDrr    : TYPE_I_r<"and", 1, [(set IntRegs:$rd, (and IntRegs:$rs, IntRegs:$rt))]>, ARITH_R<0b01100011>;
+//def ANDri    : TYPE_I_i<"and", imm32, 1, [(set IntRegs:$rd, (and IntRegs:$rs, simm9:$rt))]>, ARITH_I<0b01100011>;
+//
+//// ANDC Instruction
+//def ANDCr    : ArithLogicR<0b01100100, "andc", andc, GPRegs, NoItinerary, 1>;
+//def ANDCi    : ArithLogicI<0b01100100, "andc", andc, GPRegs, i32imm , NoItinerary, 1>;
+//def ANDCrr    : TYPE_I_r<"andc", 1, [(set IntRegs:$dst, (and IntRegs:$s2, (not IntRegs:$s1)))]>, ARITH_R<0b01100011>;
+//def ANDCri    : TYPE_I_i<"andc", simm9, 1, [(set IntRegs:$dst, (and simm9:$s2, (not IntRegs:$s1)))]>, ARITH_I<0b01100011>; 
+////def ANDCri      : TYPE_1_1<0b01100100, 
+////                          (outs IntRegs:$dst), (ins IntRegs:$s1, simm9Op:$s2),
+////                          "andc",
+////                           [(set i32:$dst, (and simm9Op:$s2, (not i32:$s1)))]>;
+//           
+//// MAX, MAXU, MIN and MINU Instructions
+//def MAXrr    : TYPE_I_r<"max", 0, [(set IntRegs:$dst, (VEXMax IntRegs:$s1, IntRegs:$s1))]>, ARITH_I<0b01100101>; 
+//def MAXri    : TYPE_I_i<"max", simm9, 0, [(set IntRegs:$dst, (VEXMax IntRegs:$s1, simm9:$s2))]>, ARITH_I<0b01100101>;
+//
+//def MAXUrr    : TYPE_I_r<"maxu", 1, [(set IntRegs:$dst, (VEXMaxu IntRegs:$s1, IntRegs:$s1))]>, ARITH_I<0b01100110>; 
+//def MAXUri    : TYPE_I_i<"maxu", simm9, 0, [(set IntRegs:$dst, (VEXMaxu IntRegs:$s1, simm9:$s2))]>, ARITH_I<0b01100110>;
+//
+//def MINrr    : TYPE_I_r<"min", 0, [(set IntRegs:$dst, (VEXMin IntRegs:$s1, IntRegs:$s1))]>, ARITH_I<0b01100111>; 
+//def MINri    : TYPE_I_i<"min", simm9, 0, [(set IntRegs:$dst, (VEXMin IntRegs:$s1, simm9:$s2))]>, ARITH_I<0b01100111>;
+//
+//def MINUrr    : TYPE_I_r<"minu", 0, [(set IntRegs:$dst, (VEXMinu IntRegs:$s1, IntRegs:$s1))]>, ARITH_I<0b01101000>; 
+//def MINUri    : TYPE_I_i<"minu", simm9, 0, [(set IntRegs:$dst, (VEXMinu IntRegs:$s1, simm9:$s2))]>, ARITH_I<0b01101000>;
+//
+//
+//// OR Instruction
+//def ORrr    : TYPE_I_r<"or", 1, [(set IntRegs:$dst, (or IntRegs:$s1, IntRegs:$s2))]>, ARITH_I<0b01101001>;
+//def ORri    : TYPE_I_i<"or", simm9, 1, [(set IntRegs:$dst, (or IntRegs:$s1, simm9:$s2))]>, ARITH_I<0b01101001>;
+//
+//// ORC Instruction
+//def ORCrr    : TYPE_I_r<"orc", 0, [(set IntRegs:$dst, (or IntRegs:$s2, (not IntRegs:$s1)))]>, ARITH_R<0b01101010>;
+//def ORCri    : TYPE_I_i<"orc", simm9, 0, [(set IntRegs:$dst, (or simm9:$s2, (not IntRegs:$s1)))]>, ARITH_I<0b01101010>; 
+//
+//// SH1ADD Instruction
+//def SH1ADDrr    : TYPE_I_r<"sh1add", 0, [(set IntRegs:$dst, (add (shl IntRegs:$s1, 1), IntRegs:$s2))]>, ARITH_R<0b01101010>;
+//def SH1ADDri    : TYPE_I_i<"sh1add", simm9, 0, [(set IntRegs:$dst, (add (shl IntRegs:$s1, 1), simm9:$s2))]>, ARITH_I<0b01101010>; 
+//
+//// SH2ADD Instruction
+//def SH2ADDrr    : TYPE_I_r<"sh2add", 0, [(set IntRegs:$dst, (add (shl IntRegs:$s1, 2), IntRegs:$s2))]>, ARITH_R<0b01101100>;
+//def SH2ADDri    : TYPE_I_i<"sh2add", simm9, 0, [(set IntRegs:$dst, (add (shl IntRegs:$s1, 2), simm9:$s2))]>, ARITH_I<0b01101100>; 
+//
+//// SH3ADD Instruction
+//def SH3ADDrr    : TYPE_I_r<"sh3add", 0, [(set IntRegs:$dst, (add (shl IntRegs:$s1, 3), IntRegs:$s2))]>, ARITH_R<0b01101101>;
+//def SH3ADDri    : TYPE_I_i<"sh3add", simm9, 0, [(set IntRegs:$dst, (add (shl IntRegs:$s1, 3), simm9:$s2))]>, ARITH_I<0b01101101>; 
+//
+//// SH4ADD Instruction
+//def SH4ADDrr    : TYPE_I_r<"sh4add", 0, [(set IntRegs:$dst, (add (shl IntRegs:$s1, 4), IntRegs:$s2))]>, ARITH_R<0b01101110>;
+//def SH4ADDri    : TYPE_I_i<"sh4add", simm9, 0, [(set IntRegs:$dst, (add (shl IntRegs:$s1, 4), simm9:$s2))]>, ARITH_I<0b01101110>; 
+//                                                     
+//// SHL Instruction 
+//def SHLrr    : TYPE_I_r<"shl", 0, [(set IntRegs:$dst, (shl IntRegs:$s1, IntRegs:$s2))]>, ARITH_I<0b01101111>;
+//def SHLri    : TYPE_I_i<"shl", simm9, 0, [(set IntRegs:$dst, (shl IntRegs:$s1, simm9:$s2))]>, ARITH_I<0b01101111>;
+////def SHLrr    : TYPE_I_r<"shl", shl, 1>, ARITH_R<0b01101111>;
+////def SHLri    : TYPE_I_i<"shl", simm9, shl, 1>, ARITH_I<0b01101111>;
+//
+//// SHR Instruction
+//def SHRrr    : TYPE_I_r<"shr", 0, [(set IntRegs:$dst, (sra IntRegs:$s1, IntRegs:$s2))]>, ARITH_I<0b00011000>;
+//def SHRri    : TYPE_I_i<"shr", simm9, 0, [(set IntRegs:$dst, (sra IntRegs:$s1, simm9:$s2))]>, ARITH_I<0b00011000>;
+////def SHRrr    : TYPE_I_r<"shr", sra, 1>, ARITH_R<0b00011000>;
+////def SHRri    : TYPE_I_i<"shr", simm9, sra, 1>, ARITH_I<0b00011000>;
+//
+//// SHRU Instruction
+//def SHRUrr    : TYPE_I_r<"shru", 0, [(set IntRegs:$dst, (srl IntRegs:$s1, IntRegs:$s2))]>, ARITH_I<0b00011001>;
+//def SHRUri    : TYPE_I_i<"shru", simm9, 0, [(set IntRegs:$dst, (srl IntRegs:$s1, simm9:$s2))]>, ARITH_I<0b00011001>;
+////defm SHRU   : TYPE_1<"shru", 0b00011001, srl>;
+////def SHRUrr    : TYPE_I_r<"shru", srl, 1>, ARITH_R<0b00011001>;
+////def SHRUri    : TYPE_I_i<"shru", simm9, srl, 1>, ARITH_I<0b00011001>;
+//
+//// XOR Instruction
+def XORr    : ArithLogicR<0b00011111, "xor", xor, GPRegs, NoItinerary, 1>;
+def XORi    : ArithLogicI<0b00011111, "xor", xor, GPRegs, i32imm , NoItinerary, 1>;
+//def XORrr    : TYPE_I_r<"xor", 1, [(set IntRegs:$dst, (xor IntRegs:$s1, IntRegs:$s2))]>, ARITH_I<0b00011111>;
+//def XORri    : TYPE_I_i<"xor", simm9, 1, [(set IntRegs:$dst, (xor IntRegs:$s1, simm9:$s2))]>, ARITH_I<0b00011111>;
+
+                   
+def : Pat<(not GPRegs:$in),
+            (XORi GPRegs:$in, 1)>;
+
+
+//def NOT     : TYPE_1_1<0b01000000, 
+//              (outs IntRegs:$dst), (ins IntRegs:$s1, IntRegs:$s2),
+//              "not", [(set i32:$dst, (not i32:$s1))]>;
+                 
+//def NOTrr    : TYPE_1_1<"not", 0b01000000, not>;
+
+
+//defm MPYLL    : TYPE_1<"mpyll", 0b00000000, mpyll>;
+//defm MPYLLU   : TYPE_1<"mpyllu", 0b00000001, mpyllu>;
+//defm MPYLH    : TYPE_1<"mpylh", 0b00000010, mpylh>;
+//defm MPYLHU   : TYPE_1<"mpylhu", 0b00000011, mpylhu>;
+//defm MPYHH    : TYPE_1<"mpyhh", 0b00000100, mpyhh>;
+//defm MPYHHU   : TYPE_1<"mpyhhu", 0b00000101, mpyhhu>;
+//defm MPYL     : TYPE_1<"mpyl", 0b00000110, mpyl>;
+//defm MPYLU    : TYPE_1<"mpylu", 0b00000111, mpylu>;
+//defm MPYH     : TYPE_1<"mpyh", 0b00001000, mpyh>;
+//defm MPYHU    : TYPE_1<"mpyhu", 0b00001001, mpyhu>;
+//defm MPYHS    : TYPE_1<"mpyhs", 0b00001010, mpyhs>;
+
+// JMPL Instruction.
+//let isTerminator = 1, hasDelaySlot = 1, isBarrier = 1,
+//    DecoderMethod = "DecodeJMPL" in {
+//  defm JMPLrr: F3_1<2, 0b0111000, (outs IntRegs:$dst), (ins MEMrr:$addr),
+//                  "jmpl $addr, $dst", []>;
+//  defm JMPLri: F3_2<2, 0b0111000, (outs IntRegs:$dst), (ins MEMri:$addr),
+//                  "jmpl $addr, $dst", []>;
+//}
