@@ -152,9 +152,9 @@ std::pair<bool, SDNode*> VEXDAGToDAGISel::selectNode(SDNode *Node){
     unsigned MultOpc;
 
     switch(Opcode){
-            case VEX::RET:
+            //case VEX::RET:
             
-            break;
+        //    break;
         default: break;
     }
 

@@ -64,6 +64,8 @@ void VEXAsmPrinter::EmitInstruction(const MachineInstr *MI){
         return;
     }
 
+    DEBUG(errs() << "Emitting instruction " << MI->getOpcode() << "\n");
+    
     MachineBasicBlock::const_instr_iterator I = MI;
     MachineBasicBlock::const_instr_iterator E = MI->getParent()->instr_end();
 
