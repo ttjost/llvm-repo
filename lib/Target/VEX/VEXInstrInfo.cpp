@@ -24,7 +24,7 @@
 #include "llvm/Support/raw_ostream.h"
 
 
-#define DEBUG_TYPE "vex-isel"
+#define DEBUG_TYPE "vex-instrinfo"
 using namespace llvm;
 
 #define GET_INSTRINFO_CTOR_DTOR

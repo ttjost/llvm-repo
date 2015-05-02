@@ -35,10 +35,6 @@
 #include "llvm/Transforms/Scalar.h"
 using namespace llvm;
 
-#include "llvm/Support/Debug.h"
-
-#define DEBUG_TYPE "vex-isel"
-
 // Enable or disable FastISel. Both options are needed, because
 // FastISel is enabled by default with -fast, and we wish to be
 // able to enable or disable fast-isel independently from -O0.
@@ -97,10 +93,8 @@ static MCContext *addPassesToGenerateCode(LLVMTargetMachine *TM,
                                           AnalysisID StartAfter,
                                           AnalysisID StopAfter) {
 
-    DEBUG(errs() << "Test1\n");
   // Add internal analysis passes from the target machine.
   PM.add(createTargetTransformInfoWrapperPass(TM->getTargetIRAnalysis()));
-    DEBUG(errs() << "Test2\n");
   // Targets may override createPassConfig to provide a target-specific
   // subclass.
   TargetPassConfig *PassConfig = TM->createPassConfig(PM);
@@ -141,7 +135,6 @@ static MCContext *addPassesToGenerateCode(LLVMTargetMachine *TM,
   PassConfig->addMachinePasses();
 
   PassConfig->setInitialized();
-DEBUG(errs() << "Test3\n");
   return &MMI->getContext();
 }
 

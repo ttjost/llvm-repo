@@ -58,15 +58,13 @@ class VEXTargetMachine;
         // Relocation Model
         Reloc::Model RM;
         
-        const VEXTargetMachine &TM;
-        
         Triple TargetTriple;
         
         const VEXSelectionDAGInfo TSInfo;
         
-        std::unique_ptr<const VEXInstrInfo> InstrInfo;
-        std::unique_ptr<const VEXFrameLowering> FrameLowering;
-        std::unique_ptr<const VEXTargetLowering> TLInfo;
+        VEXInstrInfo InstrInfo;
+        VEXFrameLowering FrameLowering;
+        VEXTargetLowering TLInfo;
         
     public:
         unsigned getTargetABI() const { return VEXABI; }
@@ -98,17 +96,17 @@ class VEXTargetMachine;
         
         const VEXSelectionDAGInfo *getSelectionDAGInfo() const { return &TSInfo; }
         
-        const VEXInstrInfo *getInstrInfo() const { return InstrInfo.get(); }
+        const VEXInstrInfo *getInstrInfo() const { return &InstrInfo; }
         
         const TargetFrameLowering *getFrameLowering() const {
-            return FrameLowering.get();
+            return &FrameLowering;
         }
         
         const VEXRegisterInfo *getRegisterInfo() const override {
-            return &InstrInfo->getRegisterInfo();
+            return &InstrInfo.getRegisterInfo();
         }
         
-        const VEXTargetLowering *getTargetLowering() const override { return TLInfo.get(); }
+        const VEXTargetLowering *getTargetLowering() const override { return &TLInfo; }
         
     };
 }

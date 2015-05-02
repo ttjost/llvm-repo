@@ -36,7 +36,7 @@
 
 using namespace llvm;
 
-#define DEBUG_TYPE "vex-isel"
+#define DEBUG_TYPE "vex-lower"
 
 #if 0
 SDValue VEXTargetLowering::getTargetNode(ConstantPoolSDNode *N, EVT Ty,
@@ -82,8 +82,30 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     //  added, this allows us to compute derived properties we expose.
     computeRegisterProperties(STI.getRegisterInfo());
     
+    //setOperationAction(<#unsigned int Op#>, <#llvm::MVT VT#>, <#llvm::TargetLoweringBase::LegalizeAction Action#>)
+    
     DEBUG(errs() << "1 : \n");
     DEBUG(errs() << "2 : \n");
+    
+}
+
+//SDValue LowerOperation(SDValue Op, SelectionDAG &DAG) const {
+//    
+//    switch (Op.getOpcode()) {
+//        case :
+//            <#statements#>
+//            break;
+//            
+//        default:
+//            break;
+//    }
+//    
+//}
+
+SDValue LowerReturn(SDValue Chain, CallingConv::ID CallConv, bool isVarArg,
+                    const SmallVectorImpl<ISD::OutputArg> &Outs,
+                    const SmallVectorImpl<SDValue> &OutVals,
+                    SDLoc dl, SelectionDAG &DAG) const {
     
 }
 

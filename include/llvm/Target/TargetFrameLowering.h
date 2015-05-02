@@ -17,11 +17,6 @@
 #include "llvm/CodeGen/MachineBasicBlock.h"
 #include <utility>
 #include <vector>
-#include "llvm/Support/Debug.h"
-#include "llvm/Support/ErrorHandling.h"
-#include "llvm/Support/raw_ostream.h"
-
-#define DEBUG_TYPE "vex-isel"
 
 namespace llvm {
   class CalleeSavedInfo;
@@ -57,7 +52,7 @@ public:
   TargetFrameLowering(StackDirection D, unsigned StackAl, int LAO,
                       unsigned TransAl = 1, bool StackReal = true)
     : StackDir(D), StackAlignment(StackAl), TransientStackAlignment(TransAl),
-      LocalAreaOffset(LAO), StackRealignable(StackReal) {DEBUG(errs() << "Test5\n");}
+      LocalAreaOffset(LAO), StackRealignable(StackReal) { }
 
   virtual ~TargetFrameLowering();
 
@@ -72,28 +67,26 @@ public:
   /// stack pointer must be aligned on entry to a function.  Typically, this
   /// is the largest alignment for any data object in the target.
   ///
-  unsigned getStackAlignment() const { DEBUG(errs() << "Test4\n");return StackAlignment; }
+  unsigned getStackAlignment() const { return StackAlignment; }
 
   /// getTransientStackAlignment - This method returns the number of bytes to
   /// which the stack pointer must be aligned at all times, even between
   /// calls.
   ///
   unsigned getTransientStackAlignment() const {
-      DEBUG(errs() << "getTransientStackAlignment\n");
     return TransientStackAlignment;
   }
 
   /// isStackRealignable - This method returns whether the stack can be
   /// realigned.
   bool isStackRealignable() const {
-      DEBUG(errs() << "stackrealignable\n");
     return StackRealignable;
   }
 
   /// getOffsetOfLocalArea - This method returns the offset of the local area
   /// from the stack pointer on entrance to a function.
   ///
-  int getOffsetOfLocalArea() const { DEBUG(errs() << "getOffsetOfLocalArea\n"); return LocalAreaOffset; }
+  int getOffsetOfLocalArea() const { return LocalAreaOffset; }
 
   /// isFPCloseToIncomingSP - Return true if the frame pointer is close to
   /// the incoming stack pointer, false if it is close to the post-prologue

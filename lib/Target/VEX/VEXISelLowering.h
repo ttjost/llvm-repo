@@ -90,6 +90,13 @@ private:
                           unsigned Flag) const;
 #endif
     
+    SDValue LowerOperation(SDValue Op, SelectionDAG &DAG) const override;
+    
+    SDValue LowerReturn(SDValue Chain, CallingConv::ID CallConv, bool isVarArg,
+                        const SmallVectorImpl<ISD::OutputArg> &Outs,
+                        const SmallVectorImpl<SDValue> &OutVals,
+                        SDLoc dl, SelectionDAG &DAG) const override;
+    
     // Lower Operand specifics
     SDValue lowerGlobalAddress(SDValue Op, SelectionDAG &DAG) const;
     SDValue lowerJumpTable(SDValue Op, SelectionDAG &DAG) const;

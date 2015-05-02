@@ -90,6 +90,48 @@ using namespace llvm;
 //  hasFP - Return true if the specified function should have a dedicated frame
 //  pointer register. This is true if the unction has varible sized allocas or
 //  if frame pointer elimination is disabled.
+
+bool VEXFrameLowering::hasReservedCallFrame(const MachineFunction &MF) const {
+    return !MF.getFrameInfo()->hasVarSizedObjects();
+}
+
+void VEXFrameLowering::emitPrologue(MachineFunction &MF) const {
+    
+}
+
+void VEXFrameLowering::emitEpilogue(MachineFunction &MF,
+                                       MachineBasicBlock &MBB) const {
+    
+}
+
+// FIXME: Can we eleminate these in favour of generic code?
+bool
+VEXFrameLowering::spillCalleeSavedRegisters(MachineBasicBlock &MBB,
+                                               MachineBasicBlock::iterator MI,
+                                               const std::vector<CalleeSavedInfo> &CSI,
+                                               const TargetRegisterInfo *TRI) const {
+    }
+
+bool
+VEXFrameLowering::restoreCalleeSavedRegisters(MachineBasicBlock &MBB,
+                                                 MachineBasicBlock::iterator MI,
+                                                 const std::vector<CalleeSavedInfo> &CSI,
+                                                 const TargetRegisterInfo *TRI) const {
+
+}
+
+void VEXFrameLowering::
+eliminateCallFramePseudoInstr(MachineFunction &MF, MachineBasicBlock &MBB,
+                              MachineBasicBlock::iterator I) const {
+    
+}
+
+void
+VEXFrameLowering::processFunctionBeforeFrameFinalized(MachineFunction &MF,
+                                                         RegScavenger *) const {
+    
+}
+
 bool VEXFrameLowering::hasFP(const MachineFunction &MF) const{
     const MachineFrameInfo *MFI = MF.getFrameInfo();
     return MF.getTarget().Options.DisableFramePointerElim(MF) ||
