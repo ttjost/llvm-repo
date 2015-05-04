@@ -25,7 +25,13 @@
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Target/TargetOptions.h"
 
+#include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/Debug.h"
+
 using namespace llvm;
+
+#define DEBUG_TYPE "vex-framelower"
 
 // ---------------------------------------------------------------------------
 //                                  FIXME
@@ -96,12 +102,17 @@ bool VEXFrameLowering::hasReservedCallFrame(const MachineFunction &MF) const {
 }
 
 void VEXFrameLowering::emitPrologue(MachineFunction &MF) const {
+    DEBUG(errs() << "EmitPrologue\n");
+    
+    MachineBasicBlock &MBB = MF.front();
+    MachineFrameInfo *MFI = MF.getFrameInfo();
+    
     
 }
 
 void VEXFrameLowering::emitEpilogue(MachineFunction &MF,
                                        MachineBasicBlock &MBB) const {
-    
+    DEBUG(errs() << "EmitEpilogue\n");
 }
 
 // FIXME: Can we eleminate these in favour of generic code?
@@ -110,7 +121,9 @@ VEXFrameLowering::spillCalleeSavedRegisters(MachineBasicBlock &MBB,
                                                MachineBasicBlock::iterator MI,
                                                const std::vector<CalleeSavedInfo> &CSI,
                                                const TargetRegisterInfo *TRI) const {
-    }
+    
+    return true;
+}
 
 bool
 VEXFrameLowering::restoreCalleeSavedRegisters(MachineBasicBlock &MBB,
@@ -118,6 +131,7 @@ VEXFrameLowering::restoreCalleeSavedRegisters(MachineBasicBlock &MBB,
                                                  const std::vector<CalleeSavedInfo> &CSI,
                                                  const TargetRegisterInfo *TRI) const {
 
+    return true;
 }
 
 void VEXFrameLowering::

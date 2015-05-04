@@ -74,6 +74,8 @@ getReservedRegs(const MachineFunction &MF) const {
     return Reserved;
 }
 
+// This function should always be implemented.
+
 //@EliminateFrameIndex
 // - If no EliminateFrameIndex(), it will hang on run.
 // pure virtual method

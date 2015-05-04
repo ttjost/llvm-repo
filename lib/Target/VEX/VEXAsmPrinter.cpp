@@ -49,6 +49,7 @@ using namespace llvm;
 bool VEXAsmPrinter::runOnMachineFunction(MachineFunction &MF){
     Subtarget = &MF.getSubtarget<VEXSubtarget>();
 
+    DEBUG(errs() << "\n\n\n\n\nVEX asm Printer\n\n\n\n\n\n");
     VEXFI = MF.getInfo<VEXFunctionInfo>();
     AsmPrinter::runOnMachineFunction(MF);
     return true;
