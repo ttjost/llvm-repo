@@ -27,7 +27,7 @@
 #include "llvm/Support/raw_ostream.h"
 
 
-#define DEBUG_TYPE "vex-isel"
+#define DEBUG_TYPE "vex-reginfo"
 
 #define GET_REGINFO_TARGET_DESC
 #include "VEXGenRegisterInfo.inc"
@@ -73,6 +73,8 @@ getReservedRegs(const MachineFunction &MF) const {
 
     return Reserved;
 }
+
+// This function should always be implemented.
 
 //@EliminateFrameIndex
 // - If no EliminateFrameIndex(), it will hang on run.

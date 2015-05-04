@@ -36,7 +36,7 @@
 
 using namespace llvm;
 
-#define DEBUG_TYPE "vex-isel"
+#define DEBUG_TYPE "vex-lower"
 
 #if 0
 SDValue VEXTargetLowering::getTargetNode(ConstantPoolSDNode *N, EVT Ty,
@@ -82,20 +82,55 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     //  added, this allows us to compute derived properties we expose.
     computeRegisterProperties(STI.getRegisterInfo());
     
+    //setOperationAction(<#unsigned int Op#>, <#llvm::MVT VT#>, <#llvm::TargetLoweringBase::LegalizeAction Action#>)
+    
     DEBUG(errs() << "1 : \n");
     DEBUG(errs() << "2 : \n");
     
 }
 
-//===----------------------------------------------------------------------===//
-//  Lower helper functions
-//===----------------------------------------------------------------------===//
+//SDValue LowerOperation(SDValue Op, SelectionDAG &DAG) const {
+//    
+//    switch (Op.getOpcode()) {
+//        case :
+//            <#statements#>
+//            break;
+//            
+//        default:
+//            break;
+//    }
+//    
+//}
 
 //===----------------------------------------------------------------------===//
 //  Misc Lower Operation implementation
 //===----------------------------------------------------------------------===//
 
 #include "VEXGenCallingConv.inc"
+
+//===----------------------------------------------------------------------===//
+//  Lower helper functions
+//===----------------------------------------------------------------------===//
+
+//===----------------------------------------------------------------------===//
+//                              Auxiliar methods
+//===----------------------------------------------------------------------===//
+static void AnalyzeRetResult(CCState &State,
+                             const SmallVectorImpl<ISD::InputArg> &Ins){
+    State.AnalyzeCallResult(Ins, CC_VEX_Address);
+}
+
+static void AnalyzeRetResult(CCState &State,
+                             const SmallVectorImpl<ISD::OutputArg> &Outs){
+    State.AnalyzeReturn(Outs, CC_VEX_Address);
+}
+
+template<typename ArgT>
+static void AnalyzeReturnValues(CCState &State,
+                                SmallVectorImpl<CCValAssign> &RVLocs,
+                                const SmallVectorImpl<ArgT> &Args){
+    AnalyzeRetResult(State, Args);
+}
 
 //===----------------------------------------------------------------------===//
 //             Formal Arguments Calling Convention Implementation
@@ -130,7 +165,39 @@ VEXTargetLowering::LowerReturn(SDValue Chain,
                                const SmallVectorImpl<SDValue> &OutVals,
                                SDLoc DL, SelectionDAG &DAG) const {
     DEBUG(errs() << "LowerReturn : \n");
-    return DAG.getNode(VEXISD::RET, DL, MVT::Other, Chain, DAG.getRegister(VEX::Lr, MVT::i32));
+    
+    // CCValAssign - represent the assignment of the return value to a location
+    SmallVector<CCValAssign, 16> RVLocs;
+    
+    // CCState - Info about the registers and stack slot.
+    CCState CCInfo(CallConv, IsVarArg, DAG.getMachineFunction(), RVLocs,
+                   *DAG.getContext());
+    
+    // Analyze return values.
+    AnalyzeReturnValues(CCInfo, RVLocs, Outs);
+    
+    SDValue Flag;
+    SmallVector<SDValue, 4> RetOps(1, Chain);
+    
+    // Copy the result values into the output registers.
+    for (unsigned i = 0; i != RVLocs.size(); ++i){
+        CCValAssign &VA = RVLocs[i];
+        assert(VA.isRegLoc() && "Can only return in registers!");
+        
+        Chain = DAG.getCopyToReg(Chain, DL, VA.getLocReg(), OutVals[i], Flag);
+        
+        // Guarantee that all emitted copies are stuck together,
+        // avoiding something bad.
+        Flag = Chain.getValue(1);
+        RetOps.push_back(DAG.getRegister(VA.getLocReg(), VA.getLocVT()));
+    }
+    
+    RetOps[0] = Chain; // Update Chain.
+    
+    // Add the flag if we have it.
+    if (Flag.getNode())
+        RetOps.push_back(Flag);
+    
+    return DAG.getNode(VEXISD::RET, DL, MVT::Other, RetOps);
 }
-
 

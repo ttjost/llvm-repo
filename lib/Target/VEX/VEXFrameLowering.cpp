@@ -25,7 +25,13 @@
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Target/TargetOptions.h"
 
+#include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/Debug.h"
+
 using namespace llvm;
+
+#define DEBUG_TYPE "vex-framelower"
 
 // ---------------------------------------------------------------------------
 //                                  FIXME
@@ -90,6 +96,56 @@ using namespace llvm;
 //  hasFP - Return true if the specified function should have a dedicated frame
 //  pointer register. This is true if the function has variable sized allocas or
 //  if frame pointer elimination is disabled.
+
+bool VEXFrameLowering::hasReservedCallFrame(const MachineFunction &MF) const {
+    return !MF.getFrameInfo()->hasVarSizedObjects();
+}
+
+void VEXFrameLowering::emitPrologue(MachineFunction &MF) const {
+    DEBUG(errs() << "EmitPrologue\n");
+    
+    MachineBasicBlock &MBB = MF.front();
+    MachineFrameInfo *MFI = MF.getFrameInfo();
+    
+    
+}
+
+void VEXFrameLowering::emitEpilogue(MachineFunction &MF,
+                                       MachineBasicBlock &MBB) const {
+    DEBUG(errs() << "EmitEpilogue\n");
+}
+
+// FIXME: Can we eleminate these in favour of generic code?
+bool
+VEXFrameLowering::spillCalleeSavedRegisters(MachineBasicBlock &MBB,
+                                               MachineBasicBlock::iterator MI,
+                                               const std::vector<CalleeSavedInfo> &CSI,
+                                               const TargetRegisterInfo *TRI) const {
+    
+    return true;
+}
+
+bool
+VEXFrameLowering::restoreCalleeSavedRegisters(MachineBasicBlock &MBB,
+                                                 MachineBasicBlock::iterator MI,
+                                                 const std::vector<CalleeSavedInfo> &CSI,
+                                                 const TargetRegisterInfo *TRI) const {
+
+    return true;
+}
+
+void VEXFrameLowering::
+eliminateCallFramePseudoInstr(MachineFunction &MF, MachineBasicBlock &MBB,
+                              MachineBasicBlock::iterator I) const {
+    
+}
+
+void
+VEXFrameLowering::processFunctionBeforeFrameFinalized(MachineFunction &MF,
+                                                         RegScavenger *) const {
+    
+}
+
 bool VEXFrameLowering::hasFP(const MachineFunction &MF) const{
     const MachineFrameInfo *MFI = MF.getFrameInfo();
     return MF.getTarget().Options.DisableFramePointerElim(MF) ||

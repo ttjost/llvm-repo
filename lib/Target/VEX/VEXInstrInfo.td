@@ -52,7 +52,7 @@ def MEM : Operand<iPTR> {
 //===----------------------------------------------------------------------===//
 
 
-
+def SDT_VEXRET  : SDTypeProfile<0, 1, [SDTCisVT<0, i32>]>;
 
 def SDT_VEXMAX  : SDTypeProfile<1, 2, [SDTCisVT<0, i32>, SDTCisInt<1>,
                                        SDTCisSameAs<1, 2>]>;
@@ -75,7 +75,7 @@ def VEXMinu  : SDNode<"VEXISD::MINU", SDTIntBinOp>;
 //def VEXMinu  : SDNode<"VEXISD::MINU", SDTNone>;
 
 // Return
-def VEXRet : SDNode<"VEXISD::Ret", SDTNone,
+def VEXRet : SDNode<"VEXISD::RET", SDT_VEXRET,
                      [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
 
 
@@ -158,7 +158,7 @@ class StoreInstr<string OpcStr, bits<8> OpVal, PatFrag OpNode, InstrItinClass It
 class ReturnInstr<string OpcStr, bits<8> OpVal, InstrItinClass Itin>
     : InstVEX<(outs), (ins LrReg:$l0),
                 !strconcat(OpcStr, " $l0"),
-                [(brind LrReg:$l0)], Itin>{
+                [(VEXRet LrReg:$l0)], Itin>{
 //    let DecoderMethod = "DecodeMem";
     let isReturn = 1;
     let isCodeGenOnly = 1;
@@ -332,6 +332,11 @@ defm XOR    : ArithLogic<"xor", 0b00011111, xor, IIAlu, 1, 1>;
 def : Pat<(not GPRegs:$in),
   (XORi GPRegs:$in, 1)>;
 
+// Immediates
+def : Pat<(i32 imm32:$in),
+(ADDi Reg0, imm:$in)>;
+def : Pat<(i32 imm:$imm),
+(ADDi Reg0, imm:$imm)>;
 
 //===----------------------------------------------------------------------===//
 //                      Multiplication instructions
@@ -474,7 +479,6 @@ def STW       : StoreInstr<"stw", 0b00010101, store_a, IIStore>;
 //===----------------------------------------------------------------------===//
 
 def RET       : ReturnInstr<"return", 0b00100110, IIAlu>;
-
 
 //===----------------------------------------------------------------------===//
 //                      Branch instructions

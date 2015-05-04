@@ -15,6 +15,7 @@
 #include "VEX.h"
 #include "VEXRegisterInfo.h"
 #include "VEXSubtarget.h"
+#include "VEXFrameLowering.h"
 
 #include "VEXTargetMachine.h"
 #include "llvm/IR/Attributes.h"
@@ -25,7 +26,7 @@
 
 using namespace llvm;
 
-#define DEBUG_TYPE "vex-isel"
+#define DEBUG_TYPE "vex-subtarget"
 
 #define GET_SUBTARGETINFO_TARGET_DESC
 #define GET_SUBTARGETINFO_CTOR
@@ -57,9 +58,11 @@ VEXSubtarget::VEXSubtarget(const std::string &TT, const std::string &CPU,
                            Reloc::Model _RM,
                            VEXTargetMachine &_TM):
     VEXGenSubtargetInfo(TT, CPU, FS),
-    VEXABI(ABI32), isNewScheduling(isNewScheduling), RM(_RM), TM(_TM), TargetTriple(TT),
-    TSInfo(*TM.getDataLayout()), InstrInfo((VEXInstrInfo *)new VEXInstrInfo(*this)),
-    TLInfo((VEXTargetLowering *)new VEXTargetLowering(TM, *this)) {
+    VEXABI(ABI32), isNewScheduling(isNewScheduling), RM(_RM), TargetTriple(TT),
+    TSInfo(*_TM.getDataLayout()),
+    InstrInfo(*this),
+    FrameLowering(),
+    TLInfo(_TM, *this) {
         DEBUG(errs() << "Subtaget\n");
         
 }

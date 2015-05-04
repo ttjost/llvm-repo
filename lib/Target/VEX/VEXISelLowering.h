@@ -90,6 +90,8 @@ private:
                           unsigned Flag) const;
 #endif
     
+    //SDValue LowerOperation(SDValue Op, SelectionDAG &DAG) const override;
+    
     // Lower Operand specifics
     SDValue lowerGlobalAddress(SDValue Op, SelectionDAG &DAG) const;
     SDValue lowerJumpTable(SDValue Op, SelectionDAG &DAG) const;

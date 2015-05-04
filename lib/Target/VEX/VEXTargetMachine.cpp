@@ -22,7 +22,7 @@
 
 using namespace llvm;
 
-#define DEBUG_TYPE "vex-isel"
+#define DEBUG_TYPE "vex-targetmachine"
 
 extern "C" void LLVMInitializeVEXTarget() {
     
@@ -72,10 +72,9 @@ VEXTargetMachine(const Target &T, StringRef TT,
     : LLVMTargetMachine(T, computeDataLayout(), TT, CPU, FS, Options, RM, CM, OL),
         isNewScheduling(isNewScheduling),
         TLOF(make_unique<TargetLoweringObjectFileELF>()),
-        Subtarget(nullptr), DefaultSubtarget(TT, CPU, FS, isNewScheduling, RM, *this){
+        Subtarget(TT, CPU, FS, isNewScheduling, RM, *this){
     DEBUG(errs() << "Target Machine  2\n");
-    Subtarget = &DefaultSubtarget;
-            initAsmInfo();
+    initAsmInfo();
 }
 
 VEXTargetMachine::~VEXTargetMachine() {}

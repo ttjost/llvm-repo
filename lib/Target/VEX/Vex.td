@@ -53,11 +53,11 @@ def: Proc<"VEX_I", []>;
 def: Proc<"VEX_II", []>;
 
 //#if CH >= CH11_1 1
-def Cpu0AsmParser : AsmParser {
+def VEXAsmParser : AsmParser {
     let ShouldEmitMatchRegisterName = 0;
 }
 
-def Cpu0AsmParserVariant : AsmParserVariant {
+def VEXAsmParserVariant : AsmParserVariant {
     int Variant = 0;
     
     // Recognize hard coded registers.

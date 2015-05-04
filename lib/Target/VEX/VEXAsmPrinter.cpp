@@ -49,6 +49,7 @@ using namespace llvm;
 bool VEXAsmPrinter::runOnMachineFunction(MachineFunction &MF){
     Subtarget = &MF.getSubtarget<VEXSubtarget>();
 
+    DEBUG(errs() << "\n\n\n\n\nVEX asm Printer\n\n\n\n\n\n");
     VEXFI = MF.getInfo<VEXFunctionInfo>();
     AsmPrinter::runOnMachineFunction(MF);
     return true;
@@ -64,6 +65,8 @@ void VEXAsmPrinter::EmitInstruction(const MachineInstr *MI){
         return;
     }
 
+    DEBUG(errs() << "Emitting instruction " << MI->getOpcode() << "\n");
+    
     MachineBasicBlock::const_instr_iterator I = MI;
     MachineBasicBlock::const_instr_iterator E = MI->getParent()->instr_end();
 

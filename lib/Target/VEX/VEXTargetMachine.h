@@ -27,8 +27,7 @@ class VEXTargetMachine : public LLVMTargetMachine{
     
 private:
     bool isNewScheduling;
-    VEXSubtarget *Subtarget;
-    VEXSubtarget DefaultSubtarget;
+    VEXSubtarget Subtarget;
     
     mutable StringMap<std::unique_ptr<VEXSubtarget>> SubtargetMap;
 
@@ -42,15 +41,11 @@ public:
     ~VEXTargetMachine() override;
 
 //    const VEXSubtarget *getSubtargetImpl() const {
-//        if (Subtarget)
-//            return Subtarget;
-//        return &DefaultSubtarget;
+//        return &Subtarget;
 //    }
     
     const VEXSubtarget *getSubtargetImpl(const Function &F) const override{
-        if (Subtarget)
-            return Subtarget;
-        return &DefaultSubtarget;
+        return &Subtarget;
     }
     
     // \brief Reset the subtarget for the VEX target.
