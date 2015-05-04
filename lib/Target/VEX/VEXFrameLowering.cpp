@@ -88,7 +88,7 @@ using namespace llvm;
 
 //- Must have, hasFP() is pure virtual of parent
 //  hasFP - Return true if the specified function should have a dedicated frame
-//  pointer register. This is true if the unction has varible sized allocas or
+//  pointer register. This is true if the function has variable sized allocas or
 //  if frame pointer elimination is disabled.
 bool VEXFrameLowering::hasFP(const MachineFunction &MF) const{
     const MachineFrameInfo *MFI = MF.getFrameInfo();

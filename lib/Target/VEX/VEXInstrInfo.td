@@ -100,12 +100,12 @@ def load_a          : AlignedLoad<load>;
 def store_a         : AlignedStore<store>;
 
 /// Type I
-multiclass TYPE1<string OpcStr, bits<8> Opcode, SDNode OpNode, InstrItinClass Itin, bit isCommR = 0, bit isCommI = 0> {
-  def r  : TYPE1_r <Opcode,
+multiclass ArithLogic<string OpcStr, bits<8> Opcode, SDNode OpNode, InstrItinClass Itin, bit isCommR = 0, bit isCommI = 0> {
+  def r  : ArithLogic_r <Opcode,
                       (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                       !strconcat(OpcStr, " $dst = $s1, $s2"),
                       [(set GPRegs:$dst, (OpNode GPRegs:$s1, GPRegs:$s2))], Itin, isCommR>;
-  def i  : TYPE1_i <Opcode,
+  def i  : ArithLogic_i <Opcode,
                       (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                       !strconcat(OpcStr, " $dst = $s1, $s2"),
                       [(set GPRegs:$dst, (OpNode GPRegs:$s1, imm32:$s2))], Itin, isCommI>;
@@ -199,116 +199,116 @@ class ReturnInstr<string OpcStr, bits<8> OpVal, InstrItinClass Itin>
 // TYPE I Instruction Definitions
 
 // ADD Instruction
-defm ADD    : TYPE1<"add", 0b01100010, add, IIAlu, 1, 1>;
+defm ADD    : ArithLogic<"add", 0b01100010, add, IIAlu, 1, 1>;
 
 // AND Instruction
-defm AND    : TYPE1<"and", 0b01100011, and, IIAlu, 1, 1>;
+defm AND    : ArithLogic<"and", 0b01100011, and, IIAlu, 1, 1>;
 
 // ANDC Instruction
-def ANDCr      : TYPE1_r<0b01100100,
+def ANDCr      : ArithLogic_r<0b01100100,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                           "andc",
                            [(set GPRegs:$dst, (and GPRegs:$s2, (not GPRegs:$s1)))], IIAlu, 1>;
-def ANDCi      : TYPE1_i<0b01100100,
+def ANDCi      : ArithLogic_i<0b01100100,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                           "andc",
                            [(set GPRegs:$dst, (and (not GPRegs:$s1), imm32:$s2))], IIAlu, 1>;
            
 // MAX Instruction
 //defm MAX    : TYPE_1<"max", 0b01100101, max>;
-def MAXr      : TYPE1_r<0b01100100,
+def MAXr      : ArithLogic_r<0b01100100,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                           "max",
                           [(set GPRegs:$dst, (VEXMax GPRegs:$s1, GPRegs:$s2))], IIAlu, 0>;
-def MAXi      : TYPE1_i<0b01100100,
+def MAXi      : ArithLogic_i<0b01100100,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                           "max",
                            [(set GPRegs:$dst, (VEXMax GPRegs:$s1, imm32:$s2))], IIAlu, 0>;
                            
 //defm MAXU   : TYPE_1<"maxu", 0b01100110, maxu>;
-def MAXUr      : TYPE1_r<0b01100110,
+def MAXUr      : ArithLogic_r<0b01100110,
                         (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                         "max",
                         [(set GPRegs:$dst, (VEXMax GPRegs:$s1, GPRegs:$s2))], IIAlu, 0>;
-def MAXUi      : TYPE1_i<0b01100110,
+def MAXUi      : ArithLogic_i<0b01100110,
                         (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                         "max",
                         [(set GPRegs:$dst, (VEXMaxu GPRegs:$s1, imm32:$s2))], IIAlu, 0>;
 
-def MINr      : TYPE1_r<0b01100100,
+def MINr      : ArithLogic_r<0b01100100,
                         (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                         "min",
                         [(set GPRegs:$dst, (VEXMin GPRegs:$s1, GPRegs:$s2))], IIAlu, 0>;
-def MINi      : TYPE1_i<0b01100100,
+def MINi      : ArithLogic_i<0b01100100,
                         (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                         "min",
                         [(set GPRegs:$dst, (VEXMin GPRegs:$s1, imm32:$s2))], IIAlu, 0>;
 
 //defm MAXU   : TYPE_1<"maxu", 0b01100110, maxu>;
-def MINUr      : TYPE1_r<0b01101000,
+def MINUr      : ArithLogic_r<0b01101000,
                         (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                         "minu",
                         [(set GPRegs:$dst, (VEXMinu GPRegs:$s1, GPRegs:$s2))], IIAlu, 0>;
-def MINUi      : TYPE1_i<0b01101000,
+def MINUi      : ArithLogic_i<0b01101000,
                         (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                         "minu",
                         [(set GPRegs:$dst, (VEXMinu GPRegs:$s1, imm32:$s2))], IIAlu, 0>;
 
 // OR Instruction
-defm OR     : TYPE1<"or", 0b01101001, or, IIAlu>;
+defm OR     : ArithLogic<"or", 0b01101001, or, IIAlu>;
 
 // ORC Instruction
-def ORCr      : TYPE1_r<0b01101010,
+def ORCr      : ArithLogic_r<0b01101010,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                           "orc",
                            [(set GPRegs:$dst, (or GPRegs:$s2, (not GPRegs:$s1)))], IIAlu, 1>;
-def ORCi      : TYPE1_i<0b01101010,
+def ORCi      : ArithLogic_i<0b01101010,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                           "orc",
                            [(set GPRegs:$dst, (or (not GPRegs:$s1), imm32:$s2))], IIAlu, 1>;
 
 // SH1ADD Instruction
-def SH1ADDr      : TYPE1_r<0b01101011,
+def SH1ADDr      : ArithLogic_r<0b01101011,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                           "sh1add",
                            [], IIAlu, 1>;
-def SH1ADDi      : TYPE1_i<0b01101010,
+def SH1ADDi      : ArithLogic_i<0b01101010,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                           "sh1add",
                            [], IIAlu, 1>;
 
 // SH2ADD Instruction
-def SH2ADDr      : TYPE1_r<0b01101100,
+def SH2ADDr      : ArithLogic_r<0b01101100,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                           "sh2add",
                            [], IIAlu, 1>;
-def SH2ADDi      : TYPE1_i<0b01101100,
+def SH2ADDi      : ArithLogic_i<0b01101100,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                           "sh2add",
                            [], IIAlu, 1>;
 
 // SH3ADD Instruction
-def SH3ADDr      : TYPE1_r<0b01101101,
+def SH3ADDr      : ArithLogic_r<0b01101101,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                           "sh3add",
                           [], IIAlu, 1>;
-def SH3ADDi      : TYPE1_i<0b01101101,
+def SH3ADDi      : ArithLogic_i<0b01101101,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                           "sh3add",
                            [], IIAlu, 1>;
 
 // SH4ADD Instruction
-def SH4ADDr      : TYPE1_r<0b01101110,
+def SH4ADDr      : ArithLogic_r<0b01101110,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                           "sh3add",
                            [], IIAlu, 1>;
-def SH4ADDi      : TYPE1_i<0b01101110,
+def SH4ADDi      : ArithLogic_i<0b01101110,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                           "sh3add",
                            [], IIAlu, 1>;
                                                      
 // SHL Instruction 
-//defm SHL    : TYPE1<"shl", 0b01101111, shl, IIAlu>;
+//defm SHL    : ArithLogic<"shl", 0b01101111, shl, IIAlu>;
 //def SHLr      : SHIFT_r<0b01101111,
 //                        (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
 //                        "shl",
@@ -325,7 +325,7 @@ def SH4ADDi      : TYPE1_i<0b01101110,
 //defm SHRU   : SHIFT<"shru", 0b00011001, srl, IIAlu>;
 
 // XOR Instruction
-defm XOR    : TYPE1<"xor", 0b00011111, xor, IIAlu, 1, 1>;
+defm XOR    : ArithLogic<"xor", 0b00011111, xor, IIAlu, 1, 1>;
 
 
 // Create Pattern to "not" instruction
@@ -336,93 +336,93 @@ def : Pat<(not GPRegs:$in),
 //===----------------------------------------------------------------------===//
 //                      Multiplication instructions
 //===----------------------------------------------------------------------===//
-def MPYLLr      : TYPE1_r<0b00000000,
+def MPYLLr      : ArithLogic_r<0b00000000,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                           "mpyll",
                            [], IIMul, 1>;
-def MPYLLi      : TYPE1_i<0b00000000,
+def MPYLLi      : ArithLogic_i<0b00000000,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                           "mpyll",
                            [], IIMul, 1>;
                     
-def MPYLLUr      : TYPE1_r<0b00000001,
+def MPYLLUr      : ArithLogic_r<0b00000001,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                           "mpyllu",
                            [], IIMul, 1>;
-def MPYLLUi      : TYPE1_i<0b00000001,
+def MPYLLUi      : ArithLogic_i<0b00000001,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                           "mpyllu",
                            [], IIMul, 1>;
                            
-def MPYLHr      : TYPE1_r<0b00000010,
+def MPYLHr      : ArithLogic_r<0b00000010,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                           "mpylh",
                            [], IIMul, 1>;
-def MPYLHi      : TYPE1_i<0b00000010,
+def MPYLHi      : ArithLogic_i<0b00000010,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                           "mpylh",
                            [], IIMul, 1>;
                            
-def MPYHHr      : TYPE1_r<0b00000011,
+def MPYHHr      : ArithLogic_r<0b00000011,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                           "mpyhh",
                            [], IIMul, 1>;
-def MPYHHi      : TYPE1_i<0b00000011,
+def MPYHHi      : ArithLogic_i<0b00000011,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                           "mpyhh",
                            [], IIMul, 1>;
 
-def MPYHHUr      : TYPE1_r<0b00000100,
+def MPYHHUr      : ArithLogic_r<0b00000100,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                           "mpyhhu",
                            [], IIMul, 1>;
-def MPYHHUi      : TYPE1_i<0b00000100,
+def MPYHHUi      : ArithLogic_i<0b00000100,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                           "mpyhhu",
                            [], IIMul, 1>;
                     
-def MPYLr      : TYPE1_r<0b00000101,
+def MPYLr      : ArithLogic_r<0b00000101,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                           "mpyl",
                            [], IIMul, 1>;
-def MPYLi      : TYPE1_i<0b00000101,
+def MPYLi      : ArithLogic_i<0b00000101,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                           "mpyl",
                            [], IIMul, 1>;
                            
-def MPYLUr      : TYPE1_r<0b00000110,
+def MPYLUr      : ArithLogic_r<0b00000110,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                           "mpylu",
                            [], IIMul, 1>;
-def MPYLUi      : TYPE1_i<0b00000110,
+def MPYLUi      : ArithLogic_i<0b00000110,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                           "mpylu",
                            [], IIMul, 1>;
                            
-def MPYHr      : TYPE1_r<0b00000111,
+def MPYHr      : ArithLogic_r<0b00000111,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                           "mpyh",
                            [], IIMul, 1>;
-def MPYHi      : TYPE1_i<0b00000111,
+def MPYHi      : ArithLogic_i<0b00000111,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                           "mpyh",
                            [], IIMul, 1>;
                            
                            
-def MPYHUr      : TYPE1_r<0b00001001,
+def MPYHUr      : ArithLogic_r<0b00001001,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                           "mpyhu",
                            [], IIMul, 1>;
-def MPYHUi      : TYPE1_i<0b00001001,
+def MPYHUi      : ArithLogic_i<0b00001001,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                           "mpyhu",
                            [], IIMul, 1>;
                            
-def MPYHSr      : TYPE1_r<0b00001010,
+def MPYHSr      : ArithLogic_r<0b00001010,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                           "mpyhs",
                            [], IIMul, 1>;
-def MPYHSi      : TYPE1_i<0b00001010,
+def MPYHSi      : ArithLogic_i<0b00001010,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                           "mpyhs",
                            [], IIMul, 1>;

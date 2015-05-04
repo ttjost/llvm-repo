@@ -84,6 +84,51 @@ void VEXRegisterInfo::
 eliminateFrameIndex(MachineBasicBlock::iterator II, int SPAdj,
                     unsigned FIOperandNum, RegScavenger *RS) const {
 
+    assert(SPAdj == 0 && "Unexpected");
+
+    MachineInstr &MI = *II;
+    MachineBasicBlock &MBB = *MI.getParent();
+    MachineFunction &MF = *MBB.getParent();
+    const TargetFrameLowering *TFI = MF.getSubtarget().getFrameLowering();
+    DebugLoc dl = MI.getDebugLoc();
+    int FrameIndex = MI.getOperand(FIOperandNum).getIndex();
+
+    unsigned BasePtr = VEX::Reg1;
+    int Offset = MF.getFrameInfo()->getObjectOffset(FrameIndex);
+
+    // Skip the saved PC
+    Offset += 4;
+
+    if(!TFI->hasFP(MF))
+        Offset += MF.getFrameInfo()->getStackSize();
+    else
+        Offset += 4;
+
+    // Fold imm into offset
+    Offset += MI.getOperand(FIOperandNum + 1).getImm();
+
+    if(MI.getOpcode() == VEX::ADDi){
+        // This is actually "load effective address" of the stack slot
+        // instruction. We have only two-address instructions, thus we need to
+        // expand it into mov + add
+        const TargetInstrInfo &TII = *MF.getSubtarget().getInstrInfo();
+
+        //MI.setDesc(TII.get());
+        if(Offset == 0)
+            return;
+
+        // we need to materialize the offset via add instruction
+        unsigned DstReg = MI.getOpcode(0).getReg();
+        if(Offset < 0)
+            BuildMI(MBB, std::next(II), dl, TII.get(VEX::SUBi), DstReg)
+                    .addReg(DstReg).addImm(-Offset);
+        else
+            BuildMI(MBB, std::next(II), dl, TII.get(VEX::ADDi), DstReg)
+                    .addReg(DstReg).addImm(Offset);
+        return;
+    }
+    MI.getOperand(FIOperandNum).ChangeToRegister(BasePtr, false);
+    MI.getOperand(FIOperandNum + 1).ChangeToImmediate(Offset);
 }
 
 // pure virtual method

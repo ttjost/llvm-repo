@@ -26,7 +26,7 @@ class InstVEX<dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClas
 //===----------------------------------------------------------------------===//
 
 // TYPE 1 instructions
-class TYPE1<dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass Itin, bit isCommR = 0, bit isCommI = 0>
+class ArithLogic<dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass Itin, bit isCommR = 0, bit isCommI = 0>
    : InstVEX<outs, ins, asmstr, pattern, Itin> {
   bits<6>  s1;
   
@@ -36,8 +36,8 @@ class TYPE1<dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass 
   let Inst{22-17} = dst;
 }
 
-class TYPE1_r<bits<8> OpVal, dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass Itin, bit isComm>
-   : TYPE1<outs, ins, asmstr, pattern, Itin> {
+class ArithLogic_r<bits<8> OpVal, dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass Itin, bit isComm>
+   : ArithLogic<outs, ins, asmstr, pattern, Itin> {
   bits<8> op;
   bits<6>  s2;
   
@@ -48,8 +48,8 @@ class TYPE1_r<bits<8> OpVal, dag outs, dag ins, string asmstr, list<dag> pattern
   
 }
 
-class TYPE1_i<bits<8> OpVal, dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass Itin, bit isComm>
-   : TYPE1<outs, ins, asmstr, pattern, Itin> {
+class ArithLogic_i<bits<8> OpVal, dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass Itin, bit isComm>
+   : ArithLogic<outs, ins, asmstr, pattern, Itin> {
   bits<8>  op;
   bits<9>  imm;
   
@@ -71,7 +71,7 @@ let Inst{22-17} = dst;
 }
 
 class SHIFT_r<bits<8> OpVal, dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass Itin, bit isComm>
-: TYPE1<outs, ins, asmstr, pattern, Itin> {
+: ArithLogic<outs, ins, asmstr, pattern, Itin> {
 bits<8> op;
 bits<6>  s2;
 
@@ -83,7 +83,7 @@ let isCommutable = isComm;
 }
 
 class SHIFT_i<bits<8> OpVal, dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass Itin, bit isComm>
-: TYPE1<outs, ins, asmstr, pattern, Itin> {
+: ArithLogic<outs, ins, asmstr, pattern, Itin> {
 bits<8>  op;
 bits<9>  imm;
 
