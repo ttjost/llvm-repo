@@ -60,14 +60,12 @@ MachineFunction::MachineFunction(const Function *F, const TargetMachine &TM,
     RegInfo = new (Allocator) MachineRegisterInfo(this);
   else
     RegInfo = nullptr;
-    DEBUG(errs() << "asadasd1");
   DEBUG(errs() << Target.getDataLayout()->getStringRepresentation());
   MFInfo = nullptr;
   FrameInfo = new (Allocator)
       MachineFrameInfo(STI->getFrameLowering()->getStackAlignment(),
                        STI->getFrameLowering()->isStackRealignable(),
                        !F->hasFnAttribute("no-realign-stack"));
-    DEBUG(errs() << "asadasd");
   if (Fn->hasFnAttribute(Attribute::StackAlignment))
     FrameInfo->ensureMaxAlignment(Fn->getFnStackAlignment());
 

@@ -30,10 +30,6 @@ def imm5Op  : Operand<i32>;
 def ADDR : ComplexPattern<iPTR, 2, "SelectAddr", [frameindex], []>;
 
 // Address operands
-def VEXMEMrrAsmOperand : AsmOperandClass {
-  let Name = "MEMrr";
-  let ParserMethod = "parseMEMOperand";
-}
 
 def VEXMEMriAsmOperand : AsmOperandClass {
   let Name = "MEMri";
@@ -75,9 +71,11 @@ def VEXMinu  : SDNode<"VEXISD::MINU", SDTIntBinOp>;
 //def VEXMinu  : SDNode<"VEXISD::MINU", SDTNone>;
 
 // Return
-def VEXRet : SDNode<"VEXISD::RET", SDT_VEXRET,
+def VEXRet : SDNode<"VEXISD::RET", SDTNone,
                      [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
 
+// def VEXRet : SDNode<"VEXISD::RET", SDT_VEXRET,
+//                     [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
 
 //===----------------------------------------------------------------------===//
 // Instruction Class Templates
@@ -156,15 +154,28 @@ class StoreInstr<string OpcStr, bits<8> OpVal, PatFrag OpNode, InstrItinClass It
 }
 
 class ReturnInstr<string OpcStr, bits<8> OpVal, InstrItinClass Itin>
-    : InstVEX<(outs), (ins LrReg:$l0),
-                !strconcat(OpcStr, " $l0"),
-                [(VEXRet LrReg:$l0)], Itin>{
+    : InstVEX<(outs), (ins),
+                "return ",
+                [(VEXRet)], Itin>{
 //    let DecoderMethod = "DecodeMem";
     let isReturn = 1;
-    let isCodeGenOnly = 1;
+//    let isCodeGenOnly = 1;
     let hasCtrlDep = 1;
-    let hasExtraSrcRegAllocReq = 1;
+//    let hasExtraSrcRegAllocReq = 1;
 }
+
+// class ReturnInstr<string OpcStr, bits<8> OpVal, InstrItinClass Itin>
+//     : InstVEX<(outs), (ins LrReg:$l0),
+//                 !strconcat(OpcStr, " $l0"),
+//                 [(VEXRet LrReg:$l0)], Itin>{
+// //    let DecoderMethod = "DecodeMem";
+//     let isReturn = 1;
+// //    let isCodeGenOnly = 1;
+//     let hasCtrlDep = 1;
+//     let isTerminator = 1; 
+//     let isBarrier = 1;
+//     let hasExtraSrcRegAllocReq = 1;
+// }
 
 
 //class SetCC_R<bits<8> op, string instr_asm, PatFrag cond_op,
@@ -203,6 +214,9 @@ defm ADD    : ArithLogic<"add", 0b01100010, add, IIAlu, 1, 1>;
 
 // AND Instruction
 defm AND    : ArithLogic<"and", 0b01100011, and, IIAlu, 1, 1>;
+
+// SUB Instruction
+defm SUB    : ArithLogic<"sub", 0b01100011, and, IIAlu, 1, 1>;
 
 // ANDC Instruction
 def ANDCr      : ArithLogic_r<0b01100100,

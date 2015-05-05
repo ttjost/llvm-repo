@@ -27,7 +27,7 @@
 #include "llvm/Support/raw_ostream.h"
 
 
-#define DEBUG_TYPE "vex-reginfo"
+#define DEBUG_TYPE "vex-isel"
 
 #define GET_REGINFO_TARGET_DESC
 #include "VEXGenRegisterInfo.inc"
@@ -63,7 +63,9 @@ getReservedRegs(const MachineFunction &MF) const {
 // @getReservedRegs body
     // FIXME : Verify if this is correct
     static const uint16_t ReservedVEXRegs[] = {
-        VEX::Reg0, VEX::Lr, VEX::Reg1
+        VEX::Reg0, VEX::Lr, VEX::Reg1, VEX::Reg2, VEX::Reg3,
+        VEX::Reg4, VEX::Reg5, VEX::Reg6, VEX::Reg7, VEX::Reg8,
+        VEX::Reg9, VEX::Reg10
     };
     BitVector Reserved(getNumRegs());
     typedef TargetRegisterClass::iterator RegIter;
@@ -73,8 +75,6 @@ getReservedRegs(const MachineFunction &MF) const {
 
     return Reserved;
 }
-
-// This function should always be implemented.
 
 //@EliminateFrameIndex
 // - If no EliminateFrameIndex(), it will hang on run.
@@ -120,7 +120,7 @@ eliminateFrameIndex(MachineBasicBlock::iterator II, int SPAdj,
             return;
 
         // we need to materialize the offset via add instruction
-        unsigned DstReg = MI.getOpcode(0).getReg();
+        unsigned DstReg = MI.getOperand(0).getReg();
         if(Offset < 0)
             BuildMI(MBB, std::next(II), dl, TII.get(VEX::SUBi), DstReg)
                     .addReg(DstReg).addImm(-Offset);

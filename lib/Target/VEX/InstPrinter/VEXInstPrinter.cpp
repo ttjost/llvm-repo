@@ -94,6 +94,7 @@ void VEXInstPrinter::printOperand(const MCInst *mi, unsigned OpNo,
     }
     if(Op.isImm()){
         O << Op.getImm();
+        return;
     }
     
     assert(Op.isExpr() && "unknown operand kind in printOperand");
