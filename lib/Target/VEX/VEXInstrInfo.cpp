@@ -35,4 +35,14 @@ VEXInstrInfo::VEXInstrInfo(const VEXSubtarget &STI) : Subtarget(STI), RI(STI) {
     DEBUG(errs() << "InstrInfo \n");
 }
 
+// Emit instructions to copy a pair of physical registers.
+void VEXInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
+                               MachineBasicBlock::iterator MI, DebugLoc DL,
+                               unsigned DestReg, unsigned SrcReg,
+                               bool KillSrc) const {
+
+
+
+}
+
 

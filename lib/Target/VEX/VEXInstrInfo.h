@@ -39,6 +39,11 @@ namespace llvm{
         ///
         
         const VEXRegisterInfo &getRegisterInfo() const { return RI; }
+
+        void copyPhysReg(MachineBasicBlock &MBB,
+                         MachineBasicBlock::iterator MI, DebugLoc DL,
+                         unsigned DestReg, unsigned SrcReg,
+                         bool KillSrc) const override;
         
     };
     
