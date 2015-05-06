@@ -48,17 +48,18 @@ def MEM : Operand<iPTR> {
 //===----------------------------------------------------------------------===//
 
 
-def SDT_VEXRET  : SDTypeProfile<0, 1, [SDTCisVT<0, i32>]>;
+//def SDT_VEXRET  : SDTypeProfile<0, 1, [SDTCisVT<0, i32>]>;
 
-def SDT_VEXMAX  : SDTypeProfile<1, 2, [SDTCisVT<0, i32>, SDTCisInt<1>,
-                                       SDTCisSameAs<1, 2>]>;
+//def SDT_VEXMAX  : SDTypeProfile<1, 2, [SDTCisVT<0, i32>, SDTCisInt<1>,
+//                                       SDTCisSameAs<1, 2>]>;
 
-def SDT_VEXMIN  : SDTypeProfile<1, 2, [SDTCisVT<0, i32>, SDTCisInt<1>,
-                                       SDTCisSameAs<1, 2>]>;
+//def SDT_VEXMIN  : SDTypeProfile<1, 2, [SDTCisVT<0, i32>, SDTCisInt<1>,
+//                                       SDTCisSameAs<1, 2>]>;
                                        
-def SDT_MUL     : SDTypeProfile<1, 2, [SDTCisVT<0, i32>, SDTCisInt<1>,
-                                        SDTCisSameAs<1, 2>]>;
+//def SDT_MUL     : SDTypeProfile<1, 2, [SDTCisVT<0, i32>, SDTCisInt<1>,
+//                                        SDTCisSameAs<1, 2>]>;
                                         
+def SDTRet : SDTypeProfile<0, 0, []>; // ret
 
 def VEXMax   : SDNode<"VEXISD::MAX", SDTIntBinOp>;
 def VEXMaxu  : SDNode<"VEXISD::MAXU", SDTIntBinOp>;
@@ -71,11 +72,11 @@ def VEXMinu  : SDNode<"VEXISD::MINU", SDTIntBinOp>;
 //def VEXMinu  : SDNode<"VEXISD::MINU", SDTNone>;
 
 // Return
-// def VEXRet : SDNode<"VEXISD::RET", SDTNone,
-//                      [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
+def ret : SDNode<"VEXISD::RET", SDTRet,
+                     [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
 
-def VEXRet : SDNode<"VEXISD::RET", SDT_VEXRET,
-                    [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
+//def VEXRet : SDNode<"VEXISD::RET", SDT_VEXRET,
+//                    [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
 
 //===----------------------------------------------------------------------===//
 // Instruction Class Templates
@@ -123,15 +124,15 @@ multiclass SHIFTInstr<string OpcStr, bits<8> Opcode, SDNode OpNode, InstrItinCla
 }
 
 /// Type I
-multiclass MOVInstr<string OpcStr, bits<8> Opcode, SDNode OpNode, InstrItinClass Itin> {
+multiclass MOVInstr<string OpcStr, bits<8> Opcode, InstrItinClass Itin> {
   def r  : MOV_r <Opcode,
                      (outs GPRegs:$dst), (ins GPRegs:$s1),
                      !strconcat(OpcStr, " $dst = $s1"),
-                     [(set GPRegs:$dst, (OpNode GPRegs:$s1))], Itin>;
+                     [(set GPRegs:$dst, GPRegs:$s1)], Itin>;
   def i  : MOV_i <Opcode,
                    (outs GPRegs:$dst), (ins imm32Op:$s1),
                    !strconcat(OpcStr, " $dst = $s1"),
-                   [(set GPRegs:$dst, (OpNode imm32:$s1))], Itin>;
+                   [(set GPRegs:$dst, imm32:$s1)], Itin>;
 }
 
 class CMPInstr_r<string OpcStr, bits<8> OpVal, PatFrag cond_op, InstrItinClass Itin>
@@ -165,29 +166,28 @@ class StoreInstr<string OpcStr, bits<8> OpVal, PatFrag OpNode, InstrItinClass It
     let mayStore = 1;
 }
 
-// class ReturnInstr<string OpcStr, bits<8> OpVal, InstrItinClass Itin>
-//     : InstVEX<(outs), (ins),
-//                 "return ",
-//                 [(VEXRet)], Itin>{
-// //    let DecoderMethod = "DecodeMem";
-//     let isReturn = 1;
-// //    let isCodeGenOnly = 1;
-//     let hasCtrlDep = 1;
-//     let hasExtraSrcRegAllocReq = 1;
-// }
-
 class ReturnInstr<string OpcStr, bits<8> OpVal, InstrItinClass Itin>
-    : InstVEX<(outs), (ins LrReg:$l0),
-                !strconcat(OpcStr, " $l0"),
-                [(VEXRet LrReg:$l0)], Itin>{
-//    let DecoderMethod = "DecodeReturn";
+    : InstVEX<(outs), (ins),
+                OpcStr,
+                [(ret)], Itin>{
+//    let DecoderMethod = "DecodeMem";
     let isReturn = 1;
 //    let isCodeGenOnly = 1;
     let hasCtrlDep = 1;
-    let isTerminator = 1; 
-    let isBarrier = 1;
-    let hasExtraSrcRegAllocReq = 1;
 }
+
+//class ReturnInstr<string OpcStr, bits<8> OpVal, InstrItinClass Itin>
+//    : InstVEX<(outs), (ins LrReg:$l0),
+//                !strconcat(OpcStr, " $l0"),
+//                [(VEXRet LrReg:$l0)], Itin>{
+////    let DecoderMethod = "DecodeReturn";
+//    let isReturn = 1;
+///    let isCodeGenOnly = 1;
+//    let hasCtrlDep = 1;
+//    let isTerminator = 1;
+//    let isBarrier = 1;
+//    let hasExtraSrcRegAllocReq = 1;
+//}
 
 
 //class SetCC_R<bits<8> op, string instr_asm, PatFrag cond_op,
@@ -281,7 +281,7 @@ def MINUi      : ArithLogic_i<0b01101000,
                         [(set GPRegs:$dst, (VEXMinu GPRegs:$s1, imm32:$s2))], IIAlu, 0>;
 
 // OR Instruction
-defm OR     : ArithLogic<"or", 0b01101001, or, IIAlu>;
+defm OR     : ArithLogicInstr<"or", 0b01101001, or, IIAlu>;
 
 // ORC Instruction
 def ORCr      : ArithLogic_r<0b01101010,
@@ -353,7 +353,7 @@ def SH4ADDi      : ArithLogic_i<0b01101110,
 // XOR Instruction
 defm XOR    : ArithLogicInstr<"xor", 0b00011111, xor, IIAlu, 1, 1>;
 
-defm MOV    : MOVInstr<"mov", 
+defm MOV    : MOVInstr<"mov", 0b00000000, IIAlu>;
 
 
 // Create Pattern to "not" instruction
@@ -362,9 +362,9 @@ def : Pat<(not GPRegs:$in),
 
 // Immediates
 def : Pat<(i32 imm32:$in),
-(ADDi Reg0, imm:$in)>;
+(MOVi imm:$in)>;
 def : Pat<(i32 imm:$imm),
-(ADDi Reg0, imm:$imm)>;
+(MOVi imm:$imm)>;
 
 //===----------------------------------------------------------------------===//
 //                      Multiplication instructions

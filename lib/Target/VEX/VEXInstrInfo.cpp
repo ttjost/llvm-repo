@@ -41,8 +41,27 @@ void VEXInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
                                unsigned DestReg, unsigned SrcReg,
                                bool KillSrc) const {
 
-
-
+    unsigned Opc = 0;
+    
+    // GP Register is Destination
+    if (VEX::GPRegsRegClass.contains(DestReg)){
+        if(VEX::BrRegsRegClass.contains(SrcReg)){
+            //Opc = VEX::MFB;
+        }else
+            if(VEX::GPRegsRegClass.contains(SrcReg)){
+            Opc = VEX::MOVr;
+        }
+    }else if(VEX::BrRegsRegClass.contains(DestReg)){
+        if (VEX::GPRegsRegClass.contains(SrcReg)){
+            //Opc = VEX::MTB;
+        }else
+            if(VEX::BrRegsRegClass.contains(SrcReg)){
+            llvm_unreachable("Impossible reg-to-reg copy. BrReg to BrReg");
+        }
+    }
+    
+    BuildMI(MBB, MI, DL, get(Opc), DestReg).addReg(SrcReg, getKillRegState(KillSrc));
+    
 }
 
 
