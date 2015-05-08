@@ -26,18 +26,18 @@ class InstVEX<dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClas
 //===----------------------------------------------------------------------===//
 
 // TYPE 1 instructions
-class ArithLogicInstr<dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass Itin, bit isCommR = 0, bit isCommI = 0>
-   : InstVEX<outs, ins, asmstr, pattern, Itin> {
-  bits<6>  s1;
-  
-  bits<6>  dst;
-  
-  let Inst{16-11} = s1;
-  let Inst{22-17} = dst;
-}
+// class ArithLogicInstr<dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass Itin, bit isCommR = 0, bit isCommI = 0>
+//    : InstVEX<outs, ins, asmstr, pattern, Itin> {
+//   bits<6>  s1;
+//   
+//   bits<6>  dst;
+//   
+//   let Inst{16-11} = s1;
+//   let Inst{22-17} = dst;
+// }
 
 class ArithLogic_r<bits<8> OpVal, dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass Itin, bit isComm>
-   : ArithLogicInstr<outs, ins, asmstr, pattern, Itin> {
+   : InstVEX<outs, ins, asmstr, pattern, Itin> {
   bits<8> op;
   bits<6>  s2;
   
@@ -49,7 +49,7 @@ class ArithLogic_r<bits<8> OpVal, dag outs, dag ins, string asmstr, list<dag> pa
 }
 
 class ArithLogic_i<bits<8> OpVal, dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass Itin, bit isComm>
-   : ArithLogicInstr<outs, ins, asmstr, pattern, Itin> {
+   : InstVEX<outs, ins, asmstr, pattern, Itin> {
   bits<8>  op;
   bits<9>  imm;
   
@@ -60,18 +60,18 @@ class ArithLogic_i<bits<8> OpVal, dag outs, dag ins, string asmstr, list<dag> pa
 }
 
 // TYPE 1 instructions
-class MOVInstr<dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass Itin>
-: InstVEX<outs, ins, asmstr, pattern, Itin> {
-    bits<6>  s1;
-    
-    bits<6>  dst;
-    
-    let Inst{16-11} = s1;
-    let Inst{22-17} = dst;
-}
+// class MOVInstr<dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass Itin>
+// : InstVEX<outs, ins, asmstr, pattern, Itin> {
+//     bits<6>  s1;
+//     
+//     bits<6>  dst;
+//     
+//     let Inst{16-11} = s1;
+//     let Inst{22-17} = dst;
+// }
 
 class MOV_r<bits<8> OpVal, dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass Itin>
-: MOVInstr<outs, ins, asmstr, pattern, Itin> {
+: InstVEX<outs, ins, asmstr, pattern, Itin> {
     bits<8> op;
     bits<6>  s2;
     
@@ -82,7 +82,7 @@ class MOV_r<bits<8> OpVal, dag outs, dag ins, string asmstr, list<dag> pattern, 
 }
 
 class MOV_i<bits<8> OpVal, dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass Itin>
-: MOVInstr<outs, ins, asmstr, pattern, Itin> {
+: InstVEX<outs, ins, asmstr, pattern, Itin> {
     bits<8>  op;
     bits<9>  imm;
     
@@ -93,18 +93,18 @@ class MOV_i<bits<8> OpVal, dag outs, dag ins, string asmstr, list<dag> pattern, 
 }
 
 // TYPE 1 instructions
-class SHIFTInstr<dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass Itin, bit isCommR = 0, bit isCommI = 0>
-: InstVEX<outs, ins, asmstr, pattern, Itin> {
-bits<6>  s1;
-
-bits<6>  dst;
-
-let Inst{16-11} = s1;
-let Inst{22-17} = dst;
-}
+// class SHIFTInstr<dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass Itin, bit isCommR = 0, bit isCommI = 0>
+// : InstVEX<outs, ins, asmstr, pattern, Itin> {
+// bits<6>  s1;
+// 
+// bits<6>  dst;
+// 
+// let Inst{16-11} = s1;
+// let Inst{22-17} = dst;
+// }
 
 class SHIFT_r<bits<8> OpVal, dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass Itin, bit isComm>
-: SHIFTInstr<outs, ins, asmstr, pattern, Itin> {
+: InstVEX<outs, ins, asmstr, pattern, Itin> {
 bits<8> op;
 bits<6>  s2;
 
@@ -116,7 +116,7 @@ let isCommutable = isComm;
 }
 
 class SHIFT_i<bits<8> OpVal, dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass Itin, bit isComm>
-: SHIFTInstr<outs, ins, asmstr, pattern, Itin> {
+: InstVEX<outs, ins, asmstr, pattern, Itin> {
 bits<8>  op;
 bits<9>  imm;
 

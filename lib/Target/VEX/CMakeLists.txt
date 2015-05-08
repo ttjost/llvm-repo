@@ -14,7 +14,7 @@ tablegen(LLVM VEXGenSubtargetInfo.inc -gen-subtarget)
 tablegen(LLVM VEXGenPseudoLowering.inc -gen-pseudo-lowering)
 tablegen(LLVM VEXGenDAGISel.inc -gen-dag-isel)
 tablegen(LLVM VEXGenCallingConv.inc -gen-callingconv)
-
+tablegen(LLVM VEXGenCodeEmitter.inc -gen-emitter)
 tablegen(LLVM VEXGenAsmWriter.inc -gen-asm-writer)
 
 # VEXCommomTableGen must be defined

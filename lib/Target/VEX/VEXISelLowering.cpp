@@ -177,7 +177,7 @@ VEXTargetLowering::LowerReturn(SDValue Chain,
     AnalyzeReturnValues(CCInfo, RVLocs, Outs);
     
     SDValue Flag;
-    SmallVector<SDValue, 4> RetOps(1, Chain);
+    SmallVector<SDValue, 8> RetOps(1, Chain);
     
     // Copy the result values into the output registers.
     for (unsigned i = 0; i != RVLocs.size(); ++i){
