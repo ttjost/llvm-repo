@@ -48,11 +48,14 @@ def MEM : Operand<iPTR> {
 //===----------------------------------------------------------------------===//
 
 
-// def SDT_VEXRET  : SDTypeProfile<1, 3, [SDTCisVT<0, i32>, SDTCisInt<1>,
-//                                         SDTCisInt<2>, SDTCisInt<3>, SDTCisSameAs<1, 2>,
-//                                         SDTCisSameAs<1, 3>]>;
+//def SDT_VEXRET  : SDTypeProfile<1, 3, [SDTCisVT<0, i32>, SDTCisInt<1>,
+//                                       SDTCisInt<2>, SDTCisInt<3>, SDTCisSameAs<1, 2>,
+//                                       SDTCisSameAs<1, 3>]>;
                                         
-def SDT_VEXRET  : SDTypeProfile<0, 1, [SDTCisVT<0, i32>]>;
+def SDT_VEXPSEUDORET  : SDTypeProfile<0, 1, [SDTCisVT<0, i32>]>;
+
+def vexretflag       : SDNode<"VEXISD::RET_FLAG", SDTNone,
+                                [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
 
 //def SDT_VEXMAX  : SDTypeProfile<1, 2, [SDTCisVT<0, i32>, SDTCisInt<1>,
 //                                       SDTCisSameAs<1, 2>]>;
@@ -62,8 +65,6 @@ def SDT_VEXRET  : SDTypeProfile<0, 1, [SDTCisVT<0, i32>]>;
                                        
 //def SDT_MUL     : SDTypeProfile<1, 2, [SDTCisVT<0, i32>, SDTCisInt<1>,
 //                                        SDTCisSameAs<1, 2>]>;
-                                        
-def SDTRet : SDTypeProfile<0, 0, []>; // ret
 
 def VEXMax   : SDNode<"VEXISD::MAX", SDTIntBinOp>;
 def VEXMaxu  : SDNode<"VEXISD::MAXU", SDTIntBinOp>;
@@ -79,7 +80,7 @@ def VEXMinu  : SDNode<"VEXISD::MINU", SDTIntBinOp>;
 // def ret : SDNode<"VEXISD::RET", SDTRet,
 //                      [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
 
-def VEXRet : SDNode<"VEXISD::RET", SDT_VEXRET,
+def VEXPseudoRet : SDNode<"VEXISD::PSEUDO_RET", SDTNone,
                    [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
 
 //===----------------------------------------------------------------------===//
@@ -180,31 +181,30 @@ class StoreInstr<string OpcStr, bits<8> OpVal, PatFrag OpNode, InstrItinClass It
 //     let hasCtrlDep = 1;
 // }
 
-// class ReturnInstr<string OpcStr, bits<8> OpVal, InstrItinClass Itin>
-//    : InstVEX<(outs GPRegs:$dst), (ins GPRegs:$sp, LrReg:$l0, imm32Op:$imm),
-//                !strconcat(OpcStr, " $dst = $sp, $imm, $l0"),
-//                [], Itin>{
-// //    let DecoderMethod = "DecodeReturn";
-//    let isReturn = 1;
-// //    let isCodeGenOnly = 1;
-//    let hasCtrlDep = 1;
+class ReturnInstr<string OpcStr, bits<8> OpVal, InstrItinClass Itin>
+   : InstVEX<(outs GPRegs:$dst), (ins GPRegs:$sp, imm32Op:$imm, LrReg:$l0),
+               !strconcat(OpcStr, " $dst = $sp, $imm, $l0"),
+                [], Itin>{
+    let isTerminator = 1;
+    let isBarrier = 1;
+    let isReturn = 1;
+}
+
+//class ReturnInstr<string OpcStr, bits<8> OpVal, InstrItinClass Itin>
+//   : InstVEX<(outs), (ins LrReg:$l0),
+//               !strconcat(OpcStr, " $l0"),
+//               [(VEXRet LrReg:$l0)], Itin>{
+////    let DecoderMethod = "DecodeReturn";
+//   let isReturn = 1;
+////    let isCodeGenOnly = 1;
+//   let hasCtrlDep = 1;
+//   let isTerminator = 1;
+//   let isBarrier = 1;
+//   let hasExtraSrcRegAllocReq = 1;
 //    let isTerminator = 1;
 //    let isBarrier = 1;
-//    let hasExtraSrcRegAllocReq = 1;
-// }
-
-class ReturnInstr<string OpcStr, bits<8> OpVal, InstrItinClass Itin>
-   : InstVEX<(outs), (ins LrReg:$l0),
-               !strconcat(OpcStr, " $l0"),
-               [(VEXRet LrReg:$l0)], Itin>{
-//    let DecoderMethod = "DecodeReturn";
-   let isReturn = 1;
-//    let isCodeGenOnly = 1;
-   let hasCtrlDep = 1;
-   let isTerminator = 1;
-   let isBarrier = 1;
-   let hasExtraSrcRegAllocReq = 1;
-}
+//    let isReturn = 1;
+//}
 
 
 //class SetCC_R<bits<8> op, string instr_asm, PatFrag cond_op,
@@ -234,6 +234,16 @@ class ReturnInstr<string OpcStr, bits<8> OpVal, InstrItinClass Itin>
 //===----------------------------------------------------------------------===//
 // Instructions
 //===----------------------------------------------------------------------===//
+
+//                      PSEUDO Instructions
+// These instructions will not generate code.
+// They are used to ease the process of converting SelectionDAG Nodes
+// real target instructions
+def PSEUDO_RET : Pseudo<(outs), (ins) , [(VEXPseudoRet)]>{
+    let isTerminator = 1;
+    let isBarrier = 1;
+    let isReturn = 1;
+}
 
 
 // TYPE I Instruction Definitions

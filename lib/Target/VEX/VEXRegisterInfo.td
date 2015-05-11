@@ -31,7 +31,7 @@ foreach I = 0-7 in
   def BrReg#I : Br<I, "b0."#I >, DwarfRegNum<[!add(I, 64)]>;
   
 // Define Link Register
-  def Lr    :  Lr< 0, "lr">, DwarfRegNum<[73]>;
+  def Lr    :  Lr< 0, "l0.0">, DwarfRegNum<[73]>;
 
 //
 // FIXME: the register order should be defined in terms of the preferred

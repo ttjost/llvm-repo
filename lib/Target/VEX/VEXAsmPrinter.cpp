@@ -49,7 +49,7 @@ using namespace llvm;
 bool VEXAsmPrinter::runOnMachineFunction(MachineFunction &MF){
     Subtarget = &MF.getSubtarget<VEXSubtarget>();
 
-    DEBUG(errs() << "\n\n\n\n\nVEX asm Printer\n\n\n\n\n\n");
+    DEBUG(errs() << "\n\nVEX asm Printer\n\n");
     VEXFI = MF.getInfo<VEXFunctionInfo>();
     AsmPrinter::runOnMachineFunction(MF);
     return true;
@@ -76,6 +76,7 @@ void VEXAsmPrinter::EmitInstruction(const MachineInstr *MI){
         MCInstLowering.Lower(I, TmpInst0);
         OutStreamer.EmitInstruction(TmpInst0, getSubtargetInfo());
     }while((++I != E) && I->isInsideBundle()); //
+    DEBUG(errs() << "Done emitting\n");
 }
 
 // Create a bitmask with all callee saved registers for CPU

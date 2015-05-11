@@ -1,6 +1,6 @@
 //===-- VEXInstrFormats.td - VEX Instruction Formats ---*- tablegen -*-===//
 
-class InstVEX<dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass itin>
+class InstVEX<dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass itin = IIAlu>
           : Instruction {
   field bits<32> Inst;
 
@@ -20,6 +20,17 @@ class InstVEX<dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClas
   let DecoderNamespace = "VEX";
   field bits<32> SoftFail = 0;
 }
+
+// Pseudo instructions (don't have encoding information)
+class Pseudo<dag outs, dag ins, list<dag> pattern, string asmstr = "">
+: InstVEX<outs, ins, asmstr,  pattern> {
+    let isCodeGenOnly  = 1;
+    let isPseudo = 1;
+}
+
+//class BaseReturnReg<bits<8> OpVal, dag outs, dag ins, string asmstr, pattern>
+//: VEXInst<outs, ins, asmstr, pattern
+
 
 //===----------------------------------------------------------------------===//
 // Format TYPE 1 instruction classes in the VEX

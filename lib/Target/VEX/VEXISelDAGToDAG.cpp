@@ -108,31 +108,25 @@ SDNode * VEXDAGToDAGISel::Select(SDNode *Node){
     DEBUG(errs() << "Selecting New node\n");
 
     // Dump information about the Node being selected
-    DEBUG(errs() << "Selecting: "; Node->dump(CurDAG); errs() << "\n");
+    //DEBUG(errs() << "Selecting: "; Node->dump(CurDAG); errs() << "\n");
 
     // If we have a custom node, we already have selected!
     if(Node->isMachineOpcode()){
-        DEBUG(errs() << "== "; Node->dump(CurDAG); errs() << "\n");
         Node->setNodeId(-1);
         return nullptr;
     }
 
     // See if subclasses can handle this node
     std::pair<bool, SDNode*> Ret = selectNode(Node);
-    DEBUG(errs() << "finished selectNode\n");
     if(Ret.first)
         return Ret.second;
-    DEBUG(errs() << "part 2");
     // Select the default instruction
     SDNode *ResNode = SelectCode(Node);
     
-    DEBUG(errs() << "part 3");
-    DEBUG(errs() << "=>");
     if(ResNode == NULL || ResNode == Node)
         DEBUG(Node->dump(CurDAG));
     else
         DEBUG(ResNode->dump(CurDAG));
-    DEBUG(errs() << "\n");
     
     return ResNode;
 

@@ -61,6 +61,8 @@ const char *VEXTargetLowering::getTargetNodeName(unsigned Opcode) const {
         case VEXISD::MINU:      return "VEXISD::MINU";
             
         case VEXISD::WRAPPER:   return "VEXISD::WRAPPER";
+            
+        case VEXISD::PSEUDO_RET: return "VEXISD::PSEUDO_RET";
         
         default:                return NULL;
     }
@@ -198,6 +200,6 @@ VEXTargetLowering::LowerReturn(SDValue Chain,
     if (Flag.getNode())
         RetOps.push_back(Flag);
     
-    return DAG.getNode(VEXISD::RET, DL, MVT::Other, RetOps);
+    return DAG.getNode(VEXISD::PSEUDO_RET, DL, MVT::Other, RetOps);
 }
 

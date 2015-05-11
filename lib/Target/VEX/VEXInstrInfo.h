@@ -45,6 +45,8 @@ namespace llvm{
                          unsigned DestReg, unsigned SrcReg,
                          bool KillSrc) const override;
         
+        bool expandPostRAPseudo (MachineBasicBlock::iterator MI) const override;
+        
     };
     
 }

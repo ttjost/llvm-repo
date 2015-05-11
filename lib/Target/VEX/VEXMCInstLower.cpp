@@ -40,12 +40,10 @@ VEXMCInstLower::VEXMCInstLower(VEXAsmPrinter &asmprinter)
 
 void VEXMCInstLower::Initialize(MCContext *C){
     Ctx = C;
-    DEBUG(errs() << "MCInstLower2\n");
 }
 
 static void CreateMCInst(MCInst &Inst, unsigned Opc, const MCOperand& Opnd0,
                          const MCOperand& Opnd1, const MCOperand Opnd2 = MCOperand()){
-    DEBUG(errs() << "MCInstLower4\n");
     Inst.setOpcode(Opc);
     Inst.addOperand(Opnd0);
     Inst.addOperand(Opnd1);
@@ -77,7 +75,7 @@ MCOperand VEXMCInstLower::LowerOperand(const MachineOperand &MO,
 void VEXMCInstLower::Lower(const MachineInstr *MI, MCInst &OutMI) const{
     OutMI.setOpcode(MI->getOpcode());
     
-    DEBUG(errs() << "MCInstLower3\n");
+    DEBUG(errs() << "MCInstLower::Lower\n");
     for(unsigned i = 0, e = MI->getNumOperands(); i != e ; ++i){
         const MachineOperand &MO = MI->getOperand(i);
         MCOperand MCOp = LowerOperand(MO);

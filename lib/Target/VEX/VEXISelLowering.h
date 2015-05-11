@@ -35,6 +35,8 @@ namespace llvm {
             
             RET,
             
+            PSEUDO_RET,
+            
             MAX,
             MAXU,
             MIN,
