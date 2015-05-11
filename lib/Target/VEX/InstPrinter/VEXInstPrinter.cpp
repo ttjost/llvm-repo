@@ -40,6 +40,7 @@ void VEXInstPrinter::printInst(const MCInst *mi, raw_ostream &O,
     if (!printAliasInstr(mi, O))
         // printInstruction(mi, O) defined in VEXGenAsmWriter.inc which came from
         // VEX.td indicate.
+        O << "\tc0";
         printInstruction(mi, O);
     printAnnotation(O, Annot);
 }
