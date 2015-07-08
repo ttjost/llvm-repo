@@ -17,6 +17,7 @@
 #include "VEX.h"
 #include "VEXRegisterInfo.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
+#include "VEXMachineFunction.h"
 #include "llvm/Target/TargetInstrInfo.h"
 
 #define GET_INSTRINFO_HEADER
@@ -47,6 +48,10 @@ namespace llvm{
         
         bool expandPostRAPseudo (MachineBasicBlock::iterator MI) const override;
         
+        // Adjust SP by Amount bytes
+        void adjustStackPtr(VEXFunctionInfo *VEXFI, unsigned SP, uint64_t Amount,
+                            MachineBasicBlock &MBB, MachineBasicBlock::iterator I)
+        const;
     };
     
 }

@@ -131,11 +131,11 @@ void VEXAsmPrinter::emitFrameDirective(){
     unsigned returnReg = RI.getRARegister();
     unsigned stackSize = MF->getFrameInfo()->getStackSize();
 
-    if(OutStreamer.hasRawTextSupport())
-        OutStreamer.EmitRawText("\t.frame\t$" +
-                                StringRef(VEXInstPrinter::getRegisterName(stackReg)).lower() +
-                                "," + Twine(stackSize) + ", $" +
-                                StringRef(VEXInstPrinter::getRegisterName(returnReg)).lower());
+//    if(OutStreamer.hasRawTextSupport())
+//        OutStreamer.EmitRawText("\t.frame\t$" +
+//                                StringRef(VEXInstPrinter::getRegisterName(stackReg)).lower() +
+//                                "," + Twine(stackSize) + ", $" +
+//                                StringRef(VEXInstPrinter::getRegisterName(returnReg)).lower());
 }
 
 const char *VEXAsmPrinter::getCurrentABIString() const {
@@ -146,8 +146,8 @@ const char *VEXAsmPrinter::getCurrentABIString() const {
 //->		.ent	main                    # @main
 //	main:
 void VEXAsmPrinter::EmitFunctionEntryLabel(){
-    if(OutStreamer.hasRawTextSupport())
-        OutStreamer.EmitRawText("\t.ent\t" + Twine(CurrentFnSym->getName()));
+//    if(OutStreamer.hasRawTextSupport())
+//        OutStreamer.EmitRawText("\t.ent\t" + Twine(CurrentFnSym->getName()));
     OutStreamer.EmitLabel(CurrentFnSym);
 }
 
@@ -163,17 +163,17 @@ void VEXAsmPrinter::EmitFunctionBodyStart() {
     MCInstLowering.Initialize(&MF->getContext());
     emitFrameDirective();
 
-    if (OutStreamer.hasRawTextSupport()) {
-        SmallString<128> Str;
-        raw_svector_ostream OS(Str);
-        printSavedRegsBitmask(OS);
-        OutStreamer.EmitRawText(OS.str());
-        OutStreamer.EmitRawText(StringRef("\t.set\tnoreorder"));
-        OutStreamer.EmitRawText(StringRef("\t.set\tnomacro"));
-
-        if (VEXFI->getEmitNOAT())
-            OutStreamer.EmitRawText(StringRef("\t.set\tnoat"));
-    }
+//    if (OutStreamer.hasRawTextSupport()) {
+//        SmallString<128> Str;
+//        raw_svector_ostream OS(Str);
+//        printSavedRegsBitmask(OS);
+//        OutStreamer.EmitRawText(OS.str());
+//        OutStreamer.EmitRawText(StringRef("\t.set\tnoreorder"));
+//        OutStreamer.EmitRawText(StringRef("\t.set\tnomacro"));
+//
+//        if (VEXFI->getEmitNOAT())
+//            OutStreamer.EmitRawText(StringRef("\t.set\tnoat"));
+//    }
 }
 
 // FIXME : Should this be implemented
@@ -187,29 +187,28 @@ void VEXAsmPrinter::EmitFunctionBodyEnd() {
     // There are instruction for this macros, but they must
     // always be at the function end, and we can't emit and
     // break with BB logic.
-    if (OutStreamer.hasRawTextSupport()) {
-        if (VEXFI->getEmitNOAT())
-            OutStreamer.EmitRawText(StringRef("\t.set\tat"));
-        OutStreamer.EmitRawText(StringRef("\t.set\tmacro"));
-        OutStreamer.EmitRawText(StringRef("\t.set\treorder"));
-        OutStreamer.EmitRawText("\t.end\t" + Twine(CurrentFnSym->getName()));
-    }
+//    if (OutStreamer.hasRawTextSupport()) {
+//        if (VEXFI->getEmitNOAT())
+//            OutStreamer.EmitRawText(StringRef("\t.set\tat"));
+//        OutStreamer.EmitRawText(StringRef("\t.set\tmacro"));
+//        OutStreamer.EmitRawText(StringRef("\t.set\treorder"));
+//        OutStreamer.EmitRawText("\t.end\t" + Twine(CurrentFnSym->getName()));
+//    }
 }
 
 // FIXME : Is this correct?
-
 //  .section .mdebug.abi32
 //  .previous
 void VEXAsmPrinter::EmitStartOfAsmFile(Module &M){
 
-    // Tell the assembler which ABI we are using
-    if(OutStreamer.hasRawTextSupport())
-        OutStreamer.EmitRawText("\t.section .mdebug." +
-                                Twine(getCurrentABIString()));
-
-    // return to previous section
-    if(OutStreamer.hasRawTextSupport())
-        OutStreamer.EmitRawText(StringRef("\t.previous"));
+//    // Tell the assembler which ABI we are using
+//    if(OutStreamer.hasRawTextSupport())
+//        OutStreamer.EmitRawText("\t.section .mdebug." +
+//                                Twine(getCurrentABIString()));
+//
+//    // return to previous section
+//    if(OutStreamer.hasRawTextSupport())
+//        OutStreamer.EmitRawText(StringRef("\t.previous"));
 }
 
 // FIXME :  Is this algorithm correct?

@@ -83,4 +83,15 @@ bool VEXInstrInfo::expandPostRAPseudo(MachineBasicBlock::iterator MI) const {
     
 }
 
-
+void VEXInstrInfo::adjustStackPtr(VEXFunctionInfo *VEXFI, unsigned SP, uint64_t Amount,
+                                  MachineBasicBlock &MBB, MachineBasicBlock::iterator I) const{
+    
+    
+    DebugLoc DL = I != MBB.end() ? I->getDebugLoc() : DebugLoc();
+    
+    unsigned add = VEX::ADDi;
+    
+    // TODO : What happens when stacksize is greater than 16 bits? or even 8 bits?
+    BuildMI(MBB, I, DL, get(add), SP).addReg(SP).addImm(Amount);
+    
+}

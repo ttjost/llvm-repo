@@ -105,8 +105,66 @@ void VEXFrameLowering::emitPrologue(MachineFunction &MF) const {
     DEBUG(errs() << "EmitPrologue\n");
     
     MachineBasicBlock &MBB = MF.front();
-    MachineFrameInfo *MFI = MF.getFrameInfo();
     
+    assert(&MF.front() == &MBB && "Shrink-wrapping not yet supported");
+    
+    MachineBasicBlock::iterator MBBI = MBB.begin();
+    MachineFrameInfo *MFI = MF.getFrameInfo();
+    VEXFunctionInfo *VEXFI = MF.getInfo<VEXFunctionInfo>();
+
+    
+    const VEXInstrInfo &TII = *static_cast<const VEXInstrInfo *>(MF.getSubtarget().getInstrInfo());
+    const VEXRegisterInfo *RegInfo = static_cast<const VEXRegisterInfo *>(MF.getSubtarget().getRegisterInfo());
+    
+    DebugLoc DL = MBBI != MBB.end() ? MBBI->getDebugLoc() : DebugLoc();
+    
+    // Get the number of bytes to allocate from the FrameInfo.
+    uint64_t StackSize = MFI->getStackSize();
+    
+    // No need to allocate space on the stack
+    if (StackSize == 0 && !MFI->adjustsStack()) return;
+    
+    uint64_t NumBytes = 0;
+    
+    MachineModuleInfo &MMI = MF.getMMI();
+    const MCRegisterInfo *MRI = MMI.getContext().getRegisterInfo();
+    
+    // Adjust Stack
+    TII.adjustStackPtr(VEXFI, VEX::Reg1, -StackSize, MBB, MBBI);
+    
+    const std::vector<CalleeSavedInfo> &CSI = MFI->getCalleeSavedInfo();
+    
+    // emit ".cfi_def_cfa_offset StackSize"
+    // Is that really necessary???
+    unsigned CFIIndex = MMI.addFrameInst(MCCFIInstruction::createDefCfaOffset(nullptr, -StackSize));
+    BuildMI(MBB, MBBI, DL, TII.get(TargetOpcode::CFI_INSTRUCTION)).addCFIIndex(CFIIndex);
+    
+    if(CSI.size()){
+        // Find the instruction past the last instruction that saves
+        // a callee-saved register to the stack.
+        for (unsigned i = 0; i < CSI.size(); ++i){
+            ++MBBI;
+            
+            // Iterate over list of callee-saved registers and emit .cfi_offset directives
+            for (std::vector<CalleeSavedInfo>::const_iterator I = CSI.begin(),
+                 E = CSI.end(); I != E ; ++I){
+                uint64_t Offset = MFI->getObjectOffset(I->getFrameIdx());
+                unsigned Reg = I->getReg();
+                {
+                    // Reg is in VEXRegs
+                    unsigned CFIIndex = MMI.addFrameInst(MCCFIInstruction::createOffset(nullptr, MRI->getDwarfRegNum(Reg, 1), Offset));
+                    BuildMI(MBB, MBBI, DL, TII.get(TargetOpcode::CFI_INSTRUCTION)).addCFIIndex(CFIIndex);
+                }
+            }
+        }
+    }
+    
+//    if (hasFP(MF)){
+//        // Calculated required stack adjustment
+//        uint64_t FrameSize = StackSize - 2;
+//        NumBytes = FrameSize - VEXFI
+//        
+//    }
     
 }
 

@@ -1299,7 +1299,7 @@ struct LoopVectorize : public FunctionPass {
     // the act of vectorizing or partially unrolling a loop creates new loops
     // and can invalidate iterators across the loops.
     SmallVector<Loop *, 8> Worklist;
-
+    
     for (Loop *L : *LI)
       addInnerLoop(*L, Worklist);
 
@@ -2190,6 +2190,7 @@ void InnerLoopVectorizer::createEmptyLoop() {
   }
   Lp->addBasicBlockToLoop(VecBody, *LI);
 
+    
   // Use this IR builder to create the loop instructions (Phi, Br, Cmp)
   // inside the loop.
   Builder.SetInsertPoint(VecBody->getFirstNonPHI());
@@ -2438,7 +2439,15 @@ void InnerLoopVectorizer::createEmptyLoop() {
   Value *CmpN = CmpInst::Create(Instruction::ICmp, CmpInst::ICMP_EQ, IdxEnd,
                                 ResumeIndex, "cmp.n",
                                 MiddleBlock->getTerminator());
-
+  // NOP Operation added here
+  //  Value *nop1 = Builder.CreateXor(Step, Step);
+  //  Value *nop2 = Builder.CreateXor(Step, Step);
+  //  Value *CmpN_aux = CmpInst::Create(Instruction::ICmp, CmpInst::ICMP_EQ, nop1,
+  //                                    nop2, "nop.n", ExitBlock->getTerminator());
+  //  DEBUG(errs() << "Added 2 nop instructions\n\n");
+  //  BranchInst::Create(ExitBlock, ExitBlock, CmpN_aux, ExitBlock->getTerminator());
+  //  ExitBlock->getTerminator()->eraseFromParent();
+    
   BranchInst::Create(ExitBlock, ScalarPH, CmpN, MiddleBlock->getTerminator());
   // Remove the old terminator.
   MiddleBlock->getTerminator()->eraseFromParent();

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 3.4.0, 2015-05-14T14:15:06. -->
+<!-- Written by QtCreator 3.4.2, 2015-07-06T15:20:38. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -63,7 +63,7 @@
    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">{69b1f8e2-39bf-4435-9d55-e0dc074feb07}</value>
    <value type="int" key="ProjectExplorer.Target.ActiveBuildConfiguration">0</value>
    <value type="int" key="ProjectExplorer.Target.ActiveDeployConfiguration">0</value>
-   <value type="int" key="ProjectExplorer.Target.ActiveRunConfiguration">42</value>
+   <value type="int" key="ProjectExplorer.Target.ActiveRunConfiguration">11</value>
    <valuemap type="QVariantMap" key="ProjectExplorer.Target.BuildConfiguration.0">
     <value type="bool" key="CMakeProjectManager.CMakeBuildConfiguration.UseNinja">false</value>
     <value type="QString" key="ProjectExplorer.BuildConfiguration.BuildDirectory">/home/jost/llvm_build/build</value>
@@ -2034,7 +2034,7 @@
      <value type="int">14</value>
     </valuelist>
     <value type="QString" key="CMakeProjectManager.CMakeRunConfiguation.Title">clang</value>
-    <value type="QString" key="CMakeProjectManager.CMakeRunConfiguration.Arguments">-O3 -march=skx -Rpass-analysis=loop-vectorize -mllvm -debug-only=loop-vectorize -Rpass=loop-vectorize /home/jost/llvm_build/benchmarks/vecsum.c -S -o /home/jost/llvm_build/benchmarks/vecsum.s</value>
+    <value type="QString" key="CMakeProjectManager.CMakeRunConfiguration.Arguments"></value>
     <value type="bool" key="CMakeProjectManager.CMakeRunConfiguration.UseTerminal">false</value>
     <value type="QString" key="CMakeProjectManager.CMakeRunConfiguration.UserWorkingDirectory"></value>
     <value type="int" key="PE.EnvironmentAspect.Base">2</value>
