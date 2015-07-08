@@ -64,24 +64,27 @@ void VEXInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
     
 }
 
-bool VEXInstrInfo::expandPostRAPseudo(MachineBasicBlock::iterator MI) const {
+//bool VEXInstrInfo::expandPostRAPseudo(MachineBasicBlock::iterator MI) const {
     
-    MachineBasicBlock &MBB = *MI->getParent();
-    DEBUG(errs() << "\n\n" << MI->getDesc().getOpcode() <<"\n\n");
+//    MachineBasicBlock &MBB = *MI->getParent();
+//    MachineFunction &MF = *MBB.getParent();
+//    DEBUG(errs() << "\n\n" << MI->getDesc().getOpcode() <<"\n\n");
     
-    switch(MI->getDesc().getOpcode()) {
-        default:
-            return false;
-        case VEX::PSEUDO_RET:
-            DEBUG(errs() << "\n\nReplacing PSEUDO_RET\n\n");
-            BuildMI(MBB, MI, MI->getDebugLoc(), get(VEX::RET)).addReg(VEX::Lr);
-            break;
-    }
+//    switch(MI->getDesc().getOpcode()) {
+//        default:
+//            return false;
+//        case VEX::PSEUDO_RET:
+//            DEBUG(errs() << "\n\nReplacing PSEUDO_RET\n\n");
+//            //BuildMI(MBB, MI, MI->getDebugLoc(), get(VEX::RET)).addReg(VEX::Lr);
+//            //BuildMI(MBB, MI, MI->getDebugLoc(), get(VEX::RET)).addImm(MF.getFrameInfo()->getStackSize()).addReg(VEX::Lr);
+//            break;
+//    }
+
     
-    MBB.erase(MI);
-    return true;
+//    MBB.erase(MI);
+//    return true;
     
-}
+//}
 
 void VEXInstrInfo::adjustStackPtr(VEXFunctionInfo *VEXFI, unsigned SP, uint64_t Amount,
                                   MachineBasicBlock &MBB, MachineBasicBlock::iterator I) const{

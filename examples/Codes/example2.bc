@@ -4,33 +4,34 @@ target triple = "mips-unknown-linux-gnu"
 
 ; Function Attrs: nounwind
 define i32 @main() #0 {
-  %1 = alloca i32, align 4
+entry:
+  %retval = alloca i32, align 4
   %a = alloca i32, align 4
   %b = alloca i32, align 4
   %c = alloca i32, align 4
   %d = alloca i32, align 4
-  store i32 0, i32* %1
+  store i32 0, i32* %retval
   store i32 1, i32* %a, align 4
-  %2 = load i32* %a, align 4
-  %3 = add nsw i32 %2, 100
-  store i32 %3, i32* %b, align 4
-  %4 = load i32* %b, align 4
-  %5 = load i32* %a, align 4
-  %6 = sub nsw i32 %4, %5
-  %7 = add nsw i32 %6, 1000
-  store i32 %7, i32* %c, align 4
-  %8 = load i32* %a, align 4
-  %9 = load i32* %b, align 4
-  %10 = add nsw i32 %8, %9
-  %11 = load i32* %c, align 4
-  %12 = add nsw i32 %10, %11
-  store i32 %12, i32* %d, align 4
-  %13 = load i32* %d, align 4
-  ret i32 %13
+  %0 = load i32, i32* %a, align 4
+  %add = add nsw i32 %0, 100
+  store i32 %add, i32* %b, align 4
+  %1 = load i32, i32* %b, align 4
+  %2 = load i32, i32* %a, align 4
+  %sub = sub nsw i32 %1, %2
+  %add1 = add nsw i32 %sub, 1000
+  store i32 %add1, i32* %c, align 4
+  %3 = load i32, i32* %a, align 4
+  %4 = load i32, i32* %b, align 4
+  %add2 = add nsw i32 %3, %4
+  %5 = load i32, i32* %c, align 4
+  %add3 = add nsw i32 %add2, %5
+  store i32 %add3, i32* %d, align 4
+  %6 = load i32, i32* %d, align 4
+  ret i32 %6
 }
 
-attributes #0 = { nounwind "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "stack-protector-buffer-size"="8" "unsafe-fp-math"="false" "use-soft-float"="false" }
+attributes #0 = { nounwind "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="mips32r2" "unsafe-fp-math"="false" "use-soft-float"="false" }
 
 !llvm.ident = !{!0}
 
-!0 = metadata !{metadata !"Apple LLVM version 6.1.0 (clang-602.0.53) (based on LLVM 3.6.0svn)"}
+!0 = !{!"clang version 3.7.0 (trunk 234885)"}

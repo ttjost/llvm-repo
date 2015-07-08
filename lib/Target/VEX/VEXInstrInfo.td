@@ -21,7 +21,7 @@ include "VEXInstrFormats.td"
 def imm32   : PatLeaf<(imm), [{ return isInt<32>(N->getSExtValue()); }]>;
 def imm32Op : Operand<i32>;
 
-def immZExt5 : PatLeaf<(imm), [{
+def immZExt5 : PatLeaf<(imm32), [{
     return N->getZExtValue() == ((N->getZExtValue()) & 0x1f) ;
 }]>;
 
@@ -96,9 +96,9 @@ multiclass SHIFTInstr<string OpcStr, bits<8> Opcode, SDNode OpNode, InstrItinCla
                      !strconcat(OpcStr, " $dst = $s1, $s2"),
                      [(set GPRegs:$dst, (OpNode GPRegs:$s1, GPRegs:$s2))], Itin, isCommR>;
   def i  : SHIFT_i <Opcode,
-                   (outs GPRegs:$dst), (ins GPRegs:$s1, imm5Op:$s2),
+                   (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                    !strconcat(OpcStr, " $dst = $s1, $s2"),
-                   [(set GPRegs:$dst, (OpNode GPRegs:$s1, immZExt5:$s2))], Itin, isCommI>;
+                   [(set GPRegs:$dst, (OpNode GPRegs:$s1, i32:$s2))], Itin, isCommI>;
 }
 
 /// Type I
@@ -300,20 +300,20 @@ def SH4ADDi      : ArithLogic_i<0b01101110,
                                                      
 // SHL Instruction 
 //defm SHL    : ArithLogic<"shl", 0b01101111, shl, IIAlu>;
-//def SHLr      : SHIFT_r<0b01101111,
-//                        (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
-//                        "shl",
-//                       [(set GPRegs:$dst, (shl GPRegs:$s1, GPRegs:$s2))], IIAlu, 0>;
-//def SHLi      : SHIFT_i<0b01101111,
-//                        (outs GPRegs:$dst), (ins GPRegs:$s1, imm5Op:$s2),
-//                        "shl",
-//                        [(set GPRegs:$dst, (shl GPRegs:$s1, immZExt5:$s2))], IIAlu, 0>;
+def SHLr      : SHIFT_r<0b01101111,
+                        (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
+                        "shl",
+                       [(set GPRegs:$dst, (shl GPRegs:$s1, GPRegs:$s2))], IIAlu, 0>;
+def SHLi      : SHIFT_i<0b01101111,
+                        (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
+                        "shl",
+                        [(set GPRegs:$dst, (shl GPRegs:$s1, i32:$s2))], IIAlu, 0>;
 
 // SHR Instruction
-//defm SHR    : SHIFTInstr<"shr", 0b00011000, sra, IIAlu>;
+defm SHR    : SHIFTInstr<"shr", 0b00011000, sra, IIAlu>;
 
 // SHRU Instruction
-//defm SHRU   : SHIFTInstr<"shru", 0b00011001, srl, IIAlu>;
+defm SHRU   : SHIFTInstr<"shru", 0b00011001, srl, IIAlu>;
 
 // XOR Instruction
 defm XOR    : ArithLogicInstr<"xor", 0b00011111, xor, IIAlu, 1, 1>;
@@ -331,6 +331,7 @@ def : Pat<(i32 imm32:$in),
 def : Pat<(i32 imm:$imm),
 (MOVi imm:$imm)>;
 
+//def : Pat<(i32 (shl GPRegs:$s1, immZExt5:$s2)),(i32 (SHLi GPRegs:$s1, immZExt5:$s2))>;
 
 //===----------------------------------------------------------------------===//
 //                      Multiplication instructions

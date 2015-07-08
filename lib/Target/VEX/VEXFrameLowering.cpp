@@ -129,7 +129,7 @@ void VEXFrameLowering::emitPrologue(MachineFunction &MF) const {
     MachineModuleInfo &MMI = MF.getMMI();
     const MCRegisterInfo *MRI = MMI.getContext().getRegisterInfo();
     
-    // Adjust Stack
+//    // Adjust Stack
     TII.adjustStackPtr(VEXFI, VEX::Reg1, -StackSize, MBB, MBBI);
     
     const std::vector<CalleeSavedInfo> &CSI = MFI->getCalleeSavedInfo();
@@ -163,7 +163,7 @@ void VEXFrameLowering::emitPrologue(MachineFunction &MF) const {
 //        // Calculated required stack adjustment
 //        uint64_t FrameSize = StackSize - 2;
 //        NumBytes = FrameSize - VEXFI
-//        
+
 //    }
     
 }

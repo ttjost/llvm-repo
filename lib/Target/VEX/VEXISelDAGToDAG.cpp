@@ -108,7 +108,7 @@ SDNode * VEXDAGToDAGISel::Select(SDNode *Node){
     DEBUG(errs() << "Selecting New node\n");
 
     // Dump information about the Node being selected
-    //DEBUG(errs() << "Selecting: "; Node->dump(CurDAG); errs() << "\n");
+    DEBUG(errs() << "Selecting: "; Node->dump(CurDAG); errs() << "\n");
 
     // If we have a custom node, we already have selected!
     if(Node->isMachineOpcode()){
