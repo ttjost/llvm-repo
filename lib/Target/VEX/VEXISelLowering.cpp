@@ -63,6 +63,10 @@ const char *VEXTargetLowering::getTargetNodeName(unsigned Opcode) const {
         case VEXISD::WRAPPER:   return "VEXISD::WRAPPER";
             
         case VEXISD::PSEUDO_RET: return "VEXISD::PSEUDO_RET";
+
+        case VEXISD::BR:        return "VEXISD::BR";
+
+        case VEXISD::BRF:        return "VEXISD::BRF";
         
         default:                return NULL;
     }
@@ -91,18 +95,27 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     
 }
 
-//SDValue LowerOperation(SDValue Op, SelectionDAG &DAG) const {
-//    
-//    switch (Op.getOpcode()) {
-//        case :
-//            <#statements#>
+SDValue VEXTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) const {
+
+    DEBUG(errs() << "Lower Operation\n\n\n");
+    switch (Op.getOpcode()) {
+        case ISD::BRCOND:
+        case ISD::BR:
+        case ISD::BR_CC:
+        case ISD::BRIND:
+            DEBUG(errs() << "BRCOND\n\n\n");
+            break;
+
+//        case ISD::BR:
+//                DEBUG(errs() << "BR\n\n\n");
 //            break;
-//            
-//        default:
-//            break;
-//    }
-//    
-//}
+        default:
+            break;
+    }
+
+    return Op;
+
+}
 
 //===----------------------------------------------------------------------===//
 //  Misc Lower Operation implementation

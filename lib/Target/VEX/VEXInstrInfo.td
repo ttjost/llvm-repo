@@ -42,13 +42,27 @@ def MEM : Operand<iPTR> {
   let ParserMatchClass = VEXMEMriAsmOperand;
 }
 
+def brtarget : Operand<OtherVT> {
+  let EncoderMethod = "getBranchTargetOpValue";
+  let DecoderMethod = "DecodeBranchTarget";
+}
 
 //===----------------------------------------------------------------------===//
 // VEX Profiles and Nodes
 //===----------------------------------------------------------------------===//
 
+
+def SDTVEXBranchCond : SDTypeProfile <0, 2, [SDTCisInt<0>, SDTCisVT<1, OtherVT> ]>;
+
+
 def VEXPseudoRet : SDNode<"VEXISD::PSEUDO_RET", SDTNone,
                    [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
+
+def VEXBr       : SDNode<"VEXISD::BR", SDTVEXBranchCond,
+                    [SDNPHasChain, SDNPOptInGlue]>;
+
+def VEXBrf       : SDNode<"VEXISD::BRF", SDTVEXBranchCond,
+                    [SDNPHasChain, SDNPOptInGlue]>;
                    
 def VEXMax   : SDNode<"VEXISD::MAX", SDTIntBinOp>;
 def VEXMaxu  : SDNode<"VEXISD::MAXU", SDTIntBinOp>;
@@ -153,10 +167,19 @@ class ReturnInstr<string OpcStr, bits<8> OpVal, InstrItinClass Itin>
     let isReturn = 1;
 }
 
-class BranchInstr<string OpcStr, bits<8> OpVal, PatFrag br_op, InstrItinClass Itin>
-: InstVEX<(outs), (ins BrRegs:$s1, imm32Op:$offset),
+class BranchInstr<string OpcStr, bits<8> OpVal, SDNode OpNode, InstrItinClass Itin>
+: InstVEX<(outs), (ins BrRegs:$s1, brtarget:$offset),
 !strconcat(OpcStr, " $s1, $offset"),
-[br_op BrRegs:$s1, imm32:$offset], Itin>{
+[(OpNode i1:$s1, bb:$offset)], Itin>{
+    let isTerminator = 1;
+    let isBarrier = 1;
+    let isBranch = 1;
+}
+
+class JumpInstr<string OpcStr, bits<8> OpVal, SDNode OpNode, InstrItinClass Itin>
+: InstVEX<(outs), (ins brtarget:$offset),
+!strconcat(OpcStr, " $offset"),
+[(OpNode bb:$offset)], Itin>{
     let isTerminator = 1;
     let isBarrier = 1;
     let isBranch = 1;
@@ -185,7 +208,7 @@ class BranchInstr<string OpcStr, bits<8> OpVal, PatFrag br_op, InstrItinClass It
 //                      PSEUDO Instructions
 // These instructions will not generate code.
 // They are used to ease the process of converting SelectionDAG Nodes
-// real target instructions
+// to real target instructions
 def PSEUDO_RET : Pseudo<(outs), (ins) , [(VEXPseudoRet)]>{
     let isTerminator = 1;
     let isBarrier = 1;
@@ -474,8 +497,8 @@ def CMPNEi    : CMPInstr_i<"cmpne", 0b01001001, setne, IIAlu>;
 //                      Memory instructions
 //===----------------------------------------------------------------------===//
 
-def LDW       : LoadInstr<"ldw", 0b00010000, load_a, IILoad>;
-def STW       : StoreInstr<"stw", 0b00010101, store_a, IIStore>;
+def LDW       : LoadInstr<"ldw", 0b00010000, load, IILoad>;
+def STW       : StoreInstr<"stw", 0b00010101, store, IIStore>;
 
 
 //===----------------------------------------------------------------------===//
@@ -488,8 +511,10 @@ def RET       : ReturnInstr<"return", 0b00100110, IIAlu>;
 //                      Branch instructions
 //===----------------------------------------------------------------------===//
 
-def BR        : BranchInstr<"br", 0b00000000, IIAlu>;
-def BRF       : BranchInstr<"brf", 0b00000000, IIAlu>;
+def BR        : BranchInstr<"br", 0b00000000, VEXBr, IIAlu>;
+def BRF       : BranchInstr<"brf", 0b00000000, VEXBrf, IIAlu>;
+
+def GOTO      : JumpInstr<"goto", 0b00000000, br, IIAlu>;
 
 //
 // JMPL Instruction.

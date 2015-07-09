@@ -41,6 +41,9 @@ namespace llvm {
             MAXU,
             MIN,
             MINU,
+
+            BR,
+            BRF,
             
             WRAPPER,
             DYNALLOC,
@@ -92,7 +95,7 @@ private:
                           unsigned Flag) const;
 #endif
     
-    //SDValue LowerOperation(SDValue Op, SelectionDAG &DAG) const override;
+    SDValue LowerOperation(SDValue Op, SelectionDAG &DAG) const override;
     
     // Lower Operand specifics
     SDValue lowerGlobalAddress(SDValue Op, SelectionDAG &DAG) const;
