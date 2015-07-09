@@ -46,7 +46,7 @@ namespace llvm{
                          unsigned DestReg, unsigned SrcReg,
                          bool KillSrc) const override;
         
-//        bool expandPostRAPseudo (MachineBasicBlock::iterator MI) const override;
+        bool expandPostRAPseudo (MachineBasicBlock::iterator MI) const override;
         
         // Adjust SP by Amount bytes
         void adjustStackPtr(VEXFunctionInfo *VEXFI, unsigned SP, uint64_t Amount,

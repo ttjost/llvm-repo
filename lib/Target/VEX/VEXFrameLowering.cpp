@@ -171,22 +171,20 @@ void VEXFrameLowering::emitPrologue(MachineFunction &MF) const {
 void VEXFrameLowering::emitEpilogue(MachineFunction &MF,
                                        MachineBasicBlock &MBB) const {
     DEBUG(errs() << "EmitEpilogue\n");
-    MachineBasicBlock::iterator MBBI = MBB.getLastNonDebugInstr();
-    
-    MachineFrameInfo *MFI = MF.getFrameInfo();
-    const VEXInstrInfo &TII = *static_cast<const VEXInstrInfo *>(MF.getSubtarget().getInstrInfo());
-    
-    DebugLoc dl = MBBI->getDebugLoc();
-    uint64_t StackSize = MFI->getStackSize();
-    
-    //if(!StackSize){
-        BuildMI(MBB, MBBI, dl, TII.get(VEX::RET)).addReg(VEX::Reg1).addReg(VEX::Reg1).addImm(0).addReg(VEX::Lr);
-        //MachineInstrBuilder MIB = BuildMI(MBB, MBBI, dl, TII.get(VEX::RET)).addReg(VEX::Reg1);
-        //MIB->addOperand(VEX::Reg1);
-    MBB.erase(MBBI);
-    //}else{
-     //   BuildMI(MBB, MBBI, dl)
-    //}
+//    MachineBasicBlock::iterator MBBI = MBB.getLastNonDebugInstr();
+//    
+//    MachineFrameInfo *MFI = MF.getFrameInfo();
+//    const VEXInstrInfo &TII = *static_cast<const VEXInstrInfo *>(MF.getSubtarget().getInstrInfo());
+//    
+//    DebugLoc dl = MBBI->getDebugLoc();
+//    uint64_t StackSize = MFI->getStackSize();
+//    
+////    if(StackSize){
+////        BuildMI(MBB, MBBI, dl, TII.get(VEX::RET)).addReg(VEX::Reg1).addReg(VEX::Reg1).addImm(MFI->getStackSize()).addReg(VEX::Lr);
+////    }else{
+////        BuildMI(MBB, MBBI, dl, TII.get(VEX::RET)).addReg(VEX::Reg1).addReg(VEX::Reg1).addImm(0).addReg(VEX::Lr);
+////    }
+////    MBB.erase(MBBI);
     
 }
 

@@ -153,6 +153,15 @@ class ReturnInstr<string OpcStr, bits<8> OpVal, InstrItinClass Itin>
     let isReturn = 1;
 }
 
+class BranchInstr<string OpcStr, bits<8> OpVal, PatFrag br_op, InstrItinClass Itin>
+: InstVEX<(outs), (ins BrRegs:$s1, imm32Op:$offset),
+!strconcat(OpcStr, " $s1, $offset"),
+[br_op BrRegs:$s1, imm32:$offset], Itin>{
+    let isTerminator = 1;
+    let isBarrier = 1;
+    let isBranch = 1;
+}
+
 //class SetCC_R<bits<8> op, string instr_asm, PatFrag cond_op,
 //              RegisterClass RC>:
 //  TYPE2<op, (outs GPROut:$ra), (ins RC:$rb, RC:$rc),
@@ -479,10 +488,8 @@ def RET       : ReturnInstr<"return", 0b00100110, IIAlu>;
 //                      Branch instructions
 //===----------------------------------------------------------------------===//
 
-
-
-
-
+def BR        : BranchInstr<"br", 0b00000000, IIAlu>;
+def BRF       : BranchInstr<"brf", 0b00000000, IIAlu>;
 
 //
 // JMPL Instruction.
