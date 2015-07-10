@@ -97,6 +97,10 @@ private:
     
     SDValue LowerOperation(SDValue Op, SelectionDAG &DAG) const override;
     
+    
+    // Custom Lowering of Instructions
+    SDValue LowerBR_CC(SDValue Op, SelectionDAG &DAG) const;
+    
     // Lower Operand specifics
     SDValue lowerGlobalAddress(SDValue Op, SelectionDAG &DAG) const;
     SDValue lowerJumpTable(SDValue Op, SelectionDAG &DAG) const;

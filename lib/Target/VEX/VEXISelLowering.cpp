@@ -90,8 +90,27 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     
     //setOperationAction(<#unsigned int Op#>, <#llvm::MVT VT#>, <#llvm::TargetLoweringBase::LegalizeAction Action#>)
     
+    //setOperationAction(ISD::BR_CC, MVT::i32, Custom);
+    setOperationAction(ISD::BR_CC, MVT::i32, Promote);
+    
     DEBUG(errs() << "1 : \n");
     DEBUG(errs() << "2 : \n");
+    
+}
+
+SDValue VEXTargetLowering::LowerBR_CC(SDValue Op, SelectionDAG &DAG) const {
+    
+    SDValue Chain = Op.getOperand(0);
+    
+    ISD::CondCode CC = cast<CondCodeSDNode>(Op.getOperand(1))->get();
+    
+    SDValue LHS = Op.getOperand(2);
+    SDValue RHS = Op.getOperand(3);
+    SDValue Dst = Op.getOperand(4);
+    
+    SDValue TargetCC;
+    
+    return TargetCC;
     
 }
 
