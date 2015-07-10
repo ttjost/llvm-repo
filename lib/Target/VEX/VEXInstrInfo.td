@@ -127,14 +127,51 @@ multiclass MOVInstr<string OpcStr, bits<8> Opcode, RegisterClass DstOp, Register
                    [(set DstOp:$dst, imm32:$s1)], Itin>;
 }
 
-class CMPInstr_r<string OpcStr, bits<8> OpVal, PatFrag cond_op, InstrItinClass Itin>
+//multiclass CMPInstr<string OpcStr, bits<8> OpVal, PatFrag cond_op, InstrItinClass Itin> {
+//  def rr  : CMP_regr <Opcode,
+//                     (outs DstOp:$dst), (ins SrcOp:$s1),
+//                     !strconcat(OpcStr, " $dst = $s1"),
+//                     [(set DstOp:$dst, SrcOp:$s1)], Itin>;
+//  def ri  : CMP_regi <Opcode,
+//                   (outs DstOp:$dst), (ins imm32Op:$s1),
+//                   !strconcat(OpcStr, " $dst = $s1"),
+//                   [(set DstOp:$dst, imm32:$s1)], Itin>;
+//
+//  def br  : CMP_bregr <Opcode,
+//                     (outs DstOp:$dst), (ins SrcOp:$s1),
+//                     !strconcat(OpcStr, " $dst = $s1"),
+//                     [(set DstOp:$dst, SrcOp:$s1)], Itin>;
+//  def bi  : CMP_bregi <Opcode,
+//                   (outs DstOp:$dst), (ins imm32Op:$s1),
+//                   !strconcat(OpcStr, " $dst = $s1"),
+//                   [(set DstOp:$dst, imm32:$s1)], Itin>;
+//    {
+//    let isCompare = 1;
+//    }
+//}
+
+class CMPInstr_regr<string OpcStr, bits<8> OpVal, PatFrag cond_op, InstrItinClass Itin>
     : InstVEX<(outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                 !strconcat(OpcStr, " $dst = $s1, $s2"),
                 [(set GPRegs:$dst, (cond_op GPRegs:$s1, GPRegs:$s2))], Itin>{
     let isCompare = 1;
 }
 
-class CMPInstr_i<string OpcStr, bits<8> OpVal, PatFrag cond_op, InstrItinClass Itin>
+class CMPInstr_regi<string OpcStr, bits<8> OpVal, PatFrag cond_op, InstrItinClass Itin>
+   : InstVEX<(outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
+                !strconcat(OpcStr, " $dst = $s1, $s2"),
+                [(set i1:$dst, (cond_op GPRegs:$s1, imm32:$s2))], Itin>{
+    let isCompare = 1;
+}
+
+class CMPInstr_bregr<string OpcStr, bits<8> OpVal, PatFrag cond_op, InstrItinClass Itin>
+    : InstVEX<(outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
+                !strconcat(OpcStr, " $dst = $s1, $s2"),
+                [(set GPRegs:$dst, (cond_op GPRegs:$s1, GPRegs:$s2))], Itin>{
+    let isCompare = 1;
+}
+
+class CMPInstr_bregi<string OpcStr, bits<8> OpVal, PatFrag cond_op, InstrItinClass Itin>
    : InstVEX<(outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                 !strconcat(OpcStr, " $dst = $s1, $s2"),
                 [(set GPRegs:$dst, (cond_op GPRegs:$s1, imm32:$s2))], Itin>{
@@ -168,9 +205,9 @@ class ReturnInstr<string OpcStr, bits<8> OpVal, InstrItinClass Itin>
 }
 
 class BranchInstr<string OpcStr, bits<8> OpVal, SDNode OpNode, InstrItinClass Itin>
-: InstVEX<(outs), (ins BrRegs:$s1, brtarget:$offset),
+: InstVEX<(outs), (ins GPRegs:$s1, brtarget:$offset),
 !strconcat(OpcStr, " $s1, $offset"),
-[(OpNode i1:$s1, bb:$offset)], Itin>{
+[(OpNode GPRegs:$s1, bb:$offset)], Itin>{
     let isTerminator = 1;
     let isBarrier = 1;
     let isBranch = 1;
@@ -462,43 +499,76 @@ def MPYHSi      : ArithLogic_i<0b00001010,
 //===----------------------------------------------------------------------===//
 //                      Compare instructions
 //===----------------------------------------------------------------------===//
-                           
-def CMPEQr    : CMPInstr_r<"cmpeq", 0b01000000, seteq, IIAlu>;
-def CMPEQi    : CMPInstr_i<"cmpeq", 0b01000000, seteq, IIAlu>;
 
-def CMPGEr    : CMPInstr_r<"cmpge", 0b01000001, setge, IIAlu>;
-def CMPGEi    : CMPInstr_i<"cmpge", 0b01000001, setge, IIAlu>;
+// For Branch Registers
+def CMPEQr    : CMPInstr_bregr<"cmpeq", 0b01000000, seteq, IIAlu>;
+def CMPEQi    : CMPInstr_bregi<"cmpeq", 0b01000000, seteq, IIAlu>;
 
-def CMPGEUr   : CMPInstr_r<"cmpgeu", 0b01000010, setuge, IIAlu>;
-def CMPGEUi   : CMPInstr_i<"cmpgeu", 0b01000010, setuge, IIAlu>;
+def CMPGEr    : CMPInstr_bregr<"cmpge", 0b01000001, setge, IIAlu>;
+def CMPGEi    : CMPInstr_bregi<"cmpge", 0b01000001, setge, IIAlu>;
 
-def CMPGTr    : CMPInstr_r<"cmpgt", 0b01000011, setgt, IIAlu>;
-def CMPGTi    : CMPInstr_i<"cmpgt", 0b01000011, setgt, IIAlu>;
+def CMPGEUr   : CMPInstr_bregr<"cmpgeu", 0b01000010, setuge, IIAlu>;
+def CMPGEUi   : CMPInstr_bregi<"cmpgeu", 0b01000010, setuge, IIAlu>;
 
-def CMPGTUr   : CMPInstr_r<"cmpgtu", 0b01000100, setugt, IIAlu>;
-def CMPGTUi   : CMPInstr_i<"cmpgtu", 0b01000100, setugt, IIAlu>;
+def CMPGTr    : CMPInstr_bregr<"cmpgt", 0b01000011, setgt, IIAlu>;
+def CMPGTi    : CMPInstr_bregi<"cmpgt", 0b01000011, setgt, IIAlu>;
 
-def CMPLEr    : CMPInstr_r<"cmple", 0b01000101, setle, IIAlu>;
-def CMPLEi    : CMPInstr_i<"cmple", 0b01000101, setle, IIAlu>;
+def CMPGTUr   : CMPInstr_bregr<"cmpgtu", 0b01000100, setugt, IIAlu>;
+def CMPGTUi   : CMPInstr_bregi<"cmpgtu", 0b01000100, setugt, IIAlu>;
 
-def CMPLEUr   : CMPInstr_r<"cmpleu", 0b01000110, setule, IIAlu>;
-def CMPLEUi   : CMPInstr_i<"cmpleu", 0b01000110, setule, IIAlu>;
+def CMPLEr    : CMPInstr_bregr<"cmple", 0b01000101, setle, IIAlu>;
+def CMPLEi    : CMPInstr_bregi<"cmple", 0b01000101, setle, IIAlu>;
 
-def CMPLTr    : CMPInstr_r<"cmplt", 0b01000111, setlt, IIAlu>;
-def CMPLTi    : CMPInstr_i<"cmplt", 0b01000111, setlt, IIAlu>;
+def CMPLEUr   : CMPInstr_bregr<"cmpleu", 0b01000110, setule, IIAlu>;
+def CMPLEUi   : CMPInstr_bregi<"cmpleu", 0b01000110, setule, IIAlu>;
 
-def CMPLTUr   : CMPInstr_r<"cmpltu", 0b01001000, setult, IIAlu>;
-def CMPLTUi   : CMPInstr_i<"cmpltu", 0b01001000, setult, IIAlu>;
+def CMPLTr    : CMPInstr_bregr<"cmplt", 0b01000111, setlt, IIAlu>;
+def CMPLTi    : CMPInstr_bregi<"cmplt", 0b01000111, setlt, IIAlu>;
 
-def CMPNEr    : CMPInstr_r<"cmpne", 0b01001001, setne, IIAlu>;
-def CMPNEi    : CMPInstr_i<"cmpne", 0b01001001, setne, IIAlu>;
+def CMPLTUr   : CMPInstr_bregr<"cmpltu", 0b01001000, setult, IIAlu>;
+def CMPLTUi   : CMPInstr_bregi<"cmpltu", 0b01001000, setult, IIAlu>;
+
+def CMPNEr    : CMPInstr_bregr<"cmpne", 0b01001001, setne, IIAlu>;
+def CMPNEi    : CMPInstr_bregi<"cmpne", 0b01001001, setne, IIAlu>;
+
+// For General Purpose Registers
+//def CMPEQr    : CMPInstr_regr<"cmpeq", 0b01000000, seteq, IIAlu>;
+//def CMPEQi    : CMPInstr_regi<"cmpeq", 0b01000000, seteq, IIAlu>;
+//
+//def CMPGEr    : CMPInstr_regr<"cmpge", 0b01000001, setge, IIAlu>;
+//def CMPGEi    : CMPInstr_regi<"cmpge", 0b01000001, setge, IIAlu>;
+//
+//def CMPGEUr   : CMPInstr_regr<"cmpgeu", 0b01000010, setuge, IIAlu>;
+//def CMPGEUi   : CMPInstr_regi<"cmpgeu", 0b01000010, setuge, IIAlu>;
+//
+//def CMPGTr    : CMPInstr_regr<"cmpgt", 0b01000011, setgt, IIAlu>;
+//def CMPGTi    : CMPInstr_regi<"cmpgt", 0b01000011, setgt, IIAlu>;
+//
+//def CMPGTUr   : CMPInstr_regr<"cmpgtu", 0b01000100, setugt, IIAlu>;
+//def CMPGTUi   : CMPInstr_regi<"cmpgtu", 0b01000100, setugt, IIAlu>;
+//
+//def CMPLEr    : CMPInstr_regr<"cmple", 0b01000101, setle, IIAlu>;
+//def CMPLEi    : CMPInstr_regi<"cmple", 0b01000101, setle, IIAlu>;
+//
+//def CMPLEUr   : CMPInstr_regr<"cmpleu", 0b01000110, setule, IIAlu>;
+//def CMPLEUi   : CMPInstr_regi<"cmpleu", 0b01000110, setule, IIAlu>;
+//
+//def CMPLTr    : CMPInstr_regr<"cmplt", 0b01000111, setlt, IIAlu>;
+//def CMPLTi    : CMPInstr_regi<"cmplt", 0b01000111, setlt, IIAlu>;
+//
+//def CMPLTUr   : CMPInstr_regr<"cmpltu", 0b01001000, setult, IIAlu>;
+//def CMPLTUi   : CMPInstr_regi<"cmpltu", 0b01001000, setult, IIAlu>;
+//
+//def CMPNEr    : CMPInstr_regr<"cmpne", 0b01001001, setne, IIAlu>;
+//def CMPNEi    : CMPInstr_regi<"cmpne", 0b01001001, setne, IIAlu>;
+
 
 //===----------------------------------------------------------------------===//
 //                      Memory instructions
 //===----------------------------------------------------------------------===//
 
-def LDW       : LoadInstr<"ldw", 0b00010000, load, IILoad>;
-def STW       : StoreInstr<"stw", 0b00010101, store, IIStore>;
+def LDW       : LoadInstr<"ldw", 0b00010000, load_a, IILoad>;
+def STW       : StoreInstr<"stw", 0b00010101, store_a, IIStore>;
 
 
 //===----------------------------------------------------------------------===//
@@ -511,8 +581,8 @@ def RET       : ReturnInstr<"return", 0b00100110, IIAlu>;
 //                      Branch instructions
 //===----------------------------------------------------------------------===//
 
-def BR        : BranchInstr<"br", 0b00000000, VEXBr, IIAlu>;
-def BRF       : BranchInstr<"brf", 0b00000000, VEXBrf, IIAlu>;
+def BR        : BranchInstr<"br", 0b00000000, brcond, IIAlu>;
+//def BRF       : BranchInstr<"brf", 0b00000000, brcond, IIAlu>;
 
 def GOTO      : JumpInstr<"goto", 0b00000000, br, IIAlu>;
 

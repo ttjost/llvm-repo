@@ -56,6 +56,11 @@ VEXRegisterInfo::getCallPreservedMask(CallingConv::ID) const {
     return CSR_RegMask;
 }
 
+const TargetRegisterClass *VEXRegisterInfo::getPointerRegClass(const MachineFunction &MF,
+                                              unsigned Kind) const {
+    return &VEX::GPRegsRegClass;
+}
+
 // pure virtual method
 // @getReserved Regs
 BitVector VEXRegisterInfo::

@@ -48,6 +48,9 @@ public:
                              int SPAdj, unsigned FIOperandNum,
                              RegScavenger *RS = nullptr) const override;
 
+    const TargetRegisterClass *getPointerRegClass(const MachineFunction &MF,
+                                                  unsigned Kind) const override;
+
     // Debug information queries
     unsigned getFrameRegister(const MachineFunction &MF) const;
 

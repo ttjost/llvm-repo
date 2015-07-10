@@ -87,11 +87,10 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     // must, computeRegisterProperties - Once all of the register classes are
     //  added, this allows us to compute derived properties we expose.
     computeRegisterProperties(STI.getRegisterInfo());
-    
-    //setOperationAction(<#unsigned int Op#>, <#llvm::MVT VT#>, <#llvm::TargetLoweringBase::LegalizeAction Action#>)
-    
+
     //setOperationAction(ISD::BR_CC, MVT::i32, Custom);
     setOperationAction(ISD::BR_CC, MVT::i32, Promote);
+    //setOperationAction(ISD::BRCOND, MVT::i32, Expand);
     
     DEBUG(errs() << "1 : \n");
     DEBUG(errs() << "2 : \n");
