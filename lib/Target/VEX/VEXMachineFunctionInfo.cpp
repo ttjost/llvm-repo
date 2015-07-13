@@ -7,7 +7,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "VEXMachineFunction.h"
+#include "VEXMachineFunctionInfo.h"
 
 #include "VEXInstrInfo.h"
 #include "VEXSubtarget.h"

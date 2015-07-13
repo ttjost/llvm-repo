@@ -17,7 +17,7 @@
 #include "VEX.h"
 #include "VEXRegisterInfo.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
-#include "VEXMachineFunction.h"
+#include "VEXMachineFunctionInfo.h"
 #include "llvm/Target/TargetInstrInfo.h"
 
 #define GET_INSTRINFO_HEADER

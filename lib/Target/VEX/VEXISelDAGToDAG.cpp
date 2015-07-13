@@ -14,7 +14,7 @@
 #include "VEXISelDAGToDAG.h"
 #include "VEX.h"
 
-#include "VEXMachineFunction.h"
+#include "VEXMachineFunctionInfo.h"
 #include "VEXRegisterInfo.h"
 #include "VEXSubtarget.h"
 #include "VEXTargetMachine.h"

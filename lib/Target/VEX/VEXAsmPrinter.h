@@ -14,16 +14,8 @@
 #ifndef VEXASMPRINTER_H
 #define VEXASMPRINTER_H
 
-//#include "VEXMachineFunction.h"
-//#include "VEXMCInstLower.h"
-//#include "VEXSubtarget.h"
-//#include "llvm/CodeGen/AsmPrinter.h"
-//#include "llvm/Support/Compiler.h"
-//#include "llvm/Target/TargetMachine.h"
-//#include "llvm/MC/MCStreamer.h"
-
 #include "VEX.h"
-#include "VEXMachineFunction.h"
+#include "VEXMachineFunctionInfo.h"
 #include "InstPrinter/VEXInstPrinter.h"
 #include "VEXInstrInfo.h"
 #include "VEXMCInstLower.h"

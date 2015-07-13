@@ -11,7 +11,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "VEXMachineFunction.h"
+#include "VEXMachineFunctionInfo.h"
 #include "VEX.h"
 #include "VEXRegisterInfo.h"
 #include "VEXSubtarget.h"

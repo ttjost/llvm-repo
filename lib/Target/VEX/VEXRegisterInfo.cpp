@@ -15,7 +15,7 @@
 
 #include "VEX.h"
 #include "VEXSubtarget.h"
-#include "VEXMachineFunction.h"
+#include "VEXMachineFunctionInfo.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Type.h"
 #include "llvm/Support/CommandLine.h"

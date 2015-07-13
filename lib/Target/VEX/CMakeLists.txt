@@ -26,7 +26,7 @@ add_llvm_target(VEXCodeGen
   VEXFrameLowering.cpp
   VEXInstrInfo.cpp
   VEXISelLowering.cpp
-  VEXMachineFunction.cpp
+  VEXMachineFunctionInfo.cpp
   VEXRegisterInfo.cpp
   VEXSubtarget.cpp
   VEXSelectionDAGInfo.cpp

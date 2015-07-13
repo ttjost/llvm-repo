@@ -14,7 +14,7 @@
 
 #include "VEXISelLowering.h"
 
-#include "VEXMachineFunction.h"
+#include "VEXMachineFunctionInfo.h"
 #include "VEXTargetMachine.h"
 #include "VEXSubtarget.h"
 
@@ -153,10 +153,14 @@ VEXTargetLowering::LowerFormalArguments(SDValue Chain,
                                         SDLoc DL, SelectionDAG &DAG,
                                         SmallVectorImpl<SDValue> &InVals)
 const {
-    DEBUG(errs() << "LowerFormal : \n");
+    DEBUG(errs() << "LowerFormalArguments\n");
+
+    MachineFunction &MF = DAG.getMachineFunction();
+    MachineFrameInfo *MFI = MF.getFrameInfo();
+    MachineRegisterInfo &MRI = MF.getRegInfo();
+
     return Chain;
     
-                                        
 }
 // @LowerFormalArguments }
 

@@ -14,7 +14,7 @@
 #include "VEXInstrInfo.h"
 
 #include "VEXTargetMachine.h"
-#include "VEXMachineFunction.h"
+#include "VEXMachineFunctionInfo.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/Support/ErrorHandling.h"
