@@ -42,14 +42,14 @@ void VEXMCInstLower::Initialize(MCContext *C){
     Ctx = C;
 }
 
-static void CreateMCInst(MCInst &Inst, unsigned Opc, const MCOperand& Opnd0,
-                         const MCOperand& Opnd1, const MCOperand Opnd2 = MCOperand()){
-    Inst.setOpcode(Opc);
-    Inst.addOperand(Opnd0);
-    Inst.addOperand(Opnd1);
-    if(Opnd2.isValid())
-        Inst.addOperand(Opnd2);
-}
+//static void CreateMCInst(MCInst &Inst, unsigned Opc, const MCOperand& Opnd0,
+//                         const MCOperand& Opnd1, const MCOperand Opnd2 = MCOperand()){
+//    Inst.setOpcode(Opc);
+//    Inst.addOperand(Opnd0);
+//    Inst.addOperand(Opnd1);
+//    if(Opnd2.isValid())
+//        Inst.addOperand(Opnd2);
+//}
 
 // LowerOperand
 MCOperand VEXMCInstLower::LowerOperand(const MachineOperand &MO,
@@ -65,6 +65,8 @@ MCOperand VEXMCInstLower::LowerOperand(const MachineOperand &MO,
             return MCOperand::CreateImm(MO.getImm() + Offset);
         case MachineOperand::MO_RegisterMask:
             break;
+        case MachineOperand::MO_MachineBasicBlock:
+            return MCOperand::CreateExpr(MCSymbolRefExpr::Create(MO.getMBB()->getSymbol(), *Ctx));
         default:
             llvm_unreachable("unknown operand type");
             break;
