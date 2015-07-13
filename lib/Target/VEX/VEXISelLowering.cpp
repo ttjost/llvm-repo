@@ -64,9 +64,9 @@ const char *VEXTargetLowering::getTargetNodeName(unsigned Opcode) const {
             
         case VEXISD::PSEUDO_RET: return "VEXISD::PSEUDO_RET";
 
-        case VEXISD::BR:        return "VEXISD::BR";
+//        case VEXISD::BR:        return "VEXISD::BR";
 
-        case VEXISD::BRF:        return "VEXISD::BRF";
+//        case VEXISD::BRF:        return "VEXISD::BRF";
         
         default:                return NULL;
     }
@@ -90,6 +90,7 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
 
     //setOperationAction(ISD::BR_CC, MVT::i32, Custom);
     setOperationAction(ISD::BR_CC, MVT::i32, Promote);
+    setOperationAction(ISD::GlobalAddress, MVT::i32, Custom);
     //setOperationAction(ISD::BRCOND, MVT::i32, Custom);
     
 }
@@ -98,6 +99,7 @@ SDValue VEXTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) const {
 
     DEBUG(errs() << "Lower Operation\n");
     switch (Op.getOpcode()) {
+        case ISD::GlobalAddress:        return lowerGlobalAddress(Op, DAG);
         default:
             break;
     }
@@ -203,4 +205,19 @@ VEXTargetLowering::LowerReturn(SDValue Chain,
         RetOps.push_back(Flag);
     
     return DAG.getNode(VEXISD::PSEUDO_RET, DL, MVT::Other, RetOps);
+}
+
+SDValue VEXTargetLowering::lowerGlobalAddress(SDValue Op, SelectionDAG &DAG) const{
+
+    const GlobalValue *GV = cast<GlobalAddressSDNode>(Op)->getGlobal();
+
+    int64_t Offset = cast<GlobalAddressSDNode>(Op)->getOffset();
+
+    // Create TargetGlobalAddress node, folding in the constant offset.
+    SDValue Result = DAG.getTargetGlobalAddress(GV, SDLoc(Op),
+                                                getPointerTy(), Offset);
+
+    return DAG.getNode(VEXISD::WRAPPER, SDLoc(Op),
+                       getPointerTy(), Result);
+
 }

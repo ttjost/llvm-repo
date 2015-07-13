@@ -28,7 +28,9 @@ namespace llvm {
         typedef MachineOperand::MachineOperandType MachineOperandType;
         MCContext *Ctx;
         VEXAsmPrinter &AsmPrinter;
-        
+
+        MCSymbol *GetGlobalAddressSymbol(const MachineOperand &MO) const;
+
     public:
         VEXMCInstLower(VEXAsmPrinter &asmprinter);
         void Initialize(MCContext* C);

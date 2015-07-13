@@ -51,6 +51,13 @@ void VEXMCInstLower::Initialize(MCContext *C){
 //        Inst.addOperand(Opnd2);
 //}
 
+MCSymbol *VEXMCInstLower::
+GetGlobalAddressSymbol(const MachineOperand &MO) const{
+    return AsmPrinter.getSymbol(MO.getGlobal());
+}
+
+
+
 // LowerOperand
 MCOperand VEXMCInstLower::LowerOperand(const MachineOperand &MO,
                                        unsigned Offset) const {
@@ -67,6 +74,8 @@ MCOperand VEXMCInstLower::LowerOperand(const MachineOperand &MO,
             break;
         case MachineOperand::MO_MachineBasicBlock:
             return MCOperand::CreateExpr(MCSymbolRefExpr::Create(MO.getMBB()->getSymbol(), *Ctx));
+        case MachineOperand::MO_GlobalAddress:
+            return MCOperand::CreateExpr(MCSymbolRefExpr::Create(GetGlobalAddressSymbol(MO), *Ctx));
         default:
             llvm_unreachable("unknown operand type");
             break;

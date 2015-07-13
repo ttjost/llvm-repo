@@ -42,10 +42,10 @@ namespace llvm {
             MIN,
             MINU,
 
-            BR,
-            BRF,
-            
             WRAPPER,
+//            BR,
+//            BRF,
+
             DYNALLOC,
             
             SYNC

@@ -25,18 +25,25 @@ VEXMCAsmInfo::VEXMCAsmInfo(StringRef TT) {
         isNewScheduling = false;
 
     AlignmentIsInBytes          = false;
-    Data16bitsDirective         = "\t.2byte\t";
-    Data32bitsDirective         = "\t.4byte\t";
-    Data64bitsDirective         = "\t.8byte\t";
-    PrivateGlobalPrefix         = "$";
-    CommentString               = "#";
-    ZeroDirective               = "\t.space\t";
-    GPRel32Directive            = "\t.gpword\t";
-    GPRel64Directive            = "\t.gpdword\t";
-    WeakRefDirective            = "\t.weak\t";
-    UseAssignmentForEHBegin = true;
+    LabelSuffix                 = "::";
 
-    SupportsDebugInformation = true;
-    ExceptionsType = ExceptionHandling::DwarfCFI;
-    DwarfRegNumForCFI = true;
+    Data8bitsDirective          = "\t.data1\t";
+    Data16bitsDirective         = "\t.data2\t";
+    Data32bitsDirective         = "\t.data4\t";
+    Data64bitsDirective         = "\t.data8\t";
+    PrivateGlobalPrefix         = "$";
+    CommentString               = "##";
+    UseDataRegionDirectives = false;
+
+    //ZeroDirective               = "\t.space\t";
+    //GPRel32Directive            = "\t.gpword\t";
+    //GPRel64Directive            = "\t.gpdword\t";
+    //WeakRefDirective            = "\t.weak\t";
+    //UseAssignmentForEHBegin = true;
+
+    //SupportsDebugInformation = true;
+    //ExceptionsType = ExceptionHandling::DwarfCFI;
+    //DwarfRegNumForCFI = true;
+
+    //UseDataRegionDirectives = true;
 }

@@ -52,18 +52,35 @@ def brtarget : Operand<OtherVT> {
 //===----------------------------------------------------------------------===//
 
 
-def SDTVEXBranchCond : SDTypeProfile <0, 2, [SDTCisInt<0>, SDTCisVT<1, OtherVT> ]>;
+//===----------------------------------------------------------------------===//
+// Type Profiles.
+//===----------------------------------------------------------------------===//
 
+//def SDT_VEXBranchCond : SDTypeProfile <0, 2, [SDTCisInt<0>, SDTCisVT<1, OtherVT> ]>;
+
+def SDT_VEXWrapper : SDTypeProfile <1, 1, [SDTCisSameAs<0, 1>,
+                                           SDTCisPtrTy<0>]>;
+
+
+//===----------------------------------------------------------------------===//
+// VEX Specific Node Definitions.
+//===----------------------------------------------------------------------===//
 
 def VEXPseudoRet : SDNode<"VEXISD::PSEUDO_RET", SDTNone,
                    [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
 
-def VEXBr       : SDNode<"VEXISD::BR", SDTVEXBranchCond,
-                    [SDNPHasChain, SDNPOptInGlue]>;
+def VEXWrapper : SDNode<"VEXISD::WRAPPER", SDT_VEXWrapper>;
 
-def VEXBrf       : SDNode<"VEXISD::BRF", SDTVEXBranchCond,
-                    [SDNPHasChain, SDNPOptInGlue]>;
-                   
+// **************************************************************
+//                       NOT USED
+//
+//def VEXBr       : SDNode<"VEXISD::BR", SDT_VEXBranchCond,
+//                    [SDNPHasChain, SDNPOptInGlue]>;
+//
+//def VEXBrf       : SDNode<"VEXISD::BRF", SDT_VEXBranchCond,
+//                    [SDNPHasChain, SDNPOptInGlue]>;
+// **************************************************************
+
 def VEXMax   : SDNode<"VEXISD::MAX", SDTIntBinOp>;
 def VEXMaxu  : SDNode<"VEXISD::MAXU", SDTIntBinOp>;
 def VEXMin   : SDNode<"VEXISD::MIN", SDTIntBinOp>;
@@ -578,6 +595,7 @@ def LDB       : LoadInstr<"ldw", 0b00010000, sextloadi8, IILoad>;
 def LDBU       : LoadInstr<"ldw", 0b00010000, extloadi8, IILoad>;
 def STB       : StoreInstr<"stw", 0b00010101, truncstorei8, IIStore>;
 
+
 //===----------------------------------------------------------------------===//
 //                      Return/Call instructions
 //===----------------------------------------------------------------------===//
@@ -593,15 +611,16 @@ def BR        : BranchInstr<"br", 0b00000000, brcond, IIAlu>;
 
 def GOTO      : JumpInstr<"goto", 0b00000000, br, IIAlu>;
 
-//
-// JMPL Instruction.
-//let isTerminator = 1, hasDelaySlot = 1, isBarrier = 1,
-//    DecoderMethod = "DecodeJMPL" in {
-//  defm JMPLrr: <2, 0b0111000, (outs GPRegs:$dst), (ins MEMrr:$addr),
-//                  "jmpl $addr, $dst", []>;
-//  defm JMPLri: F3_2<2, 0b0111000, (outs GPRegs:$dst), (ins MEMri:$addr),
-//                  "jmpl $addr, $dst", []>;
-//}
+
+
+//===----------------------------------------------------------------------===//
+//                       Non-Instruction Patterns
+//===----------------------------------------------------------------------===//
+
+def : Pat<(i32 (VEXWrapper tglobaladdr:$dst)), (MOVi tglobaladdr:$dst)>;
+//def : Pat<(i32 (VEXWrapper texternalsym:$dst)), (MOVi texternalsym:$dst)>;
+//def : Pat<(i32 (VEXWrapper tblockaddress:$dst)), (MOVi tblockaddress:$dst)>;
+
 
 //include "VEXInstrVIS.td"
 //include "VEXInstrAliases.td"
