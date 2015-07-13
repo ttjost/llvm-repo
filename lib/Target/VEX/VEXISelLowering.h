@@ -99,7 +99,6 @@ private:
     
     
     // Custom Lowering of Instructions
-    SDValue LowerBR_CC(SDValue Op, SelectionDAG &DAG) const;
     
     // Lower Operand specifics
     SDValue lowerGlobalAddress(SDValue Op, SelectionDAG &DAG) const;
@@ -118,6 +117,8 @@ private:
                         const SmallVectorImpl<ISD::OutputArg> &Outs,
                         const SmallVectorImpl<SDValue> &OutVals,
                         SDLoc dl, SelectionDAG &DAG) const override;
+    
+    SDValue lowerBRCOND(SDValue Op, SelectionDAG &DAG) const;
     
 };
 

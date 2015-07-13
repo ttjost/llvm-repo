@@ -90,43 +90,14 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
 
     //setOperationAction(ISD::BR_CC, MVT::i32, Custom);
     setOperationAction(ISD::BR_CC, MVT::i32, Promote);
-    //setOperationAction(ISD::BRCOND, MVT::i32, Expand);
-    
-    DEBUG(errs() << "1 : \n");
-    DEBUG(errs() << "2 : \n");
-    
-}
-
-SDValue VEXTargetLowering::LowerBR_CC(SDValue Op, SelectionDAG &DAG) const {
-    
-    SDValue Chain = Op.getOperand(0);
-    
-    ISD::CondCode CC = cast<CondCodeSDNode>(Op.getOperand(1))->get();
-    
-    SDValue LHS = Op.getOperand(2);
-    SDValue RHS = Op.getOperand(3);
-    SDValue Dst = Op.getOperand(4);
-    
-    SDValue TargetCC;
-    
-    return TargetCC;
+    //setOperationAction(ISD::BRCOND, MVT::i32, Custom);
     
 }
 
 SDValue VEXTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) const {
 
-    DEBUG(errs() << "Lower Operation\n\n\n");
+    DEBUG(errs() << "Lower Operation\n");
     switch (Op.getOpcode()) {
-        case ISD::BRCOND:
-        case ISD::BR:
-        case ISD::BR_CC:
-        case ISD::BRIND:
-            DEBUG(errs() << "BRCOND\n\n\n");
-            break;
-
-//        case ISD::BR:
-//                DEBUG(errs() << "BR\n\n\n");
-//            break;
         default:
             break;
     }
@@ -233,4 +204,3 @@ VEXTargetLowering::LowerReturn(SDValue Chain,
     
     return DAG.getNode(VEXISD::PSEUDO_RET, DL, MVT::Other, RetOps);
 }
-

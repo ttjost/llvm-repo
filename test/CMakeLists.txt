@@ -19,6 +19,7 @@ set(LLVM_TEST_DEPENDS
           UnitTests
           BugpointPasses
           LLVMHello
+          LLVMReplaceHelloName
           bugpoint
           llc
           lli

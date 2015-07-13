@@ -120,11 +120,11 @@ multiclass MOVInstr<string OpcStr, bits<8> Opcode, RegisterClass DstOp, Register
   def r  : MOV_r <Opcode,
                      (outs DstOp:$dst), (ins SrcOp:$s1),
                      !strconcat(OpcStr, " $dst = $s1"),
-                     [(set DstOp:$dst, SrcOp:$s1)], Itin>;
+                     [], Itin>;
   def i  : MOV_i <Opcode,
                    (outs DstOp:$dst), (ins imm32Op:$s1),
                    !strconcat(OpcStr, " $dst = $s1"),
-                   [(set DstOp:$dst, imm32:$s1)], Itin>;
+                   [], Itin>;
 }
 
 //multiclass CMPInstr<string OpcStr, bits<8> OpVal, PatFrag cond_op, InstrItinClass Itin> {
