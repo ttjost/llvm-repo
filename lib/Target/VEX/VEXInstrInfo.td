@@ -570,6 +570,13 @@ def CMPNEi    : CMPInstr_bregi<"cmpne", 0b01001001, setne, IIAlu>;
 def LDW       : LoadInstr<"ldw", 0b00010000, load_a, IILoad>;
 def STW       : StoreInstr<"stw", 0b00010101, store_a, IIStore>;
 
+def LDH       : LoadInstr<"ldw", 0b00010000, sextloadi16, IILoad>;
+def LDHU       : LoadInstr<"ldw", 0b00010000, extloadi16, IILoad>;
+def STH       : StoreInstr<"stw", 0b00010101, truncstorei16, IIStore>;
+
+def LDB       : LoadInstr<"ldw", 0b00010000, sextloadi8, IILoad>;
+def LDBU       : LoadInstr<"ldw", 0b00010000, extloadi8, IILoad>;
+def STB       : StoreInstr<"stw", 0b00010101, truncstorei8, IIStore>;
 
 //===----------------------------------------------------------------------===//
 //                      Return/Call instructions

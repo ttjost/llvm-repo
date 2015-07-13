@@ -350,7 +350,6 @@ void ScheduleDAGSDNodes::BuildSchedUnits() {
 
     // Scan up to find glued preds.
     SDNode *N = NI;
-      
     while (N->getNumOperands() &&
            N->getOperand(N->getNumOperands()-1).getValueType() == MVT::Glue) {
       N = N->getOperand(N->getNumOperands()-1).getNode();
