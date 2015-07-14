@@ -157,8 +157,80 @@ const {
 
     MachineFunction &MF = DAG.getMachineFunction();
     MachineFrameInfo *MFI = MF.getFrameInfo();
-    MachineRegisterInfo &MRI = MF.getRegInfo();
-
+    MachineRegisterInfo &MRI = MF.getRegInfo();;
+    
+    VEXFunctionInfo *FuncInfo = MF.getInfo<VEXFunctionInfo>();
+    
+    auto *TFL = static_cast<const VEXFrameLowering *>(Subtarget.getFrameLowering());
+    
+    // Assign locations to all of ht eincoming arguments.
+    SmallVector<CCValAssign, 16> ArgLocs;
+    CCState CCInfo(CallConv, IsVarArg, MF, ArgLocs, *DAG.getContext());
+    
+    CCInfo.AnalyzeFormalArguments(Ins, CC_VEX_Address);
+    
+    unsigned NumFixedGPRs = 0;
+    
+    for (unsigned I = 0, E = ArgLocs.size(); I != E; ++I){
+        SDValue ArgValue;
+        CCValAssign &VA = ArgLocs[I];
+        EVT LocVT = VA.getLocVT();
+        
+        if (VA.isRegLoc()){
+            // Arguments passed in registers
+            const TargetRegisterClass *RC;
+            switch (LocVT.getSimpleVT().SimpleTy) {
+                default:
+                    // Integers smaller than i32 should be promoted
+                    // TOCHECK : Is that correct?
+                    // TODO: Check if We need to pass any other types as argument registers
+                    // For now, we only accept i8, i16 and i32 into argument registers
+                    llvm_unreachable("Unexpected argument type");
+                    break;
+                    
+                case MVT::i8:
+                    NumFixedGPRs += 1;
+                    RC = &VEX::GPRegsRegClass;
+                    break;
+                
+                case MVT::i16:
+                    NumFixedGPRs += 1;
+                    RC = &VEX::GPRegsRegClass;
+                    break;
+                
+                case MVT::i32:
+                    NumFixedGPRs += 1;
+                    RC = &VEX::GPRegsRegClass;
+                    break;
+            }
+            
+            unsigned VReg = MRI.createVirtualRegister(RC);
+            MRI.addLiveIn(VA.getLocReg(), VReg);
+            ArgValue = DAG.getCopyFromReg(Chain, DL, VReg, LocVT);
+        }else{
+            assert(VA.isMemLoc() && "Argument not register or memory");
+            
+            // Create the frame index object for this incoming parameter.
+            int FI = MFI->CreateFixedObject(LocVT.getSizeInBits()/8, VA.getLocMemOffset(), true);
+            
+            // Create the SelectionDAG nodes corresponding to a load
+            // from this parameter. Unpromoted ints are passed
+            // as right-justified 8-byte values.
+            EVT PtrVT = getPointerTy();
+            SDValue FIN = DAG.getFrameIndex(FI, PtrVT);
+            
+            if (VA.getLocVT() == MVT::i32)
+                FIN = DAG.getNode(ISD::ADD, DL, PtrVT, FIN,
+                                  DAG.getIntPtrConstant(4));
+            ArgValue = DAG.getLoad(LocVT, DL, Chain, FIN,
+                                   MachinePointerInfo::getFixedStack(FI), false, false, false, 0);
+        }
+        
+        // Convert the value of the argument register into the value that's
+        // being passed.
+        // InVals.push_back(convertL)
+    }
+    
     return Chain;
     
 }
