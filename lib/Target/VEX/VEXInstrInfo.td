@@ -388,11 +388,11 @@ def SH4ADDi      : ArithLogic_i<0b01101110,
 //defm SHL    : ArithLogic<"shl", 0b01101111, shl, IIAlu>;
 def SHLr      : SHIFT_r<0b01101111,
                         (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
-                        "shl",
+                        "shl $dst = $s1, $s2",
                        [(set GPRegs:$dst, (shl GPRegs:$s1, GPRegs:$s2))], IIAlu, 0>;
 def SHLi      : SHIFT_i<0b01101111,
                         (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
-                        "shl",
+                        "shl $dst = $s1, $s2",
                         [(set GPRegs:$dst, (shl GPRegs:$s1, i32:$s2))], IIAlu, 0>;
 
 // SHR Instruction
