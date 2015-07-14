@@ -81,17 +81,17 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
       setMinFunctionAlignment(2);
 
     addRegisterClass(MVT::i32, &VEX::GPRegsRegClass);
-    addRegisterClass(MVT::i32, &VEX::BrRegsRegClass);
-    addRegisterClass(MVT::i32, &VEX::LrRegRegClass);
+    addRegisterClass(MVT::i1, &VEX::BrRegsRegClass);
+    //addRegisterClass(MVT::i32, &VEX::LrRegRegClass);
     
     // must, computeRegisterProperties - Once all of the register classes are
     //  added, this allows us to compute derived properties we expose.
     computeRegisterProperties(STI.getRegisterInfo());
 
-    //setOperationAction(ISD::BR_CC, MVT::i32, Custom);
     setOperationAction(ISD::BR_CC, MVT::i32, Promote);
     setOperationAction(ISD::GlobalAddress, MVT::i32, Custom);
-    //setOperationAction(ISD::BRCOND, MVT::i32, Custom);
+
+    //setSchedulingPreference(Sched::VLIW);
     
 }
 
@@ -123,12 +123,12 @@ SDValue VEXTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) const {
 //===----------------------------------------------------------------------===//
 static void AnalyzeRetResult(CCState &State,
                              const SmallVectorImpl<ISD::InputArg> &Ins){
-    State.AnalyzeCallResult(Ins, CC_VEX_Address);
+    State.AnalyzeCallResult(Ins, RetCC_VEX);
 }
 
 static void AnalyzeRetResult(CCState &State,
                              const SmallVectorImpl<ISD::OutputArg> &Outs){
-    State.AnalyzeReturn(Outs, CC_VEX_Address);
+    State.AnalyzeReturn(Outs, RetCC_VEX);
 }
 
 template<typename ArgT>

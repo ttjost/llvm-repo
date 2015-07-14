@@ -144,10 +144,7 @@ getFrameRegister(const MachineFunction &MF) const{
     const TargetFrameLowering *TFI = MF.getSubtarget().getFrameLowering();
 
     // FIXME : Is there a frame pointer register?
-    return TFI->hasFP(MF) ? (VEX::Reg1) : (VEX::Reg1);
+    //return TFI->hasFP(MF) ? (VEX::Reg1) : (VEX::Reg1);
+    return VEX::Reg1;
 }
-
-
-
-
 

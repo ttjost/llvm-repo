@@ -177,21 +177,21 @@ class CMPInstr_regr<string OpcStr, bits<8> OpVal, PatFrag cond_op, InstrItinClas
 class CMPInstr_regi<string OpcStr, bits<8> OpVal, PatFrag cond_op, InstrItinClass Itin>
    : InstVEX<(outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                 !strconcat(OpcStr, " $dst = $s1, $s2"),
-                [(set i1:$dst, (cond_op GPRegs:$s1, imm32:$s2))], Itin>{
+                [(set GPRegs:$dst, (cond_op GPRegs:$s1, imm32:$s2))], Itin>{
     let isCompare = 1;
 }
 
 class CMPInstr_bregr<string OpcStr, bits<8> OpVal, PatFrag cond_op, InstrItinClass Itin>
-    : InstVEX<(outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
+    : InstVEX<(outs BrRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                 !strconcat(OpcStr, " $dst = $s1, $s2"),
-                [(set GPRegs:$dst, (cond_op GPRegs:$s1, GPRegs:$s2))], Itin>{
+                [(set BrRegs:$dst, (cond_op GPRegs:$s1, GPRegs:$s2))], Itin>{
     let isCompare = 1;
 }
 
 class CMPInstr_bregi<string OpcStr, bits<8> OpVal, PatFrag cond_op, InstrItinClass Itin>
-   : InstVEX<(outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
+   : InstVEX<(outs BrRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                 !strconcat(OpcStr, " $dst = $s1, $s2"),
-                [(set GPRegs:$dst, (cond_op GPRegs:$s1, imm32:$s2))], Itin>{
+                [(set BrRegs:$dst, (cond_op GPRegs:$s1, imm32:$s2))], Itin>{
     let isCompare = 1;
 }
 
@@ -213,7 +213,7 @@ class StoreInstr<string OpcStr, bits<8> OpVal, PatFrag OpNode, InstrItinClass It
 }
 
 class ReturnInstr<string OpcStr, bits<8> OpVal, InstrItinClass Itin>
-   : InstVEX<(outs GPRegs:$dst), (ins GPRegs:$sp, imm32Op:$imm, LrReg:$l0),
+   : InstVEX<(outs GPRegs:$dst), (ins GPRegs:$sp, imm32Op:$imm, GPRegs:$l0),
                !strconcat(OpcStr, " $dst = $sp, $imm, $l0"),
                 [], Itin>{
     let isTerminator = 1;
@@ -222,9 +222,9 @@ class ReturnInstr<string OpcStr, bits<8> OpVal, InstrItinClass Itin>
 }
 
 class BranchInstr<string OpcStr, bits<8> OpVal, SDNode OpNode, InstrItinClass Itin>
-: InstVEX<(outs), (ins GPRegs:$s1, brtarget:$offset),
+: InstVEX<(outs), (ins BrRegs:$s1, brtarget:$offset),
 !strconcat(OpcStr, " $s1, $offset"),
-[(OpNode GPRegs:$s1, bb:$offset)], Itin>{
+[(OpNode BrRegs:$s1, bb:$offset)], Itin>{
     let isTerminator = 1;
     let isBarrier = 1;
     let isBranch = 1;

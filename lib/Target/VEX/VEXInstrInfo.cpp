@@ -56,7 +56,7 @@ void VEXInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
             //Opc = VEX::MTB;
         }else
             if(VEX::BrRegsRegClass.contains(SrcReg)){
-            llvm_unreachable("Impossible reg-to-reg copy. BrReg to BrReg");
+                llvm_unreachable("Impossible reg-to-reg copy. BrReg to BrReg");
         }
     }
     
@@ -85,6 +85,84 @@ bool VEXInstrInfo::expandPostRAPseudo(MachineBasicBlock::iterator MI) const {
     return false;
     
     
+}
+
+void VEXInstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
+                                        MachineBasicBlock::iterator MI,
+                                        unsigned DestReg, int FrameIndex,
+                                        const TargetRegisterClass *RC,
+                                        const TargetRegisterInfo *TRI) const {
+
+    DebugLoc DL;
+
+    if (MI != MBB.end()) DL = MI->getDebugLoc();
+
+    MachineFunction &MF = *MBB.getParent();
+    MachineFrameInfo &MFI = *MF.getFrameInfo();
+
+    MachineMemOperand *MMO =
+            MF.getMachineMemOperand(MachinePointerInfo::getFixedStack(FrameIndex),
+                                    MachineMemOperand::MOLoad,
+                                    MFI.getObjectSize(FrameIndex),
+                                    MFI.getObjectAlignment(FrameIndex));
+
+    // On the order of operands here: think [FrameIndex + 0] = SrcReg.
+    if (RC == &VEX::GPRegsRegClass)
+        BuildMI(MBB, MI, DL, get(VEX::LDW), DestReg)
+                .addFrameIndex(FrameIndex).addImm(0)
+                .addMemOperand(MMO);
+    else
+        if (RC == &VEX::BrRegsRegClass)
+            BuildMI(MBB, MI, DL, get(VEX::LDW), DestReg)
+                    .addFrameIndex(FrameIndex).addImm(0)
+                    .addMemOperand(MMO);
+        else
+//            if (RC == &VEX::LrRegRegClass)
+//                BuildMI(MBB, MI, DL, get(VEX::LDW), DestReg)
+//                        .addFrameIndex(FrameIndex).addImm(0)
+//                        .addMemOperand(MMO);
+//            else
+                llvm_unreachable("Can't store this register to stack slot");
+
+}
+
+void VEXInstrInfo::storeRegToStackSlot(MachineBasicBlock &MBB,
+                         MachineBasicBlock::iterator MI,
+                         unsigned SrcReg, bool isKill, int FrameIndex,
+                         const TargetRegisterClass *RC,
+                         const TargetRegisterInfo *TRI) const {
+
+    DebugLoc DL;
+
+    if (MI != MBB.end()) DL = MI->getDebugLoc();
+
+    MachineFunction &MF = *MBB.getParent();
+    MachineFrameInfo &MFI = *MF.getFrameInfo();
+
+    MachineMemOperand *MMO =
+            MF.getMachineMemOperand(MachinePointerInfo::getFixedStack(FrameIndex),
+                                    MachineMemOperand::MOStore,
+                                    MFI.getObjectSize(FrameIndex),
+                                    MFI.getObjectAlignment(FrameIndex));
+
+    // On the order of operands here: think [FrameIndex + 0] = SrcReg.
+    if (RC == &VEX::GPRegsRegClass)
+        BuildMI(MBB, MI, DL, get(VEX::STW))
+                .addFrameIndex(FrameIndex).addImm(0)
+                .addReg(SrcReg, getKillRegState(isKill)).addMemOperand(MMO);
+    else
+        if (RC == &VEX::BrRegsRegClass)
+            BuildMI(MBB, MI, DL, get(VEX::STW))
+                    .addFrameIndex(FrameIndex).addImm(0)
+                    .addReg(SrcReg, getKillRegState(isKill)).addMemOperand(MMO);
+        else
+//            if (RC == &VEX::LrRegRegClass)
+//                BuildMI(MBB, MI, DL, get(VEX::STW))
+//                        .addFrameIndex(FrameIndex).addImm(0)
+//                        .addReg(SrcReg, getKillRegState(isKill)).addMemOperand(MMO);
+//            else
+                llvm_unreachable("Can't store this register to stack slot");
+
 }
 
 void VEXInstrInfo::adjustStackPtr(VEXFunctionInfo *VEXFI, unsigned SP, uint64_t Amount,

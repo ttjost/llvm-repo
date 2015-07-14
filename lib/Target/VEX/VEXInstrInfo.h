@@ -44,9 +44,21 @@ namespace llvm{
         void copyPhysReg(MachineBasicBlock &MBB,
                          MachineBasicBlock::iterator MI, DebugLoc DL,
                          unsigned DestReg, unsigned SrcReg,
-                         bool KillSrc) const override;
+                         bool KillSrc) const;
         
-        bool expandPostRAPseudo (MachineBasicBlock::iterator MI) const override;
+        bool expandPostRAPseudo (MachineBasicBlock::iterator MI) const;
+
+        void loadRegFromStackSlot(MachineBasicBlock &MBB,
+                                  MachineBasicBlock::iterator MI,
+                                  unsigned DestReg, int FrameIndex,
+                                  const TargetRegisterClass *RC,
+                                  const TargetRegisterInfo *TRI) const;
+
+        void storeRegToStackSlot(MachineBasicBlock &MBB,
+                                 MachineBasicBlock::iterator MI,
+                                 unsigned SrcReg, bool isKill, int FrameIndex,
+                                 const TargetRegisterClass *RC,
+                                 const TargetRegisterInfo *TRI) const;
         
         // Adjust SP by Amount bytes
         void adjustStackPtr(VEXFunctionInfo *VEXFI, unsigned SP, uint64_t Amount,
