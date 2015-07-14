@@ -138,6 +138,41 @@ static void AnalyzeReturnValues(CCState &State,
     AnalyzeRetResult(State, Args);
 }
 
+// Value is a value that has been passed to us in the location described by VA
+// (and so has type VA.getLocVT()).  Convert Value to VA.getValVT(), chaining
+// any loads onto Chain.
+// TODO: Is that really neccessary?
+static SDValue convertLocVTToValVT(SelectionDAG &DAG, SDLoc DL,
+                                   CCValAssign &VA, SDValue Chain,
+                                   SDValue Value){
+    // If the argument has been promoted from a smaller type,
+    // insert an assertion to capture this.
+    if (VA.getLocInfo() == CCValAssign::SExt)
+        Value = DAG.getNode(ISD::AssertSext, DL, VA.getLocVT(), Value,
+                            DAG.getValueType(VA.getValVT()));
+   else if (VA.getLocInfo() == CCValAssign::ZExt)
+            Value = DAG.getNode(ISD::AssertZext, DL, VA.getLocVT(), Value,
+                                DAG.getValueType(VA.getValVT()));
+
+    if (VA.isExtInLoc())
+        Value = DAG.getNode(ISD::TRUNCATE, DL, VA.getValVT(), Value);
+    else if (VA.getLocInfo() == CCValAssign::Indirect)
+        Value = DAG.getLoad(VA.getValVT(), DL, Chain, Value,
+                            MachinePointerInfo(), false, false, false, 0);
+    else if (VA.getLocInfo() == CCValAssign::BCvt) {
+        // If this is a short vector argument loaded from the stack,
+        // extend from i64 to full vector size and then bitcast.
+        assert(VA.getLocVT() == MVT::i64);
+        assert(VA.getValVT().isVector());
+        Value = DAG.getNode(ISD::BUILD_VECTOR, DL, MVT::v2i64,
+                            Value, DAG.getUNDEF(MVT::i64));
+        Value = DAG.getNode(ISD::BITCAST, DL, VA.getValVT(), Value);
+    } else
+        assert(VA.getLocInfo() == CCValAssign::Full && "Unsupported getLocInfo");
+
+    return Value;
+}
+
 //===----------------------------------------------------------------------===//
 //             Formal Arguments Calling Convention Implementation
 //===----------------------------------------------------------------------===//
@@ -228,8 +263,11 @@ const {
         
         // Convert the value of the argument register into the value that's
         // being passed.
-        // InVals.push_back(convertL)
+        InVals.push_back(convertLocVTToValVT(DAG, DL, VA, Chain, ArgValue));
     }
+
+    if (IsVarArg)
+        llvm_unreachable("Variable number of arguments not yet implemented!");
     
     return Chain;
     
