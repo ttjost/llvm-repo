@@ -43,6 +43,7 @@ def MEM : Operand<iPTR> {
 }
 
 def brtarget : Operand<OtherVT> {
+// Methods used by Assembler and Disassembler.
   let EncoderMethod = "getBranchTargetOpValue";
   let DecoderMethod = "DecodeBranchTarget";
 }
@@ -61,15 +62,28 @@ def brtarget : Operand<OtherVT> {
 def SDT_VEXWrapper : SDTypeProfile <1, 1, [SDTCisSameAs<0, 1>,
                                            SDTCisPtrTy<0>]>;
 
+def SDT_VEXCall         : SDTypeProfile<0, -1, [SDTCisVT<0, iPTR>]>;
+def SDT_VEXCallSeqStart : SDCallSeqStart<[SDTCisVT<0, i32>]>;
+def SDT_VEXCallSeqEnd   : SDCallSeqEnd<[SDTCisVT<0, i32>, SDTCisVT<1, i32>]>;
 
 //===----------------------------------------------------------------------===//
 // VEX Specific Node Definitions.
 //===----------------------------------------------------------------------===//
 
 def VEXPseudoRet : SDNode<"VEXISD::PSEUDO_RET", SDTNone,
-                   [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
+                          [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
 
 def VEXWrapper : SDNode<"VEXISD::WRAPPER", SDT_VEXWrapper>;
+
+def VEXCall    : SDNode<"VEXISD::CALL", SDT_VEXCall,
+                        [SDNPHasChain, SDNPOutGlue,
+                        SDNPOptInGlue, SDNPVariadic]>;
+
+def VEXCallseq_start :  SDNode<"ISD::CALLSEQ_START", SDT_VEXCallSeqStart,
+                               [SDNPHasChain, SDNPOutGlue]>;
+
+def VEXCallseq_end: SDNode<"ISD::CALLSEQ_END",   SDT_VEXCallSeqEnd,
+                           [SDNPHasChain, SDNPOptInGlue, SDNPOutGlue]>;
 
 // **************************************************************
 //                       NOT USED
@@ -230,6 +244,15 @@ class BranchInstr<string OpcStr, bits<8> OpVal, SDNode OpNode, InstrItinClass It
     let isBranch = 1;
 }
 
+class CallInstr<string OpcStr, bits<8> OpVal, InstrItinClass Itin>
+: InstVEX<(outs), (ins GPRegs:$lr, imm32Op:$offset),
+    !strconcat(OpcStr, " $lr = $offset"),
+    [], Itin>{
+    let isTerminator = 1;
+    let isBarrier = 1;
+    let isBranch = 1;
+}
+
 class JumpInstr<string OpcStr, bits<8> OpVal, SDNode OpNode, InstrItinClass Itin>
 : InstVEX<(outs), (ins brtarget:$offset),
 !strconcat(OpcStr, " $offset"),
@@ -268,7 +291,6 @@ def PSEUDO_RET : Pseudo<(outs), (ins) , [(VEXPseudoRet)]>{
     let isBarrier = 1;
     let isReturn = 1;
 }
-
 
 // TYPE I Instruction Definitions
 
@@ -603,7 +625,7 @@ def STB       : StoreInstr<"stw", 0b00010101, truncstorei8, IIStore>;
 def RET       : ReturnInstr<"return", 0b00100110, IIAlu>;
 
 //===----------------------------------------------------------------------===//
-//                      Branch instructions
+//                      Branch and Call instructions
 //===----------------------------------------------------------------------===//
 
 def BR        : BranchInstr<"br", 0b00000000, brcond, IIAlu>;
@@ -611,7 +633,7 @@ def BR        : BranchInstr<"br", 0b00000000, brcond, IIAlu>;
 
 def GOTO      : JumpInstr<"goto", 0b00000000, br, IIAlu>;
 
-
+def CALL      : CallInstr<"call", 0b00100110, IIAlu>;
 
 //===----------------------------------------------------------------------===//
 //                       Non-Instruction Patterns

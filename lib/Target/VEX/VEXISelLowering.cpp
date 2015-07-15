@@ -50,23 +50,25 @@ SDValue VEXTargetLowering::getTargetNode(ConstantPoolSDNode *N, EVT Ty,
 const char *VEXTargetLowering::getTargetNodeName(unsigned Opcode) const {
     
     switch (Opcode) {
-        case VEXISD::RET:       return "VEXISD::RET";
+        case VEXISD::RET:           return "VEXISD::RET";
             
-        case VEXISD::MAX:       return "VEXISD::MAX";
+        case VEXISD::MAX:           return "VEXISD::MAX";
         
-        case VEXISD::MAXU:      return "VEXISD::MAXU";
+        case VEXISD::MAXU:          return "VEXISD::MAXU";
         
-        case VEXISD::MIN:       return "VEXISD::MIN";
+        case VEXISD::MIN:           return "VEXISD::MIN";
             
-        case VEXISD::MINU:      return "VEXISD::MINU";
+        case VEXISD::MINU:          return "VEXISD::MINU";
             
-        case VEXISD::WRAPPER:   return "VEXISD::WRAPPER";
+        case VEXISD::WRAPPER:       return "VEXISD::WRAPPER";
             
-        case VEXISD::PSEUDO_RET: return "VEXISD::PSEUDO_RET";
+        case VEXISD::PSEUDO_RET:    return "VEXISD::PSEUDO_RET";
 
-//        case VEXISD::BR:        return "VEXISD::BR";
+//        case VEXISD::BR:            return "VEXISD::BR";
 
-//        case VEXISD::BRF:        return "VEXISD::BRF";
+//        case VEXISD::BRF:           return "VEXISD::BRF";
+
+        case VEXISD::PSEUDO_CALL:   return "VEXISD::PSEUDO_CALL";
         
         default:                return NULL;
     }
@@ -172,6 +174,175 @@ static SDValue convertLocVTToValVT(SelectionDAG &DAG, SDLoc DL,
 
     return Value;
 }
+
+// Value is a value of type VA.getValVT() that we need to copy into
+// the location described by VA.  Return a copy of Value converted to
+// VA.getValVT().  The caller is responsible for handling indirect values.
+static SDValue convertValVTToLocVT(SelectionDAG &DAG, SDLoc DL,
+                                   CCValAssign &VA, SDValue Value) {
+
+
+    switch (VA.getLocInfo()) {
+    case CCValAssign::SExt:
+        return DAG.getNode(ISD::SIGN_EXTEND, DL, VA.getLocVT(), Value);
+    case CCValAssign::ZExt:
+        return DAG.getNode(ISD::ZERO_EXTEND, DL, VA.getLocVT(), Value);
+    case CCValAssign::AExt:
+        return DAG.getNode(ISD::ANY_EXTEND, DL, VA.getLocVT(), Value);
+    case CCValAssign::Full:
+        return Value;
+    default:
+        llvm_unreachable("Cannot convert type!");
+    }
+}
+
+
+SDValue
+VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
+            SmallVectorImpl<SDValue> &InVals) const {
+
+    SelectionDAG &DAG = CLI.DAG;
+    SDLoc &DL = CLI.DL;
+    SmallVectorImpl<ISD::OutputArg> &Outs = CLI.Outs;
+    SmallVectorImpl<SDValue> &OutVals = CLI.OutVals;
+    SmallVectorImpl<ISD::InputArg> &Ins = CLI.Ins;
+    SDValue Chain = CLI.Chain;
+    SDValue Callee = CLI.Callee;
+    CallingConv::ID CallConv = CLI.CallConv;
+    bool IsVarArg = CLI.IsVarArg;
+    MachineFunction &MF = DAG.getMachineFunction();
+    EVT PtrVT = getPointerTy();
+    bool &IsTailCall = CLI.IsTailCall;
+
+    // Analyze the operands of the call, assigning locations to each operand.
+    SmallVector<CCValAssign, 16> ArgLocs;
+    CCState ArgCCInfo(CallConv, IsVarArg, MF, ArgLocs, *DAG.getContext());
+    ArgCCInfo.AnalyzeCallOperands(Outs, CC_VEX_Address);
+
+    // Get a count of how many bytes are to be pushed on to the stack.
+    unsigned NumBytes = ArgCCInfo.getNextStackOffset();
+
+    // Mark the start of the call.
+    if (!IsTailCall)
+        Chain = DAG.getCALLSEQ_START(Chain,
+                                     DAG.getConstant(NumBytes, PtrVT, true),
+                                     DL);
+    else
+        llvm_unreachable("Target does not yet support Tail Calls.");
+
+    // Copy argument values to their designated locations.
+    SmallVector<std::pair<unsigned, SDValue>, 10> RegsToPass;
+    SmallVector<SDValue, 8> MemOpChains;
+    SDValue StackPtr;
+
+    for (unsigned I = 0, E = ArgLocs.size(); I != E; ++I){
+        CCValAssign &VA = ArgLocs[I];
+        SDValue ArgValue = OutVals[I];
+
+        if (VA.getLocInfo() == CCValAssign::Indirect) {
+            // Store the argument in a stack slot and pass its address.
+            SDValue SpillSlot = DAG.CreateStackTemporary(VA.getValVT());
+            int FI = cast<FrameIndexSDNode>(SpillSlot)->getIndex();
+            MemOpChains.push_back(DAG.getStore(Chain, DL, ArgValue, SpillSlot,
+                                               MachinePointerInfo::getFixedStack(FI),
+                                               false, false, 0));
+            ArgValue = SpillSlot;
+        }else
+            ArgValue = convertValVTToLocVT(DAG, DL, VA, ArgValue);
+
+        if (VA.isRegLoc())
+            // Queue up the argument copies and emit them at the end.
+            RegsToPass.push_back(std::make_pair(VA.getLocReg(), ArgValue));
+        else{
+            //assert(VA.isMemLoc() && "Argument not register or memory");
+            llvm_unreachable("Argument not register or memory");
+        }
+    }
+
+    // Join the stores, which are independent of one another.
+    if (!MemOpChains.empty())
+        Chain = DAG.getNode(ISD::TokenFactor, DL, MVT::Other, MemOpChains);
+
+    // Accept direct calls by converting symbolic call address to the
+    // associated Target* opcodes.
+    SDValue Glue;
+    if (auto *G = dyn_cast<GlobalAddressSDNode>(Callee)) {
+        Callee = DAG.getTargetGlobalAddress(G->getGlobal(), DL, PtrVT);
+        Callee = DAG.getNode(VEXISD::WRAPPER, DL, PtrVT, Callee);
+    }else if (auto *E = dyn_cast<ExternalSymbolSDNode>(Callee)) {
+        llvm_unreachable("Target does not implement tail calls!");
+        Callee = DAG.getTargetExternalSymbol(E->getSymbol(), PtrVT);
+        Callee = DAG.getNode(VEXISD::WRAPPER, DL, PtrVT, Callee);
+    } else if (IsTailCall) {
+        llvm_unreachable("Target does not implement tail calls!");
+    }
+
+    // Build a sequence of copy-to-reg nodes, chained and glued together.
+    for (unsigned I = 0, E = RegsToPass.size(); I != E; ++I) {
+        Chain = DAG.getCopyToReg(Chain, DL, RegsToPass[I].first,
+                                 RegsToPass[I].second, Glue);
+        Glue = Chain.getValue(1);
+    }
+
+    // The first call operand is the chain and the second is the target address.
+    SmallVector<SDValue, 8> Ops;
+    Ops.push_back(Chain);
+    Ops.push_back(Callee);
+
+    // Add argument registers to the end of the list so that they are
+    // known live into the call.
+    for (unsigned I = 0, E = RegsToPass.size(); I != E; ++I)
+        Ops.push_back(DAG.getRegister(RegsToPass[I].first,
+                                      RegsToPass[I].second.getValueType()));
+
+    // Add a register mask operand representing the call-preserved registers.
+    const VEXRegisterInfo *TRI = Subtarget.getRegisterInfo();
+    const uint32_t *Mask = TRI->getCallPreservedMask(CallConv);
+    assert (Mask && "Missing call preserved mask for calling convention");
+    Ops.push_back(DAG.getRegisterMask(Mask));
+
+    // Glue the call to the argument copies, if any.
+    if (Glue.getNode())
+        Ops.push_back(Glue);
+
+    // Emit the Call.
+    SDVTList NodeTys = DAG.getVTList(MVT::Other, MVT::Glue);
+
+    Chain = DAG.getNode(VEX::CALL, DL, NodeTys, Ops);
+    Glue = Chain.getValue(1);
+
+    // Mark the end of the call, which is glued to the call itself.
+    Chain = DAG.getCALLSEQ_END(Chain,
+                               DAG.getConstant(NumBytes, PtrVT, true),
+                               DAG.getConstant(0, PtrVT, true),
+                               Glue, DL);
+    Glue = Chain.getValue(1);
+
+    // Assign locations to each value returned by this call.
+    SmallVector<CCValAssign, 16> RetLocs;
+    CCState RetCCInfo(CallConv, IsVarArg, MF, RetLocs, *DAG.getContext());
+
+    AnalyzeRetResult(RetCCInfo, Ins);
+
+    // Copy all of the result registers out of their specified physreg.
+    for (unsigned I = 0, E = RetLocs.size(); I != E; ++I) {
+        CCValAssign &VA = RetLocs[I];
+
+        // Copy the value out, gluing the copy to the end of the call sequence.
+        SDValue RetValue = DAG.getCopyFromReg(Chain, DL, VA.getLocReg(),
+                                              VA.getLocVT(), Glue);
+        Chain = RetValue.getValue(1);
+        Glue = RetValue.getValue(2);
+
+        // Convert the value of the return register into the value that's
+        // being returned.
+        InVals.push_back(Chain.getValue(0));
+    }
+
+    return Chain;
+
+}
+
 
 //===----------------------------------------------------------------------===//
 //             Formal Arguments Calling Convention Implementation

@@ -36,7 +36,7 @@ namespace llvm {
             RET,
             
             PSEUDO_RET,
-            
+            PSEUDO_CALL,
             MAX,
             MAXU,
             MIN,
@@ -103,6 +103,10 @@ private:
     // Lower Operand specifics
     SDValue lowerGlobalAddress(SDValue Op, SelectionDAG &DAG) const;
     SDValue lowerJumpTable(SDValue Op, SelectionDAG &DAG) const;
+
+    SDValue
+    LowerCall(CallLoweringInfo &CLI,
+                SmallVectorImpl<SDValue> &InVals) const override;
     
     //- must be exist even without function all
     SDValue

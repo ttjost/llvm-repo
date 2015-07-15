@@ -74,7 +74,7 @@ bool VEXInstrInfo::expandPostRAPseudo(MachineBasicBlock::iterator MI) const {
         default:
             return false;
         case VEX::PSEUDO_RET:
-            DEBUG(errs() << "\n\nReplacing PSEUDO_RET\n\n");
+            DEBUG(errs() << "\nReplacing PSEUDO_RET\n");
             BuildMI(MBB, MI, MI->getDebugLoc(), get(VEX::RET)).addReg(VEX::Reg1).addReg(VEX::Reg1).addImm(MF.getFrameInfo()->getStackSize()).addReg(VEX::Lr);
             //BuildMI(MBB, MI, MI->getDebugLoc(), get(VEX::RET)).addReg(VEX::Reg1);
             MBB.erase(MI);
