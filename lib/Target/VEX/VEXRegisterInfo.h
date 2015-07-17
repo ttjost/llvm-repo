@@ -46,10 +46,10 @@ public:
     // stack Frame Processing methods
     void eliminateFrameIndex(MachineBasicBlock::iterator II,
                              int SPAdj, unsigned FIOperandNum,
-                             RegScavenger *RS = nullptr) const override;
+                             RegScavenger *RS = nullptr) const;
 
     const TargetRegisterClass *getPointerRegClass(const MachineFunction &MF,
-                                                  unsigned Kind) const override;
+                                                  unsigned Kind) const;
 
     // Debug information queries
     unsigned getFrameRegister(const MachineFunction &MF) const;

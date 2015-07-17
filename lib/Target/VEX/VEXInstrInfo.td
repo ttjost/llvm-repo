@@ -62,7 +62,7 @@ def brtarget : Operand<OtherVT> {
 def SDT_VEXWrapper : SDTypeProfile <1, 1, [SDTCisSameAs<0, 1>,
                                            SDTCisPtrTy<0>]>;
 
-def SDT_VEXCall         : SDTypeProfile<0, -1, [SDTCisVT<0, iPTR>]>;
+def SDT_VEXPseudoCall         : SDTypeProfile<0, -1, [SDTCisVT<0, iPTR>]>;
 def SDT_VEXCallSeqStart : SDCallSeqStart<[SDTCisVT<0, i32>]>;
 def SDT_VEXCallSeqEnd   : SDCallSeqEnd<[SDTCisVT<0, i32>, SDTCisVT<1, i32>]>;
 
@@ -75,7 +75,7 @@ def VEXPseudoRet : SDNode<"VEXISD::PSEUDO_RET", SDTNone,
 
 def VEXWrapper : SDNode<"VEXISD::WRAPPER", SDT_VEXWrapper>;
 
-def VEXCall    : SDNode<"VEXISD::CALL", SDT_VEXCall,
+def VEXPseudoCall    : SDNode<"VEXISD::PSEUDO_CALL", SDT_VEXPseudoCall,
                         [SDNPHasChain, SDNPOutGlue,
                         SDNPOptInGlue, SDNPVariadic]>;
 
@@ -291,6 +291,32 @@ def PSEUDO_RET : Pseudo<(outs), (ins) , [(VEXPseudoRet)]>{
     let isBarrier = 1;
     let isReturn = 1;
 }
+
+//def CALLi : Pseudo<(outs), (ins i32imm:$dst) , [(VEXPseudoCall imm:$dst)]>{
+//    let isTerminator = 1;
+//    let isBarrier = 1;
+//    let isReturn = 1;
+//}
+
+//def PSEUDO_CALLr : Pseudo<(outs), (ins GPRegs:$dst) , [(VEXPseudoCall GPRegs:$dst)]>{
+//    let isTerminator = 1;
+//    let isBarrier = 1;
+//    let isReturn = 1;
+//}
+
+//def PSEUDO_CALLm : Pseudo<(outs), (ins imm32Op:$dst) , [(VEXPseudoCall (load ADDR:$dst))]>{
+//    let isTerminator = 1;
+//    let isBarrier = 1;
+//    let isReturn = 1;
+//}
+
+def ADJCALLSTACKDOWN : Pseudo<(outs), (ins imm32Op:$amt),
+                              [(VEXCallseq_start timm:$amt)],
+                              "#ADJCALLSTACKDOWN">;
+
+def ADJCALLSTACKUP : Pseudo<(outs), (ins imm32Op:$amt1, imm32Op:$amt2),
+                              [(VEXCallseq_end timm:$amt1, timm:$amt2)],
+                              "#ADJCALLSTACKUP">;
 
 // TYPE I Instruction Definitions
 
@@ -633,8 +659,24 @@ def BR        : BranchInstr<"br", 0b00000000, brcond, IIAlu>;
 
 def GOTO      : JumpInstr<"goto", 0b00000000, br, IIAlu>;
 
-def CALL      : CallInstr<"call", 0b00100110, IIAlu>;
+//def CALL      : CallInstr<"call", 0b00100110, IIAlu>;
 
+
+let isTerminator = 1, isBarrier = 1, isReturn = 1 in {
+
+def CALLi     : InstVEX<(outs), (ins i32imm:$offset),
+                        "call $$l0.0 = $offset",
+                        [(VEXPseudoCall imm:$offset)], IIAlu>;
+
+def CALLr : InstVEX<(outs), (ins GPRegs:$offset),
+                    "call $$l0.0 = $offset",
+                    [(VEXPseudoCall GPRegs:$offset)], IIAlu>;
+
+def CALLm : InstVEX<(outs), (ins imm32Op:$offset),
+                    "call $$l0.0 = $offset",
+                    [(VEXPseudoCall (load ADDR:$offset))], IIAlu>;
+
+}
 //===----------------------------------------------------------------------===//
 //                       Non-Instruction Patterns
 //===----------------------------------------------------------------------===//
@@ -643,6 +685,12 @@ def : Pat<(i32 (VEXWrapper tglobaladdr:$dst)), (MOVi tglobaladdr:$dst)>;
 //def : Pat<(i32 (VEXWrapper texternalsym:$dst)), (MOVi texternalsym:$dst)>;
 //def : Pat<(i32 (VEXWrapper tblockaddress:$dst)), (MOVi tblockaddress:$dst)>;
 
+// Calls
+def : Pat<(VEXPseudoCall (i32 tglobaladdr:$dst)),
+          (CALLi tglobaladdr:$dst)>;
+
+def : Pat<(VEXPseudoCall (i32 texternalsym:$dst)),
+          (CALLi texternalsym:$dst)>;
 
 //include "VEXInstrVIS.td"
 //include "VEXInstrAliases.td"

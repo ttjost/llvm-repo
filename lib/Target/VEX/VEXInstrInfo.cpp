@@ -79,7 +79,21 @@ bool VEXInstrInfo::expandPostRAPseudo(MachineBasicBlock::iterator MI) const {
             //BuildMI(MBB, MI, MI->getDebugLoc(), get(VEX::RET)).addReg(VEX::Reg1);
             MBB.erase(MI);
             return true;
-            break;
+//        case VEX::PSEUDO_CALLi:
+//            DEBUG(errs() << "\nReplacing PSEUDO_CALLI\n");
+//            BuildMI(MBB, MI, MI->getDebugLoc(), get(VEX::CALL)).addReg(VEX::Lr).addReg(MI->getOperand(0).getImm());
+//            MBB.erase(MI);
+//            break;
+//        case VEX::PSEUDO_CALLr:
+//            DEBUG(errs() << "\nReplacing PSEUDO_CALLR\n");
+//            BuildMI(MBB, MI, MI->getDebugLoc(), get(VEX::CALL)).addReg(VEX::Lr).addImm(MI->getOperand(0).getImm());
+//            MBB.erase(MI);
+//            break;
+//        case VEX::PSEUDO_CALLm:
+//            DEBUG(errs() << "\nReplacing PSEUDO_CALLM\n");
+//            BuildMI(MBB, MI, MI->getDebugLoc(), get(VEX::CALL)).addReg(VEX::Lr).addImm(MI->getOperand(0).getImm());
+//            MBB.erase(MI);
+//            break;
     }
 
     return false;

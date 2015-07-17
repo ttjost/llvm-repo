@@ -36,11 +36,12 @@ namespace llvm {
             RET,
             
             PSEUDO_RET,
-            PSEUDO_CALL,
             MAX,
             MAXU,
             MIN,
             MINU,
+
+            PSEUDO_CALL,
 
             WRAPPER,
 //            BR,

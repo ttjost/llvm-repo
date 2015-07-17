@@ -68,6 +68,7 @@ const char *VEXTargetLowering::getTargetNodeName(unsigned Opcode) const {
 
 //        case VEXISD::BRF:           return "VEXISD::BRF";
 
+//        case VEXISD::CALL:   return "VEXISD::CALL";
         case VEXISD::PSEUDO_CALL:   return "VEXISD::PSEUDO_CALL";
         
         default:                return NULL;
@@ -203,6 +204,9 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
             SmallVectorImpl<SDValue> &InVals) const {
 
     SelectionDAG &DAG = CLI.DAG;
+
+    DAG.dump();
+
     SDLoc &DL = CLI.DL;
     SmallVectorImpl<ISD::OutputArg> &Outs = CLI.Outs;
     SmallVectorImpl<SDValue> &OutVals = CLI.OutVals;
@@ -309,7 +313,7 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
     // Emit the Call.
     SDVTList NodeTys = DAG.getVTList(MVT::Other, MVT::Glue);
 
-    Chain = DAG.getNode(VEX::CALL, DL, NodeTys, Ops);
+    Chain = DAG.getNode(VEXISD::PSEUDO_CALL, DL, NodeTys, Ops);
     Glue = Chain.getValue(1);
 
     // Mark the end of the call, which is glued to the call itself.
@@ -361,6 +365,7 @@ VEXTargetLowering::LowerFormalArguments(SDValue Chain,
 const {
     DEBUG(errs() << "LowerFormalArguments\n");
 
+    DAG.dump();
     MachineFunction &MF = DAG.getMachineFunction();
     MachineFrameInfo *MFI = MF.getFrameInfo();
     MachineRegisterInfo &MRI = MF.getRegInfo();;
@@ -369,7 +374,7 @@ const {
     
     auto *TFL = static_cast<const VEXFrameLowering *>(Subtarget.getFrameLowering());
     
-    // Assign locations to all of ht eincoming arguments.
+    // Assign locations to all of the incoming arguments.
     SmallVector<CCValAssign, 16> ArgLocs;
     CCState CCInfo(CallConv, IsVarArg, MF, ArgLocs, *DAG.getContext());
     
@@ -457,6 +462,7 @@ VEXTargetLowering::LowerReturn(SDValue Chain,
                                SDLoc DL, SelectionDAG &DAG) const {
     DEBUG(errs() << "LowerReturn : \n");
     
+    DAG.dump();
     // CCValAssign - represent the assignment of the return value to a location
     SmallVector<CCValAssign, 16> RVLocs;
     
