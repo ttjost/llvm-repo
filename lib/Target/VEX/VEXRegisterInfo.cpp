@@ -27,7 +27,7 @@
 #include "llvm/Support/raw_ostream.h"
 
 
-#define DEBUG_TYPE "vex-isel"
+#define DEBUG_TYPE "vex-register"
 
 #define GET_REGINFO_TARGET_DESC
 #include "VEXGenRegisterInfo.inc"

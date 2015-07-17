@@ -36,7 +36,7 @@
 
 namespace llvm{
 
-#define DEBUG_TYPE "vex-isel"
+#define DEBUG_TYPE "vex-isel-h"
 
 class VEXDAGToDAGISel : public SelectionDAGISel {
 public:

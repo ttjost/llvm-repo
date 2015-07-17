@@ -101,7 +101,8 @@ SDValue VEXTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) const {
 
     DEBUG(errs() << "Lower Operation\n");
     switch (Op.getOpcode()) {
-        case ISD::GlobalAddress:        return lowerGlobalAddress(Op, DAG);
+        case ISD::GlobalAddress:        return LowerGlobalAddress(Op, DAG);
+        case ISD::ExternalSymbol:       return LowerExternalSymbol(Op, DAG);
         default:
             break;
     }
@@ -267,11 +268,11 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
     // associated Target* opcodes.
     SDValue Glue;
     if (auto *G = dyn_cast<GlobalAddressSDNode>(Callee)) {
-        Callee = DAG.getTargetGlobalAddress(G->getGlobal(), DL, PtrVT);
+        Callee = DAG.getTargetGlobalAddress(G->getGlobal(), DL, MVT::i32);
         Callee = DAG.getNode(VEXISD::WRAPPER, DL, PtrVT, Callee);
     }else if (auto *E = dyn_cast<ExternalSymbolSDNode>(Callee)) {
-        llvm_unreachable("Target does not implement tail calls!");
-        Callee = DAG.getTargetExternalSymbol(E->getSymbol(), PtrVT);
+        llvm_unreachable("Target does not implement External Symbol yet!");
+        Callee = DAG.getTargetExternalSymbol(E->getSymbol(), MVT::i32);
         Callee = DAG.getNode(VEXISD::WRAPPER, DL, PtrVT, Callee);
     } else if (IsTailCall) {
         llvm_unreachable("Target does not implement tail calls!");
@@ -295,13 +296,13 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
         Ops.push_back(DAG.getRegister(RegsToPass[I].first,
                                       RegsToPass[I].second.getValueType()));
 
-    // Add a register mask operand representing the call-preserved registers.
-    const VEXRegisterInfo *TRI = Subtarget.getRegisterInfo();
-    const uint32_t *Mask = TRI->getCallPreservedMask(CallConv);
-    assert (Mask && "Missing call preserved mask for calling convention");
-    Ops.push_back(DAG.getRegisterMask(Mask));
+//    // Add a register mask operand representing the call-preserved registers.
+//    const VEXRegisterInfo *TRI = Subtarget.getRegisterInfo();
+//    const uint32_t *Mask = TRI->getCallPreservedMask(CallConv);
+//    assert (Mask && "Missing call preserved mask for calling convention");
+//    Ops.push_back(DAG.getRegisterMask(Mask));
 
-    // Glue the call to the argument copies, if any.
+//    // Glue the call to the argument copies, if any.
     if (Glue.getNode())
         Ops.push_back(Glue);
 
@@ -329,10 +330,9 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
         CCValAssign &VA = RetLocs[I];
 
         // Copy the value out, gluing the copy to the end of the call sequence.
-        SDValue RetValue = DAG.getCopyFromReg(Chain, DL, VA.getLocReg(),
-                                              VA.getLocVT(), Glue);
-        Chain = RetValue.getValue(1);
-        Glue = RetValue.getValue(2);
+        Chain = DAG.getCopyFromReg(Chain, DL, VA.getLocReg(),
+                                   VA.getValVT(), Glue).getValue(1);
+        Glue = Chain.getValue(2);
 
         // Convert the value of the return register into the value that's
         // being returned.
@@ -415,7 +415,7 @@ const {
             ArgValue = DAG.getCopyFromReg(Chain, DL, VReg, LocVT);
         }else{
             assert(VA.isMemLoc() && "Argument not register or memory");
-            
+            llvm_unreachable("Not yet implemented!");
             // Create the frame index object for this incoming parameter.
             int FI = MFI->CreateFixedObject(LocVT.getSizeInBits()/8, VA.getLocMemOffset(), true);
             
@@ -492,7 +492,7 @@ VEXTargetLowering::LowerReturn(SDValue Chain,
     return DAG.getNode(VEXISD::PSEUDO_RET, DL, MVT::Other, RetOps);
 }
 
-SDValue VEXTargetLowering::lowerGlobalAddress(SDValue Op, SelectionDAG &DAG) const{
+SDValue VEXTargetLowering::LowerGlobalAddress(SDValue Op, SelectionDAG &DAG) const{
 
     const GlobalValue *GV = cast<GlobalAddressSDNode>(Op)->getGlobal();
 
@@ -506,3 +506,17 @@ SDValue VEXTargetLowering::lowerGlobalAddress(SDValue Op, SelectionDAG &DAG) con
                        getPointerTy(), Result);
 
 }
+
+SDValue VEXTargetLowering::LowerExternalSymbol(SDValue Op, SelectionDAG &DAG) const{
+
+    SDLoc dl(Op);
+    const char *Sym = cast<ExternalSymbolSDNode>(Op)->getSymbol();
+
+    // Create TargetGlobalAddress node, folding in the constant offset.
+    SDValue Result = DAG.getTargetExternalSymbol(Sym, getPointerTy());
+
+    return DAG.getNode(VEXISD::WRAPPER, dl,
+                       getPointerTy(), Result);
+}
+
+

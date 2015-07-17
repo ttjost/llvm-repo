@@ -18,12 +18,6 @@
 
 #include "llvm/Target/TargetFrameLowering.h"
 
-#include "llvm/Support/Debug.h"
-#include "llvm/Support/ErrorHandling.h"
-#include "llvm/Support/raw_ostream.h"
-
-#define DEBUG_TYPE "vex-framelower"
-
 namespace llvm {
 
 class VEXSubtarget;
@@ -36,7 +30,6 @@ public:
     explicit VEXFrameLowering()
     :   TargetFrameLowering(StackGrowsDown,8,0,8 /**sti.stackAlignment(), 0, *sti.stackAlignment()*/)
     {
-        DEBUG(errs() << "Frame Lowering");
     }
  
     /// emitProlog/emitEpilog - These methods insert prolog and epilog code into
