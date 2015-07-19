@@ -27,6 +27,16 @@ def immZExt5 : PatLeaf<(imm32), [{
 
 def imm5Op  : Operand<i32>;
 
+// Node immediate is zero (e.g. insve.d)
+def imms : PatLeaf<(imm), [{ return isInt<1>(N->getSExtValue()); }]>;
+def immSExt8  : PatLeaf<(imm), [{ return isInt<8>(N->getSExtValue()); }]>;
+def immSExt16  : PatLeaf<(imm), [{ return isInt<16>(N->getSExtValue()); }]>;
+
+// Node immediate is zero (e.g. insve.d)
+def immz : PatLeaf<(imm), [{ return isInt<1>(N->getZExtValue()); }]>;
+def immZExt8  : PatLeaf<(imm), [{ return isInt<8>(N->getZExtValue()); }]>;
+def immZExt16  : PatLeaf<(imm), [{ return isInt<16>(N->getZExtValue()); }]>;
+
 def ADDR : ComplexPattern<iPTR, 2, "SelectAddr", [frameindex], []>;
 
 // Address operands
@@ -292,24 +302,6 @@ def PSEUDO_RET : Pseudo<(outs), (ins) , [(VEXPseudoRet)]>{
     let isReturn = 1;
 }
 
-//def CALLi : Pseudo<(outs), (ins i32imm:$dst) , [(VEXPseudoCall imm:$dst)]>{
-//    let isTerminator = 1;
-//    let isBarrier = 1;
-//    let isReturn = 1;
-//}
-
-//def PSEUDO_CALLr : Pseudo<(outs), (ins GPRegs:$dst) , [(VEXPseudoCall GPRegs:$dst)]>{
-//    let isTerminator = 1;
-//    let isBarrier = 1;
-//    let isReturn = 1;
-//}
-
-//def PSEUDO_CALLm : Pseudo<(outs), (ins imm32Op:$dst) , [(VEXPseudoCall (load ADDR:$dst))]>{
-//    let isTerminator = 1;
-//    let isBarrier = 1;
-//    let isReturn = 1;
-//}
-
 def ADJCALLSTACKDOWN : Pseudo<(outs), (ins imm32Op:$amt),
                               [(VEXCallseq_start timm:$amt)],
                               "#ADJCALLSTACKDOWN">;
@@ -454,6 +446,14 @@ defm XOR    : ArithLogicInstr<"xor", 0b00011111, xor, IIAlu, 1, 1>;
 
 defm MOV    : MOVInstr<"mov", 0b00000000, GPRegs, GPRegs, IIAlu>;
 
+def MTB     : MOV_r<0b00000000,
+                    (outs BrRegs:$dst), (ins GPRegs:$s1),
+                    "mtb $dst = $s1", [], IIAlu>;
+
+def MFB     : MOV_r<0b00000000,
+                    (outs GPRegs:$dst), (ins BrRegs:$s1),
+                    "mfb $dst = $s1", [], IIAlu>;
+
 
 // Create Pattern to "not" instruction
 def : Pat<(not GPRegs:$in),
@@ -464,6 +464,8 @@ def : Pat<(i32 imm32:$in),
 (MOVi imm:$in)>;
 def : Pat<(i32 imm:$imm),
 (MOVi imm:$imm)>;
+
+// Move Between Regs
 
 //def : Pat<(i32 (shl GPRegs:$s1, immZExt5:$s2)),(i32 (SHLi GPRegs:$s1, immZExt5:$s2))>;
 
@@ -564,68 +566,70 @@ def MPYHSi      : ArithLogic_i<0b00001010,
 //===----------------------------------------------------------------------===//
 //                      Compare instructions
 //===----------------------------------------------------------------------===//
-
+// TODO: Fix these CMP Instructions. Should have both BRegs and GPRegs
+// as a result to the set*** DAG operation. For now, it only pattern matches
+// with i1 type. It should also do the same for i32.
 // For Branch Registers
-def CMPEQr    : CMPInstr_bregr<"cmpeq", 0b01000000, seteq, IIAlu>;
-def CMPEQi    : CMPInstr_bregi<"cmpeq", 0b01000000, seteq, IIAlu>;
+def CMPEQbr    : CMPInstr_bregr<"cmpeq", 0b01000000, seteq, IIAlu>;
+def CMPEQbi    : CMPInstr_bregi<"cmpeq", 0b01000000, seteq, IIAlu>;
 
-def CMPGEr    : CMPInstr_bregr<"cmpge", 0b01000001, setge, IIAlu>;
-def CMPGEi    : CMPInstr_bregi<"cmpge", 0b01000001, setge, IIAlu>;
+def CMPGEbr    : CMPInstr_bregr<"cmpge", 0b01000001, setge, IIAlu>;
+def CMPGEbi    : CMPInstr_bregi<"cmpge", 0b01000001, setge, IIAlu>;
 
-def CMPGEUr   : CMPInstr_bregr<"cmpgeu", 0b01000010, setuge, IIAlu>;
-def CMPGEUi   : CMPInstr_bregi<"cmpgeu", 0b01000010, setuge, IIAlu>;
+def CMPGEUbr   : CMPInstr_bregr<"cmpgeu", 0b01000010, setuge, IIAlu>;
+def CMPGEUbi   : CMPInstr_bregi<"cmpgeu", 0b01000010, setuge, IIAlu>;
 
-def CMPGTr    : CMPInstr_bregr<"cmpgt", 0b01000011, setgt, IIAlu>;
-def CMPGTi    : CMPInstr_bregi<"cmpgt", 0b01000011, setgt, IIAlu>;
+def CMPGTbr    : CMPInstr_bregr<"cmpgt", 0b01000011, setgt, IIAlu>;
+def CMPGTbi    : CMPInstr_bregi<"cmpgt", 0b01000011, setgt, IIAlu>;
 
-def CMPGTUr   : CMPInstr_bregr<"cmpgtu", 0b01000100, setugt, IIAlu>;
-def CMPGTUi   : CMPInstr_bregi<"cmpgtu", 0b01000100, setugt, IIAlu>;
+def CMPGTUbr   : CMPInstr_bregr<"cmpgtu", 0b01000100, setugt, IIAlu>;
+def CMPGTUbi   : CMPInstr_bregi<"cmpgtu", 0b01000100, setugt, IIAlu>;
 
-def CMPLEr    : CMPInstr_bregr<"cmple", 0b01000101, setle, IIAlu>;
-def CMPLEi    : CMPInstr_bregi<"cmple", 0b01000101, setle, IIAlu>;
+def CMPLEbr    : CMPInstr_bregr<"cmple", 0b01000101, setle, IIAlu>;
+def CMPLEbi    : CMPInstr_bregi<"cmple", 0b01000101, setle, IIAlu>;
 
-def CMPLEUr   : CMPInstr_bregr<"cmpleu", 0b01000110, setule, IIAlu>;
-def CMPLEUi   : CMPInstr_bregi<"cmpleu", 0b01000110, setule, IIAlu>;
+def CMPLEUbr   : CMPInstr_bregr<"cmpleu", 0b01000110, setule, IIAlu>;
+def CMPLEUbi   : CMPInstr_bregi<"cmpleu", 0b01000110, setule, IIAlu>;
 
-def CMPLTr    : CMPInstr_bregr<"cmplt", 0b01000111, setlt, IIAlu>;
-def CMPLTi    : CMPInstr_bregi<"cmplt", 0b01000111, setlt, IIAlu>;
+def CMPLTbr    : CMPInstr_bregr<"cmplt", 0b01000111, setlt, IIAlu>;
+def CMPLTbi    : CMPInstr_bregi<"cmplt", 0b01000111, setlt, IIAlu>;
 
-def CMPLTUr   : CMPInstr_bregr<"cmpltu", 0b01001000, setult, IIAlu>;
-def CMPLTUi   : CMPInstr_bregi<"cmpltu", 0b01001000, setult, IIAlu>;
+def CMPLTUbr   : CMPInstr_bregr<"cmpltu", 0b01001000, setult, IIAlu>;
+def CMPLTUbi   : CMPInstr_bregi<"cmpltu", 0b01001000, setult, IIAlu>;
 
-def CMPNEr    : CMPInstr_bregr<"cmpne", 0b01001001, setne, IIAlu>;
-def CMPNEi    : CMPInstr_bregi<"cmpne", 0b01001001, setne, IIAlu>;
+def CMPNEbr    : CMPInstr_bregr<"cmpne", 0b01001001, setne, IIAlu>;
+def CMPNEbi    : CMPInstr_bregi<"cmpne", 0b01001001, setne, IIAlu>;
 
 // For General Purpose Registers
-//def CMPEQr    : CMPInstr_regr<"cmpeq", 0b01000000, seteq, IIAlu>;
-//def CMPEQi    : CMPInstr_regi<"cmpeq", 0b01000000, seteq, IIAlu>;
-//
-//def CMPGEr    : CMPInstr_regr<"cmpge", 0b01000001, setge, IIAlu>;
-//def CMPGEi    : CMPInstr_regi<"cmpge", 0b01000001, setge, IIAlu>;
-//
-//def CMPGEUr   : CMPInstr_regr<"cmpgeu", 0b01000010, setuge, IIAlu>;
-//def CMPGEUi   : CMPInstr_regi<"cmpgeu", 0b01000010, setuge, IIAlu>;
-//
-//def CMPGTr    : CMPInstr_regr<"cmpgt", 0b01000011, setgt, IIAlu>;
-//def CMPGTi    : CMPInstr_regi<"cmpgt", 0b01000011, setgt, IIAlu>;
-//
-//def CMPGTUr   : CMPInstr_regr<"cmpgtu", 0b01000100, setugt, IIAlu>;
-//def CMPGTUi   : CMPInstr_regi<"cmpgtu", 0b01000100, setugt, IIAlu>;
-//
-//def CMPLEr    : CMPInstr_regr<"cmple", 0b01000101, setle, IIAlu>;
-//def CMPLEi    : CMPInstr_regi<"cmple", 0b01000101, setle, IIAlu>;
-//
-//def CMPLEUr   : CMPInstr_regr<"cmpleu", 0b01000110, setule, IIAlu>;
-//def CMPLEUi   : CMPInstr_regi<"cmpleu", 0b01000110, setule, IIAlu>;
-//
-//def CMPLTr    : CMPInstr_regr<"cmplt", 0b01000111, setlt, IIAlu>;
-//def CMPLTi    : CMPInstr_regi<"cmplt", 0b01000111, setlt, IIAlu>;
-//
-//def CMPLTUr   : CMPInstr_regr<"cmpltu", 0b01001000, setult, IIAlu>;
-//def CMPLTUi   : CMPInstr_regi<"cmpltu", 0b01001000, setult, IIAlu>;
-//
-//def CMPNEr    : CMPInstr_regr<"cmpne", 0b01001001, setne, IIAlu>;
-//def CMPNEi    : CMPInstr_regi<"cmpne", 0b01001001, setne, IIAlu>;
+def CMPEQrr    : CMPInstr_regr<"cmpeq", 0b01000000, seteq, IIAlu>;
+def CMPEQri    : CMPInstr_regi<"cmpeq", 0b01000000, seteq, IIAlu>;
+
+def CMPGErr    : CMPInstr_regr<"cmpge", 0b01000001, setge, IIAlu>;
+def CMPGEri    : CMPInstr_regi<"cmpge", 0b01000001, setge, IIAlu>;
+
+def CMPGEUrr   : CMPInstr_regr<"cmpgeu", 0b01000010, setuge, IIAlu>;
+def CMPGEUri   : CMPInstr_regi<"cmpgeu", 0b01000010, setuge, IIAlu>;
+
+def CMPGTrr    : CMPInstr_regr<"cmpgt", 0b01000011, setgt, IIAlu>;
+def CMPGTri    : CMPInstr_regi<"cmpgt", 0b01000011, setgt, IIAlu>;
+
+def CMPGTUrr   : CMPInstr_regr<"cmpgtu", 0b01000100, setugt, IIAlu>;
+def CMPGTUri   : CMPInstr_regi<"cmpgtu", 0b01000100, setugt, IIAlu>;
+
+def CMPLErr    : CMPInstr_regr<"cmple", 0b01000101, setle, IIAlu>;
+def CMPLEri    : CMPInstr_regi<"cmple", 0b01000101, setle, IIAlu>;
+
+def CMPLEUrr   : CMPInstr_regr<"cmpleu", 0b01000110, setule, IIAlu>;
+def CMPLEUri   : CMPInstr_regi<"cmpleu", 0b01000110, setule, IIAlu>;
+
+def CMPLTrr    : CMPInstr_regr<"cmplt", 0b01000111, setlt, IIAlu>;
+def CMPLTri    : CMPInstr_regi<"cmplt", 0b01000111, setlt, IIAlu>;
+
+def CMPLTUrr   : CMPInstr_regr<"cmpltu", 0b01001000, setult, IIAlu>;
+def CMPLTUri   : CMPInstr_regi<"cmpltu", 0b01001000, setult, IIAlu>;
+
+def CMPNErr    : CMPInstr_regr<"cmpne", 0b01001001, setne, IIAlu>;
+def CMPNEri    : CMPInstr_regi<"cmpne", 0b01001001, setne, IIAlu>;
 
 
 //===----------------------------------------------------------------------===//
@@ -636,11 +640,11 @@ def LDW       : LoadInstr<"ldw", 0b00010000, load_a, IILoad>;
 def STW       : StoreInstr<"stw", 0b00010101, store_a, IIStore>;
 
 def LDH       : LoadInstr<"ldw", 0b00010000, sextloadi16, IILoad>;
-def LDHU       : LoadInstr<"ldw", 0b00010000, extloadi16, IILoad>;
+def LDHU       : LoadInstr<"ldw", 0b00010000, zextloadi16, IILoad>;
 def STH       : StoreInstr<"stw", 0b00010101, truncstorei16, IIStore>;
 
 def LDB       : LoadInstr<"ldw", 0b00010000, sextloadi8, IILoad>;
-def LDBU       : LoadInstr<"ldw", 0b00010000, extloadi8, IILoad>;
+def LDBU       : LoadInstr<"ldw", 0b00010000, zextloadi8, IILoad>;
 def STB       : StoreInstr<"stw", 0b00010101, truncstorei8, IIStore>;
 
 
@@ -659,38 +663,36 @@ def BR        : BranchInstr<"br", 0b00000000, brcond, IIAlu>;
 
 def GOTO      : JumpInstr<"goto", 0b00000000, br, IIAlu>;
 
-//def CALL      : CallInstr<"call", 0b00100110, IIAlu>;
-
-
 let isTerminator = 1, isBarrier = 1, isReturn = 1 in {
-
-def CALLi     : InstVEX<(outs), (ins i32imm:$offset),
+def CALL      : InstVEX<(outs), (ins i32imm:$offset),
                         "call $$l0.0 = $offset",
                         [(VEXPseudoCall imm:$offset)], IIAlu>;
-
-def CALLr : InstVEX<(outs), (ins GPRegs:$offset),
-                    "call $$l0.0 = $offset",
-                    [(VEXPseudoCall GPRegs:$offset)], IIAlu>;
-
-def CALLm : InstVEX<(outs), (ins imm32Op:$offset),
-                    "call $$l0.0 = $offset",
-                    [(VEXPseudoCall (load ADDR:$offset))], IIAlu>;
-
 }
+
 //===----------------------------------------------------------------------===//
 //                       Non-Instruction Patterns
 //===----------------------------------------------------------------------===//
 
 def : Pat<(i32 (VEXWrapper tglobaladdr:$dst)), (MOVi tglobaladdr:$dst)>;
-//def : Pat<(i32 (VEXWrapper texternalsym:$dst)), (MOVi texternalsym:$dst)>;
-//def : Pat<(i32 (VEXWrapper tblockaddress:$dst)), (MOVi tblockaddress:$dst)>;
+def : Pat<(i32 (VEXWrapper texternalsym:$dst)), (MOVi texternalsym:$dst)>;
+def : Pat<(i32 (VEXWrapper tblockaddress:$dst)), (MOVi tblockaddress:$dst)>;
+
+def : Pat<(zext BrRegs:$node), (MFB BrRegs:$node)>;
+
+//def : Pat<(i32 (zext i8:$node)), (MOVi GPRegs:$node)>;
+
+def : Pat<(brcond i32:$cond, bb:$offset), (BR (MTB i32:$cond), bb:$offset)>;
+
 
 // Calls
+def : Pat<(VEXPseudoCall (VEXWrapper tglobaladdr:$dst)),
+            (CALL tglobaladdr:$dst)>;
+
 def : Pat<(VEXPseudoCall (i32 tglobaladdr:$dst)),
-          (CALLi tglobaladdr:$dst)>;
+          (CALL tglobaladdr:$dst)>;
 
 def : Pat<(VEXPseudoCall (i32 texternalsym:$dst)),
-          (CALLi texternalsym:$dst)>;
+          (CALL texternalsym:$dst)>;
 
 //include "VEXInstrVIS.td"
 //include "VEXInstrAliases.td"

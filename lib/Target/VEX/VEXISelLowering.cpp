@@ -85,15 +85,19 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
 
     addRegisterClass(MVT::i32, &VEX::GPRegsRegClass);
     addRegisterClass(MVT::i1, &VEX::BrRegsRegClass);
-    //addRegisterClass(MVT::i32, &VEX::LrRegRegClass);
     
     // must, computeRegisterProperties - Once all of the register classes are
     //  added, this allows us to compute derived properties we expose.
     computeRegisterProperties(STI.getRegisterInfo());
 
-    setOperationAction(ISD::BR_CC, MVT::i32, Promote);
+    setOperationAction(ISD::BR_CC, MVT::i1, Promote);
+    setOperationAction(ISD::BR_CC, MVT::i8, Promote);
+    setOperationAction(ISD::BR_CC, MVT::i16, Promote);
+    setOperationAction(ISD::BR_CC, MVT::i32, Expand);
+    
     setOperationAction(ISD::GlobalAddress, MVT::i32, Custom);
 
+    // This should be enable when we implement the VLIW Packetizer
     //setSchedulingPreference(Sched::VLIW);
     
 }
