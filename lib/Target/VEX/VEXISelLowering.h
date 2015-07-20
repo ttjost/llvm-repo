@@ -127,6 +127,8 @@ private:
     
     //SDValue LowerBRCOND(SDValue Op, SelectionDAG &DAG) const;
     
+    SDValue PerformDAGCombine(SDNode *N, DAGCombinerInfo &DCI) const;
+    
 };
 
 }

@@ -83,6 +83,8 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     // It will emit .align 2 later
       setMinFunctionAlignment(2);
 
+//    setBooleanContents(ZeroOrOneBooleanContent);
+    
     addRegisterClass(MVT::i32, &VEX::GPRegsRegClass);
     addRegisterClass(MVT::i1, &VEX::BrRegsRegClass);
     
@@ -90,12 +92,31 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     //  added, this allows us to compute derived properties we expose.
     computeRegisterProperties(STI.getRegisterInfo());
 
+    setOperationAction(ISD::SIGN_EXTEND_INREG, MVT::i1, Expand);
+//
+    setOperationAction(ISD::Constant, MVT::i1, Promote);
+    setOperationAction(ISD::TRUNCATE, MVT::i1, Promote);
+    
+    setOperationAction(ISD::SELECT_CC, MVT::i1, Promote);
+    setOperationAction(ISD::SELECT_CC, MVT::i8, Promote);
+    setOperationAction(ISD::SELECT_CC, MVT::i16, Promote);
+    setOperationAction(ISD::SELECT_CC, MVT::i32, Expand);
+    setOperationAction(ISD::SELECT_CC, MVT::Other, Expand);
+    
+    setOperationAction(ISD::ANY_EXTEND, MVT::i8, Promote);
+    setOperationAction(ISD::ANY_EXTEND, MVT::i16, Promote);
+    
     setOperationAction(ISD::BR_CC, MVT::i1, Promote);
     setOperationAction(ISD::BR_CC, MVT::i8, Promote);
     setOperationAction(ISD::BR_CC, MVT::i16, Promote);
     setOperationAction(ISD::BR_CC, MVT::i32, Expand);
     
+    //setOperationAction(ISD::SETCC, MVT::i32, Expand);
+    
     setOperationAction(ISD::GlobalAddress, MVT::i32, Custom);
+    
+    // Perform DAG Combination of certain instructions
+    setTargetDAGCombine(ISD::SELECT);
 
     // This should be enable when we implement the VLIW Packetizer
     //setSchedulingPreference(Sched::VLIW);
@@ -527,6 +548,76 @@ SDValue VEXTargetLowering::LowerExternalSymbol(SDValue Op, SelectionDAG &DAG) co
 
     return DAG.getNode(VEXISD::WRAPPER, dl,
                        getPointerTy(), Result);
+}
+
+SDValue CombineMinMax(SDLoc DL, EVT VT, SDValue lhs, SDValue rhs,
+                      SDValue True, SDValue False,
+                      SDValue CC, SelectionDAG &DAG) {
+    
+    if (!(lhs == True && rhs == False) && !(rhs == True && lhs == False))
+        return SDValue();
+    
+    ISD::CondCode CCOpcode = cast<CondCodeSDNode>(CC)->get();
+    
+    switch (CCOpcode) {
+        case ISD::SETULE:
+        case ISD::SETULT: {
+            unsigned Opc = (lhs == True) ? VEXISD::MINU : VEXISD::MAXU;
+            return DAG.getNode(Opc, DL, VT, lhs, rhs);
+        }
+        case ISD::SETLE:
+        case ISD::SETLT: {
+            unsigned Opc = (lhs == True) ? VEXISD::MIN : VEXISD::MAX;
+            return DAG.getNode(Opc, DL, VT, lhs, rhs);
+        }
+        case ISD::SETGT:
+        case ISD::SETGE: {
+            unsigned Opc = (lhs == True) ? VEXISD::MAX : VEXISD::MIN;
+            return DAG.getNode(Opc, DL, VT, lhs, rhs);
+        }
+        case ISD::SETUGE:
+        case ISD::SETUGT: {
+            unsigned Opc = (lhs == True) ? VEXISD::MAXU : VEXISD::MINU;
+            return DAG.getNode(Opc, DL, VT, lhs, rhs);
+        }
+        default:
+            return SDValue();
+    }
+        
+}
+
+// We need this function to perform combination of DAG.
+// Useful for instructions such as max and min, etc.
+SDValue VEXTargetLowering::PerformDAGCombine(SDNode *N,
+                                             DAGCombinerInfo &DCI) const {
+    
+    SelectionDAG &DAG = DCI.DAG;
+    SDLoc DL(N);
+    unsigned Opc = N->getOpcode();
+    
+    switch (Opc) {
+        
+        default:
+            break;
+
+        case ISD::SELECT:
+            SDValue Cond = N->getOperand(0);
+            
+            if (Cond->getOpcode() == ISD::SETCC && Cond.hasOneUse()){
+                EVT VT = N->getValueType(0);
+                SDValue lhs = Cond.getOperand(0);
+                SDValue rhs = Cond.getOperand(1);
+                SDValue CC = Cond.getOperand(2);
+            
+                SDValue True = N->getOperand(1);
+                SDValue False = N->getOperand(2);
+                
+                if (VT == MVT::i32)
+                    return CombineMinMax(DL, VT, lhs, rhs, True, False, CC, DAG);
+            }
+    }
+    
+    return SDValue();
 }
 
 

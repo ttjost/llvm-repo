@@ -1,0 +1,59 @@
+	.text
+	.file	"/Users/ttjost/Dropbox/Universidade/Mestrado/llvm/examples/Codes/simplecall.ll"
+	.globl	sum
+	.align	2
+	.type	sum,@function
+sum::                                   ## @sum
+## BB#0:                                ## %entry
+	c0	add $r0.1 = $r0.1, -8
+	c0	stw 4($r0.1) = $r0.3
+	c0	stw 0($r0.1) = $r0.4
+	c0	ldw $r0.58 = 4($r0.1)
+	c0	add $r0.58 = $r0.58, $r0.4
+	c0	mov $r0.59 = global_a
+	c0	ldw $r0.59 = 0($r0.59)
+	c0	add $r0.3 = $r0.58, $r0.59
+	c0	return $r0.1 = $r0.1, 8, $l0.0
+$func_end0::
+	.size	sum, ($func_end0)-sum
+
+	.globl	main
+	.align	2
+	.type	main,@function
+main::                                  ## @main
+## BB#0:                                ## %entry
+	c0	add $r0.1 = $r0.1, -8
+	c0	mov $r0.58 = 0
+	c0	stw 4($r0.1) = $r0.58
+	c0	mov $r0.58 = global_b
+	c0	ldw $r0.4 = 0($r0.58)
+	c0	mov $r0.58 = global_c
+	c0	ldw $r0.3 = 0($r0.58)
+	c0	call $l0.0 = sum
+	c0	return $r0.1 = $r0.1, 8, $l0.0
+$func_end1::
+	.size	main, ($func_end1)-main
+
+	.type	global_a,@object        ## @global_a
+	.data
+	.globl	global_a
+	.align	2
+global_a::
+	.data4	50                      ## 0x32
+	.size	global_a, 4
+
+	.type	global_b,@object        ## @global_b
+	.globl	global_b
+	.align	2
+global_b::
+	.data4	100                     ## 0x64
+	.size	global_b, 4
+
+	.type	global_c,@object        ## @global_c
+	.globl	global_c
+	.align	2
+global_c::
+	.data4	1000                    ## 0x3e8
+	.size	global_c, 4
+
+
