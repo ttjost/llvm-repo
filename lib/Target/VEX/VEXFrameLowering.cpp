@@ -124,6 +124,8 @@ void VEXFrameLowering::emitPrologue(MachineFunction &MF) const {
     // No need to allocate space on the stack
     if (StackSize == 0 && !MFI->adjustsStack()) return;
     
+    DEBUG(errs() << "StackSize is not ZERO: " << StackSize << "   " << MF.getName() << "\n");
+
     uint64_t NumBytes = 0;
     
     MachineModuleInfo &MMI = MF.getMMI();
@@ -152,7 +154,9 @@ void VEXFrameLowering::emitPrologue(MachineFunction &MF) const {
                 unsigned Reg = I->getReg();
                 {
                     // Reg is in VEXRegs
-                    unsigned CFIIndex = MMI.addFrameInst(MCCFIInstruction::createOffset(nullptr, MRI->getDwarfRegNum(Reg, 1), Offset));
+                    unsigned CFIIndex = MMI.addFrameInst(MCCFIInstruction::createOffset(nullptr,
+                                                                                        MRI->getDwarfRegNum(Reg, 1),
+                                                                                        Offset));
                     BuildMI(MBB, MBBI, DL, TII.get(TargetOpcode::CFI_INSTRUCTION)).addCFIIndex(CFIIndex);
                 }
             }
@@ -188,7 +192,7 @@ void VEXFrameLowering::emitEpilogue(MachineFunction &MF,
     
 }
 
-// FIXME: Can we eleminate these in favour of generic code?
+// FIXME: Can we eliminate these in favour of generic code?
 bool
 VEXFrameLowering::spillCalleeSavedRegisters(MachineBasicBlock &MBB,
                                                MachineBasicBlock::iterator MI,

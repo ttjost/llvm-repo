@@ -402,42 +402,42 @@ def ORCi      : ArithLogic_i<0b01101010,
 // SH1ADD Instruction
 def SH1ADDr      : ArithLogic_r<0b01101011,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
-                          "sh1add",
+                          "sh1add $dst = $s1, $s2",
                            [], IIAlu, 1>;
 
 def SH1ADDi      : ArithLogic_i<0b01101010,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
-                          "sh1add",
+                          "sh1add $dst = $s1, $s2",
                            [], IIAlu, 1>;
 
 // SH2ADD Instruction
 def SH2ADDr      : ArithLogic_r<0b01101100,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
-                          "sh2add",
+                          "sh2add $dst = $s1, $s2",
                            [], IIAlu, 1>;
 def SH2ADDi      : ArithLogic_i<0b01101100,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
-                          "sh2add",
+                          "sh2add $dst = $s1, $s2",
                            [], IIAlu, 1>;
 
 // SH3ADD Instruction
 def SH3ADDr      : ArithLogic_r<0b01101101,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
-                          "sh3add",
+                          "sh3add $dst = $s1, $s2",
                           [], IIAlu, 1>;
 def SH3ADDi      : ArithLogic_i<0b01101101,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
-                          "sh3add",
+                          "sh3add $dst = $s1, $s2",
                            [], IIAlu, 1>;
 
 // SH4ADD Instruction
 def SH4ADDr      : ArithLogic_r<0b01101110,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
-                          "sh3add",
+                          "sh4add $dst = $s1, $s2",
                            [], IIAlu, 1>;
 def SH4ADDi      : ArithLogic_i<0b01101110,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
-                          "sh3add",
+                          "sh4add $dst = $s1, $s2",
                            [], IIAlu, 1>;
                                                      
 // SHL Instruction 

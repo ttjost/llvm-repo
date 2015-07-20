@@ -101,15 +101,16 @@ eliminateFrameIndex(MachineBasicBlock::iterator II, int SPAdj,
     int FrameIndex = MI.getOperand(FIOperandNum).getIndex();
 
     unsigned BasePtr = VEX::Reg1;
-    int Offset = MF.getFrameInfo()->getObjectOffset(FrameIndex);
+    int Offset = TFI->getFrameIndexOffset(MF, FrameIndex);
+    //int Offset = MF.getFrameInfo()->getObjectOffset(FrameIndex);
 
     // Skip the saved PC
     Offset += 4;
 
-    if(!TFI->hasFP(MF))
-        Offset += MF.getFrameInfo()->getStackSize();
-    else
-        Offset += 4;
+//    if(TFI->hasFP(MF))
+//        Offset += MF.getFrameInfo()->getStackSize();
+//    else
+//        Offset += 4;
 
     // Fold imm into offset
     Offset += MI.getOperand(FIOperandNum + 1).getImm();

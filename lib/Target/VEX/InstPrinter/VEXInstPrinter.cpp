@@ -115,9 +115,9 @@ void VEXInstPrinter::printUnsignedImm(const MCInst *mi, int opNum,
 void VEXInstPrinter::printMemOperand(const MCInst *mi, int opNum, raw_ostream &O){
     // Load/Store memory operands -- imm($reg)
     printOperand(mi, opNum+1, O);
-    O << "(";
+    O << "[";
     printOperand(mi, opNum, O);
-    O << ")";
+    O << "]";
 }
 
 void VEXInstPrinter::printMemOperandEA(const MCInst *mi, int opNum, raw_ostream &O){
