@@ -130,36 +130,36 @@ void VEXFrameLowering::emitPrologue(MachineFunction &MF) const {
     MachineModuleInfo &MMI = MF.getMMI();
     const MCRegisterInfo *MRI = MMI.getContext().getRegisterInfo();
     
-//    // Adjust Stack
+    // Adjust Stack
     TII.adjustStackPtr(VEXFI, VEX::Reg1, -StackSize, MBB, MBBI);
     
     const std::vector<CalleeSavedInfo> &CSI = MFI->getCalleeSavedInfo();
     
     // emit ".cfi_def_cfa_offset StackSize"
     // Is that really necessary???
-//    unsigned CFIIndex = MMI.addFrameInst(MCCFIInstruction::createDefCfaOffset(nullptr, -StackSize));
-//    BuildMI(MBB, MBBI, DL, TII.get(TargetOpcode::CFI_INSTRUCTION)).addCFIIndex(CFIIndex);
+    unsigned CFIIndex = MMI.addFrameInst(MCCFIInstruction::createDefCfaOffset(nullptr, -StackSize));
+    BuildMI(MBB, MBBI, DL, TII.get(TargetOpcode::CFI_INSTRUCTION)).addCFIIndex(CFIIndex);
     
-//    if(CSI.size()){
-//        // Find the instruction past the last instruction that saves
-//        // a callee-saved register to the stack.
-//        for (unsigned i = 0; i < CSI.size(); ++i){
-//            ++MBBI;
+    if(CSI.size()){
+        // Find the instruction past the last instruction that saves
+        // a callee-saved register to the stack.
+        for (unsigned i = 0; i < CSI.size(); ++i){
+            ++MBBI;
             
-//            // Iterate over list of callee-saved registers and emit .cfi_offset directives
-//            for (std::vector<CalleeSavedInfo>::const_iterator I = CSI.begin(),
-//                 E = CSI.end(); I != E ; ++I){
-//                uint64_t Offset = MFI->getObjectOffset(I->getFrameIdx());
-//                unsigned Reg = I->getReg();
-//                unsigned DReg = MRI->getDwarfRegNum(Reg, true);
-//                // Reg is in VEXRegs
-//                unsigned CFIIndex = MMI.addFrameInst(
-//                        MCCFIInstruction::createOffset(nullptr, true, Offset));
-//                BuildMI(MBB, MBBI, DL, TII.get(TargetOpcode::CFI_INSTRUCTION))
-//                        .addCFIIndex(CFIIndex);
-//            }
-//        }
-//    }
+            // Iterate over list of callee-saved registers and emit .cfi_offset directives
+            for (std::vector<CalleeSavedInfo>::const_iterator I = CSI.begin(),
+                 E = CSI.end(); I != E ; ++I){
+                uint64_t Offset = MFI->getObjectOffset(I->getFrameIdx());
+                unsigned Reg = I->getReg();
+                unsigned DReg = MRI->getDwarfRegNum(Reg, true);
+                // Reg is in VEXRegs
+                unsigned CFIIndex = MMI.addFrameInst(
+                        MCCFIInstruction::createOffset(nullptr, true, Offset));
+                BuildMI(MBB, MBBI, DL, TII.get(TargetOpcode::CFI_INSTRUCTION))
+                        .addCFIIndex(CFIIndex);
+            }
+        }
+    }
     
 //    if (hasFP(MF)){
 //        // Calculated required stack adjustment

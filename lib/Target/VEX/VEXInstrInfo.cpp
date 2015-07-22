@@ -139,19 +139,19 @@ void VEXInstrInfo::storeRegToStackSlot(MachineBasicBlock &MBB,
                                     MFI.getObjectAlignment(FrameIndex));
 
     // On the order of operands here: think [FrameIndex + 0] = SrcReg.
-//    if (RC == &VEX::GPRegsRegClass)
-//        BuildMI(MBB, MI, DL, get(VEX::STW))
-//                .addFrameIndex(FrameIndex).addImm(0)
-//                .addMemOperand(MMO)
-//                .addReg(SrcReg, getKillRegState(isKill));
-//    else
-//        if (RC == &VEX::BrRegsRegClass)
-//            BuildMI(MBB, MI, DL, get(VEX::STW))
-//                    .addFrameIndex(FrameIndex).addImm(0)
-//                    .addMemOperand(MMO)
-//                    .addReg(SrcReg, getKillRegState(isKill));
-//        else
-//            llvm_unreachable("Can't store this register to stack slot");
+    if (RC == &VEX::GPRegsRegClass)
+        BuildMI(MBB, MI, DL, get(VEX::STW))
+                .addReg(SrcReg, getKillRegState(isKill))
+                .addMemOperand(MMO)
+                .addFrameIndex(FrameIndex).addImm(0);
+    else
+        if (RC == &VEX::BrRegsRegClass)
+            BuildMI(MBB, MI, DL, get(VEX::STW))
+                    .addReg(SrcReg, getKillRegState(isKill))
+                    .addMemOperand(MMO)
+                    .addFrameIndex(FrameIndex).addImm(0);
+        else
+            llvm_unreachable("Can't store this register to stack slot");
 
 }
 
