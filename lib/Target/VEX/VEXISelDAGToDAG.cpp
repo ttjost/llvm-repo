@@ -84,21 +84,12 @@ bool VEXDAGToDAGISel::SelectAddr(SDValue Addr, SDValue &Base, SDValue &Offset) {
                 return true;
             }
         }
-//        if (Addr.getOperand(0).getOpcode() == SPISD::Lo) {
-//            Base = Addr.getOperand(1);
-//            Offset = Addr.getOperand(0).getOperand(0);
-//            return true;
-//        }
-//        if (Addr.getOperand(1).getOpcode() == SPISD::Lo) {
-//            Base = Addr.getOperand(0);
-//            Offset = Addr.getOperand(1).getOperand(0);
-//            return true;
-//        }
     }
     Base = Addr;
     Offset = CurDAG->getTargetConstant(0, MVT::i32);
     return true;
 }
+
 // Select instructions not customized!
 // Used for expanded, promoted and normal instructions
 SDNode * VEXDAGToDAGISel::Select(SDNode *Node){

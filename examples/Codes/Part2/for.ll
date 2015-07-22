@@ -57,25 +57,26 @@ for.body4:                                        ; preds = %for.cond2
   br i1 %cmp7, label %if.then, label %if.end
 
 if.then:                                          ; preds = %for.body4
-  store i32 3, i32* %retval
+  %11 = load i32, i32* %i, align 4
+  store i32 %11, i32* %retval
   br label %return
 
 if.end:                                           ; preds = %for.body4
   br label %for.inc8
 
 for.inc8:                                         ; preds = %if.end
-  %11 = load i32, i32* %i, align 4
-  %inc9 = add nsw i32 %11, 1
+  %12 = load i32, i32* %i, align 4
+  %inc9 = add nsw i32 %12, 1
   store i32 %inc9, i32* %i, align 4
   br label %for.cond2
 
 for.end10:                                        ; preds = %for.cond2
-  store i32 1, i32* %retval
+  store i32 -1, i32* %retval
   br label %return
 
 return:                                           ; preds = %for.end10, %if.then
-  %12 = load i32, i32* %retval
-  ret i32 %12
+  %13 = load i32, i32* %retval
+  ret i32 %13
 }
 
 attributes #0 = { nounwind "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="mips32r2" "unsafe-fp-math"="false" "use-soft-float"="false" }

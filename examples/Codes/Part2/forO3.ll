@@ -24,22 +24,22 @@ for.body:                                         ; preds = %for.body, %entry
 for.body4.preheader:                              ; preds = %for.body
   br label %for.body4
 
-for.cond2:                                        ; preds = %for.body4
-  %cmp3 = icmp slt i32 %inc9, 100
-  br i1 %cmp3, label %for.body4, label %return
-
-for.body4:                                        ; preds = %for.body4.preheader, %for.cond2
-  %i.120 = phi i32 [ %inc9, %for.cond2 ], [ 0, %for.body4.preheader ]
+for.body4:                                        ; preds = %for.body4.preheader, %for.inc8
+  %i.120 = phi i32 [ %inc9, %for.inc8 ], [ 0, %for.body4.preheader ]
   %arrayidx5 = getelementptr inbounds [100 x i32], [100 x i32]* @a, i32 0, i32 %i.120
   %0 = load i32, i32* %arrayidx5, align 4, !tbaa !1
   %arrayidx6 = getelementptr inbounds [100 x i32], [100 x i32]* @b, i32 0, i32 %i.120
   %1 = load i32, i32* %arrayidx6, align 4, !tbaa !1
   %cmp7 = icmp eq i32 %0, %1
-  %inc9 = add nuw nsw i32 %i.120, 1
-  br i1 %cmp7, label %return, label %for.cond2
+  br i1 %cmp7, label %return, label %for.inc8
 
-return:                                           ; preds = %for.cond2, %for.body4
-  %retval.0 = phi i32 [ 3, %for.body4 ], [ 1, %for.cond2 ]
+for.inc8:                                         ; preds = %for.body4
+  %inc9 = add nuw nsw i32 %i.120, 1
+  %cmp3 = icmp slt i32 %inc9, 100
+  br i1 %cmp3, label %for.body4, label %return
+
+return:                                           ; preds = %for.inc8, %for.body4
+  %retval.0 = phi i32 [ %i.120, %for.body4 ], [ -1, %for.inc8 ]
   ret i32 %retval.0
 }
 
