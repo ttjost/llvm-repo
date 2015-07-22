@@ -18,7 +18,7 @@ class VexGPR<bits<16> Enc, string n> : VEXReg<Enc, n>;
 class Br<bits<16> Enc, string n> : VEXReg<Enc, n>;
 
 // Class for Link Register
-class Lr<bits<16> Enc, string n> : VEXReg<Enc, n>;
+//class Lr<bits<16> Enc, string n> : VEXReg<Enc, n>;
 
 // Defining General Purpose registers
 // TODO: Make parametrizable
@@ -28,10 +28,10 @@ foreach I = 0-63 in
 
 // Branch Registers
 foreach I = 0-7 in
-  def BrReg#I : Br<I, "b0."#I >, DwarfRegNum<[!add(I, 64)]>;
+  def BrReg#I : Br<I, "b0."#I >, DwarfRegNum<[!add(I, 65)]>;
   
 // Define Link Register
-def Lr    :  VexGPR<64, "l0.0">, DwarfRegNum<[73]>;
+def Lr    :  VexGPR<64, "l0.0">, DwarfRegNum<[64]>;
 
 //
 // FIXME: the register order should be defined in terms of the preferred
@@ -40,7 +40,7 @@ def Lr    :  VexGPR<64, "l0.0">, DwarfRegNum<[73]>;
 // This register class should not be used to hold i64 values, use the I64Regs
 // register class for that. The i64 type is included here to allow i64 patterns
 // using the integer instructions.
-def GPRegs : RegisterClass<"VEX", [i32], 32, (sequence "Reg%u", 0, 63)>;
+def GPRegs : RegisterClass<"VEX", [i32], 32, (add Lr, (sequence "Reg%u", 0, 63))>;
                             
 def BrRegs  : RegisterClass<"VEX", [i1], 32, (sequence "BrReg%u", 0, 7)>;
                            

@@ -230,7 +230,7 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
 
     SelectionDAG &DAG = CLI.DAG;
 
-    DAG.dump();
+    //DAG.dump();
 
     SDLoc &DL = CLI.DL;
     SmallVectorImpl<ISD::OutputArg> &Outs = CLI.Outs;
@@ -390,7 +390,7 @@ VEXTargetLowering::LowerFormalArguments(SDValue Chain,
 const {
     DEBUG(errs() << "LowerFormalArguments\n");
 
-    DAG.dump();
+    //DAG.dump();
     MachineFunction &MF = DAG.getMachineFunction();
     MachineFrameInfo *MFI = MF.getFrameInfo();
     MachineRegisterInfo &MRI = MF.getRegInfo();;
@@ -487,7 +487,7 @@ VEXTargetLowering::LowerReturn(SDValue Chain,
                                SDLoc DL, SelectionDAG &DAG) const {
     DEBUG(errs() << "LowerReturn : \n");
     
-    DAG.dump();
+    //DAG.dump();
     // CCValAssign - represent the assignment of the return value to a location
     SmallVector<CCValAssign, 16> RVLocs;
     

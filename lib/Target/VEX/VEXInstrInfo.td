@@ -693,7 +693,7 @@ def BR        : BranchInstr<"br", 0b00000000, brcond, IIAlu>;
 
 def GOTO      : JumpInstr<"goto", 0b00000000, br, IIAlu>;
 
-let isTerminator = 1, isBarrier = 1, isReturn = 1 in {
+let isCall = 1 in {
 def CALL      : InstVEX<(outs), (ins i32imm:$offset),
                         "call $$l0.0 = $offset",
                         [(VEXPseudoCall imm:$offset)], IIAlu>;

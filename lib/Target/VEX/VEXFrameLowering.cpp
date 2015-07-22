@@ -112,7 +112,6 @@ void VEXFrameLowering::emitPrologue(MachineFunction &MF) const {
     MachineFrameInfo *MFI = MF.getFrameInfo();
     VEXFunctionInfo *VEXFI = MF.getInfo<VEXFunctionInfo>();
 
-    
     const VEXInstrInfo &TII = *static_cast<const VEXInstrInfo *>(MF.getSubtarget().getInstrInfo());
     const VEXRegisterInfo *RegInfo = static_cast<const VEXRegisterInfo *>(MF.getSubtarget().getRegisterInfo());
     
@@ -138,30 +137,29 @@ void VEXFrameLowering::emitPrologue(MachineFunction &MF) const {
     
     // emit ".cfi_def_cfa_offset StackSize"
     // Is that really necessary???
-    unsigned CFIIndex = MMI.addFrameInst(MCCFIInstruction::createDefCfaOffset(nullptr, -StackSize));
-    BuildMI(MBB, MBBI, DL, TII.get(TargetOpcode::CFI_INSTRUCTION)).addCFIIndex(CFIIndex);
+//    unsigned CFIIndex = MMI.addFrameInst(MCCFIInstruction::createDefCfaOffset(nullptr, -StackSize));
+//    BuildMI(MBB, MBBI, DL, TII.get(TargetOpcode::CFI_INSTRUCTION)).addCFIIndex(CFIIndex);
     
-    if(CSI.size()){
-        // Find the instruction past the last instruction that saves
-        // a callee-saved register to the stack.
-        for (unsigned i = 0; i < CSI.size(); ++i){
-            ++MBBI;
+//    if(CSI.size()){
+//        // Find the instruction past the last instruction that saves
+//        // a callee-saved register to the stack.
+//        for (unsigned i = 0; i < CSI.size(); ++i){
+//            ++MBBI;
             
-            // Iterate over list of callee-saved registers and emit .cfi_offset directives
-            for (std::vector<CalleeSavedInfo>::const_iterator I = CSI.begin(),
-                 E = CSI.end(); I != E ; ++I){
-                uint64_t Offset = MFI->getObjectOffset(I->getFrameIdx());
-                unsigned Reg = I->getReg();
-                {
-                    // Reg is in VEXRegs
-                    unsigned CFIIndex = MMI.addFrameInst(MCCFIInstruction::createOffset(nullptr,
-                                                                                        MRI->getDwarfRegNum(Reg, 1),
-                                                                                        Offset));
-                    BuildMI(MBB, MBBI, DL, TII.get(TargetOpcode::CFI_INSTRUCTION)).addCFIIndex(CFIIndex);
-                }
-            }
-        }
-    }
+//            // Iterate over list of callee-saved registers and emit .cfi_offset directives
+//            for (std::vector<CalleeSavedInfo>::const_iterator I = CSI.begin(),
+//                 E = CSI.end(); I != E ; ++I){
+//                uint64_t Offset = MFI->getObjectOffset(I->getFrameIdx());
+//                unsigned Reg = I->getReg();
+//                unsigned DReg = MRI->getDwarfRegNum(Reg, true);
+//                // Reg is in VEXRegs
+//                unsigned CFIIndex = MMI.addFrameInst(
+//                        MCCFIInstruction::createOffset(nullptr, true, Offset));
+//                BuildMI(MBB, MBBI, DL, TII.get(TargetOpcode::CFI_INSTRUCTION))
+//                        .addCFIIndex(CFIIndex);
+//            }
+//        }
+//    }
     
 //    if (hasFP(MF)){
 //        // Calculated required stack adjustment
@@ -198,7 +196,23 @@ VEXFrameLowering::spillCalleeSavedRegisters(MachineBasicBlock &MBB,
                                                MachineBasicBlock::iterator MI,
                                                const std::vector<CalleeSavedInfo> &CSI,
                                                const TargetRegisterInfo *TRI) const {
-    
+    return false;
+
+    MachineFunction *MF = MBB.getParent();
+    MachineBasicBlock *EntryBlock = MF->begin();
+
+    // Registers Lr and other called saved registers
+    // need to be saved with a STORE instruction during emitPrologue
+    for (unsigned i = 0, e = CSI.size(); i != e; ++i){
+        // Add the callee-saved register as live-in.
+        // TODO: Do I need to omit this procedure for Link Register?
+        unsigned Reg = CSI[i].getReg();
+        bool IsRAAndRetAddrIsTaken = MF->getFrameInfo()->isReturnAddressTaken();
+
+        if(!IsRAAndRetAddrIsTaken)
+            EntryBlock->addLiveIn(Reg);
+    }
+
     return true;
 }
 
@@ -208,19 +222,43 @@ VEXFrameLowering::restoreCalleeSavedRegisters(MachineBasicBlock &MBB,
                                                  const std::vector<CalleeSavedInfo> &CSI,
                                                  const TargetRegisterInfo *TRI) const {
 
-    return true;
+    return false;
 }
 
 void VEXFrameLowering::
 eliminateCallFramePseudoInstr(MachineFunction &MF, MachineBasicBlock &MBB,
                               MachineBasicBlock::iterator I) const {
-    
+  MachineInstr &MI = *I;
+
+  if (MI.getOpcode() == VEX::ADJCALLSTACKDOWN) {
+    // TODO: add code
+  } else if (MI.getOpcode() == VEX::ADJCALLSTACKUP) {
+    // TODO: add code
+  } else {
+    llvm_unreachable("Cannot handle this call frame pseudo instruction");
+  }
+  MBB.erase(I);
 }
 
+// This function is called immediately before the insertion of
+// Prolog and Epilog code. We need to explicitly tell the function
+// that Link Register needs to be saved for the function.
+// This only needs to happen when we have a call to another
+// function. If we don't we mark as unused and save an instruction
+// on being added.
 void
-VEXFrameLowering::processFunctionBeforeFrameFinalized(MachineFunction &MF,
-                                                         RegScavenger *) const {
-    
+VEXFrameLowering::processFunctionBeforeCalleeSavedScan
+                  (MachineFunction &MF, RegScavenger *RS) const {
+
+    MachineRegisterInfo &MRI = MF.getRegInfo();
+
+    // Needs to mark Link Register used only when
+    // the function calls another function
+    if (MF.getFrameInfo()->hasCalls())
+      MRI.setPhysRegUsed(VEX::Lr);
+    else {
+      MRI.setPhysRegUnused(VEX::Lr);
+    }
 }
 
 bool VEXFrameLowering::hasFP(const MachineFunction &MF) const{

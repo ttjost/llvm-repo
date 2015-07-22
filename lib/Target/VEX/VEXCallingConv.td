@@ -21,5 +21,6 @@ def CC_VEX_Address : CallingConv<[
   CCAssignToStack<4, 4>
 ]>;
 
-//def CSR: CalleeSavedRegs<(add Lr, (sequence "Reg%u", 57, 6))>;
-def CSR: CalleeSavedRegs<(add (sequence "Reg%u", 57, 6))>;
+// It should also include LinkRegister which is represented by Reg64.
+def CSR: CalleeSavedRegs<(add Lr, (sequence "Reg%u", 57, 6))>;
+

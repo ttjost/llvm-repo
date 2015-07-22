@@ -171,7 +171,7 @@ inline static unsigned getVEXRegisterNumbering(unsigned RegEnum)
   case VEX::BrReg7:
     return 7;
   case VEX::Lr:
-    return 0;
+    return 64;
   default: llvm_unreachable("Unknown register number!");
   }
 }

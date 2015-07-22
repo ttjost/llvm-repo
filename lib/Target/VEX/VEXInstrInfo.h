@@ -60,6 +60,11 @@ namespace llvm{
                                  const TargetRegisterClass *RC,
                                  const TargetRegisterInfo *TRI) const;
         
+        // Use in EmitPrologue to adjust SP by FrameSize bytes and save
+        void makeFrame(unsigned SP, int64_t FrameSize,
+                                     MachineBasicBlock &MBB,
+                                     MachineBasicBlock::iterator I) const;
+
         // Adjust SP by Amount bytes
         void adjustStackPtr(VEXFunctionInfo *VEXFI, unsigned SP, uint64_t Amount,
                             MachineBasicBlock &MBB, MachineBasicBlock::iterator I)

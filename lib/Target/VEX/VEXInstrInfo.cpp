@@ -104,18 +104,18 @@ void VEXInstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
                                     MFI.getObjectSize(FrameIndex),
                                     MFI.getObjectAlignment(FrameIndex));
 
-//    // On the order of operands here: think [FrameIndex + 0] = SrcReg.
-//    if (RC == &VEX::GPRegsRegClass)
-//        BuildMI(MBB, MI, DL, get(VEX::LDW), DestReg)
-//                .addFrameIndex(FrameIndex).addImm(0)
-//                .addMemOperand(MMO);
-//    else
-//        if (RC == &VEX::BrRegsRegClass)
-//            BuildMI(MBB, MI, DL, get(VEX::LDW), DestReg)
-//                    .addFrameIndex(FrameIndex).addImm(0)
-//                    .addMemOperand(MMO);
-//        else
-//            llvm_unreachable("Can't store this register to stack slot");
+    // On the order of operands here: think [FrameIndex + 0] = SrcReg.
+    if (RC == &VEX::GPRegsRegClass)
+        BuildMI(MBB, MI, DL, get(VEX::LDW), DestReg)
+                .addFrameIndex(FrameIndex).addImm(0)
+                .addMemOperand(MMO);
+    else
+        if (RC == &VEX::BrRegsRegClass)
+            BuildMI(MBB, MI, DL, get(VEX::LDW), DestReg)
+                    .addFrameIndex(FrameIndex).addImm(0)
+                    .addMemOperand(MMO);
+        else
+            llvm_unreachable("Can't store this register to stack slot");
 
 }
 
@@ -142,14 +142,26 @@ void VEXInstrInfo::storeRegToStackSlot(MachineBasicBlock &MBB,
 //    if (RC == &VEX::GPRegsRegClass)
 //        BuildMI(MBB, MI, DL, get(VEX::STW))
 //                .addFrameIndex(FrameIndex).addImm(0)
-//                .addReg(SrcReg, getKillRegState(isKill)).addMemOperand(MMO);
+//                .addMemOperand(MMO)
+//                .addReg(SrcReg, getKillRegState(isKill));
 //    else
 //        if (RC == &VEX::BrRegsRegClass)
 //            BuildMI(MBB, MI, DL, get(VEX::STW))
 //                    .addFrameIndex(FrameIndex).addImm(0)
-//                    .addReg(SrcReg, getKillRegState(isKill)).addMemOperand(MMO);
+//                    .addMemOperand(MMO)
+//                    .addReg(SrcReg, getKillRegState(isKill));
 //        else
 //            llvm_unreachable("Can't store this register to stack slot");
+
+}
+
+void VEXInstrInfo::makeFrame(unsigned SP, int64_t FrameSize,
+                             MachineBasicBlock &MBB,
+                             MachineBasicBlock::iterator I) const {
+    DebugLoc DL = I != MBB.end() ? I->getDebugLoc() : DebugLoc();
+    MachineFunction &MF = *MBB.getParent();
+    MachineFrameInfo *MFI = MF.getFrameInfo();
+    const BitVector Reserved = RI.getReservedRegs(MF);
 
 }
 
