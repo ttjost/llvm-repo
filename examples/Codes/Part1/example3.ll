@@ -2,7 +2,7 @@
 target datalayout = "E-m:m-p:32:32-i8:8:32-i16:16:32-i64:64-n32-S64"
 target triple = "mips-unknown-linux-gnu"
 
-@a = global i32 10, align 4
+@a = global i32 1, align 4
 @b = global i32 20, align 4
 @c = global i8 97, align 1
 

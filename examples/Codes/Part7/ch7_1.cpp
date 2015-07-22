@@ -10,3 +10,11 @@ int test_local_pointer()
 
   return *p;
 }
+
+int main() {
+
+	int a = test_local_pointer();
+
+	return 1000 + a;
+
+}

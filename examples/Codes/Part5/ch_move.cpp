@@ -12,5 +12,5 @@ int main()
 
   c = a + b + d + e;
 
-  return 0;
+  return c;
 }

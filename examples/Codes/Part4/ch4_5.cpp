@@ -1,7 +1,7 @@
 // clang -target mips-unknown-linux-gnu -c ch4_5.cpp -emit-llvm -o ch4_5.bc
 // /Users/Jonathan/llvm/test/cmake_debug_build/Debug/bin/llc -march=cpu0 -mcpu=cpu032I -relocation-model=pic -filetype=asm ch4_5.bc -o -
 // /Users/Jonathan/llvm/test/cmake_debug_build/Debug/bin/llc -march=cpu0 -mcpu=cpu032II -relocation-model=pic -filetype=asm ch4_5.bc -o -
-
+#include <stdio.h>
 
 /// start
 int test_andorxornot()
@@ -34,3 +34,14 @@ int test_setxx()
   return (c+d+e+f+g+h); // 3
 }
 
+int main () {
+
+
+	int a = test_andorxornot();
+
+	int b = test_setxx();
+	printf("%d\n", a+b);
+	return a + b;
+
+
+}

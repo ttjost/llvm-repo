@@ -492,93 +492,93 @@ def : Pat<(i32 imm:$imm),
 //===----------------------------------------------------------------------===//
 def MPYLLr      : ArithLogic_r<0b00000000,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
-                          "mpyll",
+                          "mpyll $dst = $s1, $s2",
                            [], IIMul, 1>;
 def MPYLLi      : ArithLogic_i<0b00000000,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
-                          "mpyll",
+                          "mpyll $dst = $s1, $s2",
                            [], IIMul, 1>;
                     
 def MPYLLUr      : ArithLogic_r<0b00000001,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
-                          "mpyllu",
+                          "mpyllu $dst = $s1, $s2",
                            [], IIMul, 1>;
 def MPYLLUi      : ArithLogic_i<0b00000001,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
-                          "mpyllu",
+                          "mpyllu $dst = $s1, $s2",
                            [], IIMul, 1>;
                            
 def MPYLHr      : ArithLogic_r<0b00000010,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
-                          "mpylh",
+                          "mpylh $dst = $s1, $s2",
                            [], IIMul, 1>;
 def MPYLHi      : ArithLogic_i<0b00000010,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
-                          "mpylh",
+                          "mpylh $dst = $s1, $s2",
                            [], IIMul, 1>;
                            
 def MPYHHr      : ArithLogic_r<0b00000011,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
-                          "mpyhh",
+                          "mpyhh $dst = $s1, $s2",
                            [], IIMul, 1>;
 def MPYHHi      : ArithLogic_i<0b00000011,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
-                          "mpyhh",
+                          "mpyhh $dst = $s1, $s2",
                            [], IIMul, 1>;
 
 def MPYHHUr      : ArithLogic_r<0b00000100,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
-                          "mpyhhu",
+                          "mpyhhu $dst = $s1, $s2",
                            [], IIMul, 1>;
 def MPYHHUi      : ArithLogic_i<0b00000100,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
-                          "mpyhhu",
+                          "mpyhhu $dst = $s1, $s2",
                            [], IIMul, 1>;
                     
 def MPYLr      : ArithLogic_r<0b00000101,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
-                          "mpyl",
+                          "mpyl $dst = $s1, $s2",
                            [], IIMul, 1>;
 def MPYLi      : ArithLogic_i<0b00000101,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
-                          "mpyl",
+                          "mpyl $dst = $s1, $s2",
                            [], IIMul, 1>;
                            
 def MPYLUr      : ArithLogic_r<0b00000110,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
-                          "mpylu",
+                          "mpylu $dst = $s1, $s2",
                            [], IIMul, 1>;
 def MPYLUi      : ArithLogic_i<0b00000110,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
-                          "mpylu",
+                          "mpylu $dst = $s1, $s2",
                            [], IIMul, 1>;
                            
 def MPYHr      : ArithLogic_r<0b00000111,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
-                          "mpyh",
+                          "mpyh $dst = $s1, $s2",
                            [], IIMul, 1>;
 def MPYHi      : ArithLogic_i<0b00000111,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
-                          "mpyh",
+                          "mpyh $dst = $s1, $s2",
                            [], IIMul, 1>;
                            
                            
 def MPYHUr      : ArithLogic_r<0b00001001,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
-                          "mpyhu",
+                          "mpyhu $dst = $s1, $s2",
                            [], IIMul, 1>;
 def MPYHUi      : ArithLogic_i<0b00001001,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
-                          "mpyhu",
+                          "mpyhu $dst = $s1, $s2",
                            [], IIMul, 1>;
                            
 def MPYHSr      : ArithLogic_r<0b00001010,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
-                          "mpyhs",
+                          "mpyhs $dst = $s1, $s2",
                            [], IIMul, 1>;
 def MPYHSi      : ArithLogic_i<0b00001010,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
-                          "mpyhs",
+                          "mpyhs $dst = $s1, $s2",
                            [], IIMul, 1>;
                            
 //===----------------------------------------------------------------------===//
@@ -702,6 +702,9 @@ def CALL      : InstVEX<(outs), (ins i32imm:$offset),
 //===----------------------------------------------------------------------===//
 //                       Non-Instruction Patterns
 //===----------------------------------------------------------------------===//
+
+def : Pat<(mul GPRegs:$lhs, GPRegs:$rhs), (ADDr (MPYLUr $lhs, $rhs), (MPYHSr $lhs, $rhs))>;
+def : Pat<(mul GPRegs:$lhs, GPRegs:$rhs), (ADDr (MPYLUi $lhs, $rhs), (MPYHSi $lhs, $rhs))>;
 
 // 1-to-32-bit extension
 def : Pat<(i32 (anyext BrRegs:$src)), (MFB BrRegs:$src)>;

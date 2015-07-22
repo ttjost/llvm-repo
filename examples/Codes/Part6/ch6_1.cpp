@@ -22,3 +22,11 @@ int test_global()
 
   return c;
 }
+int global_a = 100;
+int main() {
+
+	int a = global_a + test_global();
+
+	return a;
+
+}

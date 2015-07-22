@@ -146,9 +146,17 @@ std::pair<bool, SDNode*> VEXDAGToDAGISel::selectNode(SDNode *Node){
     unsigned MultOpc;
 
     switch(Opcode){
-            //case VEX::RET:
-            
-        //    break;
+            case ISD::MUL: {
+                DEBUG(errs() << "Selecting node mult.");
+//                mpylu LO_REGISTER = rs, rt
+//                mpyhs aux = rs, rt
+//                add LO_REGISTER = LO_REGISTER, aux
+//                  SDValue LHS = Node->getOperand(1);
+//                  SDValue RHS = Node->getOperand(2);
+
+//                  MultOpc = VEX::MPYLU
+            }
+            break;
         default: break;
     }
 

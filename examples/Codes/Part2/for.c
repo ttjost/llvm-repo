@@ -14,8 +14,8 @@ int main(){
 
 	for (i = 0; i < 100 ; i++){
 		if (a[i] == b[i])
-			return 3;
+			return i;
 	}
 
-	return 1;
+	return -1;
 }

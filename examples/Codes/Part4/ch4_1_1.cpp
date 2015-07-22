@@ -30,3 +30,12 @@ int test_math()
 // 7+3+10+20-10+1+3+32+4+4+0 = 74
 }
 
+int main () {
+
+	int a = test_math();
+
+	return 1000+a;
+
+
+}
+
