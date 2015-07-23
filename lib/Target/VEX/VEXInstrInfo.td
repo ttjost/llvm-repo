@@ -485,12 +485,13 @@ def : Pat<(i32 imm:$imm),
 (MOVi imm:$imm)>;
 
 // Handle FrameIndex. Similar to LEA_ADDri from Sparc Architecture
-let isCodeGenOnly = 1 in {
-def LEA_ADDri   : InstVEX<(outs GPRegs:$dst), (ins MEM:$addr),
-                          "add $dst = $addr, $addr",
-                          [(set iPTR:$dst, ADDR:$addr)],
-                          IIAlu>;
-}
+//let isCodeGenOnly = 1 in {
+//def LEA_ADDri   : InstVEX<(outs GPRegs:$dst), (ins MEM:$addr),
+//                          "add $dst = $addr, $addr",
+//                          [(set iPTR:$dst, ADDR:$addr)],
+//                          IIAlu>;
+//}
+
 // Move Between Regs
 
 
