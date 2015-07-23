@@ -168,29 +168,6 @@ multiclass MOVInstr<string OpcStr, bits<8> Opcode, RegisterClass DstOp, Register
                    [], Itin>;
 }
 
-//multiclass CMPInstr<string OpcStr, bits<8> OpVal, PatFrag cond_op, InstrItinClass Itin> {
-//  def rr  : CMP_regr <Opcode,
-//                     (outs DstOp:$dst), (ins SrcOp:$s1),
-//                     !strconcat(OpcStr, " $dst = $s1"),
-//                     [(set DstOp:$dst, SrcOp:$s1)], Itin>;
-//  def ri  : CMP_regi <Opcode,
-//                   (outs DstOp:$dst), (ins imm32Op:$s1),
-//                   !strconcat(OpcStr, " $dst = $s1"),
-//                   [(set DstOp:$dst, imm32:$s1)], Itin>;
-//
-//  def br  : CMP_bregr <Opcode,
-//                     (outs DstOp:$dst), (ins SrcOp:$s1),
-//                     !strconcat(OpcStr, " $dst = $s1"),
-//                     [(set DstOp:$dst, SrcOp:$s1)], Itin>;
-//  def bi  : CMP_bregi <Opcode,
-//                   (outs DstOp:$dst), (ins imm32Op:$s1),
-//                   !strconcat(OpcStr, " $dst = $s1"),
-//                   [(set DstOp:$dst, imm32:$s1)], Itin>;
-//    {
-//    let isCompare = 1;
-//    }
-//}
-
 let isCompare = 1 in {
 
 multiclass CMPInstr<string OpcStr, bits<8> OpVal, PatFrag cond_op, InstrItinClass Itin>{
@@ -281,22 +258,6 @@ def iz  : InstVEX<(outs GPRegs:$dst), (ins BrRegs:$cond, GPRegs:$s1, imm32Op:$s2
                  !strconcat(OpcStr, "slctf $dst = $cond, "),
                  [(set GPRegs:$dst, (select (not BrRegs:$cond), GPRegs:$s1, imm32:$s2))], Itin>;
 }
-
-//class SetCC_R<bits<8> op, string instr_asm, PatFrag cond_op,
-//              RegisterClass RC>:
-//  TYPE2<op, (outs GPROut:$ra), (ins RC:$rb, RC:$rc),
-//     !strconcat(instr_asm, "\t$ra, $rb, $rc"),
-//     [(set GPROut:$ra, (cond_op RC:$rb, RC:$rc))],
-//     IIAlu>  {
-//  let shamt = 0;
-//}
-
-//class SetCC_I<bits<8> op, string instr_asm, PatFrag cond_op>:
-//  TYPE2<op, (outs GPROut:$ra), (ins RC:$rb, imm32Op:$imm32),
-//     !strconcat(instr_asm, "\t$ra, $rb, $imm32"),
-//     [(set GPROut:$ra, (cond_op RC:$rb, imm32Op:$imm16))],
-//    IIAlu>, Requires<[HasSlt]> {
-//}
 
 //===----------------------------------------------------------------------===//
 // Instructions
@@ -595,68 +556,6 @@ def MPYHSi      : ArithLogic_i<0b00001010,
 // TODO: Fix these CMP Instructions. Should have both BRegs and GPRegs
 // as a result to the set*** DAG operation. For now, it only pattern matches
 // with i1 type. It should also do the same for i32.
-// For Branch Registers
-//def CMPEQbr    : CMPInstr<"cmpeq", 0b01000000, seteq, IIAlu>;
-//def CMPEQbi    : CMPInstr_bregi<"cmpeq", 0b01000000, seteq, IIAlu>;
-//
-//def CMPGEbr    : CMPInstr_bregr<"cmpge", 0b01000001, setge, IIAlu>;
-//def CMPGEbi    : CMPInstr_bregi<"cmpge", 0b01000001, setge, IIAlu>;
-//
-//def CMPGEUbr   : CMPInstr_bregr<"cmpgeu", 0b01000010, setuge, IIAlu>;
-//def CMPGEUbi   : CMPInstr_bregi<"cmpgeu", 0b01000010, setuge, IIAlu>;
-//
-//def CMPGTbr    : CMPInstr_bregr<"cmpgt", 0b01000011, setgt, IIAlu>;
-//def CMPGTbi    : CMPInstr_bregi<"cmpgt", 0b01000011, setgt, IIAlu>;
-//
-//def CMPGTUbr   : CMPInstr_bregr<"cmpgtu", 0b01000100, setugt, IIAlu>;
-//def CMPGTUbi   : CMPInstr_bregi<"cmpgtu", 0b01000100, setugt, IIAlu>;
-//
-//def CMPLEbr    : CMPInstr_bregr<"cmple", 0b01000101, setle, IIAlu>;
-//def CMPLEbi    : CMPInstr_bregi<"cmple", 0b01000101, setle, IIAlu>;
-//
-//def CMPLEUbr   : CMPInstr_bregr<"cmpleu", 0b01000110, setule, IIAlu>;
-//def CMPLEUbi   : CMPInstr_bregi<"cmpleu", 0b01000110, setule, IIAlu>;
-//
-//def CMPLTbr    : CMPInstr_bregr<"cmplt", 0b01000111, setlt, IIAlu>;
-//def CMPLTbi    : CMPInstr_bregi<"cmplt", 0b01000111, setlt, IIAlu>;
-//
-//def CMPLTUbr   : CMPInstr_bregr<"cmpltu", 0b01001000, setult, IIAlu>;
-//def CMPLTUbi   : CMPInstr_bregi<"cmpltu", 0b01001000, setult, IIAlu>;
-//
-//def CMPNEbr    : CMPInstr_bregr<"cmpne", 0b01001001, setne, IIAlu>;
-//def CMPNEbi    : CMPInstr_bregi<"cmpne", 0b01001001, setne, IIAlu>;
-//
-/// For General Purpose Registers
-//def CMPEQrr    : CMPInstr_regr<"cmpeq", 0b01000000, seteq, IIAlu>;
-//def CMPEQri    : CMPInstr_regi<"cmpeq", 0b01000000, seteq, IIAlu>;
-//
-//def CMPGErr    : CMPInstr_regr<"cmpge", 0b01000001, setge, IIAlu>;
-//def CMPGEri    : CMPInstr_regi<"cmpge", 0b01000001, setge, IIAlu>;
-//
-//def CMPGEUrr   : CMPInstr_regr<"cmpgeu", 0b01000010, setuge, IIAlu>;
-//def CMPGEUri   : CMPInstr_regi<"cmpgeu", 0b01000010, setuge, IIAlu>;
-//
-//def CMPGTrr    : CMPInstr_regr<"cmpgt", 0b01000011, setgt, IIAlu>;
-//def CMPGTri    : CMPInstr_regi<"cmpgt", 0b01000011, setgt, IIAlu>;
-//
-//def CMPGTUrr   : CMPInstr_regr<"cmpgtu", 0b01000100, setugt, IIAlu>;
-//def CMPGTUri   : CMPInstr_regi<"cmpgtu", 0b01000100, setugt, IIAlu>;
-//
-//def CMPLErr    : CMPInstr_regr<"cmple", 0b01000101, setle, IIAlu>;
-//def CMPLEri    : CMPInstr_regi<"cmple", 0b01000101, setle, IIAlu>;
-//
-//def CMPLEUrr   : CMPInstr_regr<"cmpleu", 0b01000110, setule, IIAlu>;
-//def CMPLEUri   : CMPInstr_regi<"cmpleu", 0b01000110, setule, IIAlu>;
-//
-//def CMPLTrr    : CMPInstr_regr<"cmplt", 0b01000111, setlt, IIAlu>;
-//def CMPLTri    : CMPInstr_regi<"cmplt", 0b01000111, setlt, IIAlu>;
-//
-//def CMPLTUrr   : CMPInstr_regr<"cmpltu", 0b01001000, setult, IIAlu>;
-//def CMPLTUri   : CMPInstr_regi<"cmpltu", 0b01001000, setult, IIAlu>;
-//
-//def CMPNErr    : CMPInstr_regr<"cmpne", 0b01001001, setne, IIAlu>;
-//def CMPNEri    : CMPInstr_regi<"cmpne", 0b01001001, setne, IIAlu>;
-
 
 defm CMPEQ  : CMPInstr<"cmpeq", 0b01000000, seteq, IIAlu>;
 defm CMPGE  : CMPInstr<"cmpge", 0b01000001, setge, IIAlu>;
@@ -678,11 +577,11 @@ def LDW       : LoadInstr<"ldw", 0b00010000, load_a, IILoad>;
 def STW       : StoreInstr<"stw", 0b00010101, store_a, IIStore>;
 
 def LDH       : LoadInstr<"ldw", 0b00010000, sextloadi16, IILoad>;
-def LDHU       : LoadInstr<"ldw", 0b00010000, zextloadi16, IILoad>;
+def LDHU      : LoadInstr<"ldw", 0b00010000, zextloadi16, IILoad>;
 def STH       : StoreInstr<"stw", 0b00010101, truncstorei16, IIStore>;
 
 def LDB       : LoadInstr<"ldw", 0b00010000, sextloadi8, IILoad>;
-def LDBU       : LoadInstr<"ldw", 0b00010000, zextloadi8, IILoad>;
+def LDBU      : LoadInstr<"ldw", 0b00010000, zextloadi8, IILoad>;
 def STB       : StoreInstr<"stw", 0b00010101, truncstorei8, IIStore>;
 
 
@@ -736,6 +635,8 @@ def : Pat<(i1 (trunc GPRegs:$src)), (MTB GPRegs:$src)>;
 // Sign extend in register
 //def : Pat<(i32 (sext_inreg GPRegs:$src, i1)), (MTB GPRegs:$src)>;
 
+def : Pat<(extloadi8 ADDR:$addr), (LDBU ADDR:$addr)>;
+def : Pat<(extloadi16 ADDR:$addr), (LDBU ADDR:$addr)>;
 
 def : Pat<(i32 (VEXWrapper tglobaladdr:$dst)), (MOVi tglobaladdr:$dst)>;
 def : Pat<(i32 (VEXWrapper texternalsym:$dst)), (MOVi texternalsym:$dst)>;

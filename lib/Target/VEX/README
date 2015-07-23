@@ -12,4 +12,7 @@ The list of missing that are still missing for VEX Backend can be viewed below:
 	Consequences: not able to compile code that uses ISD::DIV instruction.
 	Solution: We need to lower div instruction so that we can implement it with divs and addc instructions from VEX ISA.
 
+3. Add support for functions that have a variable number of parameters.
+	Consequences: compiler may not generate code since it needs ISD::VA_ARGS to be lowered (or so)
+
 Continuing...
