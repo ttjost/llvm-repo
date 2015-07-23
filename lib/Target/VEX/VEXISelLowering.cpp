@@ -101,8 +101,8 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
 
     setOperationAction(ISD::SIGN_EXTEND_INREG, MVT::i1, Expand);
 //
-    setOperationAction(ISD::Constant, MVT::i1, Promote);
-    setOperationAction(ISD::TRUNCATE, MVT::i1, Promote);
+//    setOperationAction(ISD::Constant, MVT::i1, Promote);
+//    setOperationAction(ISD::TRUNCATE, MVT::i1, Promote);
     
     setOperationAction(ISD::SELECT_CC, MVT::i1, Promote);
     setOperationAction(ISD::SELECT_CC, MVT::i8, Promote);

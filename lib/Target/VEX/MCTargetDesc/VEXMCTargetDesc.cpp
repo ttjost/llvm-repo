@@ -29,6 +29,7 @@
 #include "llvm/Support/TargetRegistry.h"
 
 #include "InstPrinter/VEXInstPrinter.h"
+#include "VEXTargetStreamer.h"
 #include "VEXMCAsmInfo.h"
 
 using namespace llvm;
@@ -109,6 +110,13 @@ static MCCodeGenInfo *createVEXMCCodeGenInfo(StringRef TT, Reloc::Model RM,
     return X;
 }
 
+static MCTargetStreamer *createAsmTargetStreamer(MCStreamer &S,
+                                                 formatted_raw_ostream &OS,
+                                                 MCInstPrinter *InstPrint,
+                                                 bool isVerboseAsm) {
+  return new VEXTargetAsmStreamer(S, OS);
+}
+
 static MCInstPrinter *createVEXMCInstPrinter(const Triple &T,
                                              unsigned SyntaxVariant,
                                              const MCAsmInfo &MAI,
@@ -139,6 +147,11 @@ extern "C" void LLVMInitializeVEXTargetMC(){
     // Register the MC SubtargetInfo
     TargetRegistry::RegisterMCSubtargetInfo(TheVEXTarget, createVEXMCSubtargetInfo);
     TargetRegistry::RegisterMCSubtargetInfo(TheVEXNewTarget, createVEXMCSubtargetInfo);
+
+    // Register the MCStreamer (needed to modify the way a string is writen into memory
+    // Register the asm target streamer.
+    TargetRegistry::RegisterAsmTargetStreamer(TheVEXTarget, createAsmTargetStreamer);
+    TargetRegistry::RegisterAsmTargetStreamer(TheVEXNewTarget, createAsmTargetStreamer);
 
     // Register the MC InstPrinter
     TargetRegistry::RegisterMCInstPrinter(TheVEXTarget, createVEXMCInstPrinter);

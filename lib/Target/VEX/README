@@ -15,4 +15,6 @@ The list of missing that are still missing for VEX Backend can be viewed below:
 3. Add support for functions that have a variable number of parameters.
 	Consequences: compiler may not generate code since it needs ISD::VA_ARGS to be lowered (or so)
 
+4. Need to check how to write datatype "char" in assembly file. It looks like it is not doing it properly
+
 Continuing...

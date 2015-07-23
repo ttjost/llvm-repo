@@ -13,6 +13,7 @@
 
 #include "VEXMCAsmInfo.h"
 
+#include "llvm/MC/MCStreamer.h"
 #include "llvm/ADT/Triple.h"
 
 using namespace llvm;
@@ -33,7 +34,7 @@ VEXMCAsmInfo::VEXMCAsmInfo(StringRef TT) {
     Data64bitsDirective         = "\t.data8\t";
     PrivateGlobalPrefix         = "$";
     CommentString               = "##";
-    UseDataRegionDirectives = false;
+    UseDataRegionDirectives     = true;
 
     //ZeroDirective               = "\t.space\t";
     //GPRel32Directive            = "\t.gpword\t";

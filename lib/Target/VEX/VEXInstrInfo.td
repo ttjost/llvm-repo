@@ -52,6 +52,14 @@ def MEM : Operand<iPTR> {
   let ParserMatchClass = VEXMEMriAsmOperand;
 }
 
+// Used for FrameIndex Node. We need another print method, so we
+// define printMemOperandEA which will be called in VEXInstPrinter class
+def ADDR_FI : Operand<i32> {
+  let PrintMethod = "printMemOperandEA";
+  let MIOperandInfo = (ops GPRegs, imm32Op);
+  let EncoderMethod = "getMemEncoding";
+}
+
 def brtarget : Operand<OtherVT> {
 // Methods used by Assembler and Disassembler.
   let EncoderMethod = "getBranchTargetOpValue";
@@ -445,13 +453,16 @@ def : Pat<(i32 imm32:$in),
 def : Pat<(i32 imm:$imm),
 (MOVi imm:$imm)>;
 
+//def : Pat<(i1 imm:$imm),
+//(MOVi imm:$imm)>;
+
 // Handle FrameIndex. Similar to LEA_ADDri from Sparc Architecture
-//let isCodeGenOnly = 1 in {
-//def LEA_ADDri   : InstVEX<(outs GPRegs:$dst), (ins MEM:$addr),
-//                          "add $dst = $addr, $addr",
-//                          [(set iPTR:$dst, ADDR:$addr)],
-//                          IIAlu>;
-//}
+let isCodeGenOnly = 1 in {
+def LEA_ADDri   : InstVEX<(outs GPRegs:$dst), (ins ADDR_FI:$addr),
+                          "add $dst = $addr",
+                          [(set iPTR:$dst, ADDR:$addr)],
+                          IIAlu>;
+}
 
 // Move Between Regs
 
@@ -631,9 +642,6 @@ def : Pat<(add (shl GPRegs:$lhs, (i32 4)), i32:$rhs), (SH4ADDi GPRegs:$lhs, i32:
 
 // truncs
 def : Pat<(i1 (trunc GPRegs:$src)), (MTB GPRegs:$src)>;
-
-// Sign extend in register
-//def : Pat<(i32 (sext_inreg GPRegs:$src, i1)), (MTB GPRegs:$src)>;
 
 def : Pat<(extloadi8 ADDR:$addr), (LDBU ADDR:$addr)>;
 def : Pat<(extloadi16 ADDR:$addr), (LDBU ADDR:$addr)>;
