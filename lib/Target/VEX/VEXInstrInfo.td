@@ -587,13 +587,13 @@ defm CMPNE  : CMPInstr<"cmpne", 0b01001001, setne, IIAlu>;
 def LDW       : LoadInstr<"ldw", 0b00010000, load_a, IILoad>;
 def STW       : StoreInstr<"stw", 0b00010101, store_a, IIStore>;
 
-def LDH       : LoadInstr<"ldw", 0b00010000, sextloadi16, IILoad>;
-def LDHU      : LoadInstr<"ldw", 0b00010000, zextloadi16, IILoad>;
-def STH       : StoreInstr<"stw", 0b00010101, truncstorei16, IIStore>;
+def LDH       : LoadInstr<"ldh", 0b00010000, sextloadi16, IILoad>;
+def LDHU      : LoadInstr<"ldhu", 0b00010000, zextloadi16, IILoad>;
+def STH       : StoreInstr<"sth", 0b00010101, truncstorei16, IIStore>;
 
-def LDB       : LoadInstr<"ldw", 0b00010000, sextloadi8, IILoad>;
-def LDBU      : LoadInstr<"ldw", 0b00010000, zextloadi8, IILoad>;
-def STB       : StoreInstr<"stw", 0b00010101, truncstorei8, IIStore>;
+def LDB       : LoadInstr<"ldb", 0b00010000, sextloadi8, IILoad>;
+def LDBU      : LoadInstr<"ldbu", 0b00010000, zextloadi8, IILoad>;
+def STB       : StoreInstr<"stb", 0b00010101, truncstorei8, IIStore>;
 
 
 //===----------------------------------------------------------------------===//
