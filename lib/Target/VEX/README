@@ -2,19 +2,33 @@
 This file is intended to serve as a guide to what still needs to be implemented in the VEX Backend.
 All modifications and missing features should be specified here, so any contributors may be aware of the missing component.
 
+List of Examples that are not working from the directory "llvm/examples/Codes/PartX"
+- ch7_2.cpp
+- 
+
 The list of missing that are still missing for VEX Backend can be viewed below:
 
+(Done)
 1. Need support for FrameIndex (ISD::FRAMEINDEX) Node.
 	Consequences: for now, codes with pointers may not work properly or even possibly not handled by the compiler.
 	Solution: Take a look at how other backends handle FrameIndex, such as, MIPS and MSP430.
+
 
 2. Add support for DIV instruction.
 	Consequences: not able to compile code that uses ISD::DIV instruction.
 	Solution: We need to lower div instruction so that we can implement it with divs and addc instructions from VEX ISA.
 
+
 3. Add support for functions that have a variable number of parameters.
 	Consequences: compiler may not generate code since it needs ISD::VA_ARGS to be lowered (or so)
 
+
 4. Need to check how to write datatype "char" in assembly file. It looks like it is not doing it properly
+
+
+5. Need to add support for long long type. So far, we only support char, short and integer types.
+
+
+6. Example "Part7/ch7_2.cpp" is not working. Probable cause is the llvm.memcpy intrinsic from the IR code that is preventing llc from generating correct code for it.
 
 Continuing...

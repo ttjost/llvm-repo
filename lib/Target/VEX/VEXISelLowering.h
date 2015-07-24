@@ -98,7 +98,8 @@ private:
     
     SDValue LowerOperation(SDValue Op, SelectionDAG &DAG) const override;
     
-    
+    bool isOffsetFoldingLegal(const GlobalAddressSDNode *GA) const;
+
     // Custom Lowering of Instructions
     
     // Lower Operand specifics

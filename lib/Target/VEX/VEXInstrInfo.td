@@ -170,10 +170,14 @@ multiclass MOVInstr<string OpcStr, bits<8> Opcode, RegisterClass DstOp, Register
                      (outs DstOp:$dst), (ins SrcOp:$s1),
                      !strconcat(OpcStr, " $dst = $s1"),
                      [], Itin>;
-  def i  : MOV_i <Opcode,
+
+
+    def i  : MOV_i <Opcode,
                    (outs DstOp:$dst), (ins imm32Op:$s1),
                    !strconcat(OpcStr, " $dst = $s1"),
-                   [], Itin>;
+                   [], Itin>{
+    let isMoveImm = 1;
+    }
 }
 
 let isCompare = 1 in {
@@ -250,20 +254,20 @@ class JumpInstr<string OpcStr, bits<8> OpVal, SDNode OpNode, InstrItinClass Itin
     let isBranch = 1;
 }
 
-multiclass SelectInstr<string OpcStr, bits<8> OpVal, InstrItinClass Itin> {
+multiclass SelectInstr<bits<8> OpVal, InstrItinClass Itin> {
 
 def r  : InstVEX<(outs GPRegs:$dst), (ins BrRegs:$cond, GPRegs:$s1, GPRegs:$s2),
-                 !strconcat(OpcStr, "slct $dst = $cond, "),
+                 "slct $dst = $cond, $s1, $s2",
                  [(set GPRegs:$dst, (select BrRegs:$cond, GPRegs:$s1, GPRegs:$s2))], Itin>;
 def i  : InstVEX<(outs GPRegs:$dst), (ins BrRegs:$cond, GPRegs:$s1, imm32Op:$s2),
-                 !strconcat(OpcStr, "slct $dst = $cond, "),
+                 "slct $dst = $cond, $s1, $s2",
                  [(set GPRegs:$dst, (select BrRegs:$cond, GPRegs:$s1, imm32:$s2))], Itin>;
                  
-def rz  : InstVEX<(outs GPRegs:$dst), (ins BrRegs:$cond, GPRegs:$s1, GPRegs:$s2),
-                 !strconcat(OpcStr, "slctf $dst = $cond, "),
+def Fr  : InstVEX<(outs GPRegs:$dst), (ins BrRegs:$cond, GPRegs:$s1, GPRegs:$s2),
+                 "slctf $dst = $cond, $s1, $s2",
                  [(set GPRegs:$dst, (select (not BrRegs:$cond), GPRegs:$s1, GPRegs:$s2))], Itin>;
-def iz  : InstVEX<(outs GPRegs:$dst), (ins BrRegs:$cond, GPRegs:$s1, imm32Op:$s2),
-                 !strconcat(OpcStr, "slctf $dst = $cond, "),
+def Fi  : InstVEX<(outs GPRegs:$dst), (ins BrRegs:$cond, GPRegs:$s1, imm32Op:$s2),
+                 "slctf $dst = $cond, $s1, $s2",
                  [(set GPRegs:$dst, (select (not BrRegs:$cond), GPRegs:$s1, imm32:$s2))], Itin>;
 }
 
@@ -440,7 +444,7 @@ def MFB     : MOV_r<0b00000000,
                     "mfb $dst = $s1", [], IIAlu>;
 
 // Select Instructions
-defm slct   : SelectInstr<"slct", 0b00000000, IIAlu>;
+defm SLCT   : SelectInstr<0b00000000, IIAlu>;
 
 
 // Create Pattern to "not" instruction

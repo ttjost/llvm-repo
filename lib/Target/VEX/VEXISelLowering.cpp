@@ -64,11 +64,6 @@ const char *VEXTargetLowering::getTargetNodeName(unsigned Opcode) const {
             
         case VEXISD::PSEUDO_RET:    return "VEXISD::PSEUDO_RET";
 
-//        case VEXISD::BR:            return "VEXISD::BR";
-
-//        case VEXISD::BRF:           return "VEXISD::BRF";
-
-//        case VEXISD::CALL:   return "VEXISD::CALL";
         case VEXISD::PSEUDO_CALL:   return "VEXISD::PSEUDO_CALL";
         
         default:                return NULL;
@@ -83,7 +78,7 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     // It will emit .align 2 later
       setMinFunctionAlignment(2);
 
-//    setBooleanContents(ZeroOrOneBooleanContent);
+    setBooleanContents(ZeroOrOneBooleanContent);
     
     addRegisterClass(MVT::i32, &VEX::GPRegsRegClass);
     addRegisterClass(MVT::i1, &VEX::BrRegsRegClass);
@@ -99,19 +94,17 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
         setLoadExtAction(ISD::SEXTLOAD, VT, MVT::i1,  Promote);
     }
 
-    setOperationAction(ISD::SIGN_EXTEND_INREG, MVT::i1, Expand);
-//
-//    setOperationAction(ISD::Constant, MVT::i1, Promote);
-//    setOperationAction(ISD::TRUNCATE, MVT::i1, Promote);
+    setOperationAction(ISD::SIGN_EXTEND_INREG, MVT::i1, Promote);
+
+    setOperationAction(ISD::TargetConstant, MVT::i1, Promote);
+    setOperationAction(ISD::Constant, MVT::i1, Promote);
+    setOperationAction(ISD::TRUNCATE, MVT::i1, Expand);
     
     setOperationAction(ISD::SELECT_CC, MVT::i1, Promote);
     setOperationAction(ISD::SELECT_CC, MVT::i8, Promote);
     setOperationAction(ISD::SELECT_CC, MVT::i16, Promote);
     setOperationAction(ISD::SELECT_CC, MVT::i32, Expand);
     setOperationAction(ISD::SELECT_CC, MVT::Other, Expand);
-    
-    setOperationAction(ISD::ANY_EXTEND, MVT::i8, Promote);
-    setOperationAction(ISD::ANY_EXTEND, MVT::i16, Promote);
     
     setOperationAction(ISD::BR_CC, MVT::i1, Promote);
     setOperationAction(ISD::BR_CC, MVT::i8, Promote);
@@ -122,8 +115,13 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     
     //setOperationAction(ISD::SETCC, MVT::i32, Expand);
     
+    setOperationAction(ISD::GlobalAddress, MVT::i8, Promote);
+    setOperationAction(ISD::GlobalAddress, MVT::i16, Promote);
     setOperationAction(ISD::GlobalAddress, MVT::i32, Custom);
-    
+    setOperationAction(ISD::ExternalSymbol, MVT::i8, Promote);
+    setOperationAction(ISD::ExternalSymbol, MVT::i16, Promote);
+    setOperationAction(ISD::ExternalSymbol, MVT::i32, Custom);
+
     // Perform DAG Combination of certain instructions
     setTargetDAGCombine(ISD::SELECT);
 
@@ -144,6 +142,11 @@ SDValue VEXTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) const {
 
     return Op;
 
+}
+
+bool VEXTargetLowering::isOffsetFoldingLegal(const GlobalAddressSDNode *GA) const {
+    // The VEX Target isn't yet aware of offsets.
+    return false;
 }
 
 //===----------------------------------------------------------------------===//
