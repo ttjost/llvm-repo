@@ -155,6 +155,16 @@ std::pair<bool, SDNode*> VEXDAGToDAGISel::selectNode(SDNode *Node){
 
 }
 
+void VEXDAGToDAGISel::processFunctionAfterISel(MachineFunction &MF){
+
+//    MachineRegisterInfo *MRI = &MF.getRegInfo();
+
+//    for(MachineFunction::iterator MFI = MF.begin(), MFE = MF.end(); MFI != MFE ; ++MFI)
+//        for(MachineBasicBlock::iterator I = MFI->begin(), E = MFI->end(); I != E; ++I)
+//            if (I->getOperand(1))
+
+}
+
 // createVEXISelDag - This pass converts a legalized DAG into a
 // VEX-specific DAG, ready for instruction scheduling.
 FunctionPass *llvm::createVEXISelDag(VEXTargetMachine &TM){

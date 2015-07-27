@@ -49,7 +49,7 @@ void VEXInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
             Opc = VEX::MFB;
         }else
             if(VEX::GPRegsRegClass.contains(SrcReg)){
-            Opc = VEX::MOVr;
+                Opc = VEX::MOVr;
         }
     }else if(VEX::BrRegsRegClass.contains(DestReg)){
         if (VEX::GPRegsRegClass.contains(SrcReg)){

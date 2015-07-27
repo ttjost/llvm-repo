@@ -31,4 +31,9 @@ The list of missing that are still missing for VEX Backend can be viewed below:
 
 6. Example "Part7/ch7_2.cpp" is not working. Probable cause is the llvm.memcpy intrinsic from the IR code that is preventing llc from generating correct code for it.
 
+
+7. Modify Instructions to Use Reg0 instead of Constant 0.
+	E.g. slct $r0.11 = $b0.0, $r0.13, 0   ->    slct $r0.11 = $b0.0, $r0.13, $r0.0
+
+
 Continuing...

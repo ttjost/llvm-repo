@@ -198,22 +198,22 @@ VEXFrameLowering::spillCalleeSavedRegisters(MachineBasicBlock &MBB,
                                                const TargetRegisterInfo *TRI) const {
     return false;
 
-    MachineFunction *MF = MBB.getParent();
-    MachineBasicBlock *EntryBlock = MF->begin();
+//    MachineFunction *MF = MBB.getParent();
+//    MachineBasicBlock *EntryBlock = MF->begin();
 
-    // Registers Lr and other called saved registers
-    // need to be saved with a STORE instruction during emitPrologue
-    for (unsigned i = 0, e = CSI.size(); i != e; ++i){
-        // Add the callee-saved register as live-in.
-        // TODO: Do I need to omit this procedure for Link Register?
-        unsigned Reg = CSI[i].getReg();
-        bool IsRAAndRetAddrIsTaken = MF->getFrameInfo()->isReturnAddressTaken();
+//    // Registers Lr and other called saved registers
+//    // need to be saved with a STORE instruction during emitPrologue
+//    for (unsigned i = 0, e = CSI.size(); i != e; ++i){
+//        // Add the callee-saved register as live-in.
+//        // TODO: Do I need to omit this procedure for Link Register?
+//        unsigned Reg = CSI[i].getReg();
+//        bool IsRAAndRetAddrIsTaken = MF->getFrameInfo()->isReturnAddressTaken();
 
-        if(!IsRAAndRetAddrIsTaken)
-            EntryBlock->addLiveIn(Reg);
-    }
+//        if(!IsRAAndRetAddrIsTaken)
+//            EntryBlock->addLiveIn(Reg);
+//    }
 
-    return true;
+//    return true;
 }
 
 bool

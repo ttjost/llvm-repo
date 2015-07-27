@@ -227,13 +227,17 @@ class ReturnInstr<string OpcStr, bits<8> OpVal, InstrItinClass Itin>
     let isReturn = 1;
 }
 
-class BranchInstr<string OpcStr, bits<8> OpVal, SDNode OpNode, InstrItinClass Itin>
-: InstVEX<(outs), (ins BrRegs:$s1, brtarget:$offset),
-!strconcat(OpcStr, " $s1, $offset"),
-[(OpNode BrRegs:$s1, bb:$offset)], Itin>{
-    let isTerminator = 1;
-    let isBarrier = 1;
-    let isBranch = 1;
+
+let isTerminator = 1, isBarrier = 1, isBranch = 1 in {
+multiclass BranchInstr<string OpcStr1, string OpcStr2, bits<8> OpVal, SDNode OpNode, InstrItinClass Itin>{
+def R : InstVEX<(outs), (ins BrRegs:$s1, brtarget:$offset),
+                !strconcat(OpcStr1, " $s1, $offset"),
+                [(OpNode BrRegs:$s1, bb:$offset)], Itin>;
+
+def RF : InstVEX<(outs), (ins BrRegs:$s1, brtarget:$offset),
+                 !strconcat(OpcStr2, " $s1, $offset"),
+                 [(OpNode (not BrRegs:$s1), bb:$offset)], Itin>;
+}
 }
 
 class CallInstr<string OpcStr, bits<8> OpVal, InstrItinClass Itin>
@@ -610,8 +614,7 @@ def RET       : ReturnInstr<"return", 0b00100110, IIAlu>;
 //                      Branch and Call instructions
 //===----------------------------------------------------------------------===//
 
-def BR        : BranchInstr<"br", 0b00000000, brcond, IIAlu>;
-//def BRF       : BranchInstr<"brf", 0b00000000, brcond, IIAlu>;
+defm B        : BranchInstr<"br", "brf", 0b00000000, brcond, IIAlu>;
 
 def GOTO      : JumpInstr<"goto", 0b00000000, br, IIAlu>;
 
