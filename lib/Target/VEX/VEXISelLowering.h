@@ -106,6 +106,7 @@ private:
     SDValue LowerGlobalAddress(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerJumpTable(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerExternalSymbol(SDValue Op, SelectionDAG &DAG) const;
+    SDValue LowerConstant(SDValue Op, SelectionDAG &DAG) const;
 
     SDValue
     LowerCall(CallLoweringInfo &CLI,

@@ -87,6 +87,8 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     //  added, this allows us to compute derived properties we expose.
     computeRegisterProperties(STI.getRegisterInfo());
     
+    setOperationAction(ISD::SIGN_EXTEND_INREG, MVT::i1,   Expand);
+    
     // Load extented operations for i1 types must be promoted
     for (MVT VT : MVT::integer_valuetypes()) {
         setLoadExtAction(ISD::EXTLOAD,  VT, MVT::i1,  Promote);
@@ -94,11 +96,11 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
         setLoadExtAction(ISD::SEXTLOAD, VT, MVT::i1,  Promote);
     }
 
-    setOperationAction(ISD::SIGN_EXTEND_INREG, MVT::i1, Promote);
+//    setOperationAction(ISD::TargetConstant, MVT::i1, Promote);
+//    setOperationAction(ISD::TRUNCATE, MVT::i1, Expand);
 
-    setOperationAction(ISD::TargetConstant, MVT::i1, Promote);
-    setOperationAction(ISD::Constant, MVT::i1, Promote);
-    setOperationAction(ISD::TRUNCATE, MVT::i1, Expand);
+    // See LowerConstant to see the reason for customizing i1 ISD::Constant
+    setOperationAction(ISD::Constant, MVT::i1, Custom);
     
     setOperationAction(ISD::SELECT_CC, MVT::i1, Promote);
     setOperationAction(ISD::SELECT_CC, MVT::i8, Promote);
@@ -112,8 +114,6 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     setOperationAction(ISD::BR_CC, MVT::i32, Expand);
     setOperationAction(ISD::ROTL,  MVT::i32, Expand);
     setOperationAction(ISD::ROTR,  MVT::i32, Expand);
-    
-    //setOperationAction(ISD::SETCC, MVT::i32, Expand);
     
     setOperationAction(ISD::GlobalAddress, MVT::i8, Promote);
     setOperationAction(ISD::GlobalAddress, MVT::i16, Promote);
@@ -136,6 +136,8 @@ SDValue VEXTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) const {
     switch (Op.getOpcode()) {
         case ISD::GlobalAddress:        return LowerGlobalAddress(Op, DAG);
         case ISD::ExternalSymbol:       return LowerExternalSymbol(Op, DAG);
+        case ISD::Constant:             return LowerConstant(Op, DAG);
+            dbgs() << "Constant selected\n";
         default:
             break;
     }
@@ -560,6 +562,22 @@ SDValue VEXTargetLowering::LowerExternalSymbol(SDValue Op, SelectionDAG &DAG) co
 
     return DAG.getNode(VEXISD::WRAPPER, dl,
                        getPointerTy(), Result);
+}
+
+
+// For some reason, We need to handle MVT::i1 types and promote them manually.
+// Not sure why this is not working automatically during tblgen phase, since
+// it should automatically promote i1 to higher/handlable types.
+SDValue VEXTargetLowering::LowerConstant(SDValue Op, SelectionDAG &DAG) const{
+    
+    SDLoc dl(Op);
+    EVT ValueType = Op.getValueType();
+    uint64_t Val = cast<ConstantSDNode>(Op)->getZExtValue();
+    
+    if (ValueType == MVT::i1){
+        return DAG.getConstant(Val, MVT::i32);
+    }
+    return SDValue();
 }
 
 SDValue CombineMinMax(SDLoc DL, EVT VT, SDValue lhs, SDValue rhs,

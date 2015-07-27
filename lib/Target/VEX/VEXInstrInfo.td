@@ -170,12 +170,12 @@ multiclass MOVInstr<string OpcStr, bits<8> Opcode, RegisterClass DstOp, Register
                      (outs DstOp:$dst), (ins SrcOp:$s1),
                      !strconcat(OpcStr, " $dst = $s1"),
                      [], Itin>;
-
-
-    def i  : MOV_i <Opcode,
-                   (outs DstOp:$dst), (ins imm32Op:$s1),
-                   !strconcat(OpcStr, " $dst = $s1"),
-                   [], Itin>{
+//                     [(set DstOp:$dst, SrcOp:$s1)], Itin>;
+  def i  : MOV_i <Opcode,
+                     (outs DstOp:$dst), (ins i32imm:$s1),
+                     !strconcat(OpcStr, " $dst = $s1"),
+                     [], Itin>{
+//                     [(set GPRegs:$dst, i32:$s1)], Itin>{
     let isMoveImm = 1;
     }
 }
@@ -625,8 +625,8 @@ def CALL      : InstVEX<(outs), (ins i32imm:$offset),
 //                       Non-Instruction Patterns
 //===----------------------------------------------------------------------===//
 
-def : Pat<(mul GPRegs:$lhs, GPRegs:$rhs), (ADDr (MPYLUr $lhs, $rhs), (MPYHSr $lhs, $rhs))>;
-def : Pat<(mul GPRegs:$lhs, GPRegs:$rhs), (ADDr (MPYLUi $lhs, $rhs), (MPYHSi $lhs, $rhs))>;
+//def : Pat<(mul GPRegs:$lhs, GPRegs:$rhs), (ADDr (MPYLUr $lhs, $rhs), (MPYHSr $lhs, $rhs))>;
+//def : Pat<(mul GPRegs:$lhs, GPRegs:$rhs), (ADDr (MPYLUi $lhs, $rhs), (MPYHSi $lhs, $rhs))>;
 
 // 1-to-32-bit extension
 def : Pat<(i32 (anyext BrRegs:$src)), (MFB BrRegs:$src)>;
