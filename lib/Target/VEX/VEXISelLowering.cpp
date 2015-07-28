@@ -118,6 +118,9 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     setOperationAction(ISD::MUL, MVT::i16, Custom);
     setOperationAction(ISD::MUL, MVT::i32, Custom);
     
+    setOperationAction(ISD::OR, MVT::i1, Promote);
+    setOperationAction(ISD::XOR, MVT::i1, Promote);
+ 
     setOperationAction(ISD::BR_CC, MVT::i1, Promote);
     setOperationAction(ISD::BR_CC, MVT::i8, Promote);
     setOperationAction(ISD::BR_CC, MVT::i16, Promote);
