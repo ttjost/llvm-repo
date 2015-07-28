@@ -68,7 +68,7 @@ DCTELEM data_ref[8][8] = { {2826, -1313, 22, -151, -38, -45, 9, 10},
                             {-342, 183, -18, 33, -6, 15, -7, 2},
                             {-258, 122, 6, 7, 11, -1, 2, -3},
                             {-185, 99, -10, 18, -3, 8, -4, 1},
-                            {-90, 43, 2, 2, 4, 0, 1, -1 } };
+                            {-90, 43, 2, 2, 4, 1, 1, -1 } };
 
 int i = 0;
 
@@ -326,7 +326,9 @@ int main(void)
 {
     int j;
     int k;
-    
+    int isEqual = 1;   
+    int position = -1;
+
     for(i=0; i<1000; i++){
         jpeg_fdct_islow(data);
 	
@@ -334,17 +336,20 @@ int main(void)
             for(j = 0 ; j < 8; j++){
                 for(k = 0; k < 8 ; k++)
                     if(data[j][k] != data_ref[j][k]){
-                        #ifdef C
-                        printf("%d != %d at %d!\n", data[j][k], data_ref[j][k], j+k);
-                        #else
-			return j+k;
-      			#endif
+                        isEqual = 0;
+			position = j*k;
 	            }
             }
     }
+    if (isEqual){
         #ifdef C
-        printf("Success!\n");
+        printf("Success\n");
         #endif
-
 	return -1;
+    }else{	  
+        #ifdef C
+        printf("Failed at position %d!\n", position);
+        #endif
+	return position;
+    }
 }
