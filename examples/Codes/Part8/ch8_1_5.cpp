@@ -6,10 +6,12 @@
 
 // /Users/Jonathan/llvm/test/cmake_debug_build/Debug/bin/llc -march=cpu0 -relocation-model=pic -filetype=asm ch8_1_5.bc -o -
 
+#ifdef C
 /// start
 extern "C" int printf(const char *format, ...);
 extern "C" int sprintf(char *out, const char *format, ...);
-
+#include <stdio.h> 
+#endif
 typedef unsigned char Byte;
 typedef unsigned char *Address;
 typedef enum {FALSE=0, TRUE=1} Boolean;
@@ -50,5 +52,13 @@ Boolean test_ctrl2()
             break;
     }
     return Result;
+}
+
+int main () {
+
+	#ifdef C
+	printf("%d\n", test_ctrl2());
+	#endif
+	return test_ctrl2();
 }
 

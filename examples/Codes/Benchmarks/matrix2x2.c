@@ -17,8 +17,6 @@ int c[2][2] = { {0, 0},
 int result[2][2] = {{1, -1},
 		    {0, -2}};
 
-					
-
 int main(void)
 {
     int i, j, k, var;

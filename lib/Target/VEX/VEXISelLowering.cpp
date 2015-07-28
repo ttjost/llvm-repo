@@ -50,21 +50,28 @@ SDValue VEXTargetLowering::getTargetNode(ConstantPoolSDNode *N, EVT Ty,
 const char *VEXTargetLowering::getTargetNodeName(unsigned Opcode) const {
     
     switch (Opcode) {
-        case VEXISD::RET:           return "VEXISD::RET";
-            
-        case VEXISD::MAX:           return "VEXISD::MAX";
-        
-        case VEXISD::MAXU:          return "VEXISD::MAXU";
-        
-        case VEXISD::MIN:           return "VEXISD::MIN";
-            
-        case VEXISD::MINU:          return "VEXISD::MINU";
             
         case VEXISD::WRAPPER:       return "VEXISD::WRAPPER";
-            
         case VEXISD::PSEUDO_RET:    return "VEXISD::PSEUDO_RET";
-
         case VEXISD::PSEUDO_CALL:   return "VEXISD::PSEUDO_CALL";
+            
+            
+        case VEXISD::MAX:           return "VEXISD::MAX";
+        case VEXISD::MAXU:          return "VEXISD::MAXU";
+        case VEXISD::MIN:           return "VEXISD::MIN";
+        case VEXISD::MINU:          return "VEXISD::MINU";
+            
+        case VEXISD::MPYLL:         return "VEXISD::MPYLL";
+        case VEXISD::MPYLLU:        return "VEXISD::MPYLLU";
+        case VEXISD::MPYLH:         return "VEXISD::MPYLH";
+        case VEXISD::MPYLHU:        return "VEXISD::MPYLHU";
+        case VEXISD::MPYHH:         return "VEXISD::MPYHH";
+        case VEXISD::MPYHHU:        return "VEXISD::MPYHHU";
+        case VEXISD::MPYL:          return "VEXISD::MPYL";
+        case VEXISD::MPYLU:         return "VEXISD::MPYLU";
+        case VEXISD::MPYH:          return "VEXISD::MPYH";
+        case VEXISD::MPYHU:         return "VEXISD::MPYHU";
+        case VEXISD::MPYHS:         return "VEXISD::MPYHS";
         
         default:                return NULL;
     }
@@ -108,6 +115,9 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     setOperationAction(ISD::SELECT_CC, MVT::i32, Expand);
     setOperationAction(ISD::SELECT_CC, MVT::Other, Expand);
     
+    setOperationAction(ISD::MUL, MVT::i16, Custom);
+    setOperationAction(ISD::MUL, MVT::i32, Custom);
+    
     setOperationAction(ISD::BR_CC, MVT::i1, Promote);
     setOperationAction(ISD::BR_CC, MVT::i8, Promote);
     setOperationAction(ISD::BR_CC, MVT::i16, Promote);
@@ -139,6 +149,7 @@ SDValue VEXTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) const {
         case ISD::GlobalAddress:        return LowerGlobalAddress(Op, DAG);
         case ISD::ExternalSymbol:       return LowerExternalSymbol(Op, DAG);
         case ISD::Constant:             return LowerConstant(Op, DAG);
+        case ISD::MUL:                  return LowerMUL(Op, DAG);
         default:
             break;
     }
@@ -579,6 +590,32 @@ SDValue VEXTargetLowering::LowerConstant(SDValue Op, SelectionDAG &DAG) const{
         return DAG.getConstant(Val, MVT::i32);
     }
     return SDValue();
+}
+
+SDValue VEXTargetLowering::LowerMUL(SDValue Op, SelectionDAG &DAG) const{
+    
+    SDLoc dl(Op);
+    
+    SDValue lhs = Op.getOperand(0);
+    SDValue rhs = Op.getOperand(1);
+    
+    unsigned Opc1, Opc2;
+    
+    EVT ValueType = Op.getValueType();
+    
+    // TODO: Do we need to change this?
+    if (ValueType == MVT::i32){
+        Opc1 = VEXISD::MPYLU;
+        Opc2 = VEXISD::MPYHS;
+    }else{
+        Opc1 = VEXISD::MPYLU;
+        Opc2 = VEXISD::MPYHS;
+    }
+
+    SDValue FirstPart = DAG.getNode(Opc1, dl, ValueType, lhs, rhs);
+    SDValue SecondPart = DAG.getNode(Opc2, dl, ValueType, lhs, rhs);
+    
+    return DAG.getNode(ISD::ADD, dl, ValueType, FirstPart, SecondPart);
 }
 
 SDValue CombineMinMax(SDLoc DL, EVT VT, SDValue lhs, SDValue rhs,

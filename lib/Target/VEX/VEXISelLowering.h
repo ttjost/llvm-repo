@@ -40,6 +40,18 @@ namespace llvm {
             MAXU,
             MIN,
             MINU,
+            
+            MPYLL,
+            MPYLLU,
+            MPYLH,
+            MPYLHU,
+            MPYHH,
+            MPYHHU,
+            MPYL,
+            MPYLU,
+            MPYH,
+            MPYHU,
+            MPYHS,
 
             PSEUDO_CALL,
 
@@ -107,6 +119,7 @@ private:
     SDValue LowerJumpTable(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerExternalSymbol(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerConstant(SDValue Op, SelectionDAG &DAG) const;
+    SDValue LowerMUL(SDValue Op, SelectionDAG &DAG) const;
 
     SDValue
     LowerCall(CallLoweringInfo &CLI,
