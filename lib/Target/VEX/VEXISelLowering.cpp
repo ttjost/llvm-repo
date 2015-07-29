@@ -117,6 +117,8 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     
     setOperationAction(ISD::MUL, MVT::i16, Custom);
     setOperationAction(ISD::MUL, MVT::i32, Custom);
+//    setOperationAction(ISD::SDIV, MVT::i32, Expand);
+//    setOperationAction(ISD::SDIVREM, MVT::i32, Expand);
     
     setOperationAction(ISD::XOR, MVT::i1, Promote);
     setOperationAction(ISD::OR, MVT::i1, Promote);
@@ -143,7 +145,7 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     //setStackPointerRegisterToSaveRestore(VEX::Reg1);
 
     // This should be enable when we implement the VLIW Packetizer
-    //setSchedulingPreference(Sched::VLIW);
+    setSchedulingPreference(Sched::VLIW);
     
 }
 
