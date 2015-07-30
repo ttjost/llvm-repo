@@ -30,6 +30,8 @@ using namespace llvm;
 #define GET_INSTRINFO_CTOR_DTOR
 #include "VEXGenInstrInfo.inc"
 
+#include "VEXGenDFAPacketizer.inc"
+
 //@VEXInstrInfo(){
 VEXInstrInfo::VEXInstrInfo(const VEXSubtarget &STI) : Subtarget(STI), RI(STI) {
     DEBUG(errs() << "InstrInfo \n");
@@ -176,4 +178,11 @@ void VEXInstrInfo::adjustStackPtr(VEXFunctionInfo *VEXFI, unsigned SP, uint64_t 
     // TODO : What happens when stacksize is greater than 16 bits? or even 8 bits?
     BuildMI(MBB, I, DL, get(add), SP).addReg(SP).addImm(Amount);
     
+}
+
+// Used by the VLIW Scheduler
+DFAPacketizer* VEXInstrInfo::CreateTargetScheduleState
+                                (const TargetSubtargetInfo &STI) const{
+    const InstrItineraryData *II = STI.getInstrItineraryData();
+    return static_cast<const VEXSubtarget &>(STI).createDFAPacketizer(II);
 }

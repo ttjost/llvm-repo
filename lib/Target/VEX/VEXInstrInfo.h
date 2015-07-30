@@ -69,6 +69,9 @@ namespace llvm{
         void adjustStackPtr(VEXFunctionInfo *VEXFI, unsigned SP, uint64_t Amount,
                             MachineBasicBlock &MBB, MachineBasicBlock::iterator I)
         const;
+
+        // Used by the VLIW Scheduler.
+        DFAPacketizer* CreateTargetScheduleState(const TargetSubtargetInfo &STI) const;
     };
     
 }
