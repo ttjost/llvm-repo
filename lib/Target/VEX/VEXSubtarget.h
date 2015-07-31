@@ -91,8 +91,8 @@ class VEXTargetMachine;
         // FIXME : Why is StackAlignment 8 ????
         unsigned stackAlignment() const {   return 8;   }
         
-        VEXSubtarget &initializeSubtargetDependencies(StringRef CPU, StringRef FS,
-                                                      const TargetMachine *TM);
+        VEXSubtarget &initializeSubtargetDependencies(StringRef CPU,
+                                                      StringRef FS);
         
         const VEXSelectionDAGInfo *getSelectionDAGInfo() const { return &TSInfo; }
         

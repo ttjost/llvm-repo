@@ -184,5 +184,6 @@ void VEXInstrInfo::adjustStackPtr(VEXFunctionInfo *VEXFI, unsigned SP, uint64_t 
 DFAPacketizer* VEXInstrInfo::CreateTargetScheduleState
                                 (const TargetSubtargetInfo &STI) const{
     const InstrItineraryData *II = STI.getInstrItineraryData();
+    DEBUG(errs() << "Creating the DFAPacketizer!\n");
     return static_cast<const VEXSubtarget &>(STI).createDFAPacketizer(II);
 }

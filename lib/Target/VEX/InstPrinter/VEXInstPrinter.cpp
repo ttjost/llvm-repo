@@ -37,11 +37,12 @@ void VEXInstPrinter::printRegName(raw_ostream &OS, unsigned RegNo) const {
 void VEXInstPrinter::printInst(const MCInst *mi, raw_ostream &O,
                                StringRef Annot, const MCSubtargetInfo &STI){
     // Try to print any aliases first.
-    if (!printAliasInstr(mi, O))
+    if (!printAliasInstr(mi, O)){
         // printInstruction(mi, O) defined in VEXGenAsmWriter.inc which came from
         // VEX.td indicate.
         O << "\tc0";
         printInstruction(mi, O);
+    }
     printAnnotation(O, Annot);
 }
 

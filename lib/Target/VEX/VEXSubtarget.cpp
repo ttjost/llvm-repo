@@ -60,15 +60,15 @@ VEXSubtarget::VEXSubtarget(const std::string &TT, const std::string &CPU,
     VEXGenSubtargetInfo(TT, CPU, FS),
     VEXABI(ABI32), isNewScheduling(isNewScheduling), RM(_RM), TargetTriple(TT),
     TSInfo(*_TM.getDataLayout()),
-    InstrInfo(*this),
+    InstrInfo(initializeSubtargetDependencies(CPU, FS)),
     FrameLowering(),
     TLInfo(_TM, *this) {
         DEBUG(errs() << "Subtaget\n");
         
 }
 
-VEXSubtarget &VEXSubtarget::initializeSubtargetDependencies(StringRef CPU, StringRef FS,
-                                                            const TargetMachine *TM){
+VEXSubtarget &VEXSubtarget::initializeSubtargetDependencies(StringRef CPU,
+                                                            StringRef FS){
     std::string CPUName = selectVEXCPU(TargetTriple, CPU);
     
     if (CPUName == "help")
