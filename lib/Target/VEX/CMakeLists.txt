@@ -34,6 +34,7 @@ add_llvm_target(VEXCodeGen
   VEXAsmPrinter.cpp
   VEXMCInstLower.cpp
   VEXISelDAGToDAG.cpp
+  VEXVLIWPacketizer.cpp
   )
 
 # Should match with "subdirectories = MCTargetDesc TargetInfo" in LLVMBuild.txt
