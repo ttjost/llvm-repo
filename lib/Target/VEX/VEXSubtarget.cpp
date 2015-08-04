@@ -55,10 +55,12 @@ void VEXSubtarget::anchor() {
 // VEXSubtarget::VEXSubtarget
 VEXSubtarget::VEXSubtarget(const std::string &TT, const std::string &CPU,
                            const std::string &FS, bool isNewScheduling,
-                           Reloc::Model _RM,
+                           bool EnableVLIWScheduling, Reloc::Model _RM,
                            VEXTargetMachine &_TM):
     VEXGenSubtargetInfo(TT, CPU, FS),
-    VEXABI(ABI32), isNewScheduling(isNewScheduling), RM(_RM), TargetTriple(TT),
+    VEXABI(ABI32), isNewScheduling(isNewScheduling),
+    EnableVLIWScheduling(EnableVLIWScheduling),
+    RM(_RM), TargetTriple(TT),
     TSInfo(*_TM.getDataLayout()),
     InstrInfo(initializeSubtargetDependencies(CPU, FS)),
     FrameLowering(),

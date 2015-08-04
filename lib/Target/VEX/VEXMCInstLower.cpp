@@ -86,12 +86,12 @@ MCOperand VEXMCInstLower::LowerOperand(const MachineOperand &MO,
 void VEXMCInstLower::Lower(const MachineInstr *MI, MCInst &OutMI) const{
     OutMI.setOpcode(MI->getOpcode());
 
-    if(MI->isBundle())
+    if (MI->isBundle())
         DEBUG(errs() << "TargetOpcode::BUNDLE Instruction. Next Inst are inside the Bundle\n");
     else
         DEBUG(errs() << "NOT TargetOpcode::BUNDLE Instruction\n");
     DEBUG(errs() << "MCInstLower::Lower\n");
-    for(unsigned i = 0, e = MI->getNumOperands(); i != e ; ++i){
+    for (unsigned i = 0, e = MI->getNumOperands(); i != e ; ++i){
         const MachineOperand &MO = MI->getOperand(i);
         MCOperand MCOp = LowerOperand(MO);
         

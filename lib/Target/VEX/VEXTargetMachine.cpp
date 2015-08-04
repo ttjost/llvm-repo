@@ -14,6 +14,7 @@
 
 #include "VEXTargetMachine.h"
 #include "VEX.h"
+#include "VEXVLIWPacketizer.cpp"
 //#include "VEXSubtarget.h"
 //#include "VEXTargetObjectFile.h"
 #include "llvm/IR/PassManager.h"
@@ -24,6 +25,9 @@
 using namespace llvm;
 
 #define DEBUG_TYPE "vex-targetmachine"
+
+static cl::opt<bool> EnableVLIWScheduling("enable-vliw-scheduling",
+                                          cl::Hidden, cl::desc("Enable VLIW Scheduling"));
 
 extern "C" void LLVMInitializeVEXTarget() {
     
@@ -51,8 +55,7 @@ static std::string computeDataLayout() {
     // 32 bit registers are always available and the stack is at least 64 bit
     // aligned.
     Ret += "-n32-S64";
-    
-    DEBUG(errs() << "Target Machine\n");
+
     return Ret;
 }
 
@@ -73,8 +76,7 @@ VEXTargetMachine(const Target &T, StringRef TT,
     : LLVMTargetMachine(T, computeDataLayout(), TT, CPU, FS, Options, RM, CM, OL),
         isNewScheduling(isNewScheduling),
         TLOF(make_unique<TargetLoweringObjectFileELF>()),
-        Subtarget(TT, CPU, FS, isNewScheduling, RM, *this){
-    DEBUG(errs() << "Target Machine  2\n");
+        Subtarget(TT, CPU, FS, isNewScheduling, EnableVLIWScheduling, RM, *this){
     initAsmInfo();
 }
 
@@ -108,7 +110,7 @@ void VEXNewTargetMachine::anchor() {}
 namespace {
 
 // @ VEXPassConfig{
-//  VEX Code Generator Pass COnfiguration Options
+//  VEX Code Generator Pass Configuration Options
     class VEXPassConfig : public TargetPassConfig {
     
     public:
@@ -124,18 +126,22 @@ namespace {
 //        }
     
         bool addInstSelector() override;
+        void addPreEmitPass() override;
     };
 }
 
-bool VEXPassConfig::addInstSelector(){
+bool VEXPassConfig::addInstSelector() {
     addPass(createVEXISelDag(getVEXTargetMachine()));
     return false;
+}
+
+void VEXPassConfig::addPreEmitPass() {
+    DEBUG(errs() << "addPreEmitPass " << EnableVLIWScheduling << "\n");
+    //if (EnableVLIWScheduling)
+        addPass(createVEXPacketizer(EnableVLIWScheduling), false);
 }
 
 TargetPassConfig *VEXTargetMachine::createPassConfig(PassManagerBase &PM){
     return new VEXPassConfig(this, PM);
 }
-
-
-
 

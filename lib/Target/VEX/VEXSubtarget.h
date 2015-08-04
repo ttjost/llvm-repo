@@ -52,7 +52,8 @@ class VEXTargetMachine;
         // Tells whether is the new Scheduling Algorithm to be used
         // Used for my dissertation (Tiago)
         bool isNewScheduling;
-        
+        bool EnableVLIWScheduling;
+
         InstrItineraryData InstrItins;
         
         // Relocation Model
@@ -72,8 +73,8 @@ class VEXTargetMachine;
         ///This constructor initializes the data members to match that
         /// of the specified triple
         VEXSubtarget(const std::string &TT, const std::string &CPU,
-                     const std::string &FS, bool little, Reloc::Model _RM,
-                     VEXTargetMachine &_TM);
+                     const std::string &FS, bool little, bool EnableVLIWScheduling,
+                     Reloc::Model _RM, VEXTargetMachine &_TM);
         
         //- Virtual function, must have
         // ParseSubtargetFeatures - Parses features string settin specified
