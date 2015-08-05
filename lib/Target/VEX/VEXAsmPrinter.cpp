@@ -68,15 +68,43 @@ void VEXAsmPrinter::EmitInstruction(const MachineInstr *MI){
 
     DEBUG(errs() << "Emitting instruction " << MI->getOpcode() << "\n");
     
-    MachineBasicBlock::const_instr_iterator I = MI;
-    MachineBasicBlock::const_instr_iterator E = MI->getParent()->instr_end();
-
     MCInst TmpInst0;
 
-    do{
-        MCInstLowering.Lower(I, TmpInst0);
+    if (MI->isBundle()){
+        MachineBasicBlock::const_instr_iterator I = MI;
+        MachineBasicBlock::const_instr_iterator E = MI->getParent()->instr_end();
+
+        SmallVector<MCInst, 16> TmpInst;
+        unsigned i;
+        TmpInst0.setOpcode(I->getOpcode());
+        for (++I, i = 0; E != I && I->isInsideBundle(); ++I){
+            if (!I->isCFIInstruction()) {
+                MCInst Tmp;
+                TmpInst.push_back(Tmp);
+                MCInstLowering.Lower(I, TmpInst0, TmpInst[i++], I->isInsideBundle());
+            }
+        }
+        for (unsigned i = 0, e = TmpInst0.getNumOperands();
+             i != e ; ++i){
+                // printInstruction(mi, O) defined in VEXGenAsmWriter.inc which came from
+                // VEX.td indicate.
+                if (TmpInst0.getOperand(i).isInst())
+                    DEBUG(dbgs() << "IS INSTRUCTION\n");
+                else
+                    DEBUG(dbgs() << "NO INSTRUCTION\n");
+                const MCInst *inst = TmpInst0.getOperand(i).getInst();
+                DEBUG(dbgs() << inst->getOpcode() << " \n");
+        }
         OutStreamer.EmitInstruction(TmpInst0, getSubtargetInfo());
-    }while((++I != E) && I->isInsideBundle()); //
+    } else {
+        MCInstLowering.Lower(MI, TmpInst0, TmpInst0, false);
+        OutStreamer.EmitInstruction(TmpInst0, getSubtargetInfo());
+    }
+
+//    do{
+//        MCInstLowering.Lower(I, TmpInst0);
+//        OutStreamer.EmitInstruction(TmpInst0, getSubtargetInfo());
+//    }while((++I != E) && I->isInsideBundle()); //
     DEBUG(errs() << "Done emitting\n");
 }
 

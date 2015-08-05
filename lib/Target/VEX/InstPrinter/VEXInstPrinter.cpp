@@ -37,11 +37,35 @@ void VEXInstPrinter::printRegName(raw_ostream &OS, unsigned RegNo) const {
 void VEXInstPrinter::printInst(const MCInst *mi, raw_ostream &O,
                                StringRef Annot, const MCSubtargetInfo &STI){
     // Try to print any aliases first.
-    if (!printAliasInstr(mi, O)){
-        // printInstruction(mi, O) defined in VEXGenAsmWriter.inc which came from
-        // VEX.td indicate.
-        O << "\tc0";
-        printInstruction(mi, O);
+
+    if (mi->getOpcode() == TargetOpcode::BUNDLE) {
+        DEBUG(dbgs() << "INSTPRINTER IS BUNDLE\n");
+
+        for (unsigned i = 0, e = mi->getNumOperands();
+             i != e ; ++i){
+            if (!printAliasInstr(mi, O)){
+                // printInstruction(mi, O) defined in VEXGenAsmWriter.inc which came from
+                // VEX.td indicate.
+                O << "\tc0";
+                if (mi->getOperand(i).isInst())
+                    DEBUG(dbgs() << "IS INSTRUCTION\n");
+                else
+                    DEBUG(dbgs() << "NO INSTRUCTION\n");
+                const MCInst *inst = mi->getOperand(i).getInst();
+                printInstruction(inst, O);
+            }
+            O << "\n";
+        }
+        O << "\n;;";
+    } else {
+        DEBUG(dbgs() << "INSTPRINTER\n");
+        if (!printAliasInstr(mi, O)){
+            // printInstruction(mi, O) defined in VEXGenAsmWriter.inc which came from
+            // VEX.td indicate.
+            O << "\tc0";
+            printInstruction(mi, O);
+            O << "\n;;";
+        }
     }
     printAnnotation(O, Annot);
 }

@@ -65,11 +65,10 @@ public:
                       MachineLoopInfo &MLI)
                       : VLIWPacketizerList(MF, MLI, true) {}
 
-    bool isSoloInstruction(MachineInstr *MI);
-    
-    bool ignorePseudoInstruction(MachineInstr *MI, MachineBasicBlock *MBB);
-    
-    bool isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ);
+    bool isSoloInstruction(MachineInstr *MI) override;
+    bool ignorePseudoInstruction(MachineInstr *MI, MachineBasicBlock *MBB) override;
+    bool isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ) override;
+    void initPacketizerState() override;
 
 };
 
@@ -113,12 +112,20 @@ bool VEXPacketizerList::ignorePseudoInstruction(MachineInstr *MI,
     return !FuncUnits;
 }
 
-bool VEXPacketizerList::isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ){
+bool VEXPacketizerList::isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ) {
     
-    if (SUI->isPred(SUJ))
-        return false;
+    if (SUI->isPred(SUJ)){
+        for (SDep dep : SUI->Preds) {
+            if (dep.getKind() == SDep::Data)
+                return false;
+        }
+    }
     
     return true;
+}
+
+void VEXPacketizerList::initPacketizerState() {
+    return;
 }
 
 bool VEXPacketizer::runOnMachineFunction(MachineFunction &MF) {
@@ -160,7 +167,6 @@ bool VEXPacketizer::runOnMachineFunction(MachineFunction &MF) {
     }
 
     for (MachineFunction::iterator MBBI = MF.begin() , MBBE = MF.end(); MBBI != MBBE; ++MBBI)
-
         Packetizer.PacketizeMIs(MBBI.getNodePtrUnchecked(), MBBI->begin(), MBBI->end());
     
     return true;

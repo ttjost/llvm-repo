@@ -83,19 +83,28 @@ MCOperand VEXMCInstLower::LowerOperand(const MachineOperand &MO,
     return MCOperand();
 }
 
-void VEXMCInstLower::Lower(const MachineInstr *MI, MCInst &OutMI) const{
-    OutMI.setOpcode(MI->getOpcode());
-
-    if (MI->isBundle())
-        DEBUG(errs() << "TargetOpcode::BUNDLE Instruction. Next Inst are inside the Bundle\n");
-    else
-        DEBUG(errs() << "NOT TargetOpcode::BUNDLE Instruction\n");
+void VEXMCInstLower::Lower(const MachineInstr *MI,
+                           MCInst &OutMI,
+                           MCInst &InBundleMI,
+                           bool isInsideBundle) const{
     DEBUG(errs() << "MCInstLower::Lower\n");
+
+    InBundleMI.setOpcode(MI->getOpcode());
+
     for (unsigned i = 0, e = MI->getNumOperands(); i != e ; ++i){
         const MachineOperand &MO = MI->getOperand(i);
         MCOperand MCOp = LowerOperand(MO);
         
         if(MCOp.isValid())
-            OutMI.addOperand(MCOp);
+            InBundleMI.addOperand(MCOp);
+    }
+
+    if (isInsideBundle) {
+        DEBUG(errs() << "Is Inside BUNDLE Instruction\n");
+        MCOperand MCOp = MCOperand::CreateInst(&InBundleMI);
+        OutMI.addOperand(MCOp);
+    } else {
+       DEBUG(errs() << "NOT BUNDLE\n");
+       OutMI = InBundleMI;
     }
 }
