@@ -19,6 +19,7 @@
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/MachineLoopInfo.h"
 #include "llvm/CodeGen/MachineDominators.h"
+#include "llvm/CodeGen/ScheduleDAG.h"
 
 #define DEBUG_TYPE "vex-vliw-scheduling"
 
@@ -65,6 +66,10 @@ public:
                       : VLIWPacketizerList(MF, MLI, true) {}
 
     bool isSoloInstruction(MachineInstr *MI);
+    
+    bool ignorePseudoInstruction(MachineInstr *MI, MachineBasicBlock *MBB);
+    
+    bool isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ);
 
 };
 
@@ -88,6 +93,34 @@ bool VEXPacketizerList::isSoloInstruction(MachineInstr *MI) {
     return false;
 }
 
+// ignorePseudoInstruction - Ignore bundling of pseudo instructions.
+bool VEXPacketizerList::ignorePseudoInstruction(MachineInstr *MI,
+                                                    MachineBasicBlock *MBB) {
+    if (MI->isDebugValue())
+        return true;
+    
+    // We must print out inline assembly
+    if (MI->isInlineAsm())
+        return false;
+    
+    // We check if MI has any functional units mapped to it.
+    // If it doesn't, we ignore the instruction.
+    const MCInstrDesc& TID = MI->getDesc();
+    unsigned SchedClass = TID.getSchedClass();
+    const InstrStage* IS =
+    ResourceTracker->getInstrItins()->beginStage(SchedClass);
+    unsigned FuncUnits = IS->getUnits();
+    return !FuncUnits;
+}
+
+bool VEXPacketizerList::isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ){
+    
+    if (SUI->isPred(SUJ))
+        return false;
+    
+    return true;
+}
+
 bool VEXPacketizer::runOnMachineFunction(MachineFunction &MF) {
     
     if (EnableVLIWScheduling)
@@ -100,10 +133,37 @@ bool VEXPacketizer::runOnMachineFunction(MachineFunction &MF) {
 
     VEXPacketizerList Packetizer(MF, MLI);
 
+    //
+    // Loop over all basic blocks and remove KILL pseudo-instructions
+    // These instructions confuse the dependence analysis. Consider:
+    // D0 = ...   (Insn 0)
+    // R0 = KILL R0, D0 (Insn 1)
+    // R0 = ... (Insn 2)
+    // Here, Insn 1 will result in the dependence graph not emitting an output
+    // dependence between Insn 0 and Insn 2. This can lead to incorrect
+    // packetization
+    //
+    for (MachineFunction::iterator MBB = MF.begin(), MBBe = MF.end();
+         MBB != MBBe; ++MBB) {
+        MachineBasicBlock::iterator End = MBB->end();
+        MachineBasicBlock::iterator MI = MBB->begin();
+        while (MI != End) {
+            if (MI->isKill()) {
+                MachineBasicBlock::iterator DeleteMI = MI;
+                ++MI;
+                MBB->erase(DeleteMI);
+                End = MBB->end();
+                continue;
+            }
+            ++MI;
+        }
+    }
 
     for (MachineFunction::iterator MBBI = MF.begin() , MBBE = MF.end(); MBBI != MBBE; ++MBBI)
 
         Packetizer.PacketizeMIs(MBBI.getNodePtrUnchecked(), MBBI->begin(), MBBI->end());
+    
+    return true;
     
 }
 
