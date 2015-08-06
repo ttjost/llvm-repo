@@ -543,20 +543,20 @@ def STB       : StoreInstr<"stb", 0b00010101, truncstorei8, IIStore>;
 //                      Return/Call instructions
 //===----------------------------------------------------------------------===//
 
-def RET       : ReturnInstr<"return", 0b00100110, IIAlu>;
+def RET       : ReturnInstr<"return", 0b00100110, IIBranch>;
 
 //===----------------------------------------------------------------------===//
 //                      Branch and Call instructions
 //===----------------------------------------------------------------------===//
 
-defm B        : BranchInstr<"br", "brf", 0b00000000, brcond, IIAlu>;
+defm B        : BranchInstr<"br", "brf", 0b00000000, brcond, IIBranch>;
 
-def GOTO      : JumpInstr<"goto", 0b00000000, br, IIAlu>;
+def GOTO      : JumpInstr<"goto", 0b00000000, br, IIBranch>;
 
 let isCall = 1 in {
 def CALL      : InstVEX<(outs), (ins i32imm:$offset),
                         "call $$l0.0 = $offset",
-                        [(VEXPseudoCall imm:$offset)], IIAlu>;
+                        [(VEXPseudoCall imm:$offset)], IIBranch>;
 }
 
 //===----------------------------------------------------------------------===//
