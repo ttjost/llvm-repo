@@ -42,13 +42,25 @@ def IIStore     : InstrItinClass;
 //
 //def VEXGenericItineraries : ProcessorItineraries<[IALU1, IALU2, IALU3, IALU4,
 //                                                  IALU5, IALU6, IMUL, IBR, IMEM],
-def VEXGenericItineraries : ProcessorItineraries<[IALU1, IALU2, IMUL, IMEM],
-                                                  [], [
-//InstrItinData<IIAlu              , [InstrStage<1,  [IALU1, IALU2, IALU3, IALU4, IALU5, IALU6]>]>,
-InstrItinData<IIAlu              , [InstrStage<1,  [IALU1, IALU2]>]>,
-InstrItinData<IIMul              , [InstrStage<1,  [IMUL]>]>,
-InstrItinData<IILoad             , [InstrStage<3,  [IMEM]>]>,
-InstrItinData<IIStore            , [InstrStage<1,  [IMEM]>]>,
+//def VEXGenericItineraries : ProcessorItineraries<[IALU1, IALU2, IMUL, IMEM],
+//                                                  [], [
+//InstrItinData<IIMul              , [InstrStage<1,  [IMUL]>]>,
+//InstrItinData<IILoad             , [InstrStage<3,  [IMEM]>]>,
+//InstrItinData<IIStore            , [InstrStage<1,  [IMEM]>]>,
+////InstrItinData<IIBranch           , [InstrStage<1,  [IBR]>]>
+//InstrItinData<IIBranch           , [InstrStage<1,  [IALU1]>]>,
+////InstrItinData<IIAlu              , [InstrStage<1,  [IALU1, IALU2, IALU3, IALU4, IALU5, IALU6]>]>,
+//InstrItinData<IIAlu              , [InstrStage<1,  [IALU1, IALU2, IALU3, IALU4]>]>,
+////InstrItinData<IIAlu              , [InstrStage<1,  [IALU1, IALU2]>]>
+//]>;
+
+def VEXGenericItineraries : ProcessorItineraries<[IALU1, IALU2, IALU3, IALU4, IMUL, IMEM], [], [
+InstrItinData<IIMul              , [InstrStage<1,  [IALU2]>]>,
+InstrItinData<IILoad             , [InstrStage<1,  [IALU1]>]>,
+InstrItinData<IIStore            , [InstrStage<1,  [IALU1]>]>,
 //InstrItinData<IIBranch           , [InstrStage<1,  [IBR]>]>
-InstrItinData<IIBranch           , [InstrStage<1,  [IALU1]>]>
+InstrItinData<IIBranch           , [InstrStage<1,  [IALU3]>]>,
+//InstrItinData<IIAlu              , [InstrStage<1,  [IALU1, IALU2, IALU3, IALU4, IALU5, IALU6]>]>,
+InstrItinData<IIAlu              , [InstrStage<1,  [IALU1, IALU2, IALU3, IALU4]>]>
+//InstrItinData<IIAlu              , [InstrStage<1,  [IALU1, IALU2]>]>
 ]>;

@@ -122,7 +122,7 @@ uint8_t fenc[16*16] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,
                            20,31,2,33,4,5,6,7,8,9,101,11,12,13,12,12,
                            30,41,2,43,4,5,6,7,92,9,10,11,12,13,11,13};
 
-    int scores_temp[4] = {10370, 7067, 8000, 8492};
+    int scores_temp[4] = {10370, 7067, 8000, 849};
     int scores[4] = {0,0,0,0};
 
 int main(void)
@@ -141,14 +141,14 @@ int main(void)
 	{
         if (scores[i] != scores_temp[i]){
             #ifdef C
-            printf("Failed to Complete!\n");
+            printf("Failed to Complete: %d\n", 100*i);
             #endif
             return 100*i;
         }
 	}
 
     #ifdef C
-    printf("Success!\n");
+    printf("Success!!!\n");
     #endif
     return -1;
 }

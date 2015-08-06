@@ -27,6 +27,7 @@ class VEXTargetMachine : public LLVMTargetMachine{
     
 private:
     bool isNewScheduling;
+
     VEXSubtarget Subtarget;
     
     mutable StringMap<std::unique_ptr<VEXSubtarget>> SubtargetMap;
@@ -55,6 +56,8 @@ public:
     virtual TargetPassConfig *createPassConfig(PassManagerBase &PM);
     
     bool isNewSchedulingAlgorithm() const { return isNewScheduling; }
+
+    //bool isVLIWScheduling() const { return EnableVLIWScheduling; }
 
     TargetLoweringObjectFile *getObjFileLowering() const override {
       return TLOF.get();

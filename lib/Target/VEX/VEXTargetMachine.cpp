@@ -21,6 +21,7 @@
 #include "llvm/CodeGen/Passes.h"
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/CodeGen/TargetLoweringObjectFileImpl.h"
+#include "llvm/Support/CommandLine.h"
 
 using namespace llvm;
 

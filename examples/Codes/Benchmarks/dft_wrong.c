@@ -1,5 +1,9 @@
+#ifdef VERIFY_PROGRAM
 #ifdef C
 #include <stdio.h>
+#else
+#include "printf.h"
+#endif
 #endif
 
 typedef unsigned int uint32_t;
@@ -42,7 +46,7 @@ ufp27p5_t powers[4][24] = { {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 ufp27p5_t powers_temp[4][24] = { {2436991, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {63546, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {131381, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {19272, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
+    {19271, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
 
 uint32_t cast_uint32(int_64_t x) 
 {	
@@ -291,7 +295,7 @@ int main(void)
     for(i = 0; i < 4; i++){
         if(powers[i][0] != powers_temp[i][0]){
             #ifdef C
-            printf("Failed to complete: %d != %d\n", powers[i][0], powers_temp[i][0]);
+            printf("Failed to complete: %d != %d. Returning %d\n", powers[i][0], powers_temp[i][0], 100*i);
             #endif
             return 100*i;
         }
