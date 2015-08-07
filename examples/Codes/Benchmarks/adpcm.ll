@@ -1,117 +1,136 @@
-; ModuleID = '/home/jost/llvm_build/llvm/examples/Codes/adpcm.c'
-target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
-target triple = "x86_64-unknown-linux-gnu"
+; ModuleID = 'adpcm.c'
+target datalayout = "E-m:m-p:32:32-i8:8:32-i16:16:32-i64:64-n32-S64"
+target triple = "mips-unknown-linux-gnu"
 
 %struct.adpcm_state = type { i16, i8 }
 
-@pcmdata = global [10 x i16] [i16 0, i16 0, i16 16, i16 16, i16 16, i16 24, i16 24, i16 24, i16 32, i16 32], align 16
+@pcmdata = global [10 x i16] [i16 0, i16 0, i16 16, i16 16, i16 16, i16 24, i16 24, i16 24, i16 32, i16 32], align 2
 @adpcmdata_ref = global [5 x i8] c"\00q\82\008", align 1
-@pcmdata_2_ref = global [10 x i16] [i16 0, i16 0, i16 11, i16 17, i16 16, i16 23, i16 24, i16 25, i16 33, i16 32], align 16
+@pcmdata_2_ref = global [10 x i16] [i16 0, i16 0, i16 11, i16 17, i16 16, i16 23, i16 24, i16 25, i16 33, i16 32], align 2
 @coder_state = common global %struct.adpcm_state zeroinitializer, align 2
 @decoder_state = common global %struct.adpcm_state zeroinitializer, align 2
 @adpcmdata = common global [5 x i8] zeroinitializer, align 1
-@pcmdata_2 = common global [10 x i16] zeroinitializer, align 16
-@stepsizeTable = internal global [89 x i32] [i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 16, i32 17, i32 19, i32 21, i32 23, i32 25, i32 28, i32 31, i32 34, i32 37, i32 41, i32 45, i32 50, i32 55, i32 60, i32 66, i32 73, i32 80, i32 88, i32 97, i32 107, i32 118, i32 130, i32 143, i32 157, i32 173, i32 190, i32 209, i32 230, i32 253, i32 279, i32 307, i32 337, i32 371, i32 408, i32 449, i32 494, i32 544, i32 598, i32 658, i32 724, i32 796, i32 876, i32 963, i32 1060, i32 1166, i32 1282, i32 1411, i32 1552, i32 1707, i32 1878, i32 2066, i32 2272, i32 2499, i32 2749, i32 3024, i32 3327, i32 3660, i32 4026, i32 4428, i32 4871, i32 5358, i32 5894, i32 6484, i32 7132, i32 7845, i32 8630, i32 9493, i32 10442, i32 11487, i32 12635, i32 13899, i32 15289, i32 16818, i32 18500, i32 20350, i32 22385, i32 24623, i32 27086, i32 29794, i32 32767], align 16
-@indexTable = internal global [16 x i32] [i32 -1, i32 -1, i32 -1, i32 -1, i32 2, i32 4, i32 6, i32 8, i32 -1, i32 -1, i32 -1, i32 -1, i32 2, i32 4, i32 6, i32 8], align 16
+@pcmdata_2 = common global [10 x i16] zeroinitializer, align 2
+@stepsizeTable = internal global [89 x i32] [i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 16, i32 17, i32 19, i32 21, i32 23, i32 25, i32 28, i32 31, i32 34, i32 37, i32 41, i32 45, i32 50, i32 55, i32 60, i32 66, i32 73, i32 80, i32 88, i32 97, i32 107, i32 118, i32 130, i32 143, i32 157, i32 173, i32 190, i32 209, i32 230, i32 253, i32 279, i32 307, i32 337, i32 371, i32 408, i32 449, i32 494, i32 544, i32 598, i32 658, i32 724, i32 796, i32 876, i32 963, i32 1060, i32 1166, i32 1282, i32 1411, i32 1552, i32 1707, i32 1878, i32 2066, i32 2272, i32 2499, i32 2749, i32 3024, i32 3327, i32 3660, i32 4026, i32 4428, i32 4871, i32 5358, i32 5894, i32 6484, i32 7132, i32 7845, i32 8630, i32 9493, i32 10442, i32 11487, i32 12635, i32 13899, i32 15289, i32 16818, i32 18500, i32 20350, i32 22385, i32 24623, i32 27086, i32 29794, i32 32767], align 4
+@indexTable = internal global [16 x i32] [i32 -1, i32 -1, i32 -1, i32 -1, i32 2, i32 4, i32 6, i32 8, i32 -1, i32 -1, i32 -1, i32 -1, i32 2, i32 4, i32 6, i32 8], align 4
 
-; Function Attrs: nounwind uwtable
+; Function Attrs: nounwind
 define i32 @main() #0 {
 entry:
   %retval = alloca i32, align 4
   %i = alloca i32, align 4
   store i32 0, i32* %retval
+  store i32 0, i32* %i, align 4
+  br label %for.cond
+
+for.cond:                                         ; preds = %for.inc, %entry
+  %0 = load i32, i32* %i, align 4
+  %cmp = icmp slt i32 %0, 1000
+  br i1 %cmp, label %for.body, label %for.end
+
+for.body:                                         ; preds = %for.cond
   store i8 0, i8* getelementptr inbounds (%struct.adpcm_state, %struct.adpcm_state* @coder_state, i32 0, i32 1), align 1
   store i16 0, i16* getelementptr inbounds (%struct.adpcm_state, %struct.adpcm_state* @coder_state, i32 0, i32 0), align 2
   store i8 0, i8* getelementptr inbounds (%struct.adpcm_state, %struct.adpcm_state* @decoder_state, i32 0, i32 1), align 1
   store i16 0, i16* getelementptr inbounds (%struct.adpcm_state, %struct.adpcm_state* @decoder_state, i32 0, i32 0), align 2
-  call void @adpcm_coder(i16* getelementptr inbounds ([10 x i16], [10 x i16]* @pcmdata, i32 0, i32 0), i8* getelementptr inbounds ([5 x i8], [5 x i8]* @adpcmdata, i32 0, i32 0), i32 10, %struct.adpcm_state* @coder_state)
-  call void @adpcm_decoder(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @adpcmdata, i32 0, i32 0), i16* getelementptr inbounds ([10 x i16], [10 x i16]* @pcmdata_2, i32 0, i32 0), i32 10, %struct.adpcm_state* @decoder_state)
-  %0 = load i16, i16* getelementptr inbounds (%struct.adpcm_state, %struct.adpcm_state* @coder_state, i32 0, i32 0), align 2
-  %conv = sext i16 %0 to i32
-  %cmp = icmp ne i32 %conv, 32
-  br i1 %cmp, label %if.then, label %lor.lhs.false
-
-lor.lhs.false:                                    ; preds = %entry
-  %1 = load i8, i8* getelementptr inbounds (%struct.adpcm_state, %struct.adpcm_state* @coder_state, i32 0, i32 1), align 1
-  %conv2 = sext i8 %1 to i32
-  %cmp3 = icmp ne i32 %conv2, 1
-  br i1 %cmp3, label %if.then, label %if.end
-
-if.then:                                          ; preds = %lor.lhs.false, %entry
-  store i32 -3, i32* %retval
-  br label %return
-
-if.end:                                           ; preds = %lor.lhs.false
-  %2 = load i16, i16* getelementptr inbounds (%struct.adpcm_state, %struct.adpcm_state* @decoder_state, i32 0, i32 0), align 2
-  %conv5 = sext i16 %2 to i32
-  %cmp6 = icmp ne i32 %conv5, 32
-  br i1 %cmp6, label %if.then12, label %lor.lhs.false8
-
-lor.lhs.false8:                                   ; preds = %if.end
-  %3 = load i8, i8* getelementptr inbounds (%struct.adpcm_state, %struct.adpcm_state* @decoder_state, i32 0, i32 1), align 1
-  %conv9 = sext i8 %3 to i32
-  %cmp10 = icmp ne i32 %conv9, 1
-  br i1 %cmp10, label %if.then12, label %if.end13
-
-if.then12:                                        ; preds = %lor.lhs.false8, %if.end
-  store i32 -2, i32* %retval
-  br label %return
-
-if.end13:                                         ; preds = %lor.lhs.false8
-  store i32 0, i32* %i, align 4
-  br label %for.cond
-
-for.cond:                                         ; preds = %for.inc, %if.end13
-  %4 = load i32, i32* %i, align 4
-  %cmp14 = icmp slt i32 %4, 10
-  br i1 %cmp14, label %for.body, label %for.end
-
-for.body:                                         ; preds = %for.cond
-  %5 = load i32, i32* %i, align 4
-  %idxprom = sext i32 %5 to i64
-  %arrayidx = getelementptr inbounds [10 x i16], [10 x i16]* @pcmdata_2, i32 0, i64 %idxprom
-  %6 = load i16, i16* %arrayidx, align 2
-  %conv16 = sext i16 %6 to i32
-  %7 = load i32, i32* %i, align 4
-  %idxprom17 = sext i32 %7 to i64
-  %arrayidx18 = getelementptr inbounds [10 x i16], [10 x i16]* @pcmdata_2_ref, i32 0, i64 %idxprom17
-  %8 = load i16, i16* %arrayidx18, align 2
-  %conv19 = sext i16 %8 to i32
-  %cmp20 = icmp ne i32 %conv16, %conv19
-  br i1 %cmp20, label %if.then22, label %if.end23
-
-if.then22:                                        ; preds = %for.body
-  %9 = load i32, i32* %i, align 4
-  store i32 %9, i32* %retval
-  br label %return
-
-if.end23:                                         ; preds = %for.body
+  call void @adpcm_coder(i16* getelementptr inbounds ([10 x i16], [10 x i16]* @pcmdata, i32 0, i32 0), i8* getelementptr inbounds ([5 x i8], [5 x i8]* @adpcmdata, i32 0, i32 0), i32 signext 10, %struct.adpcm_state* @coder_state)
+  call void @adpcm_decoder(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @adpcmdata, i32 0, i32 0), i16* getelementptr inbounds ([10 x i16], [10 x i16]* @pcmdata_2, i32 0, i32 0), i32 signext 10, %struct.adpcm_state* @decoder_state)
   br label %for.inc
 
-for.inc:                                          ; preds = %if.end23
-  %10 = load i32, i32* %i, align 4
-  %inc = add nsw i32 %10, 1
+for.inc:                                          ; preds = %for.body
+  %1 = load i32, i32* %i, align 4
+  %inc = add nsw i32 %1, 1
   store i32 %inc, i32* %i, align 4
   br label %for.cond
 
 for.end:                                          ; preds = %for.cond
+  %2 = load i16, i16* getelementptr inbounds (%struct.adpcm_state, %struct.adpcm_state* @coder_state, i32 0, i32 0), align 2
+  %conv = sext i16 %2 to i32
+  %cmp1 = icmp ne i32 %conv, 32
+  br i1 %cmp1, label %if.then, label %lor.lhs.false
+
+lor.lhs.false:                                    ; preds = %for.end
+  %3 = load i8, i8* getelementptr inbounds (%struct.adpcm_state, %struct.adpcm_state* @coder_state, i32 0, i32 1), align 1
+  %conv3 = sext i8 %3 to i32
+  %cmp4 = icmp ne i32 %conv3, 1
+  br i1 %cmp4, label %if.then, label %if.end
+
+if.then:                                          ; preds = %lor.lhs.false, %for.end
+  store i32 -3, i32* %retval
+  br label %return
+
+if.end:                                           ; preds = %lor.lhs.false
+  %4 = load i16, i16* getelementptr inbounds (%struct.adpcm_state, %struct.adpcm_state* @decoder_state, i32 0, i32 0), align 2
+  %conv6 = sext i16 %4 to i32
+  %cmp7 = icmp ne i32 %conv6, 32
+  br i1 %cmp7, label %if.then13, label %lor.lhs.false9
+
+lor.lhs.false9:                                   ; preds = %if.end
+  %5 = load i8, i8* getelementptr inbounds (%struct.adpcm_state, %struct.adpcm_state* @decoder_state, i32 0, i32 1), align 1
+  %conv10 = sext i8 %5 to i32
+  %cmp11 = icmp ne i32 %conv10, 1
+  br i1 %cmp11, label %if.then13, label %if.end14
+
+if.then13:                                        ; preds = %lor.lhs.false9, %if.end
+  store i32 -2, i32* %retval
+  br label %return
+
+if.end14:                                         ; preds = %lor.lhs.false9
+  store i32 0, i32* %i, align 4
+  br label %for.cond15
+
+for.cond15:                                       ; preds = %for.inc26, %if.end14
+  %6 = load i32, i32* %i, align 4
+  %cmp16 = icmp slt i32 %6, 10
+  br i1 %cmp16, label %for.body18, label %for.end28
+
+for.body18:                                       ; preds = %for.cond15
+  %7 = load i32, i32* %i, align 4
+  %arrayidx = getelementptr inbounds [10 x i16], [10 x i16]* @pcmdata_2, i32 0, i32 %7
+  %8 = load i16, i16* %arrayidx, align 2
+  %conv19 = sext i16 %8 to i32
+  %9 = load i32, i32* %i, align 4
+  %arrayidx20 = getelementptr inbounds [10 x i16], [10 x i16]* @pcmdata_2_ref, i32 0, i32 %9
+  %10 = load i16, i16* %arrayidx20, align 2
+  %conv21 = sext i16 %10 to i32
+  %cmp22 = icmp ne i32 %conv19, %conv21
+  br i1 %cmp22, label %if.then24, label %if.end25
+
+if.then24:                                        ; preds = %for.body18
+  %11 = load i32, i32* %i, align 4
+  %mul = mul nsw i32 100, %11
+  %12 = load i32, i32* %i, align 4
+  %add = add nsw i32 %mul, %12
+  store i32 %add, i32* %retval
+  br label %return
+
+if.end25:                                         ; preds = %for.body18
+  br label %for.inc26
+
+for.inc26:                                        ; preds = %if.end25
+  %13 = load i32, i32* %i, align 4
+  %inc27 = add nsw i32 %13, 1
+  store i32 %inc27, i32* %i, align 4
+  br label %for.cond15
+
+for.end28:                                        ; preds = %for.cond15
   store i32 -1, i32* %retval
   br label %return
 
-return:                                           ; preds = %for.end, %if.then22, %if.then12, %if.then
-  %11 = load i32, i32* %retval
-  ret i32 %11
+return:                                           ; preds = %for.end28, %if.then24, %if.then13, %if.then
+  %14 = load i32, i32* %retval
+  ret i32 %14
 }
 
-; Function Attrs: nounwind uwtable
-define void @adpcm_coder(i16* %indata, i8* %outdata, i32 %len, %struct.adpcm_state* %state) #0 {
+; Function Attrs: nounwind
+define void @adpcm_coder(i16* %indata, i8* %outdata, i32 signext %len, %struct.adpcm_state* %state) #0 {
 entry:
-  %indata.addr = alloca i16*, align 8
-  %outdata.addr = alloca i8*, align 8
+  %indata.addr = alloca i16*, align 4
+  %outdata.addr = alloca i8*, align 4
   %len.addr = alloca i32, align 4
-  %state.addr = alloca %struct.adpcm_state*, align 8
-  %inp = alloca i16*, align 8
-  %outp = alloca i8*, align 8
+  %state.addr = alloca %struct.adpcm_state*, align 4
+  %inp = alloca i16*, align 4
+  %outp = alloca i8*, align 4
   %val = alloca i32, align 4
   %sign = alloca i32, align 4
   %delta = alloca i32, align 4
@@ -122,27 +141,26 @@ entry:
   %index = alloca i32, align 4
   %outputbuffer = alloca i32, align 4
   %bufferstep = alloca i32, align 4
-  store i16* %indata, i16** %indata.addr, align 8
-  store i8* %outdata, i8** %outdata.addr, align 8
+  store i16* %indata, i16** %indata.addr, align 4
+  store i8* %outdata, i8** %outdata.addr, align 4
   store i32 %len, i32* %len.addr, align 4
-  store %struct.adpcm_state* %state, %struct.adpcm_state** %state.addr, align 8
-  %0 = load i8*, i8** %outdata.addr, align 8
-  store i8* %0, i8** %outp, align 8
-  %1 = load i16*, i16** %indata.addr, align 8
-  store i16* %1, i16** %inp, align 8
-  %2 = load %struct.adpcm_state*, %struct.adpcm_state** %state.addr, align 8
+  store %struct.adpcm_state* %state, %struct.adpcm_state** %state.addr, align 4
+  %0 = load i8*, i8** %outdata.addr, align 4
+  store i8* %0, i8** %outp, align 4
+  %1 = load i16*, i16** %indata.addr, align 4
+  store i16* %1, i16** %inp, align 4
+  %2 = load %struct.adpcm_state*, %struct.adpcm_state** %state.addr, align 4
   %valprev = getelementptr inbounds %struct.adpcm_state, %struct.adpcm_state* %2, i32 0, i32 0
   %3 = load i16, i16* %valprev, align 2
   %conv = sext i16 %3 to i32
   store i32 %conv, i32* %valpred, align 4
-  %4 = load %struct.adpcm_state*, %struct.adpcm_state** %state.addr, align 8
+  %4 = load %struct.adpcm_state*, %struct.adpcm_state** %state.addr, align 4
   %index1 = getelementptr inbounds %struct.adpcm_state, %struct.adpcm_state* %4, i32 0, i32 1
   %5 = load i8, i8* %index1, align 1
   %conv2 = sext i8 %5 to i32
   store i32 %conv2, i32* %index, align 4
   %6 = load i32, i32* %index, align 4
-  %idxprom = sext i32 %6 to i64
-  %arrayidx = getelementptr inbounds [89 x i32], [89 x i32]* @stepsizeTable, i32 0, i64 %idxprom
+  %arrayidx = getelementptr inbounds [89 x i32], [89 x i32]* @stepsizeTable, i32 0, i32 %6
   %7 = load i32, i32* %arrayidx, align 4
   store i32 %7, i32* %step, align 4
   store i32 1, i32* %bufferstep, align 4
@@ -154,9 +172,9 @@ for.cond:                                         ; preds = %for.inc, %entry
   br i1 %cmp, label %for.body, label %for.end
 
 for.body:                                         ; preds = %for.cond
-  %9 = load i16*, i16** %inp, align 8
+  %9 = load i16*, i16** %inp, align 4
   %incdec.ptr = getelementptr inbounds i16, i16* %9, i32 1
-  store i16* %incdec.ptr, i16** %inp, align 8
+  store i16* %incdec.ptr, i16** %inp, align 4
   %10 = load i16, i16* %9, align 2
   %conv4 = sext i16 %10 to i32
   store i32 %conv4, i32* %val, align 4
@@ -289,67 +307,65 @@ if.end40:                                         ; preds = %if.end39, %if.then3
   %or41 = or i32 %44, %43
   store i32 %or41, i32* %delta, align 4
   %45 = load i32, i32* %delta, align 4
-  %idxprom42 = sext i32 %45 to i64
-  %arrayidx43 = getelementptr inbounds [16 x i32], [16 x i32]* @indexTable, i32 0, i64 %idxprom42
-  %46 = load i32, i32* %arrayidx43, align 4
+  %arrayidx42 = getelementptr inbounds [16 x i32], [16 x i32]* @indexTable, i32 0, i32 %45
+  %46 = load i32, i32* %arrayidx42, align 4
   %47 = load i32, i32* %index, align 4
-  %add44 = add nsw i32 %47, %46
-  store i32 %add44, i32* %index, align 4
+  %add43 = add nsw i32 %47, %46
+  store i32 %add43, i32* %index, align 4
   %48 = load i32, i32* %index, align 4
-  %cmp45 = icmp slt i32 %48, 0
-  br i1 %cmp45, label %if.then47, label %if.end48
+  %cmp44 = icmp slt i32 %48, 0
+  br i1 %cmp44, label %if.then46, label %if.end47
 
-if.then47:                                        ; preds = %if.end40
+if.then46:                                        ; preds = %if.end40
   store i32 0, i32* %index, align 4
-  br label %if.end48
+  br label %if.end47
 
-if.end48:                                         ; preds = %if.then47, %if.end40
+if.end47:                                         ; preds = %if.then46, %if.end40
   %49 = load i32, i32* %index, align 4
-  %cmp49 = icmp sgt i32 %49, 88
-  br i1 %cmp49, label %if.then51, label %if.end52
+  %cmp48 = icmp sgt i32 %49, 88
+  br i1 %cmp48, label %if.then50, label %if.end51
 
-if.then51:                                        ; preds = %if.end48
+if.then50:                                        ; preds = %if.end47
   store i32 88, i32* %index, align 4
-  br label %if.end52
+  br label %if.end51
 
-if.end52:                                         ; preds = %if.then51, %if.end48
+if.end51:                                         ; preds = %if.then50, %if.end47
   %50 = load i32, i32* %index, align 4
-  %idxprom53 = sext i32 %50 to i64
-  %arrayidx54 = getelementptr inbounds [89 x i32], [89 x i32]* @stepsizeTable, i32 0, i64 %idxprom53
-  %51 = load i32, i32* %arrayidx54, align 4
+  %arrayidx52 = getelementptr inbounds [89 x i32], [89 x i32]* @stepsizeTable, i32 0, i32 %50
+  %51 = load i32, i32* %arrayidx52, align 4
   store i32 %51, i32* %step, align 4
   %52 = load i32, i32* %bufferstep, align 4
-  %tobool55 = icmp ne i32 %52, 0
-  br i1 %tobool55, label %if.then56, label %if.else57
+  %tobool53 = icmp ne i32 %52, 0
+  br i1 %tobool53, label %if.then54, label %if.else55
 
-if.then56:                                        ; preds = %if.end52
+if.then54:                                        ; preds = %if.end51
   %53 = load i32, i32* %delta, align 4
   %shl = shl i32 %53, 4
   %and = and i32 %shl, 240
   store i32 %and, i32* %outputbuffer, align 4
-  br label %if.end62
+  br label %if.end60
 
-if.else57:                                        ; preds = %if.end52
+if.else55:                                        ; preds = %if.end51
   %54 = load i32, i32* %delta, align 4
-  %and58 = and i32 %54, 15
+  %and56 = and i32 %54, 15
   %55 = load i32, i32* %outputbuffer, align 4
-  %or59 = or i32 %and58, %55
-  %conv60 = trunc i32 %or59 to i8
-  %56 = load i8*, i8** %outp, align 8
-  %incdec.ptr61 = getelementptr inbounds i8, i8* %56, i32 1
-  store i8* %incdec.ptr61, i8** %outp, align 8
-  store i8 %conv60, i8* %56, align 1
-  br label %if.end62
+  %or57 = or i32 %and56, %55
+  %conv58 = trunc i32 %or57 to i8
+  %56 = load i8*, i8** %outp, align 4
+  %incdec.ptr59 = getelementptr inbounds i8, i8* %56, i32 1
+  store i8* %incdec.ptr59, i8** %outp, align 4
+  store i8 %conv58, i8* %56, align 1
+  br label %if.end60
 
-if.end62:                                         ; preds = %if.else57, %if.then56
+if.end60:                                         ; preds = %if.else55, %if.then54
   %57 = load i32, i32* %bufferstep, align 4
-  %tobool63 = icmp ne i32 %57, 0
-  %lnot = xor i1 %tobool63, true
+  %tobool61 = icmp ne i32 %57, 0
+  %lnot = xor i1 %tobool61, true
   %lnot.ext = zext i1 %lnot to i32
   store i32 %lnot.ext, i32* %bufferstep, align 4
   br label %for.inc
 
-for.inc:                                          ; preds = %if.end62
+for.inc:                                          ; preds = %if.end60
   %58 = load i32, i32* %len.addr, align 4
   %dec = add nsw i32 %58, -1
   store i32 %dec, i32* %len.addr, align 4
@@ -357,41 +373,41 @@ for.inc:                                          ; preds = %if.end62
 
 for.end:                                          ; preds = %for.cond
   %59 = load i32, i32* %bufferstep, align 4
-  %tobool64 = icmp ne i32 %59, 0
-  br i1 %tobool64, label %if.end68, label %if.then65
+  %tobool62 = icmp ne i32 %59, 0
+  br i1 %tobool62, label %if.end66, label %if.then63
 
-if.then65:                                        ; preds = %for.end
+if.then63:                                        ; preds = %for.end
   %60 = load i32, i32* %outputbuffer, align 4
-  %conv66 = trunc i32 %60 to i8
-  %61 = load i8*, i8** %outp, align 8
-  %incdec.ptr67 = getelementptr inbounds i8, i8* %61, i32 1
-  store i8* %incdec.ptr67, i8** %outp, align 8
-  store i8 %conv66, i8* %61, align 1
-  br label %if.end68
+  %conv64 = trunc i32 %60 to i8
+  %61 = load i8*, i8** %outp, align 4
+  %incdec.ptr65 = getelementptr inbounds i8, i8* %61, i32 1
+  store i8* %incdec.ptr65, i8** %outp, align 4
+  store i8 %conv64, i8* %61, align 1
+  br label %if.end66
 
-if.end68:                                         ; preds = %if.then65, %for.end
+if.end66:                                         ; preds = %if.then63, %for.end
   %62 = load i32, i32* %valpred, align 4
-  %conv69 = trunc i32 %62 to i16
-  %63 = load %struct.adpcm_state*, %struct.adpcm_state** %state.addr, align 8
-  %valprev70 = getelementptr inbounds %struct.adpcm_state, %struct.adpcm_state* %63, i32 0, i32 0
-  store i16 %conv69, i16* %valprev70, align 2
+  %conv67 = trunc i32 %62 to i16
+  %63 = load %struct.adpcm_state*, %struct.adpcm_state** %state.addr, align 4
+  %valprev68 = getelementptr inbounds %struct.adpcm_state, %struct.adpcm_state* %63, i32 0, i32 0
+  store i16 %conv67, i16* %valprev68, align 2
   %64 = load i32, i32* %index, align 4
-  %conv71 = trunc i32 %64 to i8
-  %65 = load %struct.adpcm_state*, %struct.adpcm_state** %state.addr, align 8
-  %index72 = getelementptr inbounds %struct.adpcm_state, %struct.adpcm_state* %65, i32 0, i32 1
-  store i8 %conv71, i8* %index72, align 1
+  %conv69 = trunc i32 %64 to i8
+  %65 = load %struct.adpcm_state*, %struct.adpcm_state** %state.addr, align 4
+  %index70 = getelementptr inbounds %struct.adpcm_state, %struct.adpcm_state* %65, i32 0, i32 1
+  store i8 %conv69, i8* %index70, align 1
   ret void
 }
 
-; Function Attrs: nounwind uwtable
-define void @adpcm_decoder(i8* %indata, i16* %outdata, i32 %len, %struct.adpcm_state* %state) #0 {
+; Function Attrs: nounwind
+define void @adpcm_decoder(i8* %indata, i16* %outdata, i32 signext %len, %struct.adpcm_state* %state) #0 {
 entry:
-  %indata.addr = alloca i8*, align 8
-  %outdata.addr = alloca i16*, align 8
+  %indata.addr = alloca i8*, align 4
+  %outdata.addr = alloca i16*, align 4
   %len.addr = alloca i32, align 4
-  %state.addr = alloca %struct.adpcm_state*, align 8
-  %inp = alloca i8*, align 8
-  %outp = alloca i16*, align 8
+  %state.addr = alloca %struct.adpcm_state*, align 4
+  %inp = alloca i8*, align 4
+  %outp = alloca i16*, align 4
   %delta = alloca i32, align 4
   %step = alloca i32, align 4
   %valpred = alloca i32, align 4
@@ -399,27 +415,26 @@ entry:
   %index = alloca i32, align 4
   %inputbuffer = alloca i32, align 4
   %bufferstep = alloca i32, align 4
-  store i8* %indata, i8** %indata.addr, align 8
-  store i16* %outdata, i16** %outdata.addr, align 8
+  store i8* %indata, i8** %indata.addr, align 4
+  store i16* %outdata, i16** %outdata.addr, align 4
   store i32 %len, i32* %len.addr, align 4
-  store %struct.adpcm_state* %state, %struct.adpcm_state** %state.addr, align 8
-  %0 = load i16*, i16** %outdata.addr, align 8
-  store i16* %0, i16** %outp, align 8
-  %1 = load i8*, i8** %indata.addr, align 8
-  store i8* %1, i8** %inp, align 8
-  %2 = load %struct.adpcm_state*, %struct.adpcm_state** %state.addr, align 8
+  store %struct.adpcm_state* %state, %struct.adpcm_state** %state.addr, align 4
+  %0 = load i16*, i16** %outdata.addr, align 4
+  store i16* %0, i16** %outp, align 4
+  %1 = load i8*, i8** %indata.addr, align 4
+  store i8* %1, i8** %inp, align 4
+  %2 = load %struct.adpcm_state*, %struct.adpcm_state** %state.addr, align 4
   %valprev = getelementptr inbounds %struct.adpcm_state, %struct.adpcm_state* %2, i32 0, i32 0
   %3 = load i16, i16* %valprev, align 2
   %conv = sext i16 %3 to i32
   store i32 %conv, i32* %valpred, align 4
-  %4 = load %struct.adpcm_state*, %struct.adpcm_state** %state.addr, align 8
+  %4 = load %struct.adpcm_state*, %struct.adpcm_state** %state.addr, align 4
   %index1 = getelementptr inbounds %struct.adpcm_state, %struct.adpcm_state* %4, i32 0, i32 1
   %5 = load i8, i8* %index1, align 1
   %conv2 = sext i8 %5 to i32
   store i32 %conv2, i32* %index, align 4
   %6 = load i32, i32* %index, align 4
-  %idxprom = sext i32 %6 to i64
-  %arrayidx = getelementptr inbounds [89 x i32], [89 x i32]* @stepsizeTable, i32 0, i64 %idxprom
+  %arrayidx = getelementptr inbounds [89 x i32], [89 x i32]* @stepsizeTable, i32 0, i32 %6
   %7 = load i32, i32* %arrayidx, align 4
   store i32 %7, i32* %step, align 4
   store i32 0, i32* %bufferstep, align 4
@@ -442,9 +457,9 @@ if.then:                                          ; preds = %for.body
   br label %if.end
 
 if.else:                                          ; preds = %for.body
-  %11 = load i8*, i8** %inp, align 8
+  %11 = load i8*, i8** %inp, align 4
   %incdec.ptr = getelementptr inbounds i8, i8* %11, i32 1
-  store i8* %incdec.ptr, i8** %inp, align 8
+  store i8* %incdec.ptr, i8** %inp, align 4
   %12 = load i8, i8* %11, align 1
   %conv4 = sext i8 %12 to i32
   store i32 %conv4, i32* %inputbuffer, align 4
@@ -546,44 +561,42 @@ if.end37:                                         ; preds = %if.then36, %if.else
 
 if.end38:                                         ; preds = %if.end37, %if.then32
   %32 = load i32, i32* %delta, align 4
-  %idxprom39 = sext i32 %32 to i64
-  %arrayidx40 = getelementptr inbounds [16 x i32], [16 x i32]* @indexTable, i32 0, i64 %idxprom39
-  %33 = load i32, i32* %arrayidx40, align 4
+  %arrayidx39 = getelementptr inbounds [16 x i32], [16 x i32]* @indexTable, i32 0, i32 %32
+  %33 = load i32, i32* %arrayidx39, align 4
   %34 = load i32, i32* %index, align 4
-  %add41 = add nsw i32 %34, %33
-  store i32 %add41, i32* %index, align 4
+  %add40 = add nsw i32 %34, %33
+  store i32 %add40, i32* %index, align 4
   %35 = load i32, i32* %index, align 4
-  %cmp42 = icmp slt i32 %35, 0
-  br i1 %cmp42, label %if.then44, label %if.end45
+  %cmp41 = icmp slt i32 %35, 0
+  br i1 %cmp41, label %if.then43, label %if.end44
 
-if.then44:                                        ; preds = %if.end38
+if.then43:                                        ; preds = %if.end38
   store i32 0, i32* %index, align 4
-  br label %if.end45
+  br label %if.end44
 
-if.end45:                                         ; preds = %if.then44, %if.end38
+if.end44:                                         ; preds = %if.then43, %if.end38
   %36 = load i32, i32* %index, align 4
-  %cmp46 = icmp sgt i32 %36, 88
-  br i1 %cmp46, label %if.then48, label %if.end49
+  %cmp45 = icmp sgt i32 %36, 88
+  br i1 %cmp45, label %if.then47, label %if.end48
 
-if.then48:                                        ; preds = %if.end45
+if.then47:                                        ; preds = %if.end44
   store i32 88, i32* %index, align 4
-  br label %if.end49
+  br label %if.end48
 
-if.end49:                                         ; preds = %if.then48, %if.end45
+if.end48:                                         ; preds = %if.then47, %if.end44
   %37 = load i32, i32* %index, align 4
-  %idxprom50 = sext i32 %37 to i64
-  %arrayidx51 = getelementptr inbounds [89 x i32], [89 x i32]* @stepsizeTable, i32 0, i64 %idxprom50
-  %38 = load i32, i32* %arrayidx51, align 4
+  %arrayidx49 = getelementptr inbounds [89 x i32], [89 x i32]* @stepsizeTable, i32 0, i32 %37
+  %38 = load i32, i32* %arrayidx49, align 4
   store i32 %38, i32* %step, align 4
   %39 = load i32, i32* %valpred, align 4
-  %conv52 = trunc i32 %39 to i16
-  %40 = load i16*, i16** %outp, align 8
-  %incdec.ptr53 = getelementptr inbounds i16, i16* %40, i32 1
-  store i16* %incdec.ptr53, i16** %outp, align 8
-  store i16 %conv52, i16* %40, align 2
+  %conv50 = trunc i32 %39 to i16
+  %40 = load i16*, i16** %outp, align 4
+  %incdec.ptr51 = getelementptr inbounds i16, i16* %40, i32 1
+  store i16* %incdec.ptr51, i16** %outp, align 4
+  store i16 %conv50, i16* %40, align 2
   br label %for.inc
 
-for.inc:                                          ; preds = %if.end49
+for.inc:                                          ; preds = %if.end48
   %41 = load i32, i32* %len.addr, align 4
   %dec = add nsw i32 %41, -1
   store i32 %dec, i32* %len.addr, align 4
@@ -591,19 +604,19 @@ for.inc:                                          ; preds = %if.end49
 
 for.end:                                          ; preds = %for.cond
   %42 = load i32, i32* %valpred, align 4
-  %conv54 = trunc i32 %42 to i16
-  %43 = load %struct.adpcm_state*, %struct.adpcm_state** %state.addr, align 8
-  %valprev55 = getelementptr inbounds %struct.adpcm_state, %struct.adpcm_state* %43, i32 0, i32 0
-  store i16 %conv54, i16* %valprev55, align 2
+  %conv52 = trunc i32 %42 to i16
+  %43 = load %struct.adpcm_state*, %struct.adpcm_state** %state.addr, align 4
+  %valprev53 = getelementptr inbounds %struct.adpcm_state, %struct.adpcm_state* %43, i32 0, i32 0
+  store i16 %conv52, i16* %valprev53, align 2
   %44 = load i32, i32* %index, align 4
-  %conv56 = trunc i32 %44 to i8
-  %45 = load %struct.adpcm_state*, %struct.adpcm_state** %state.addr, align 8
-  %index57 = getelementptr inbounds %struct.adpcm_state, %struct.adpcm_state* %45, i32 0, i32 1
-  store i8 %conv56, i8* %index57, align 1
+  %conv54 = trunc i32 %44 to i8
+  %45 = load %struct.adpcm_state*, %struct.adpcm_state** %state.addr, align 4
+  %index55 = getelementptr inbounds %struct.adpcm_state, %struct.adpcm_state* %45, i32 0, i32 1
+  store i8 %conv54, i8* %index55, align 1
   ret void
 }
 
-attributes #0 = { nounwind uwtable "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "unsafe-fp-math"="false" "use-soft-float"="false" }
+attributes #0 = { nounwind "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="mips32r2" "unsafe-fp-math"="false" "use-soft-float"="false" }
 
 !llvm.ident = !{!0}
 
