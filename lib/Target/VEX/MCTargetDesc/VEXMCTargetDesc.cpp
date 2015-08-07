@@ -81,6 +81,7 @@ static MCSubtargetInfo *createVEXMCSubtargetInfo(StringRef TT, StringRef CPU,
             ArchFS = ArchFS + "," + FS.str();
         else
             ArchFS = FS;
+
     MCSubtargetInfo *X = new MCSubtargetInfo();
     InitVEXMCSubtargetInfo(X, TT, CPU, ArchFS); // defined in VEXGenRegisterInfo.inc
     return X;

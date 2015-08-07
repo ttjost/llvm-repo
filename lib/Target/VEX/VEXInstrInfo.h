@@ -70,6 +70,12 @@ namespace llvm{
                             MachineBasicBlock &MBB, MachineBasicBlock::iterator I)
         const;
 
+        // Insert Branch Code into the end of the specified MachineBasicBlock
+        unsigned InsertBranch(MachineBasicBlock &MBB, MachineBasicBlock *TBB,
+                              MachineBasicBlock *FBB,
+                              const SmallVectorImpl<MachineOperand> &Cond,
+                              DebugLoc DL) const;
+
         // Used by the VLIW Scheduler.
         DFAPacketizer* CreateTargetScheduleState(const TargetSubtargetInfo &STI) const;
     };

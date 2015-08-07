@@ -63,7 +63,7 @@ int main(void)
 {
     int i;
 
-//    for(i=0; i<1000; i++){
+    for(i=0; i<1000; i++){
         coder_state.index = 0;
         coder_state.valprev = 0;
         decoder_state.index = 0;
@@ -73,7 +73,7 @@ int main(void)
         adpcm_coder(pcmdata, adpcmdata, DATASIZE, &coder_state);
         /* decode nible samples to shorts */
         adpcm_decoder(adpcmdata, pcmdata_2, DATASIZE, &decoder_state);
-//    }
+    }
 	
 	if (coder_state.valprev != 32 || coder_state.index != 1)
 	{

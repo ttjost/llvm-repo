@@ -180,6 +180,19 @@ void VEXInstrInfo::adjustStackPtr(VEXFunctionInfo *VEXFI, unsigned SP, uint64_t 
     
 }
 
+// Insert Branch Code into the end of the specified MachineBasicBlock
+unsigned VEXInstrInfo::InsertBranch(MachineBasicBlock &MBB, MachineBasicBlock *TBB,
+                                    MachineBasicBlock *FBB,
+                                    const SmallVectorImpl<MachineOperand> &Cond,
+                                    DebugLoc DL) const {
+
+    assert(!FBB && "Does not handle InsertBranch for this case");
+    //MachineInstr *MI = BuildMI(*MBB.getParent(), DL, get(VEX::GOTO)).addMBB(TBB);
+    BuildMI(&MBB, DL, get(VEX::GOTO)).addMBB(TBB);
+
+    return 1;
+}
+
 // Used by the VLIW Scheduler
 DFAPacketizer* VEXInstrInfo::CreateTargetScheduleState
                                 (const TargetSubtargetInfo &STI) const{

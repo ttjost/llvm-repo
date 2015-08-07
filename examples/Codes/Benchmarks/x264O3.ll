@@ -25,7 +25,7 @@ entry:
   br label %for.cond1.preheader.i.i.preheader
 
 for.cond1.preheader.i.i.preheader:                ; preds = %x264_pixel_sad_x4_16x16.exit, %entry
-  %i.015 = phi i32 [ 0, %entry ], [ %inc, %x264_pixel_sad_x4_16x16.exit ]
+  %i.016 = phi i32 [ 0, %entry ], [ %inc, %x264_pixel_sad_x4_16x16.exit ]
   br label %for.cond1.preheader.i.i
 
 for.cond1.preheader:                              ; preds = %x264_pixel_sad_x4_16x16.exit
@@ -35,17 +35,7 @@ for.cond1.preheader:                              ; preds = %x264_pixel_sad_x4_1
   %add.i.i.lcssa.lcssa.lcssa = phi i32 [ %add.i.i.lcssa.lcssa, %x264_pixel_sad_x4_16x16.exit ]
   %0 = load i32, i32* getelementptr inbounds ([4 x i32], [4 x i32]* @scores_temp, i32 0, i32 0), align 4, !tbaa !1
   %cmp5 = icmp eq i32 %add.i.i.lcssa.lcssa.lcssa, %0
-  %1 = load i32, i32* getelementptr inbounds ([4 x i32], [4 x i32]* @scores_temp, i32 0, i32 1), align 4
-  %cmp5.1 = icmp eq i32 %add.i63.i.lcssa.lcssa.lcssa, %1
-  %or.cond = and i1 %cmp5, %cmp5.1
-  %2 = load i32, i32* getelementptr inbounds ([4 x i32], [4 x i32]* @scores_temp, i32 0, i32 2), align 4
-  %cmp5.2 = icmp eq i32 %add.i39.i.lcssa.lcssa.lcssa, %2
-  %or.cond16 = and i1 %or.cond, %cmp5.2
-  %3 = load i32, i32* getelementptr inbounds ([4 x i32], [4 x i32]* @scores_temp, i32 0, i32 3), align 4
-  %cmp5.3 = icmp eq i32 %add.i15.i.lcssa.lcssa.lcssa, %3
-  %or.cond17 = and i1 %or.cond16, %cmp5.3
-  %. = sext i1 %or.cond17 to i32
-  ret i32 %.
+  br i1 %cmp5, label %for.inc6, label %return
 
 for.cond1.preheader.i.i:                          ; preds = %for.cond1.preheader.i.i.preheader, %for.end.i.i
   %y.06.i.i = phi i32 [ %inc8.i.i, %for.end.i.i ], [ 0, %for.cond1.preheader.i.i.preheader ]
@@ -58,16 +48,16 @@ for.body3.i.i:                                    ; preds = %for.body3.i.i, %for
   %x.02.i.i = phi i32 [ 0, %for.cond1.preheader.i.i ], [ %inc.i.i, %for.body3.i.i ]
   %i_sum.11.i.i = phi i32 [ %i_sum.05.i.i, %for.cond1.preheader.i.i ], [ %add.i.i, %for.body3.i.i ]
   %arrayidx.i.i = getelementptr inbounds i8, i8* %pix1.addr.04.i.i, i32 %x.02.i.i
-  %4 = load i8, i8* %arrayidx.i.i, align 1, !tbaa !5
-  %conv.i.i = zext i8 %4 to i32
+  %1 = load i8, i8* %arrayidx.i.i, align 1, !tbaa !5
+  %conv.i.i = zext i8 %1 to i32
   %arrayidx4.i.i = getelementptr inbounds i8, i8* %pix2.addr.03.i.i, i32 %x.02.i.i
-  %5 = load i8, i8* %arrayidx4.i.i, align 1, !tbaa !5
-  %conv5.i.i = zext i8 %5 to i32
+  %2 = load i8, i8* %arrayidx4.i.i, align 1, !tbaa !5
+  %conv5.i.i = zext i8 %2 to i32
   %sub.i.i = sub nsw i32 %conv.i.i, %conv5.i.i
   %ispos.i.i = icmp sgt i32 %sub.i.i, -1
   %neg.i.i = sub nsw i32 0, %sub.i.i
-  %6 = select i1 %ispos.i.i, i32 %sub.i.i, i32 %neg.i.i
-  %add.i.i = add nsw i32 %6, %i_sum.11.i.i
+  %3 = select i1 %ispos.i.i, i32 %sub.i.i, i32 %neg.i.i
+  %add.i.i = add nsw i32 %3, %i_sum.11.i.i
   %inc.i.i = add nuw nsw i32 %x.02.i.i, 1
   %exitcond.i.i = icmp eq i32 %inc.i.i, 16
   br i1 %exitcond.i.i, label %for.end.i.i, label %for.body3.i.i
@@ -96,16 +86,16 @@ for.body3.i66.i:                                  ; preds = %for.body3.i66.i, %f
   %x.02.i54.i = phi i32 [ 0, %for.cond1.preheader.i53.i ], [ %inc.i64.i, %for.body3.i66.i ]
   %i_sum.11.i55.i = phi i32 [ %i_sum.05.i50.i, %for.cond1.preheader.i53.i ], [ %add.i63.i, %for.body3.i66.i ]
   %arrayidx.i56.i = getelementptr inbounds i8, i8* %pix1.addr.04.i51.i, i32 %x.02.i54.i
-  %7 = load i8, i8* %arrayidx.i56.i, align 1, !tbaa !5
-  %conv.i57.i = zext i8 %7 to i32
+  %4 = load i8, i8* %arrayidx.i56.i, align 1, !tbaa !5
+  %conv.i57.i = zext i8 %4 to i32
   %arrayidx4.i58.i = getelementptr inbounds i8, i8* %pix2.addr.03.i52.i, i32 %x.02.i54.i
-  %8 = load i8, i8* %arrayidx4.i58.i, align 1, !tbaa !5
-  %conv5.i59.i = zext i8 %8 to i32
+  %5 = load i8, i8* %arrayidx4.i58.i, align 1, !tbaa !5
+  %conv5.i59.i = zext i8 %5 to i32
   %sub.i60.i = sub nsw i32 %conv.i57.i, %conv5.i59.i
   %ispos.i61.i = icmp sgt i32 %sub.i60.i, -1
   %neg.i62.i = sub nsw i32 0, %sub.i60.i
-  %9 = select i1 %ispos.i61.i, i32 %sub.i60.i, i32 %neg.i62.i
-  %add.i63.i = add nsw i32 %9, %i_sum.11.i55.i
+  %6 = select i1 %ispos.i61.i, i32 %sub.i60.i, i32 %neg.i62.i
+  %add.i63.i = add nsw i32 %6, %i_sum.11.i55.i
   %inc.i64.i = add nuw nsw i32 %x.02.i54.i, 1
   %exitcond.i65.i = icmp eq i32 %inc.i64.i, 16
   br i1 %exitcond.i65.i, label %for.end.i71.i, label %for.body3.i66.i
@@ -134,16 +124,16 @@ for.body3.i42.i:                                  ; preds = %for.body3.i42.i, %f
   %x.02.i30.i = phi i32 [ 0, %for.cond1.preheader.i29.i ], [ %inc.i40.i, %for.body3.i42.i ]
   %i_sum.11.i31.i = phi i32 [ %i_sum.05.i26.i, %for.cond1.preheader.i29.i ], [ %add.i39.i, %for.body3.i42.i ]
   %arrayidx.i32.i = getelementptr inbounds i8, i8* %pix1.addr.04.i27.i, i32 %x.02.i30.i
-  %10 = load i8, i8* %arrayidx.i32.i, align 1, !tbaa !5
-  %conv.i33.i = zext i8 %10 to i32
+  %7 = load i8, i8* %arrayidx.i32.i, align 1, !tbaa !5
+  %conv.i33.i = zext i8 %7 to i32
   %arrayidx4.i34.i = getelementptr inbounds i8, i8* %pix2.addr.03.i28.i, i32 %x.02.i30.i
-  %11 = load i8, i8* %arrayidx4.i34.i, align 1, !tbaa !5
-  %conv5.i35.i = zext i8 %11 to i32
+  %8 = load i8, i8* %arrayidx4.i34.i, align 1, !tbaa !5
+  %conv5.i35.i = zext i8 %8 to i32
   %sub.i36.i = sub nsw i32 %conv.i33.i, %conv5.i35.i
   %ispos.i37.i = icmp sgt i32 %sub.i36.i, -1
   %neg.i38.i = sub nsw i32 0, %sub.i36.i
-  %12 = select i1 %ispos.i37.i, i32 %sub.i36.i, i32 %neg.i38.i
-  %add.i39.i = add nsw i32 %12, %i_sum.11.i31.i
+  %9 = select i1 %ispos.i37.i, i32 %sub.i36.i, i32 %neg.i38.i
+  %add.i39.i = add nsw i32 %9, %i_sum.11.i31.i
   %inc.i40.i = add nuw nsw i32 %x.02.i30.i, 1
   %exitcond.i41.i = icmp eq i32 %inc.i40.i, 16
   br i1 %exitcond.i41.i, label %for.end.i47.i, label %for.body3.i42.i
@@ -172,16 +162,16 @@ for.body3.i18.i:                                  ; preds = %for.body3.i18.i, %f
   %x.02.i6.i = phi i32 [ 0, %for.cond1.preheader.i5.i ], [ %inc.i16.i, %for.body3.i18.i ]
   %i_sum.11.i7.i = phi i32 [ %i_sum.05.i2.i, %for.cond1.preheader.i5.i ], [ %add.i15.i, %for.body3.i18.i ]
   %arrayidx.i8.i = getelementptr inbounds i8, i8* %pix1.addr.04.i3.i, i32 %x.02.i6.i
-  %13 = load i8, i8* %arrayidx.i8.i, align 1, !tbaa !5
-  %conv.i9.i = zext i8 %13 to i32
+  %10 = load i8, i8* %arrayidx.i8.i, align 1, !tbaa !5
+  %conv.i9.i = zext i8 %10 to i32
   %arrayidx4.i10.i = getelementptr inbounds i8, i8* %pix2.addr.03.i4.i, i32 %x.02.i6.i
-  %14 = load i8, i8* %arrayidx4.i10.i, align 1, !tbaa !5
-  %conv5.i11.i = zext i8 %14 to i32
+  %11 = load i8, i8* %arrayidx4.i10.i, align 1, !tbaa !5
+  %conv5.i11.i = zext i8 %11 to i32
   %sub.i12.i = sub nsw i32 %conv.i9.i, %conv5.i11.i
   %ispos.i13.i = icmp sgt i32 %sub.i12.i, -1
   %neg.i14.i = sub nsw i32 0, %sub.i12.i
-  %15 = select i1 %ispos.i13.i, i32 %sub.i12.i, i32 %neg.i14.i
-  %add.i15.i = add nsw i32 %15, %i_sum.11.i7.i
+  %12 = select i1 %ispos.i13.i, i32 %sub.i12.i, i32 %neg.i14.i
+  %add.i15.i = add nsw i32 %12, %i_sum.11.i7.i
   %inc.i16.i = add nuw nsw i32 %x.02.i6.i, 1
   %exitcond.i17.i = icmp eq i32 %inc.i16.i, 16
   br i1 %exitcond.i17.i, label %for.end.i23.i, label %for.body3.i18.i
@@ -197,9 +187,29 @@ for.end.i23.i:                                    ; preds = %for.body3.i18.i
 x264_pixel_sad_x4_16x16.exit:                     ; preds = %for.end.i23.i
   %add.i15.i.lcssa.lcssa = phi i32 [ %add.i15.i.lcssa, %for.end.i23.i ]
   store i32 %add.i15.i.lcssa.lcssa, i32* getelementptr inbounds ([4 x i32], [4 x i32]* @scores, i32 0, i32 3), align 4, !tbaa !1
-  %inc = add nuw nsw i32 %i.015, 1
+  %inc = add nuw nsw i32 %i.016, 1
   %exitcond = icmp eq i32 %inc, 1000
   br i1 %exitcond, label %for.cond1.preheader, label %for.cond1.preheader.i.i.preheader
+
+for.inc6:                                         ; preds = %for.cond1.preheader
+  %13 = load i32, i32* getelementptr inbounds ([4 x i32], [4 x i32]* @scores_temp, i32 0, i32 1), align 4, !tbaa !1
+  %cmp5.1 = icmp eq i32 %add.i63.i.lcssa.lcssa.lcssa, %13
+  br i1 %cmp5.1, label %for.inc6.1, label %return
+
+return:                                           ; preds = %for.cond1.preheader, %for.inc6, %for.inc6.1
+  %retval.0 = phi i32 [ 0, %for.cond1.preheader ], [ 100, %for.inc6 ], [ 200, %for.inc6.1 ]
+  ret i32 %retval.0
+
+for.inc6.1:                                       ; preds = %for.inc6
+  %14 = load i32, i32* getelementptr inbounds ([4 x i32], [4 x i32]* @scores_temp, i32 0, i32 2), align 4, !tbaa !1
+  %cmp5.2 = icmp eq i32 %add.i39.i.lcssa.lcssa.lcssa, %14
+  br i1 %cmp5.2, label %for.inc6.2, label %return
+
+for.inc6.2:                                       ; preds = %for.inc6.1
+  %15 = load i32, i32* getelementptr inbounds ([4 x i32], [4 x i32]* @scores_temp, i32 0, i32 3), align 4, !tbaa !1
+  %cmp5.3 = icmp eq i32 %add.i15.i.lcssa.lcssa.lcssa, %15
+  %. = select i1 %cmp5.3, i32 -1, i32 300
+  ret i32 %.
 }
 
 attributes #0 = { nounwind readnone "less-precise-fpmad"="false" "no-frame-pointer-elim"="false" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="mips32r2" "unsafe-fp-math"="false" "use-soft-float"="false" }

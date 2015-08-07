@@ -6,7 +6,7 @@ target triple = "mips-unknown-linux-gnu"
 
 @rowsums = global [24 x i32] [i32 759, i32 776, i32 787, i32 795, i32 797, i32 796, i32 801, i32 805, i32 800, i32 800, i32 799, i32 801, i32 799, i32 790, i32 781, i32 775, i32 772, i32 769, i32 768, i32 767, i32 762, i32 761, i32 755, i32 751], align 4
 @powers = global [4 x [24 x i32]] zeroinitializer, align 4
-@powers_temp = global [4 x [24 x i32]] [[24 x i32] [i32 2436991, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0], [24 x i32] [i32 63546, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0], [24 x i32] [i32 31381, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0], [24 x i32] [i32 19272, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0]], align 4
+@powers_temp = global [4 x [24 x i32]] [[24 x i32] [i32 2436991, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0], [24 x i32] [i32 63546, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0], [24 x i32] [i32 131381, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0], [24 x i32] [i32 19271, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0]], align 4
 @dft_waves_cos = global [96 x i32] [i32 131072, i32 126606, i32 113512, i32 92683, i32 65537, i32 33926, i32 3, i32 -33921, i32 -65532, i32 -92679, i32 -113509, i32 -126605, i32 -131072, i32 -126608, i32 -113516, i32 -92689, i32 -65544, i32 -33934, i32 -11, i32 33913, i32 65526, i32 92673, i32 113505, i32 126602, i32 131072, i32 113512, i32 65537, i32 3, i32 -65532, i32 -113509, i32 -131072, i32 -113516, i32 -65544, i32 -11, i32 65526, i32 113505, i32 131072, i32 113518, i32 65549, i32 16, i32 -65521, i32 -113503, i32 -131072, i32 -113523, i32 -65556, i32 -24, i32 65514, i32 113499, i32 131072, i32 92683, i32 3, i32 -92679, i32 -131072, i32 -92689, i32 -11, i32 92673, i32 131072, i32 92692, i32 16, i32 -92669, i32 -131072, i32 -92698, i32 -24, i32 92664, i32 131071, i32 92701, i32 29, i32 -92660, i32 -131072, i32 -92707, i32 -37, i32 92654, i32 131072, i32 65537, i32 -65532, i32 -131072, i32 -65544, i32 65526, i32 131072, i32 65549, i32 -65521, i32 -131072, i32 -65556, i32 65514, i32 131071, i32 65560, i32 -65510, i32 -131072, i32 -65567, i32 65503, i32 131071, i32 65571, i32 -65499, i32 -131072, i32 -65578, i32 65492], align 4
 @dft_waves_sin = global [96 x i32] [i32 0, i32 33923, i32 65535, i32 92680, i32 113510, i32 126605, i32 131071, i32 126606, i32 113514, i32 92685, i32 65540, i32 33929, i32 6, i32 -33917, i32 -65530, i32 -92676, i32 -113508, i32 -126604, i32 -131072, i32 -126609, i32 -113518, i32 -92691, i32 -65547, i32 -33937, i32 0, i32 65535, i32 113510, i32 131071, i32 113514, i32 65540, i32 6, i32 -65530, i32 -113508, i32 -131072, i32 -113518, i32 -65547, i32 -14, i32 65523, i32 113504, i32 131071, i32 113520, i32 65552, i32 19, i32 -65518, i32 -113501, i32 -131072, i32 -113524, i32 -65558, i32 0, i32 92680, i32 131071, i32 92685, i32 6, i32 -92676, i32 -131072, i32 -92691, i32 -14, i32 92671, i32 131071, i32 92694, i32 19, i32 -92667, i32 -131072, i32 -92700, i32 -27, i32 92662, i32 131071, i32 92704, i32 32, i32 -92658, i32 -131072, i32 -92709, i32 0, i32 113510, i32 113514, i32 6, i32 -113508, i32 -113518, i32 -14, i32 113504, i32 113520, i32 19, i32 -113501, i32 -113524, i32 -27, i32 113497, i32 113527, i32 32, i32 -113495, i32 -113531, i32 -40, i32 113491, i32 113533, i32 45, i32 -113488, i32 -113537], align 4
 
@@ -447,41 +447,41 @@ define i32 @main() #1 {
 entry:
   br label %for.body
 
+for.cond1.preheader:                              ; preds = %for.body
+  %0 = load i32, i32* getelementptr inbounds ([4 x [24 x i32]], [4 x [24 x i32]]* @powers, i32 0, i32 0, i32 0), align 4, !tbaa !4
+  %1 = load i32, i32* getelementptr inbounds ([4 x [24 x i32]], [4 x [24 x i32]]* @powers_temp, i32 0, i32 0, i32 0), align 4, !tbaa !4
+  %cmp7 = icmp eq i32 %0, %1
+  br i1 %cmp7, label %for.inc8, label %return
+
 for.body:                                         ; preds = %for.body, %entry
-  %i.016 = phi i32 [ 0, %entry ], [ %inc, %for.body ]
+  %i.018 = phi i32 [ 0, %entry ], [ %inc, %for.body ]
   tail call void @sum_rot_block_row([24 x i32]* getelementptr inbounds ([4 x [24 x i32]], [4 x [24 x i32]]* @powers, i32 0, i32 0))
-  %inc = add nuw nsw i32 %i.016, 1
+  %inc = add nuw nsw i32 %i.018, 1
   %exitcond = icmp eq i32 %inc, 200
   br i1 %exitcond, label %for.cond1.preheader, label %for.body
 
-for.cond1.preheader:                              ; preds = %for.body
-  br label %for.cond1
+for.inc8:                                         ; preds = %for.cond1.preheader
+  %2 = load i32, i32* getelementptr inbounds ([4 x [24 x i32]], [4 x [24 x i32]]* @powers, i32 0, i32 1, i32 0), align 4, !tbaa !4
+  %3 = load i32, i32* getelementptr inbounds ([4 x [24 x i32]], [4 x [24 x i32]]* @powers_temp, i32 0, i32 1, i32 0), align 4, !tbaa !4
+  %cmp7.1 = icmp eq i32 %2, %3
+  br i1 %cmp7.1, label %for.inc8.1, label %return
 
-for.cond1:                                        ; preds = %for.cond1.preheader, %for.body3
-  %i.1 = phi i32 [ %add, %for.body3 ], [ 0, %for.cond1.preheader ]
-  %cmp2 = icmp slt i32 %i.1, 4
-  br i1 %cmp2, label %for.body3, label %return.loopexit
-
-for.body3:                                        ; preds = %for.cond1
-  %arrayidx4 = getelementptr inbounds [4 x [24 x i32]], [4 x [24 x i32]]* @powers, i32 0, i32 %i.1, i32 0
-  %0 = load i32, i32* %arrayidx4, align 4, !tbaa !4
-  %arrayidx6 = getelementptr inbounds [4 x [24 x i32]], [4 x [24 x i32]]* @powers_temp, i32 0, i32 %i.1, i32 0
-  %1 = load i32, i32* %arrayidx6, align 4, !tbaa !4
-  %cmp7 = icmp eq i32 %0, %1
-  %add = add nuw nsw i32 %i.1, 1
-  br i1 %cmp7, label %for.cond1, label %if.then
-
-if.then:                                          ; preds = %for.body3
-  %add.lcssa = phi i32 [ %add, %for.body3 ]
-  %mul = mul nsw i32 %add.lcssa, 100
-  br label %return
-
-return.loopexit:                                  ; preds = %for.cond1
-  br label %return
-
-return:                                           ; preds = %return.loopexit, %if.then
-  %retval.0 = phi i32 [ %mul, %if.then ], [ -1, %return.loopexit ]
+return:                                           ; preds = %for.cond1.preheader, %for.inc8, %for.inc8.1
+  %retval.0 = phi i32 [ 0, %for.cond1.preheader ], [ 100, %for.inc8 ], [ 200, %for.inc8.1 ]
   ret i32 %retval.0
+
+for.inc8.1:                                       ; preds = %for.inc8
+  %4 = load i32, i32* getelementptr inbounds ([4 x [24 x i32]], [4 x [24 x i32]]* @powers, i32 0, i32 2, i32 0), align 4, !tbaa !4
+  %5 = load i32, i32* getelementptr inbounds ([4 x [24 x i32]], [4 x [24 x i32]]* @powers_temp, i32 0, i32 2, i32 0), align 4, !tbaa !4
+  %cmp7.2 = icmp eq i32 %4, %5
+  br i1 %cmp7.2, label %for.inc8.2, label %return
+
+for.inc8.2:                                       ; preds = %for.inc8.1
+  %6 = load i32, i32* getelementptr inbounds ([4 x [24 x i32]], [4 x [24 x i32]]* @powers, i32 0, i32 3, i32 0), align 4, !tbaa !4
+  %7 = load i32, i32* getelementptr inbounds ([4 x [24 x i32]], [4 x [24 x i32]]* @powers_temp, i32 0, i32 3, i32 0), align 4, !tbaa !4
+  %cmp7.3 = icmp eq i32 %6, %7
+  %. = select i1 %cmp7.3, i32 -1, i32 300
+  ret i32 %.
 }
 
 attributes #0 = { nounwind readnone "less-precise-fpmad"="false" "no-frame-pointer-elim"="false" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="mips32r2" "unsafe-fp-math"="false" "use-soft-float"="false" }
