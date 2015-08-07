@@ -12,8 +12,6 @@
 
 #ifdef C
 #include <stdio.h>
-#else
-#include "printf.h"
 #endif
 
 #define DATASIZE 10 	/* Data block size: 10 samples */
@@ -79,16 +77,29 @@ int main(void)
 	
 	if (coder_state.valprev != 32 || coder_state.index != 1)
 	{
+		#ifdef C
+		printf ("Failed: -3\n");
+		#endif
 		return -3;
 	}
-	if (decoder_state.valprev != 32 || decoder_state.index != 1)
+	if (decoder_state.valprev != 32 || decoder_state.index != 1){
+		#ifdef C
+		printf ("Failed: -2\n");
+		#endif
 		return -2;
+	}
 	for (i = 0; i < DATASIZE; i++)
 	{
-		if (pcmdata_2[i] != pcmdata_2_ref[i])
-			return i;
+		if (pcmdata_2[i] != pcmdata_2_ref[i]){
+			#ifdef C
+			printf ("Failed: %d\n", 100*i+i);
+			#endif
+			return 100*i+i;
+		}
 	}
-    
+    #ifdef C
+	printf ("Success!!!\n");
+	#endif
     return -1;
 }
 

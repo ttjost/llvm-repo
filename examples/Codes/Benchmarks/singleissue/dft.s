@@ -6,8 +6,8 @@
 cast_uint32::                           ## @cast_uint32
 ## BB#0:                                ## %if.end
 	c0	add $r0.1 = $r0.1, -16
-	c0	add $r0.58 = $r0.1, 8
 	c0	stw 8[$r0.1] = $r0.3
+	c0	add $r0.58 = $r0.1, 8
 	c0	or $r0.58 = $r0.58, 4
 	c0	stw 0[$r0.58] = $r0.4
 	c0	stw 4[$r0.1] = $r0.4
@@ -22,13 +22,13 @@ $func_end0::
 cast_int32::                            ## @cast_int32
 ## BB#0:                                ## %entry
 	c0	add $r0.1 = $r0.1, -16
+	c0	stw 8[$r0.1] = $r0.3
 	c0	add $r0.59 = $r0.1, 8
 	c0	or $r0.58 = $r0.59, 4
-	c0	stw 8[$r0.1] = $r0.3
 	c0	stw 0[$r0.58] = $r0.4
 	c0	mov $r0.60 = 0
-	c0	or $r0.59 = $r0.59, 3
 	c0	stw 4[$r0.1] = $r0.60
+	c0	or $r0.59 = $r0.59, 3
 	c0	ldbu $r0.59 = 0[$r0.59]
 	c0	and $r0.59 = $r0.59, 128
 	c0	cmpeq $b0.0 = $r0.59, 0
@@ -63,8 +63,8 @@ $func_end1::
 cast::                                  ## @cast
 ## BB#0:                                ## %entry
 	c0	add $r0.1 = $r0.1, -16
-	c0	add $r0.58 = $r0.1, 0
 	c0	stw 12[$r0.1] = $r0.4
+	c0	add $r0.58 = $r0.1, 0
 	c0	or $r0.58 = $r0.58, 4
 	c0	stw 0[$r0.58] = $r0.4
 	c0	ldw $r0.59 = 12[$r0.1]
@@ -95,15 +95,14 @@ add::                                   ## @add
 	c0	add $r0.1 = $r0.1, -56
 	c0	stw 52[$r0.1] = $r0.7   ## 4-byte Folded Spill
 	c0	stw 48[$r0.1] = $r0.6   ## 4-byte Folded Spill
-	c0	add $r0.58 = $r0.1, 40
 	c0	stw 40[$r0.1] = $r0.4
+	c0	add $r0.58 = $r0.1, 40
 	c0	or $r0.58 = $r0.58, 4
 	c0	stw 0[$r0.58] = $r0.5
-	c0	add $r0.59 = $r0.1, 32
 	c0	stw 32[$r0.1] = $r0.6
+	c0	add $r0.59 = $r0.1, 32
 	c0	or $r0.59 = $r0.59, 4
 	c0	stw 0[$r0.59] = $r0.7
-	c0	mov $r0.60 = 0
 	c0	ldw $r0.58 = 0[$r0.58]
 	c0	stw 28[$r0.1] = $r0.58
 	c0	ldw $r0.58 = 40[$r0.1]
@@ -112,8 +111,9 @@ add::                                   ## @add
 	c0	stw 20[$r0.1] = $r0.58
 	c0	ldw $r0.58 = 32[$r0.1]
 	c0	stw 16[$r0.1] = $r0.58
-	c0	stw 8[$r0.1] = $r0.60
-	c0	stw 12[$r0.1] = $r0.60
+	c0	mov $r0.58 = 0
+	c0	stw 8[$r0.1] = $r0.58
+	c0	stw 12[$r0.1] = $r0.58
 	c0	ldw $r0.58 = 20[$r0.1]
 	c0	ldw $r0.59 = 28[$r0.1]
 	c0	add $r0.58 = $r0.59, $r0.58
@@ -134,19 +134,19 @@ LBB3_2::                                ## %if.then
 	c0	stw 8[$r0.1] = $r0.58
 LBB3_3::                                ## %if.end
 	c0	ldw $r0.58 = 16[$r0.1]
-	c0	add $r0.59 = $r0.1, 0
-	c0	ldw $r0.60 = 24[$r0.1]
-	c0	or $r0.59 = $r0.59, 4
-	c0	add $r0.58 = $r0.60, $r0.58
-	c0	ldw $r0.60 = 8[$r0.1]
-	c0	add $r0.58 = $r0.60, $r0.58
+	c0	ldw $r0.59 = 24[$r0.1]
+	c0	add $r0.58 = $r0.59, $r0.58
+	c0	ldw $r0.59 = 8[$r0.1]
+	c0	add $r0.58 = $r0.59, $r0.58
 	c0	stw 8[$r0.1] = $r0.58
-	c0	ldw $r0.58 = 12[$r0.1]
-	c0	stw 0[$r0.59] = $r0.58
-	c0	ldw $r0.58 = 8[$r0.1]
-	c0	stw 0[$r0.1] = $r0.58
-	c0	stw 0[$r0.3] = $r0.58
-	c0	ldw $r0.58 = 0[$r0.59]
+	c0	add $r0.58 = $r0.1, 0
+	c0	or $r0.58 = $r0.58, 4
+	c0	ldw $r0.59 = 12[$r0.1]
+	c0	stw 0[$r0.58] = $r0.59
+	c0	ldw $r0.59 = 8[$r0.1]
+	c0	stw 0[$r0.1] = $r0.59
+	c0	stw 0[$r0.3] = $r0.59
+	c0	ldw $r0.58 = 0[$r0.58]
 	c0	stw 4[$r0.3] = $r0.58
 	c0	ldw $r0.6 = 48[$r0.1]   ## 4-byte Folded Reload
 	c0	ldw $r0.7 = 52[$r0.1]   ## 4-byte Folded Reload
@@ -167,24 +167,24 @@ neg::                                   ## @neg
 	c0	stw 20[$r0.1] = $r0.7   ## 4-byte Folded Spill
 	c0	stw 16[$r0.1] = $r0.6   ## 4-byte Folded Spill
 	c0	mov $r0.11 = $r0.3
-	c0	add $r0.58 = $r0.1, 8
 	c0	stw 8[$r0.1] = $r0.4
+	c0	add $r0.58 = $r0.1, 8
 	c0	or $r0.12 = $r0.58, 4
-	c0	xor $r0.58 = $r0.5, 1
-	c0	add $r0.59 = $r0.1, 0
-	c0	mov $r0.4 = 1
 	c0	stw 0[$r0.12] = $r0.5
+	c0	xor $r0.58 = $r0.5, 1
 	c0	stw 0[$r0.12] = $r0.58
-	c0	or $r0.13 = $r0.59, 4
 	c0	ldw $r0.58 = 8[$r0.1]
 	c0	xor $r0.58 = $r0.58, 1
 	c0	stw 8[$r0.1] = $r0.58
-	c0	mov $r0.3 = $r0.59
+	c0	add $r0.13 = $r0.1, 0
+	c0	mov $r0.4 = 1
+	c0	mov $r0.3 = $r0.13
 	c0	call $l0.0 = cast
-	c0	ldw $r0.7 = 0[$r0.13]
+	c0	or $r0.58 = $r0.13, 4
+	c0	ldw $r0.7 = 0[$r0.58]
 	c0	ldw $r0.5 = 0[$r0.12]
-	c0	ldw $r0.4 = 8[$r0.1]
 	c0	ldw $r0.6 = 0[$r0.1]
+	c0	ldw $r0.4 = 8[$r0.1]
 	c0	mov $r0.3 = $r0.11
 	c0	call $l0.0 = add
 	c0	ldw $r0.6 = 16[$r0.1]   ## 4-byte Folded Reload
@@ -228,14 +228,14 @@ $func_end5::
 ucast::                                 ## @ucast
 ## BB#0:                                ## %entry
 	c0	add $r0.1 = $r0.1, -16
-	c0	add $r0.58 = $r0.1, 0
 	c0	stw 12[$r0.1] = $r0.4
+	c0	add $r0.58 = $r0.1, 0
 	c0	or $r0.58 = $r0.58, 4
-	c0	mov $r0.59 = 0
 	c0	stw 0[$r0.58] = $r0.4
+	c0	mov $r0.59 = 0
 	c0	stw 0[$r0.1] = $r0.59
-	c0	ldw $r0.58 = 0[$r0.58]
 	c0	stw 0[$r0.3] = $r0.59
+	c0	ldw $r0.58 = 0[$r0.58]
 	c0	stw 4[$r0.3] = $r0.58
 	c0	return $r0.1 = $r0.1, 16, $l0.0
 $func_end6::
@@ -248,8 +248,8 @@ sll::                                   ## @sll
 ## BB#0:                                ## %entry
 	c0	add $r0.1 = $r0.1, -24
 	c0	stw 20[$r0.1] = $r0.6   ## 4-byte Folded Spill
-	c0	add $r0.58 = $r0.1, 8
 	c0	stw 8[$r0.1] = $r0.4
+	c0	add $r0.58 = $r0.1, 8
 	c0	or $r0.58 = $r0.58, 4
 	c0	stw 0[$r0.58] = $r0.5
 	c0	stb 4[$r0.1] = $r0.6
@@ -260,13 +260,13 @@ sll::                                   ## @sll
 	c0	br $b0.0, LBB7_2
 	c0	goto LBB7_1
 LBB7_1::                                ## %if.then
-	c0	ldw $r0.59 = 8[$r0.1]
-	c0	mov $r0.60 = 32
-	c0	ldbu $r0.61 = 4[$r0.1]
-	c0	shl $r0.59 = $r0.59, $r0.61
-	c0	stw 8[$r0.1] = $r0.59
 	c0	ldbu $r0.59 = 4[$r0.1]
-	c0	sub $r0.59 = $r0.60, $r0.59
+	c0	ldw $r0.60 = 8[$r0.1]
+	c0	shl $r0.59 = $r0.60, $r0.59
+	c0	stw 8[$r0.1] = $r0.59
+	c0	mov $r0.59 = 32
+	c0	ldbu $r0.60 = 4[$r0.1]
+	c0	sub $r0.59 = $r0.59, $r0.60
 	c0	ldw $r0.60 = 0[$r0.58]
 	c0	shru $r0.59 = $r0.60, $r0.59
 	c0	stw 0[$r0.1] = $r0.59
@@ -302,8 +302,8 @@ sra::                                   ## @sra
 ## BB#0:                                ## %entry
 	c0	add $r0.1 = $r0.1, -24
 	c0	stw 20[$r0.1] = $r0.6   ## 4-byte Folded Spill
-	c0	add $r0.58 = $r0.1, 8
 	c0	stw 8[$r0.1] = $r0.4
+	c0	add $r0.58 = $r0.1, 8
 	c0	or $r0.58 = $r0.58, 4
 	c0	stw 0[$r0.58] = $r0.5
 	c0	stb 4[$r0.1] = $r0.6
@@ -314,13 +314,13 @@ sra::                                   ## @sra
 	c0	br $b0.0, LBB8_2
 	c0	goto LBB8_1
 LBB8_1::                                ## %if.then
-	c0	ldbu $r0.59 = 4[$r0.1]
-	c0	mov $r0.60 = 32
-	c0	ldw $r0.61 = 0[$r0.58]
-	c0	shru $r0.59 = $r0.61, $r0.59
+	c0	ldw $r0.59 = 0[$r0.58]
+	c0	ldbu $r0.60 = 4[$r0.1]
+	c0	shru $r0.59 = $r0.59, $r0.60
 	c0	stw 0[$r0.58] = $r0.59
-	c0	ldbu $r0.59 = 4[$r0.1]
-	c0	sub $r0.59 = $r0.60, $r0.59
+	c0	mov $r0.59 = 32
+	c0	ldbu $r0.60 = 4[$r0.1]
+	c0	sub $r0.59 = $r0.59, $r0.60
 	c0	ldw $r0.60 = 8[$r0.1]
 	c0	shl $r0.59 = $r0.60, $r0.59
 	c0	stw 0[$r0.1] = $r0.59
@@ -334,12 +334,12 @@ LBB8_1::                                ## %if.then
 	c0	goto LBB8_3
 LBB8_2::                                ## %if.else
 	c0	ldbu $r0.59 = 4[$r0.1]
-	c0	mov $r0.60 = -1
 	c0	add $r0.59 = $r0.59, -32
-	c0	ldw $r0.61 = 8[$r0.1]
-	c0	shr $r0.59 = $r0.61, $r0.59
+	c0	ldw $r0.60 = 8[$r0.1]
+	c0	shr $r0.59 = $r0.60, $r0.59
 	c0	stw 0[$r0.58] = $r0.59
-	c0	stw 8[$r0.1] = $r0.60
+	c0	mov $r0.59 = -1
+	c0	stw 8[$r0.1] = $r0.59
 LBB8_3::                                ## %if.end
 	c0	ldw $r0.59 = 8[$r0.1]
 	c0	stw 0[$r0.3] = $r0.59
@@ -355,22 +355,8 @@ $func_end8::
 	.type	umult,@function
 umult::                                 ## @umult
 ## BB#0:                                ## %entry
-	c0	add $r0.1 = $r0.1, -216
-	c0	stw 212[$r0.1] = $l0.0  ## 4-byte Folded Spill
-	c0	stw 208[$r0.1] = $r0.28 ## 4-byte Folded Spill
-	c0	stw 204[$r0.1] = $r0.27 ## 4-byte Folded Spill
-	c0	stw 200[$r0.1] = $r0.26 ## 4-byte Folded Spill
-	c0	stw 196[$r0.1] = $r0.25 ## 4-byte Folded Spill
-	c0	stw 192[$r0.1] = $r0.24 ## 4-byte Folded Spill
-	c0	stw 188[$r0.1] = $r0.23 ## 4-byte Folded Spill
-	c0	stw 184[$r0.1] = $r0.22 ## 4-byte Folded Spill
-	c0	stw 180[$r0.1] = $r0.21 ## 4-byte Folded Spill
-	c0	stw 176[$r0.1] = $r0.20 ## 4-byte Folded Spill
-	c0	stw 172[$r0.1] = $r0.19 ## 4-byte Folded Spill
-	c0	stw 168[$r0.1] = $r0.18 ## 4-byte Folded Spill
-	c0	stw 164[$r0.1] = $r0.17 ## 4-byte Folded Spill
-	c0	stw 160[$r0.1] = $r0.16 ## 4-byte Folded Spill
-	c0	stw 156[$r0.1] = $r0.15 ## 4-byte Folded Spill
+	c0	add $r0.1 = $r0.1, -160
+	c0	stw 156[$r0.1] = $l0.0  ## 4-byte Folded Spill
 	c0	stw 152[$r0.1] = $r0.14 ## 4-byte Folded Spill
 	c0	stw 148[$r0.1] = $r0.13 ## 4-byte Folded Spill
 	c0	stw 144[$r0.1] = $r0.12 ## 4-byte Folded Spill
@@ -380,128 +366,127 @@ umult::                                 ## @umult
 	c0	mov $r0.11 = $r0.3
 	c0	stw 128[$r0.1] = $r0.4
 	c0	stw 124[$r0.1] = $r0.5
+	c0	ldhu $r0.58 = 128[$r0.1]
+	c0	stw 120[$r0.1] = $r0.58
 	c0	add $r0.58 = $r0.1, 128
-	c0	add $r0.59 = $r0.1, 124
-	c0	add $r0.60 = $r0.1, 72
-	c0	ldhu $r0.61 = 128[$r0.1]
 	c0	or $r0.58 = $r0.58, 2
-	c0	or $r0.59 = $r0.59, 2
-	c0	add $r0.62 = $r0.1, 80
-	c0	stw 120[$r0.1] = $r0.61
-	c0	or $r0.13 = $r0.60, 4
-	c0	or $r0.12 = $r0.62, 4
-	c0	add $r0.14 = $r0.1, 56
 	c0	ldhu $r0.58 = 0[$r0.58]
-	c0	or $r0.15 = $r0.14, 4
-	c0	mov $r0.16 = 16
-	c0	add $r0.17 = $r0.1, 64
 	c0	stw 116[$r0.1] = $r0.58
-	c0	or $r0.18 = $r0.17, 4
-	c0	add $r0.19 = $r0.1, 48
-	c0	add $r0.20 = $r0.1, 32
 	c0	ldhu $r0.58 = 124[$r0.1]
-	c0	or $r0.21 = $r0.19, 4
-	c0	or $r0.22 = $r0.20, 4
-	c0	add $r0.23 = $r0.1, 40
 	c0	stw 112[$r0.1] = $r0.58
-	c0	or $r0.24 = $r0.23, 4
-	c0	add $r0.25 = $r0.1, 24
-	c0	ldhu $r0.58 = 0[$r0.59]
-	c0	or $r0.26 = $r0.25, 4
+	c0	add $r0.58 = $r0.1, 124
+	c0	or $r0.58 = $r0.58, 2
+	c0	ldhu $r0.58 = 0[$r0.58]
 	c0	stw 108[$r0.1] = $r0.58
 	c0	ldw $r0.58 = 112[$r0.1]
 	c0	ldw $r0.59 = 120[$r0.1]
-	c0	mpyhs $r0.61 = $r0.59, $r0.58
+	c0	mpyhs $r0.60 = $r0.59, $r0.58
 	c0	mpylu $r0.58 = $r0.59, $r0.58
-	c0	add $r0.58 = $r0.58, $r0.61
+	c0	add $r0.58 = $r0.58, $r0.60
 	c0	stw 104[$r0.1] = $r0.58
 	c0	ldw $r0.58 = 108[$r0.1]
 	c0	ldw $r0.59 = 120[$r0.1]
-	c0	mpyhs $r0.61 = $r0.59, $r0.58
+	c0	mpyhs $r0.60 = $r0.59, $r0.58
 	c0	mpylu $r0.58 = $r0.59, $r0.58
-	c0	add $r0.58 = $r0.58, $r0.61
+	c0	add $r0.58 = $r0.58, $r0.60
 	c0	stw 100[$r0.1] = $r0.58
-	c0	add $r0.27 = $r0.1, 8
-	c0	ldw $r0.58 = 116[$r0.1]
-	c0	or $r0.28 = $r0.27, 4
-	c0	ldw $r0.59 = 112[$r0.1]
-	c0	mpyhs $r0.61 = $r0.58, $r0.59
-	c0	mpylu $r0.58 = $r0.58, $r0.59
-	c0	add $r0.58 = $r0.58, $r0.61
+	c0	ldw $r0.58 = 112[$r0.1]
+	c0	ldw $r0.59 = 116[$r0.1]
+	c0	mpyhs $r0.60 = $r0.59, $r0.58
+	c0	mpylu $r0.58 = $r0.59, $r0.58
+	c0	add $r0.58 = $r0.58, $r0.60
 	c0	stw 96[$r0.1] = $r0.58
 	c0	ldw $r0.58 = 108[$r0.1]
 	c0	ldw $r0.59 = 116[$r0.1]
-	c0	mpyhs $r0.61 = $r0.59, $r0.58
+	c0	mpyhs $r0.60 = $r0.59, $r0.58
 	c0	mpylu $r0.58 = $r0.59, $r0.58
-	c0	add $r0.58 = $r0.58, $r0.61
+	c0	add $r0.58 = $r0.58, $r0.60
 	c0	stw 92[$r0.1] = $r0.58
 	c0	ldw $r0.4 = 104[$r0.1]
-	c0	mov $r0.3 = $r0.60
+	c0	add $r0.12 = $r0.1, 72
+	c0	mov $r0.3 = $r0.12
 	c0	call $l0.0 = ucast
-	c0	ldw $r0.58 = 0[$r0.13]
-	c0	stw 0[$r0.12] = $r0.58
+	c0	add $r0.58 = $r0.1, 80
+	c0	or $r0.13 = $r0.58, 4
+	c0	or $r0.58 = $r0.12, 4
+	c0	ldw $r0.58 = 0[$r0.58]
+	c0	stw 0[$r0.13] = $r0.58
 	c0	ldw $r0.58 = 72[$r0.1]
 	c0	stw 80[$r0.1] = $r0.58
 	c0	ldw $r0.4 = 100[$r0.1]
-	c0	mov $r0.3 = $r0.14
+	c0	add $r0.12 = $r0.1, 56
+	c0	mov $r0.3 = $r0.12
 	c0	call $l0.0 = ucast
-	c0	ldw $r0.5 = 0[$r0.15]
-	c0	mov $r0.13 = 32
-	c0	add $r0.14 = $r0.1, 16
+	c0	or $r0.58 = $r0.12, 4
+	c0	ldw $r0.5 = 0[$r0.58]
 	c0	ldw $r0.4 = 56[$r0.1]
-	c0	mov $r0.3 = $r0.17
-	c0	mov $r0.6 = $r0.16
+	c0	add $r0.12 = $r0.1, 64
+	c0	mov $r0.14 = 16
+	c0	mov $r0.3 = $r0.12
+	c0	mov $r0.6 = $r0.14
 	c0	call $l0.0 = sll
-	c0	ldw $r0.7 = 0[$r0.18]
-	c0	or $r0.15 = $r0.14, 4
-	c0	ldw $r0.5 = 0[$r0.12]
-	c0	ldw $r0.4 = 80[$r0.1]
+	c0	or $r0.58 = $r0.12, 4
+	c0	ldw $r0.7 = 0[$r0.58]
+	c0	ldw $r0.5 = 0[$r0.13]
 	c0	ldw $r0.6 = 64[$r0.1]
-	c0	mov $r0.3 = $r0.19
+	c0	ldw $r0.4 = 80[$r0.1]
+	c0	add $r0.12 = $r0.1, 48
+	c0	mov $r0.3 = $r0.12
 	c0	call $l0.0 = add
-	c0	ldw $r0.58 = 0[$r0.21]
-	c0	stw 0[$r0.12] = $r0.58
+	c0	or $r0.58 = $r0.12, 4
+	c0	ldw $r0.58 = 0[$r0.58]
+	c0	stw 0[$r0.13] = $r0.58
 	c0	ldw $r0.58 = 48[$r0.1]
 	c0	stw 80[$r0.1] = $r0.58
 	c0	ldw $r0.4 = 96[$r0.1]
-	c0	mov $r0.3 = $r0.20
+	c0	add $r0.12 = $r0.1, 32
+	c0	mov $r0.3 = $r0.12
 	c0	call $l0.0 = ucast
-	c0	ldw $r0.5 = 0[$r0.22]
-	c0	add $r0.17 = $r0.1, 0
+	c0	or $r0.58 = $r0.12, 4
+	c0	ldw $r0.5 = 0[$r0.58]
 	c0	ldw $r0.4 = 32[$r0.1]
-	c0	mov $r0.3 = $r0.23
-	c0	mov $r0.6 = $r0.16
+	c0	add $r0.12 = $r0.1, 40
+	c0	mov $r0.3 = $r0.12
+	c0	mov $r0.6 = $r0.14
 	c0	call $l0.0 = sll
-	c0	ldw $r0.7 = 0[$r0.24]
-	c0	or $r0.16 = $r0.17, 4
-	c0	ldw $r0.5 = 0[$r0.12]
-	c0	ldw $r0.4 = 80[$r0.1]
+	c0	or $r0.58 = $r0.12, 4
+	c0	ldw $r0.7 = 0[$r0.58]
+	c0	ldw $r0.5 = 0[$r0.13]
 	c0	ldw $r0.6 = 40[$r0.1]
-	c0	mov $r0.3 = $r0.25
+	c0	ldw $r0.4 = 80[$r0.1]
+	c0	add $r0.12 = $r0.1, 24
+	c0	mov $r0.3 = $r0.12
 	c0	call $l0.0 = add
-	c0	ldw $r0.58 = 0[$r0.26]
-	c0	stw 0[$r0.12] = $r0.58
+	c0	or $r0.58 = $r0.12, 4
+	c0	ldw $r0.58 = 0[$r0.58]
+	c0	stw 0[$r0.13] = $r0.58
 	c0	ldw $r0.58 = 24[$r0.1]
 	c0	stw 80[$r0.1] = $r0.58
 	c0	ldw $r0.4 = 92[$r0.1]
-	c0	mov $r0.3 = $r0.27
+	c0	add $r0.12 = $r0.1, 8
+	c0	mov $r0.3 = $r0.12
 	c0	call $l0.0 = ucast
-	c0	ldw $r0.5 = 0[$r0.28]
+	c0	or $r0.58 = $r0.12, 4
+	c0	ldw $r0.5 = 0[$r0.58]
 	c0	ldw $r0.4 = 8[$r0.1]
-	c0	mov $r0.3 = $r0.14
-	c0	mov $r0.6 = $r0.13
+	c0	add $r0.12 = $r0.1, 16
+	c0	mov $r0.6 = 32
+	c0	mov $r0.3 = $r0.12
 	c0	call $l0.0 = sll
-	c0	ldw $r0.7 = 0[$r0.15]
-	c0	ldw $r0.5 = 0[$r0.12]
+	c0	or $r0.58 = $r0.12, 4
+	c0	ldw $r0.7 = 0[$r0.58]
+	c0	ldw $r0.5 = 0[$r0.13]
 	c0	ldw $r0.6 = 16[$r0.1]
 	c0	ldw $r0.4 = 80[$r0.1]
-	c0	mov $r0.3 = $r0.17
+	c0	add $r0.12 = $r0.1, 0
+	c0	mov $r0.3 = $r0.12
 	c0	call $l0.0 = add
-	c0	ldw $r0.58 = 0[$r0.16]
-	c0	stw 0[$r0.12] = $r0.58
+	c0	or $r0.58 = $r0.12, 4
+	c0	ldw $r0.58 = 0[$r0.58]
+	c0	stw 0[$r0.13] = $r0.58
 	c0	ldw $r0.58 = 0[$r0.1]
 	c0	stw 80[$r0.1] = $r0.58
-	c0	ldw $r0.58 = 0[$r0.12]
+	c0	ldw $r0.58 = 0[$r0.13]
 	c0	stw 4[$r0.11] = $r0.58
 	c0	ldw $r0.58 = 80[$r0.1]
 	c0	stw 0[$r0.11] = $r0.58
@@ -511,22 +496,8 @@ umult::                                 ## @umult
 	c0	ldw $r0.12 = 144[$r0.1] ## 4-byte Folded Reload
 	c0	ldw $r0.13 = 148[$r0.1] ## 4-byte Folded Reload
 	c0	ldw $r0.14 = 152[$r0.1] ## 4-byte Folded Reload
-	c0	ldw $r0.15 = 156[$r0.1] ## 4-byte Folded Reload
-	c0	ldw $r0.16 = 160[$r0.1] ## 4-byte Folded Reload
-	c0	ldw $r0.17 = 164[$r0.1] ## 4-byte Folded Reload
-	c0	ldw $r0.18 = 168[$r0.1] ## 4-byte Folded Reload
-	c0	ldw $r0.19 = 172[$r0.1] ## 4-byte Folded Reload
-	c0	ldw $r0.20 = 176[$r0.1] ## 4-byte Folded Reload
-	c0	ldw $r0.21 = 180[$r0.1] ## 4-byte Folded Reload
-	c0	ldw $r0.22 = 184[$r0.1] ## 4-byte Folded Reload
-	c0	ldw $r0.23 = 188[$r0.1] ## 4-byte Folded Reload
-	c0	ldw $r0.24 = 192[$r0.1] ## 4-byte Folded Reload
-	c0	ldw $r0.25 = 196[$r0.1] ## 4-byte Folded Reload
-	c0	ldw $r0.26 = 200[$r0.1] ## 4-byte Folded Reload
-	c0	ldw $r0.27 = 204[$r0.1] ## 4-byte Folded Reload
-	c0	ldw $r0.28 = 208[$r0.1] ## 4-byte Folded Reload
-	c0	ldw $l0.0 = 212[$r0.1]  ## 4-byte Folded Reload
-	c0	return $r0.1 = $r0.1, 216, $l0.0
+	c0	ldw $l0.0 = 156[$r0.1]  ## 4-byte Folded Reload
+	c0	return $r0.1 = $r0.1, 160, $l0.0
 $func_end9::
 	.size	umult, ($func_end9)-umult
 
@@ -535,39 +506,38 @@ $func_end9::
 	.type	mult,@function
 mult::                                  ## @mult
 ## BB#0:                                ## %entry
-	c0	add $r0.1 = $r0.1, -72
-	c0	stw 68[$r0.1] = $l0.0   ## 4-byte Folded Spill
-	c0	stw 64[$r0.1] = $r0.14  ## 4-byte Folded Spill
-	c0	stw 60[$r0.1] = $r0.13  ## 4-byte Folded Spill
-	c0	stw 56[$r0.1] = $r0.12  ## 4-byte Folded Spill
-	c0	stw 52[$r0.1] = $r0.11  ## 4-byte Folded Spill
+	c0	add $r0.1 = $r0.1, -64
+	c0	stw 60[$r0.1] = $l0.0   ## 4-byte Folded Spill
+	c0	stw 56[$r0.1] = $r0.13  ## 4-byte Folded Spill
+	c0	stw 52[$r0.1] = $r0.12  ## 4-byte Folded Spill
+	c0	stw 48[$r0.1] = $r0.11  ## 4-byte Folded Spill
 	c0	mov $r0.11 = $r0.3
-	c0	stw 48[$r0.1] = $r0.4
-	c0	stw 44[$r0.1] = $r0.5
+	c0	stw 44[$r0.1] = $r0.4
+	c0	stw 40[$r0.1] = $r0.5
 	c0	mov $r0.58 = 0
-	c0	mov $r0.59 = 31
-	c0	add $r0.13 = $r0.1, 8
 	c0	stw 20[$r0.1] = $r0.58
-	c0	add $r0.58 = $r0.1, 32
-	c0	or $r0.14 = $r0.13, 4
-	c0	ldw $r0.60 = 48[$r0.1]
-	c0	ldw $r0.61 = 44[$r0.1]
-	c0	xor $r0.60 = $r0.60, $r0.61
-	c0	shru $r0.59 = $r0.60, $r0.59
-	c0	stw 20[$r0.1] = $r0.59
-	c0	or $r0.12 = $r0.58, 4
-	c0	ldw $r0.3 = 48[$r0.1]
+	c0	ldw $r0.58 = 40[$r0.1]
+	c0	ldw $r0.59 = 44[$r0.1]
+	c0	xor $r0.58 = $r0.59, $r0.58
+	c0	mov $r0.59 = 31
+	c0	shru $r0.58 = $r0.58, $r0.59
+	c0	stw 20[$r0.1] = $r0.58
+	c0	ldw $r0.3 = 44[$r0.1]
 	c0	call $l0.0 = abs
 	c0	stw 28[$r0.1] = $r0.3
-	c0	ldw $r0.3 = 44[$r0.1]
+	c0	ldw $r0.3 = 40[$r0.1]
 	c0	call $l0.0 = abs
 	c0	mov $r0.58 = $r0.3
 	c0	stw 24[$r0.1] = $r0.58
 	c0	ldw $r0.4 = 28[$r0.1]
+	c0	add $r0.13 = $r0.1, 8
 	c0	mov $r0.3 = $r0.13
 	c0	mov $r0.5 = $r0.58
 	c0	call $l0.0 = umult
-	c0	ldw $r0.58 = 0[$r0.14]
+	c0	add $r0.58 = $r0.1, 32
+	c0	or $r0.12 = $r0.58, 4
+	c0	or $r0.58 = $r0.13, 4
+	c0	ldw $r0.58 = 0[$r0.58]
 	c0	stw 0[$r0.12] = $r0.58
 	c0	ldw $r0.58 = 8[$r0.1]
 	c0	stw 32[$r0.1] = $r0.58
@@ -576,13 +546,13 @@ mult::                                  ## @mult
 	c0	br $b0.0, LBB10_2
 	c0	goto LBB10_1
 LBB10_1::                               ## %if.then
-	c0	ldw $r0.4 = 32[$r0.1]
-	c0	add $r0.58 = $r0.1, 0
-	c0	or $r0.13 = $r0.58, 4
 	c0	ldw $r0.5 = 0[$r0.12]
-	c0	mov $r0.3 = $r0.58
+	c0	ldw $r0.4 = 32[$r0.1]
+	c0	add $r0.13 = $r0.1, 0
+	c0	mov $r0.3 = $r0.13
 	c0	call $l0.0 = neg
-	c0	ldw $r0.58 = 0[$r0.13]
+	c0	or $r0.58 = $r0.13, 4
+	c0	ldw $r0.58 = 0[$r0.58]
 	c0	stw 0[$r0.12] = $r0.58
 	c0	ldw $r0.58 = 0[$r0.1]
 	c0	stw 32[$r0.1] = $r0.58
@@ -591,12 +561,11 @@ LBB10_2::                               ## %if.end
 	c0	stw 0[$r0.11] = $r0.58
 	c0	ldw $r0.58 = 0[$r0.12]
 	c0	stw 4[$r0.11] = $r0.58
-	c0	ldw $r0.11 = 52[$r0.1]  ## 4-byte Folded Reload
-	c0	ldw $r0.12 = 56[$r0.1]  ## 4-byte Folded Reload
-	c0	ldw $r0.13 = 60[$r0.1]  ## 4-byte Folded Reload
-	c0	ldw $r0.14 = 64[$r0.1]  ## 4-byte Folded Reload
-	c0	ldw $l0.0 = 68[$r0.1]   ## 4-byte Folded Reload
-	c0	return $r0.1 = $r0.1, 72, $l0.0
+	c0	ldw $r0.11 = 48[$r0.1]  ## 4-byte Folded Reload
+	c0	ldw $r0.12 = 52[$r0.1]  ## 4-byte Folded Reload
+	c0	ldw $r0.13 = 56[$r0.1]  ## 4-byte Folded Reload
+	c0	ldw $l0.0 = 60[$r0.1]   ## 4-byte Folded Reload
+	c0	return $r0.1 = $r0.1, 64, $l0.0
 $func_end10::
 	.size	mult, ($func_end10)-mult
 
@@ -637,12 +606,12 @@ sum_rot_block_row::                     ## @sum_rot_block_row
 	c0	stw 76[$r0.1] = $r0.11
 	c0	mov $r0.12 = dft_waves_cos
 	c0	mov $r0.13 = rowsums
-	c0	add $r0.14 = $r0.1, 48
-	c0	mov $r0.15 = 17
-	c0	or $r0.16 = $r0.14, 4
+	c0	mov $r0.14 = 17
+	c0	add $r0.15 = $r0.1, 48
+	c0	or $r0.16 = $r0.15, 4
 	c0	add $r0.17 = $r0.1, 56
-	c0	mov $r0.18 = dft_waves_sin
-	c0	or $r0.19 = $r0.17, 4
+	c0	or $r0.18 = $r0.17, 4
+	c0	mov $r0.19 = dft_waves_sin
 	c0	add $r0.20 = $r0.1, 32
 	c0	or $r0.21 = $r0.20, 4
 	c0	add $r0.22 = $r0.1, 40
@@ -679,24 +648,24 @@ LBB11_3::                               ## %for.cond1
 LBB11_4::                               ## %for.inc
                                         ##   in Loop: Header=BB11_3 Depth=2
 	c0	ldw $r0.58 = 76[$r0.1]
-	c0	mpylu $r0.59 = $r0.58, 24
-	c0	ldw $r0.60 = 80[$r0.1]
-	c0	mpyhs $r0.58 = $r0.58, 24
-	c0	sh2add $r0.61 = $r0.60, $r0.13
+	c0	mpyhs $r0.59 = $r0.58, 24
+	c0	mpylu $r0.58 = $r0.58, 24
+	c0	add $r0.58 = $r0.58, $r0.59
+	c0	ldw $r0.59 = 80[$r0.1]
 	c0	add $r0.58 = $r0.59, $r0.58
-	c0	ldw $r0.59 = 0[$r0.61]
-	c0	add $r0.58 = $r0.60, $r0.58
-	c0	shl $r0.4 = $r0.59, $r0.15
 	c0	sh2add $r0.58 = $r0.58, $r0.12
+	c0	sh2add $r0.59 = $r0.59, $r0.13
+	c0	ldw $r0.59 = 0[$r0.59]
+	c0	shl $r0.4 = $r0.59, $r0.14
 	c0	ldw $r0.5 = 0[$r0.58]
-	c0	mov $r0.3 = $r0.14
+	c0	mov $r0.3 = $r0.15
 	c0	call $l0.0 = mult
 	c0	ldw $r0.5 = 0[$r0.16]
 	c0	ldw $r0.4 = 48[$r0.1]
 	c0	mov $r0.3 = $r0.17
-	c0	mov $r0.6 = $r0.15
+	c0	mov $r0.6 = $r0.14
 	c0	call $l0.0 = sra
-	c0	ldw $r0.4 = 0[$r0.19]
+	c0	ldw $r0.4 = 0[$r0.18]
 	c0	ldw $r0.3 = 56[$r0.1]
 	c0	call $l0.0 = cast_int32
 	c0	ldw $r0.58 = 72[$r0.1]
@@ -704,21 +673,21 @@ LBB11_4::                               ## %for.inc
 	c0	stw 72[$r0.1] = $r0.58
 	c0	ldw $r0.58 = 76[$r0.1]
 	c0	mpyhs $r0.59 = $r0.58, 24
-	c0	ldw $r0.60 = 80[$r0.1]
-	c0	sh2add $r0.61 = $r0.60, $r0.13
 	c0	mpylu $r0.58 = $r0.58, 24
 	c0	add $r0.58 = $r0.58, $r0.59
-	c0	ldw $r0.59 = 0[$r0.61]
-	c0	add $r0.58 = $r0.60, $r0.58
-	c0	shl $r0.4 = $r0.59, $r0.15
-	c0	sh2add $r0.58 = $r0.58, $r0.18
+	c0	ldw $r0.59 = 80[$r0.1]
+	c0	add $r0.58 = $r0.59, $r0.58
+	c0	sh2add $r0.58 = $r0.58, $r0.19
+	c0	sh2add $r0.59 = $r0.59, $r0.13
+	c0	ldw $r0.59 = 0[$r0.59]
+	c0	shl $r0.4 = $r0.59, $r0.14
 	c0	ldw $r0.5 = 0[$r0.58]
 	c0	mov $r0.3 = $r0.20
 	c0	call $l0.0 = mult
 	c0	ldw $r0.5 = 0[$r0.21]
 	c0	ldw $r0.4 = 32[$r0.1]
 	c0	mov $r0.3 = $r0.22
-	c0	mov $r0.6 = $r0.15
+	c0	mov $r0.6 = $r0.14
 	c0	call $l0.0 = sra
 	c0	ldw $r0.4 = 0[$r0.23]
 	c0	ldw $r0.3 = 40[$r0.1]
@@ -738,13 +707,13 @@ LBB11_5::                               ## %for.inc28
 	c0	mov $r0.4 = $r0.58
 	c0	mov $r0.5 = $r0.58
 	c0	call $l0.0 = mult
-	c0	ldw $r0.4 = 16[$r0.1]
 	c0	ldw $r0.5 = 0[$r0.26]
+	c0	ldw $r0.4 = 16[$r0.1]
 	c0	mov $r0.3 = $r0.27
 	c0	mov $r0.6 = $r0.28
 	c0	call $l0.0 = sra
-	c0	ldw $r0.3 = 24[$r0.1]
 	c0	ldw $r0.4 = 0[$r0.29]
+	c0	ldw $r0.3 = 24[$r0.1]
 	c0	call $l0.0 = cast_int32
 	c0	mov $r0.34 = $r0.3
 	c0	ldw $r0.58 = 68[$r0.1]
@@ -761,14 +730,14 @@ LBB11_5::                               ## %for.inc28
 	c0	ldw $r0.4 = 0[$r0.33]
 	c0	ldw $r0.3 = 8[$r0.1]
 	c0	call $l0.0 = cast_int32
-	c0	ldw $r0.58 = 76[$r0.1]
-	c0	add $r0.59 = $r0.34, $r0.3
-	c0	mpyhs $r0.60 = $r0.58, 96
-	c0	ldw $r0.61 = 84[$r0.1]
-	c0	mpylu $r0.58 = $r0.58, 96
-	c0	add $r0.58 = $r0.58, $r0.60
-	c0	add $r0.58 = $r0.61, $r0.58
-	c0	stw 0[$r0.58] = $r0.59
+	c0	add $r0.58 = $r0.34, $r0.3
+	c0	ldw $r0.59 = 76[$r0.1]
+	c0	mpyhs $r0.60 = $r0.59, 96
+	c0	mpylu $r0.59 = $r0.59, 96
+	c0	add $r0.59 = $r0.59, $r0.60
+	c0	ldw $r0.60 = 84[$r0.1]
+	c0	add $r0.59 = $r0.60, $r0.59
+	c0	stw 0[$r0.59] = $r0.58
 	c0	ldw $r0.58 = 76[$r0.1]
 	c0	add $r0.58 = $r0.58, 1
 	c0	stw 76[$r0.1] = $r0.58
@@ -809,77 +778,39 @@ $func_end11::
 	.type	main,@function
 main::                                  ## @main
 ## BB#0:                                ## %entry
-	c0	add $r0.1 = $r0.1, -24
-	c0	stw 20[$r0.1] = $l0.0   ## 4-byte Folded Spill
-	c0	stw 16[$r0.1] = $r0.12  ## 4-byte Folded Spill
-	c0	stw 12[$r0.1] = $r0.11  ## 4-byte Folded Spill
-	c0	mov $r0.12 = 0
-	c0	stw 8[$r0.1] = $r0.12
-	c0	stw 4[$r0.1] = $r0.12
+	c0	add $r0.1 = $r0.1, -16
+	c0	stw 12[$r0.1] = $l0.0   ## 4-byte Folded Spill
+	c0	stw 8[$r0.1] = $r0.11   ## 4-byte Folded Spill
+	c0	mov $r0.58 = 0
+	c0	stw 4[$r0.1] = $r0.58
+	c0	stw 0[$r0.1] = $r0.58
 	c0	mov $r0.11 = powers
 LBB12_1::                               ## %for.cond
                                         ## =>This Inner Loop Header: Depth=1
-	c0	ldw $r0.58 = 4[$r0.1]
+	c0	ldw $r0.58 = 0[$r0.1]
 	c0	cmpgt $b0.0 = $r0.58, 199
-	c0	br $b0.0, LBB12_3
+	c0	br $b0.0, LBB12_4
 	c0	goto LBB12_2
-LBB12_2::                               ## %for.inc
+LBB12_2::                               ## %for.body
                                         ##   in Loop: Header=BB12_1 Depth=1
 	c0	mov $r0.3 = $r0.11
 	c0	call $l0.0 = sum_rot_block_row
-	c0	ldw $r0.58 = 4[$r0.1]
+## BB#3:                                ## %for.inc
+                                        ##   in Loop: Header=BB12_1 Depth=1
+	c0	ldw $r0.58 = 0[$r0.1]
 	c0	add $r0.58 = $r0.58, 1
-	c0	stw 4[$r0.1] = $r0.58
+	c0	stw 0[$r0.1] = $r0.58
 	c0	goto LBB12_1
-LBB12_3::                               ## %for.end
-	c0	stw 4[$r0.1] = $r0.12
-	c0	mov $r0.58 = powers_temp
-LBB12_4::                               ## %for.cond1
-                                        ## =>This Inner Loop Header: Depth=1
-	c0	ldw $r0.59 = 4[$r0.1]
-	c0	cmpgt $b0.0 = $r0.59, 3
-	c0	br $b0.0, LBB12_8
-	c0	goto LBB12_5
-LBB12_5::                               ## %for.body3
-                                        ##   in Loop: Header=BB12_4 Depth=1
-	c0	ldw $r0.59 = 4[$r0.1]
-	c0	mpylu $r0.60 = $r0.59, 96
-	c0	mpyhs $r0.59 = $r0.59, 96
-	c0	add $r0.59 = $r0.60, $r0.59
-	c0	add $r0.60 = $r0.58, $r0.59
-	c0	add $r0.59 = $r0.11, $r0.59
-	c0	ldw $r0.60 = 0[$r0.60]
-	c0	ldw $r0.59 = 0[$r0.59]
-	c0	cmpeq $b0.0 = $r0.59, $r0.60
-	c0	br $b0.0, LBB12_7
-	c0	goto LBB12_6
-LBB12_7::                               ## %for.inc8
-                                        ##   in Loop: Header=BB12_4 Depth=1
-	c0	ldw $r0.59 = 4[$r0.1]
-	c0	add $r0.59 = $r0.59, 1
-	c0	stw 4[$r0.1] = $r0.59
-	c0	goto LBB12_4
-LBB12_6::                               ## %if.then
-	c0	ldw $r0.58 = 4[$r0.1]
-	c0	mpyhs $r0.59 = $r0.58, 100
-	c0	mpylu $r0.58 = $r0.58, 100
-	c0	add $r0.58 = $r0.58, $r0.59
-	c0	stw 8[$r0.1] = $r0.58
-	c0	goto LBB12_9
-LBB12_8::                               ## %for.end10
-	c0	mov $r0.58 = -1
-	c0	stw 8[$r0.1] = $r0.58
-LBB12_9::                               ## %return
-	c0	ldw $r0.3 = 8[$r0.1]
-	c0	ldw $r0.11 = 12[$r0.1]  ## 4-byte Folded Reload
-	c0	ldw $r0.12 = 16[$r0.1]  ## 4-byte Folded Reload
-	c0	ldw $l0.0 = 20[$r0.1]   ## 4-byte Folded Reload
-	c0	return $r0.1 = $r0.1, 24, $l0.0
+LBB12_4::                               ## %for.end
+	c0	mov $r0.3 = -1
+	c0	ldw $r0.11 = 8[$r0.1]   ## 4-byte Folded Reload
+	c0	ldw $l0.0 = 12[$r0.1]   ## 4-byte Folded Reload
+	c0	return $r0.1 = $r0.1, 16, $l0.0
 $func_end12::
 	.size	main, ($func_end12)-main
 
 	.type	rowsums,@object         ## @rowsums
-	.section .data
+.section .data
 	.globl	rowsums
 	.align	2
 rowsums::
@@ -922,7 +853,7 @@ powers::
 	.globl	powers_temp
 	.align	2
 powers_temp::
-	.data4	2436991                 ## 0x252f7f
+	.data4	74111750                ## 0x46adb06
 	.data4	0                       ## 0x0
 	.data4	0                       ## 0x0
 	.data4	0                       ## 0x0
@@ -946,7 +877,7 @@ powers_temp::
 	.data4	0                       ## 0x0
 	.data4	0                       ## 0x0
 	.data4	0                       ## 0x0
-	.data4	63546                   ## 0xf83a
+	.data4	70347846                ## 0x4316c46
 	.data4	0                       ## 0x0
 	.data4	0                       ## 0x0
 	.data4	0                       ## 0x0
@@ -970,7 +901,7 @@ powers_temp::
 	.data4	0                       ## 0x0
 	.data4	0                       ## 0x0
 	.data4	0                       ## 0x0
-	.data4	131381                  ## 0x20135
+	.data4	64357961                ## 0x3d60649
 	.data4	0                       ## 0x0
 	.data4	0                       ## 0x0
 	.data4	0                       ## 0x0
@@ -994,7 +925,7 @@ powers_temp::
 	.data4	0                       ## 0x0
 	.data4	0                       ## 0x0
 	.data4	0                       ## 0x0
-	.data4	19272                   ## 0x4b48
+	.data4	56550176                ## 0x35ee320
 	.data4	0                       ## 0x0
 	.data4	0                       ## 0x0
 	.data4	0                       ## 0x0

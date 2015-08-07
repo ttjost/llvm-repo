@@ -29,6 +29,8 @@ class VEXTargetAsmStreamer : public VEXTargetStreamer {
 
 public:
     VEXTargetAsmStreamer(MCStreamer &S, formatted_raw_ostream &OS);
+    
+    void EmitBytes(StringRef Data);
 };
 
 class VEXTargetElfStreamer : public VEXTargetStreamer {

@@ -104,10 +104,12 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     }
 
 //    setOperationAction(ISD::TargetConstant, MVT::i1, Promote);
-//    setOperationAction(ISD::TRUNCATE, MVT::i1, Expand);
 
     // See LowerConstant to see the reason for customizing i1 ISD::Constant
-    setOperationAction(ISD::Constant, MVT::i1, Custom);
+    setOperationAction(ISD::Constant, MVT::i1, Promote);
+    setOperationAction(ISD::TRUNCATE, MVT::i1, Promote);
+    setOperationAction(ISD::SETCC, MVT::i1, Promote);
+    setOperationAction(ISD::SELECT, MVT::i1, Promote);
     
     setOperationAction(ISD::SELECT_CC, MVT::i1, Promote);
     setOperationAction(ISD::SELECT_CC, MVT::i8, Promote);
@@ -122,7 +124,6 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     
     setOperationAction(ISD::XOR, MVT::i1, Promote);
     setOperationAction(ISD::OR, MVT::i1, Promote);
-    setOperationAction(ISD::XOR, MVT::i1, Promote);
     setOperationAction(ISD::AND, MVT::i1, Promote);
     
     setOperationAction(ISD::BR_CC, MVT::i1, Promote);
@@ -131,6 +132,8 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     setOperationAction(ISD::BR_CC, MVT::i32, Expand);
     setOperationAction(ISD::ROTL,  MVT::i32, Expand);
     setOperationAction(ISD::ROTR,  MVT::i32, Expand);
+    
+    setOperationAction(ISD::SETCC, MVT::i32, Custom);
     
     setOperationAction(ISD::GlobalAddress, MVT::i8, Promote);
     setOperationAction(ISD::GlobalAddress, MVT::i16, Promote);
@@ -157,6 +160,7 @@ SDValue VEXTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) const {
         case ISD::ExternalSymbol:       return LowerExternalSymbol(Op, DAG);
         case ISD::Constant:             return LowerConstant(Op, DAG);
         case ISD::MUL:                  return LowerMUL(Op, DAG);
+        case ISD::SETCC:                return LowerSETCC(Op, DAG);
         default:
             break;
     }
@@ -221,16 +225,17 @@ static SDValue convertLocVTToValVT(SelectionDAG &DAG, SDLoc DL,
     else if (VA.getLocInfo() == CCValAssign::Indirect)
         Value = DAG.getLoad(VA.getValVT(), DL, Chain, Value,
                             MachinePointerInfo(), false, false, false, 0);
-    else if (VA.getLocInfo() == CCValAssign::BCvt) {
-        // If this is a short vector argument loaded from the stack,
-        // extend from i64 to full vector size and then bitcast.
-        assert(VA.getLocVT() == MVT::i64);
-        assert(VA.getValVT().isVector());
-        Value = DAG.getNode(ISD::BUILD_VECTOR, DL, MVT::v2i64,
-                            Value, DAG.getUNDEF(MVT::i64));
-        Value = DAG.getNode(ISD::BITCAST, DL, VA.getValVT(), Value);
-    } else
-        assert(VA.getLocInfo() == CCValAssign::Full && "Unsupported getLocInfo");
+    else
+//        if (VA.getLocInfo() == CCValAssign::BCvt) {
+//            // If this is a short vector argument loaded from the stack,
+//            // extend from i64 to full vector size and then bitcast.
+//            assert(VA.getLocVT() == MVT::i64);
+//            assert(VA.getValVT().isVector());
+//            Value = DAG.getNode(ISD::BUILD_VECTOR, DL, MVT::v2i64,
+//                                Value, DAG.getUNDEF(MVT::i64));
+//            Value = DAG.getNode(ISD::BITCAST, DL, VA.getValVT(), Value);
+//        } else
+            assert(VA.getLocInfo() == CCValAssign::Full && "Unsupported getLocInfo");
 
     return Value;
 }
@@ -392,13 +397,14 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
         CCValAssign &VA = RetLocs[I];
 
         // Copy the value out, gluing the copy to the end of the call sequence.
-        Chain = DAG.getCopyFromReg(Chain, DL, VA.getLocReg(),
+        SDValue RetValue = DAG.getCopyFromReg(Chain, DL, VA.getLocReg(),
                                    VA.getValVT(), Glue).getValue(1);
-        Glue = Chain.getValue(2);
+        Chain = RetValue.getValue(1);
+        Glue = RetValue.getValue(2);
 
         // Convert the value of the return register into the value that's
         // being returned.
-        InVals.push_back(Chain.getValue(0));
+        InVals.push_back(convertLocVTToValVT(DAG, DL, VA, Chain, RetValue));
     }
 
     return Chain;
@@ -535,11 +541,14 @@ VEXTargetLowering::LowerReturn(SDValue Chain,
     SmallVector<SDValue, 8> RetOps(1, Chain);
     
     // Copy the result values into the output registers.
-    for (unsigned i = 0; i != RVLocs.size(); ++i){
+    for (unsigned i = 0, e = RVLocs.size() ; i != e; ++i){
         CCValAssign &VA = RVLocs[i];
+        SDValue RetValue = OutVals[i];
+        
         assert(VA.isRegLoc() && "Can only return in registers!");
         
-        Chain = DAG.getCopyToReg(Chain, DL, VA.getLocReg(), OutVals[i], Flag);
+        RetValue = convertValVTToLocVT(DAG, DL, VA, RetValue);
+        Chain = DAG.getCopyToReg(Chain, DL, VA.getLocReg(), RetValue, Flag);
         
         // Guarantee that all emitted copies are stuck together,
         // avoiding something bad.
@@ -587,7 +596,7 @@ SDValue VEXTargetLowering::LowerExternalSymbol(SDValue Op, SelectionDAG &DAG) co
 // For some reason, We need to handle MVT::i1 types and promote them manually.
 // Not sure why this is not working automatically during tblgen phase, since
 // it should automatically promote i1 to higher/handlable types.
-SDValue VEXTargetLowering::LowerConstant(SDValue Op, SelectionDAG &DAG) const{
+SDValue VEXTargetLowering::LowerConstant(SDValue Op, SelectionDAG &DAG) const {
     
     SDLoc dl(Op);
     EVT ValueType = Op.getValueType();
@@ -599,7 +608,20 @@ SDValue VEXTargetLowering::LowerConstant(SDValue Op, SelectionDAG &DAG) const{
     return SDValue();
 }
 
-SDValue VEXTargetLowering::LowerMUL(SDValue Op, SelectionDAG &DAG) const{
+SDValue VEXTargetLowering::LowerSETCC(SDValue Op, SelectionDAG &DAG) const {
+    
+    DEBUG(errs() << "Lower SETCC : \n");
+    SDLoc dl(Op);
+    
+    SDValue lhs = Op.getOperand(0);
+    SDValue rhs = Op.getOperand(1);
+    SDValue cond = Op.getOperand(2);
+    
+    ISD::CondCode CCOpcode = cast<CondCodeSDNode>(cond)->get();
+    return DAG.getNode(Op.getOpcode(), dl, MVT::i1, lhs, rhs, cond);
+}
+
+SDValue VEXTargetLowering::LowerMUL(SDValue Op, SelectionDAG &DAG) const {
     
     SDLoc dl(Op);
     

@@ -78,7 +78,7 @@ void VEXInstPrinter::printInst(const MCInst *mi, raw_ostream &O,
             printInstruction(mi, O);
         }
     }
-    printAnnotation(O, Annot);
+    //printAnnotation(O, Annot);
 }
 
     static void printExpr(const MCExpr *Expr, raw_ostream &OS){
