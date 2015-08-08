@@ -36,15 +36,4 @@ VEXMCAsmInfo::VEXMCAsmInfo(StringRef TT) {
     CommentString               = "##";
     UseDataRegionDirectives     = true;
 
-    //ZeroDirective               = "\t.space\t";
-    //GPRel32Directive            = "\t.gpword\t";
-    //GPRel64Directive            = "\t.gpdword\t";
-    //WeakRefDirective            = "\t.weak\t";
-    //UseAssignmentForEHBegin = true;
-
-    //SupportsDebugInformation = true;
-    //ExceptionsType = ExceptionHandling::DwarfCFI;
-    //DwarfRegNumForCFI = true;
-
-    //UseDataRegionDirectives = true;
 }

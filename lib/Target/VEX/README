@@ -3,17 +3,20 @@ This file is intended to serve as a guide to what still needs to be implemented 
 All modifications and missing features should be specified here, so any contributors may be aware of the missing component.
 
 List of BENCHMARKS that ARE WORKING for OUR ARCHITECTURE:
+- adpcm: adpcm, adpcm_wrong, adpcmO3, adpcm_wrongO3
 - Cjpeg: cjpeg, cjpegO3, cjpeg_wrong, cjpeg_wrongO3
 - Matrix: matrix, matrixO3, matrix_wrong, matrix_wrongO3
-- x264: x264, x264_wrong
+- x264: x264, x264_wrong, x264O3, x264_wrongO3
 - dft: dft, dft_wrong
 
 (NEED FIXING)
 List of BENCHMARKS that CANNOT BE COMPILED for OUR ARCHITECTURE (for now):
-- adpcm: all of them
-- x264: x264O3, x264_wrongO3
+- adpcm: 
+- Cjpeg:
 - dft: dftO3, dft_wrongO3
 - fir: all of them
+- Matrix:
+- x264: 
 
 List of Examples that are not working from the directory "llvm/examples/Codes/PartX"
 - ch7_2.cpp

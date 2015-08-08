@@ -226,15 +226,15 @@ static SDValue convertLocVTToValVT(SelectionDAG &DAG, SDLoc DL,
         Value = DAG.getLoad(VA.getValVT(), DL, Chain, Value,
                             MachinePointerInfo(), false, false, false, 0);
     else
-//        if (VA.getLocInfo() == CCValAssign::BCvt) {
-//            // If this is a short vector argument loaded from the stack,
-//            // extend from i64 to full vector size and then bitcast.
-//            assert(VA.getLocVT() == MVT::i64);
-//            assert(VA.getValVT().isVector());
-//            Value = DAG.getNode(ISD::BUILD_VECTOR, DL, MVT::v2i64,
-//                                Value, DAG.getUNDEF(MVT::i64));
-//            Value = DAG.getNode(ISD::BITCAST, DL, VA.getValVT(), Value);
-//        } else
+        if (VA.getLocInfo() == CCValAssign::BCvt) {
+            // If this is a short vector argument loaded from the stack,
+            // extend from i64 to full vector size and then bitcast.
+            assert(VA.getLocVT() == MVT::i64);
+            assert(VA.getValVT().isVector());
+            Value = DAG.getNode(ISD::BUILD_VECTOR, DL, MVT::v2i64,
+                                Value, DAG.getUNDEF(MVT::i64));
+            Value = DAG.getNode(ISD::BITCAST, DL, VA.getValVT(), Value);
+        } else
             assert(VA.getLocInfo() == CCValAssign::Full && "Unsupported getLocInfo");
 
     return Value;
@@ -398,7 +398,7 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
 
         // Copy the value out, gluing the copy to the end of the call sequence.
         SDValue RetValue = DAG.getCopyFromReg(Chain, DL, VA.getLocReg(),
-                                   VA.getValVT(), Glue).getValue(1);
+                                   VA.getValVT(), Glue);
         Chain = RetValue.getValue(1);
         Glue = RetValue.getValue(2);
 

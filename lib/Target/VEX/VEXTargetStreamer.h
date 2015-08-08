@@ -21,6 +21,7 @@ class VEXTargetStreamer : public MCTargetStreamer {
 
 public:
     VEXTargetStreamer(MCStreamer &S);
+    void EmitBytes(StringRef Data);
 
 };
 
