@@ -197,9 +197,12 @@ VEXFrameLowering::spillCalleeSavedRegisters(MachineBasicBlock &MBB,
                                                const std::vector<CalleeSavedInfo> &CSI,
                                                const TargetRegisterInfo *TRI) const {
     return false;
+//    if (CSI.empty())
+//        return true;
 
 //    MachineFunction *MF = MBB.getParent();
 //    MachineBasicBlock *EntryBlock = MF->begin();
+//    const TargetInstrInfo *TII = MF->getSubtarget().getInstrInfo();
 
 //    // Registers Lr and other called saved registers
 //    // need to be saved with a STORE instruction during emitPrologue
@@ -207,10 +210,18 @@ VEXFrameLowering::spillCalleeSavedRegisters(MachineBasicBlock &MBB,
 //        // Add the callee-saved register as live-in.
 //        // TODO: Do I need to omit this procedure for Link Register?
 //        unsigned Reg = CSI[i].getReg();
-//        bool IsRAAndRetAddrIsTaken = MF->getFrameInfo()->isReturnAddressTaken();
+//        bool IsRAAndRetAddrIsTaken = Reg != VEX::Lr;
 
-//        if(!IsRAAndRetAddrIsTaken)
+//        if(!IsRAAndRetAddrIsTaken){
 //            EntryBlock->addLiveIn(Reg);
+//            const TargetRegisterClass *RC = TRI->getMinimalPhysRegClass(Reg);
+//            TII->storeRegToStackSlot(MBB, MI, Reg, true, CSI[i].getFrameIdx(), RC, TRI);
+////            if (emitFrameMoves) {
+////                auto Store = MI;
+////                --Store;
+////                XFI->getSpillLabels().push_back(std::make_pair(Store, *it));
+////            }
+//        }
 //    }
 
 //    return true;
@@ -223,6 +234,34 @@ VEXFrameLowering::restoreCalleeSavedRegisters(MachineBasicBlock &MBB,
                                                  const TargetRegisterInfo *TRI) const {
 
     return false;
+
+//    MachineFunction *MF = MBB.getParent();
+//    const TargetInstrInfo &TII = *MF->getSubtarget().getInstrInfo();
+//    bool AtStart = MI == MBB.begin();
+//    MachineBasicBlock::iterator BeforeI = MI;
+
+//    if (!AtStart)
+//        --BeforeI;
+
+//    for (unsigned i = 0, e = CSI.size(); i != e; ++i){
+//        unsigned Reg = CSI[i].getReg();
+
+//        assert(Reg != VEX::Lr && "Link register is always handled in emitEpilogue");
+
+//        const TargetRegisterClass *RC = TRI->getMinimalPhysRegClass(Reg);
+//        TII.loadRegFromStackSlot(MBB, MI, Reg, CSI[i].getFrameIdx(), RC, TRI);
+//        assert(MI != MBB.begin() &&
+//                "loadRegFromStackSlot did not insert any code!");
+//        // Insert in reverse order. loadRegFromStackSlot can insert multiple
+//        // instructions.
+//        if (AtStart)
+//            MI = MBB.begin();
+//        else {
+//            MI = BeforeI;
+//            ++MI;
+//        }
+//    }
+//    return true;
 }
 
 void VEXFrameLowering::

@@ -133,7 +133,7 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     setOperationAction(ISD::ROTL,  MVT::i32, Expand);
     setOperationAction(ISD::ROTR,  MVT::i32, Expand);
     
-    setOperationAction(ISD::SETCC, MVT::i32, Custom);
+    //setOperationAction(ISD::SETCC, MVT::i32, Custom);
     
     setOperationAction(ISD::GlobalAddress, MVT::i8, Promote);
     setOperationAction(ISD::GlobalAddress, MVT::i16, Promote);
@@ -160,7 +160,7 @@ SDValue VEXTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) const {
         case ISD::ExternalSymbol:       return LowerExternalSymbol(Op, DAG);
         case ISD::Constant:             return LowerConstant(Op, DAG);
         case ISD::MUL:                  return LowerMUL(Op, DAG);
-        case ISD::SETCC:                return LowerSETCC(Op, DAG);
+//        case ISD::SETCC:                return LowerSETCC(Op, DAG);
         default:
             break;
     }
@@ -226,15 +226,15 @@ static SDValue convertLocVTToValVT(SelectionDAG &DAG, SDLoc DL,
         Value = DAG.getLoad(VA.getValVT(), DL, Chain, Value,
                             MachinePointerInfo(), false, false, false, 0);
     else
-        if (VA.getLocInfo() == CCValAssign::BCvt) {
-            // If this is a short vector argument loaded from the stack,
-            // extend from i64 to full vector size and then bitcast.
-            assert(VA.getLocVT() == MVT::i64);
-            assert(VA.getValVT().isVector());
-            Value = DAG.getNode(ISD::BUILD_VECTOR, DL, MVT::v2i64,
-                                Value, DAG.getUNDEF(MVT::i64));
-            Value = DAG.getNode(ISD::BITCAST, DL, VA.getValVT(), Value);
-        } else
+//        if (VA.getLocInfo() == CCValAssign::BCvt) {
+//            // If this is a short vector argument loaded from the stack,
+//            // extend from i64 to full vector size and then bitcast.
+//            assert(VA.getLocVT() == MVT::i64);
+//            assert(VA.getValVT().isVector());
+//            Value = DAG.getNode(ISD::BUILD_VECTOR, DL, MVT::v2i64,
+//                                Value, DAG.getUNDEF(MVT::i64));
+//            Value = DAG.getNode(ISD::BITCAST, DL, VA.getValVT(), Value);
+//        } else
             assert(VA.getLocInfo() == CCValAssign::Full && "Unsupported getLocInfo");
 
     return Value;
@@ -429,6 +429,9 @@ VEXTargetLowering::LowerFormalArguments(SDValue Chain,
 const {
     DEBUG(errs() << "LowerFormalArguments\n");
 
+    if (IsVarArg)
+        llvm_unreachable("Variable number of arguments not yet implemented!");
+
     //DAG.dump();
     MachineFunction &MF = DAG.getMachineFunction();
     MachineFrameInfo *MFI = MF.getFrameInfo();
@@ -486,28 +489,25 @@ const {
             assert(VA.isMemLoc() && "Argument not register or memory");
             llvm_unreachable("Not yet implemented!");
             // Create the frame index object for this incoming parameter.
-            int FI = MFI->CreateFixedObject(LocVT.getSizeInBits()/8, VA.getLocMemOffset(), true);
+//            int FI = MFI->CreateFixedObject(LocVT.getSizeInBits()/8, VA.getLocMemOffset(), true);
             
-            // Create the SelectionDAG nodes corresponding to a load
-            // from this parameter. Unpromoted ints are passed
-            // as right-justified 8-byte values.
-            EVT PtrVT = getPointerTy();
-            SDValue FIN = DAG.getFrameIndex(FI, PtrVT);
+//            // Create the SelectionDAG nodes corresponding to a load
+//            // from this parameter. Unpromoted ints are passed
+//            // as right-justified 8-byte values.
+//            EVT PtrVT = getPointerTy();
+//            SDValue FIN = DAG.getFrameIndex(FI, PtrVT);
             
-            if (VA.getLocVT() == MVT::i32)
-                FIN = DAG.getNode(ISD::ADD, DL, PtrVT, FIN,
-                                  DAG.getIntPtrConstant(4));
-            ArgValue = DAG.getLoad(LocVT, DL, Chain, FIN,
-                                   MachinePointerInfo::getFixedStack(FI), false, false, false, 0);
+//            if (VA.getLocVT() == MVT::i32)
+//                FIN = DAG.getNode(ISD::ADD, DL, PtrVT, FIN,
+//                                  DAG.getIntPtrConstant(4));
+//            ArgValue = DAG.getLoad(LocVT, DL, Chain, FIN,
+//                                   MachinePointerInfo::getFixedStack(FI), false, false, false, 0);
         }
         
         // Convert the value of the argument register into the value that's
         // being passed.
         InVals.push_back(convertLocVTToValVT(DAG, DL, VA, Chain, ArgValue));
     }
-
-    if (IsVarArg)
-        llvm_unreachable("Variable number of arguments not yet implemented!");
     
     return Chain;
     
@@ -608,18 +608,18 @@ SDValue VEXTargetLowering::LowerConstant(SDValue Op, SelectionDAG &DAG) const {
     return SDValue();
 }
 
-SDValue VEXTargetLowering::LowerSETCC(SDValue Op, SelectionDAG &DAG) const {
+//SDValue VEXTargetLowering::LowerSETCC(SDValue Op, SelectionDAG &DAG) const {
     
-    DEBUG(errs() << "Lower SETCC : \n");
-    SDLoc dl(Op);
+//    DEBUG(errs() << "Lower SETCC : \n");
+//    SDLoc dl(Op);
     
-    SDValue lhs = Op.getOperand(0);
-    SDValue rhs = Op.getOperand(1);
-    SDValue cond = Op.getOperand(2);
+//    SDValue lhs = Op.getOperand(0);
+//    SDValue rhs = Op.getOperand(1);
+//    SDValue cond = Op.getOperand(2);
     
-    ISD::CondCode CCOpcode = cast<CondCodeSDNode>(cond)->get();
-    return DAG.getNode(Op.getOpcode(), dl, MVT::i1, lhs, rhs, cond);
-}
+//    ISD::CondCode CCOpcode = cast<CondCodeSDNode>(cond)->get();
+//    return DAG.getNode(Op.getOpcode(), dl, MVT::i1, lhs, rhs, cond);
+//}
 
 SDValue VEXTargetLowering::LowerMUL(SDValue Op, SelectionDAG &DAG) const {
     
