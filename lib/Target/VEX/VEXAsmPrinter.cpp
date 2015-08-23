@@ -146,7 +146,7 @@ void VEXAsmPrinter::printHex32(unsigned Value, raw_ostream &O) {
 }
 
 //===----------------------------------------------------------------------===//
-// Frame and Set directives
+// Frame and Set directives (NOT USED)
 //===----------------------------------------------------------------------===//
 //->	.frame	$sp,8,$lr
 //	.mask 	0x00000000,0
@@ -171,12 +171,14 @@ const char *VEXAsmPrinter::getCurrentABIString() const {
     return "abi32";
 }
 
-//		.type	main,@function
-//->		.ent	main                    # @main
-//	main:
-void VEXAsmPrinter::EmitFunctionEntryLabel(){
+// .entry caller, sp=$r0.1, rl=$l0.0, asize=80, arg()
+// main:
+void VEXAsmPrinter::EmitFunctionEntryLabel() {
 //    if(OutStreamer.hasRawTextSupport())
-//        OutStreamer.EmitRawText("\t.ent\t" + Twine(CurrentFnSym->getName()));
+    unsigned stackSize = MF->getFrameInfo()->getStackSize();
+    OutStreamer.EmitRawText(".section .text \n.proc \n.entry caller, sp=$r0.1, rl=$l0.0, asize=-" +
+                            Twine(stackSize) +
+                            ", arg()");
     OutStreamer.EmitLabel(CurrentFnSym);
 }
 
@@ -205,24 +207,15 @@ void VEXAsmPrinter::EmitFunctionBodyStart() {
 //    }
 }
 
-// FIXME : Should this be implemented
-
-//->	.set	macro
-//->	.set	reorder
-//->	.end	main
 /// EmitFunctionBodyEnd - Targets can override this to emit stuff after
 /// the last basic block in the function.
+///
+/// .endp
 void VEXAsmPrinter::EmitFunctionBodyEnd() {
     // There are instruction for this macros, but they must
     // always be at the function end, and we can't emit and
     // break with BB logic.
-//    if (OutStreamer.hasRawTextSupport()) {
-//        if (VEXFI->getEmitNOAT())
-//            OutStreamer.EmitRawText(StringRef("\t.set\tat"));
-//        OutStreamer.EmitRawText(StringRef("\t.set\tmacro"));
-//        OutStreamer.EmitRawText(StringRef("\t.set\treorder"));
-//        OutStreamer.EmitRawText("\t.end\t" + Twine(CurrentFnSym->getName()));
-//    }
+    OutStreamer.EmitRawText(".endp\n");
 }
 
 // FIXME : Is this correct?

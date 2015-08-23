@@ -36,23 +36,35 @@ void VEXInstPrinter::printRegName(raw_ostream &OS, unsigned RegNo) const {
 }
 
 void VEXInstPrinter::printInst(const MCInst *mi, raw_ostream &O,
-                               StringRef Annot, const MCSubtargetInfo &STI){
+                               StringRef Annot, const MCSubtargetInfo &STI) {
     // Try to print any aliases first.
     if (EnableVLIWScheduling){
 
         if (mi->getOpcode() == TargetOpcode::BUNDLE && EnableVLIWScheduling) {
             DEBUG(dbgs() << "INSTPRINTER IS BUNDLE\n");
+            
+            for (unsigned i = 0, e = mi->getNumOperands();
+                 i != e ; ++i){
+                const MCInst *inst = mi->getOperand(i).getInst();
+                
+                if (inst->getOpcode() == VEX::CALL)
+                    printCallDirective(inst, O);
+                else if (inst->getOpcode() == VEX::RET)
+                    printReturnDirective(inst, O);
+            }
 
             for (unsigned i = 0, e = mi->getNumOperands();
                  i != e ; ++i){
                 if (!printAliasInstr(mi, O)){
                     // printInstruction(mi, O) defined in VEXGenAsmWriter.inc which came from
                     // VEX.td indicate.
-                    O << "\tc0";
                     if (mi->getOperand(i).isInst())
                         DEBUG(dbgs() << "IS INSTRUCTION\n");
                     else
                         DEBUG(dbgs() << "NO INSTRUCTION\n");
+                    
+                    O << "\tc0";
+                    
                     const MCInst *inst = mi->getOperand(i).getInst();
                     printInstruction(inst, O);
                 }
@@ -64,6 +76,12 @@ void VEXInstPrinter::printInst(const MCInst *mi, raw_ostream &O,
             if (!printAliasInstr(mi, O)){
                 // printInstruction(mi, O) defined in VEXGenAsmWriter.inc which came from
                 // VEX.td indicate.
+                
+                if (mi->getOpcode() == VEX::CALL)
+                    printCallDirective(mi, O);
+                else if (mi->getOpcode() == VEX::RET)
+                    printReturnDirective(mi, O);
+                
                 O << "\tc0";
                 printInstruction(mi, O);
                 O << "\n;;";
@@ -74,12 +92,29 @@ void VEXInstPrinter::printInst(const MCInst *mi, raw_ostream &O,
         if (!printAliasInstr(mi, O)){
             // printInstruction(mi, O) defined in VEXGenAsmWriter.inc which came from
             // VEX.td indicate.
+            
+            if (mi->getOpcode() == VEX::CALL)
+                printCallDirective(mi, O);
+            else if (mi->getOpcode() == VEX::RET)
+                printReturnDirective(mi, O);
+            
             O << "\tc0";
             printInstruction(mi, O);
         }
     }
     //printAnnotation(O, Annot);
 }
+
+void VEXInstPrinter::printReturnDirective(const MCInst *MI, raw_ostream &O) {
+    O << ".return ret($r0.3:s32)\n";
+}
+
+void VEXInstPrinter::printCallDirective(const MCInst *MI, raw_ostream &O) {
+    O << ".call ";
+    printOperand(MI, 0, O);
+    O << ", caller, arg(), ret()\n";
+}
+
 
     static void printExpr(const MCExpr *Expr, raw_ostream &OS){
 

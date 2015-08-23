@@ -27,6 +27,8 @@ VEXMCAsmInfo::VEXMCAsmInfo(StringRef TT) {
 
     AlignmentIsInBytes          = false;
     LabelSuffix                 = "::";
+    
+    ZeroDirective               = "\t.skip\t";
 
     Data8bitsDirective          = "\t.data1\t";
     Data16bitsDirective         = "\t.data2\t";
@@ -35,5 +37,15 @@ VEXMCAsmInfo::VEXMCAsmInfo(StringRef TT) {
     PrivateGlobalPrefix         = "$";
     CommentString               = "##";
     UseDataRegionDirectives     = true;
+    HasDotTypeDotSizeDirective  = false;
+    HasFunctionAlignment        = false;
+    HasSingleParameterDotFile   = false;
+    
+    // We need this to omit the AsmPrinter from printing
+    // an unwanted .globl <NameOfTheFunction> directive.
+    // A Modification in MCAsmStreamer::EmitSymbolAttribute Function was also done.
+    // See "case MCSA_Global:". I added a verification if GlobalDirective is nullptr.
+    // This maybe a problem in the future, so we need to be aware of that.
+    GlobalDirective             = nullptr;
 
 }
