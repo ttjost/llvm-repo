@@ -28,11 +28,35 @@ bool MCSectionELF::ShouldOmitSectionDirective(StringRef Name,
     return false;
 
   // FIXME: Does .section .bss/.data/.text work everywhere??
+  // No, it does not work for VEX.
+  // We are gonna omit this and always infer ".section" before this
+  // each one of the sections on the code below.
+  // However t
   if (Name == ".text" || Name == ".data" ||
       (Name == ".bss" && !MAI.usesELFSectionDirectiveForBSS()))
     return true;
 
   return false;
+}
+
+// Decides whether a '.section' directive
+// should be printed before the section name.
+// This directive is actually used to give
+// VEX compatibility with the simulator.
+// It does the exact opposite of ShouldOmitSectionDirective
+bool MCSectionELF::ShouldNotOmitSectionDirective(StringRef Name,
+                                              const MCAsmInfo &MAI) const {
+    
+    // FIXME: Does .section .bss/.data/.text work everywhere??
+    // No, it does not work for VEX.
+    // We are gonna omit this and always infer ".section" before this
+    // each one of the sections on the code below.
+    // However t
+    if (Name == ".text" || Name == ".data" ||
+        (Name == ".bss" && !MAI.usesELFSectionDirectiveForBSS()))
+        return true;
+    
+    return false;
 }
 
 static void printName(raw_ostream &OS, StringRef Name) {
@@ -61,7 +85,19 @@ static void printName(raw_ostream &OS, StringRef Name) {
 void MCSectionELF::PrintSwitchToSection(const MCAsmInfo &MAI,
                                         raw_ostream &OS,
                                         const MCExpr *Subsection) const {
-
+    
+    // Added to give compatibility with VEX HP Simulator
+    // We always add ".section" before sections named
+    // ".text", ".data" and  ".bss"
+    if (ShouldNotOmitSectionDirective(SectionName, MAI)) {
+        OS << "\t.section\t";
+        OS << '\t' << getSectionName();
+        if (Subsection)
+            OS << '\t' << *Subsection;
+        OS << '\n';
+        return;
+    }
+    
   if (ShouldOmitSectionDirective(SectionName, MAI)) {
     OS << '\t' << getSectionName();
     if (Subsection)

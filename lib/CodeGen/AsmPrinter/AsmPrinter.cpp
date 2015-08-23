@@ -526,11 +526,11 @@ void AsmPrinter::EmitFunctionHeader() {
   // Print the 'header' of function.
   const Function *F = MF->getFunction();
 
-  OutStreamer.SwitchSection(
-      getObjFileLowering().SectionForGlobal(F, *Mang, TM));
-  EmitVisibility(CurrentFnSym, F->getVisibility());
-
-  EmitLinkage(F, CurrentFnSym);
+//  OutStreamer.SwitchSection(
+//      getObjFileLowering().SectionForGlobal(F, *Mang, TM));
+//  EmitVisibility(CurrentFnSym, F->getVisibility());
+//
+//  EmitLinkage(F, CurrentFnSym);
   if (MAI->hasFunctionAlignment())
     EmitAlignment(MF->getAlignment(), F);
 

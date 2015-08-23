@@ -68,6 +68,11 @@ public:
   /// ShouldOmitSectionDirective - Decides whether a '.section' directive
   /// should be printed before the section name
   bool ShouldOmitSectionDirective(StringRef Name, const MCAsmInfo &MAI) const;
+    
+  /// ShouldNotOmitSectionDirective - Decides whether a '.section' directive
+  /// should be printed before the section name
+  /// It does the exact oposite of ShouldOmitSectionDirective
+  bool ShouldNotOmitSectionDirective(StringRef Name, const MCAsmInfo &MAI) const;
 
   StringRef getSectionName() const { return SectionName; }
   unsigned getType() const { return Type; }
