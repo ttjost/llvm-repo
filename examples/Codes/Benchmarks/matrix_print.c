@@ -1,3 +1,4 @@
+#include <stdio.h> 
 //This program prints the result of a matrix multiplication
 
 int matrix_mul();
@@ -81,5 +82,6 @@ int main(void)
                 return 100*i+j;
 		}
     }
+	printf("-1");
     return -1;
 }
