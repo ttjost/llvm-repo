@@ -673,8 +673,8 @@ void MCStreamer::SwitchSection(const MCSection *Section,
     assert(!Section->hasEnded() && "Section already ended");
     ChangeSection(Section, Subsection);
     MCSymbol *Sym = Section->getBeginSymbol();
-    //if (Sym && !Sym->isInSection())
-      //EmitLabel(Sym);
+    if (Sym && !Sym->isInSection())
+      EmitLabel(Sym);
   }
 }
 

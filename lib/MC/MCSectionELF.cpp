@@ -19,6 +19,10 @@ using namespace llvm;
 
 MCSectionELF::~MCSectionELF() {} // anchor.
 
+// AUTHOR: Tiago Trevisan Jost
+// THIS FUNCTION IS NEVER CALLED IN THIS RELEASE
+// I MODIFIED SO WE CAN ALWAYS GENERATE PROPER
+// CODE FOR HP VEX SIMULATOR.
 // Decides whether a '.section' directive
 // should be printed before the section name.
 bool MCSectionELF::ShouldOmitSectionDirective(StringRef Name,
@@ -29,9 +33,8 @@ bool MCSectionELF::ShouldOmitSectionDirective(StringRef Name,
 
   // FIXME: Does .section .bss/.data/.text work everywhere??
   // No, it does not work for VEX.
-  // We are gonna omit this and always infer ".section" before this
+  // We are gonna omit this and always infer ".section" before
   // each one of the sections on the code below.
-  // However t
   if (Name == ".text" || Name == ".data" ||
       (Name == ".bss" && !MAI.usesELFSectionDirectiveForBSS()))
     return true;
@@ -49,9 +52,8 @@ bool MCSectionELF::ShouldNotOmitSectionDirective(StringRef Name,
     
     // FIXME: Does .section .bss/.data/.text work everywhere??
     // No, it does not work for VEX.
-    // We are gonna omit this and always infer ".section" before this
+    // We are gonna omit this and always infer ".section" before
     // each one of the sections on the code below.
-    // However t
     if (Name == ".text" || Name == ".data" ||
         (Name == ".bss" && !MAI.usesELFSectionDirectiveForBSS()))
         return true;
