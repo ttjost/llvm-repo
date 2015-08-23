@@ -92,8 +92,8 @@ void MCSectionELF::PrintSwitchToSection(const MCAsmInfo &MAI,
     // We always add ".section" before sections named
     // ".text", ".data" and  ".bss"
     if (ShouldNotOmitSectionDirective(SectionName, MAI)) {
-        OS << "\t.section\t";
-        OS << '\t' << getSectionName();
+        OS << ".section";
+        OS << ' ' << getSectionName();
         if (Subsection)
             OS << '\t' << *Subsection;
         OS << '\n';
