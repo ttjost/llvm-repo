@@ -29,17 +29,27 @@ VEXMCAsmInfo::VEXMCAsmInfo(StringRef TT) {
     LabelSuffix                 = "::";
     
     ZeroDirective               = "\t.skip\t";
-
+    AscizDirective              = nullptr;
+    
+    // AUTHOR: Tiago Trevisan Jost
+    // We need to set this to nullptr so we can generate correct code for VEX.
+    // I added some lines of code in MCAsmStreamer::EmitBytes where
+    // we check if this string is null.
+    // If that is the case, we generate code for VEX.
+    // Otherwise, it will generate correct code for other architecture.
+    AsciiDirective              = nullptr;
+    
     Data8bitsDirective          = "\t.data1\t";
     Data16bitsDirective         = "\t.data2\t";
     Data32bitsDirective         = "\t.data4\t";
     Data64bitsDirective         = "\t.data8\t";
-    PrivateGlobalPrefix         = "$";
+    PrivateGlobalPrefix         = "";
     CommentString               = "##";
     UseDataRegionDirectives     = true;
     HasDotTypeDotSizeDirective  = false;
     HasFunctionAlignment        = false;
     HasSingleParameterDotFile   = false;
+    UsesELFSectionDirectiveForBSS   = true;
     
     // We need this to omit the AsmPrinter from printing
     // an unwanted .globl <NameOfTheFunction> directive.

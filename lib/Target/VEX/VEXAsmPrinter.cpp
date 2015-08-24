@@ -249,6 +249,33 @@ void VEXAsmPrinter::PrintDebugValueComment(const MachineInstr *MI,
   OS << "PrintDebugValueComment()";
 }
 
+// PROBABLY THIS IS NOT USED
+bool VEXAsmPrinter::PrintAsmOperand(const MachineInstr *MI, unsigned OpNo,
+                                    unsigned AsmVariant, const char *ExtraCode,
+                                    raw_ostream &O){
+    // Does this asm operand have a single letter operand modifier?
+    if (ExtraCode && ExtraCode[0]) {
+        if (ExtraCode[1] != 0) return true; // Unknown modifier.
+        
+        const MachineOperand &MO = MI->getOperand(OpNo);
+        switch (ExtraCode[0]) {
+            default:
+                return true;  // Unknown modifier.
+            case 'c': // Substitute immediate value without immediate syntax
+                if (MO.getType() != MachineOperand::MO_Immediate)
+                    return true;
+                O << MO.getImm();
+                return false;
+            case 'n':  // Negate the immediate constant.
+                if (MO.getType() != MachineOperand::MO_Immediate)
+                    return true;
+                O << -MO.getImm();
+                return false;
+        }
+    }
+    return true;
+}
+
 // Force static initialization.
 extern "C" void LLVMInitializeVEXAsmPrinter() {
   RegisterAsmPrinter<VEXAsmPrinter> X(TheVEXTarget);

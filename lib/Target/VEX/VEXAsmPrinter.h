@@ -77,6 +77,9 @@ public:
     void EmitStartOfAsmFile(Module &M);
     virtual MachineLocation getDebugValueLocation(const MachineInstr *MI) const;
     void PrintDebugValueComment(const MachineInstr *MI, raw_ostream &OS);
+    bool PrintAsmOperand(const MachineInstr *MI, unsigned OpNo,
+                         unsigned AsmVariant, const char *ExtraCode,
+                         raw_ostream &OS) override;
 };
 
 }

@@ -45,7 +45,8 @@ static std::string computeDataLayout() {
     
     Ret += "e";
     
-    Ret += "-m:m";
+    // Added MM_None
+    //Ret += "-m:n";
     
     Ret += "-p:32:32";
     

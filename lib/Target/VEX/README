@@ -24,7 +24,7 @@ List of Examples that are not working from the directory "llvm/examples/Codes/Pa
 
 The list of missing that are still missing for VEX Backend can be viewed below:
 
-(Done)
+(DONE)
 1. Need support for FrameIndex (ISD::FRAMEINDEX) Node.
 	Consequences: for now, codes with pointers may not work properly or even possibly not handled by the compiler.
 	Solution: Take a look at how other backends handle FrameIndex, such as, MIPS and MSP430.
@@ -38,8 +38,9 @@ The list of missing that are still missing for VEX Backend can be viewed below:
 3. Add support for functions that have a variable number of parameters.
 	Consequences: compiler may not generate code since it needs ISD::VA_ARGS to be lowered (or so)
 
-
+(DONE)
 4. Need to check how to write datatype "char" in assembly file. It looks like it is not doing it properly
+	Solution: In the future, we should try to write code inside the VEX Directore, instead of modifying code from the LLVM Infrastructure. We might have problem when upgrading LLVM to another version.
 
 
 5. Need to add support for long long type. So far, we only support char, short and integer types.
@@ -50,6 +51,13 @@ The list of missing that are still missing for VEX Backend can be viewed below:
 
 7. Modify Instructions to Use Reg0 instead of Constant 0.
 	E.g. slct $r0.11 = $b0.0, $r0.13, 0   ->    slct $r0.11 = $b0.0, $r0.13, $r0.0
+
+
+"VLIW PACKETIZER"-RELATED ISSUES
+8. When a call instructions is found in the code, we should never schedule the next instruction in the same bundle. MatrixO0 generates code with this condition and we should fix ASAP.
+ 
+
+
 
 
 Continuing...
