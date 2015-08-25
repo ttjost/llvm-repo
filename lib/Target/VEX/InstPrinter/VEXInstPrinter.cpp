@@ -66,12 +66,6 @@ void VEXInstPrinter::printInst(const MCInst *mi, raw_ostream &O,
                     O << "\tc0";
                     
                     const MCInst *inst = mi->getOperand(i).getInst();
-                    // ||
-                    //inst->getOpcode() == TargetOpcode::GC_LABEL ||
-                    //inst->getOpcode() == TargetOpcode::KILL
-                    if (inst->getOpcode() == TargetOpcode::GC_LABEL ||
-                         inst->getOpcode() == TargetOpcode::IMPLICIT_DEF)
-                        DEBUG(dbgs() << "HERERERERERER GEERERERGEREG\n");
                     printInstruction(inst, O);
                 }
                 O << "\n";

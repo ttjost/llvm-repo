@@ -160,7 +160,7 @@ bool VEXPacketizer::runOnMachineFunction(MachineFunction &MF) {
         MachineBasicBlock::iterator End = MBB->end();
         MachineBasicBlock::iterator MI = MBB->begin();
         while (MI != End) {
-            if (MI->isKill()) {
+            if (MI->isKill() || MI->isImplicitDef()) {
                 MachineBasicBlock::iterator DeleteMI = MI;
                 ++MI;
                 MBB->erase(DeleteMI);
