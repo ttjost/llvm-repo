@@ -80,6 +80,13 @@ def brtarget : Operand<OtherVT> {
 def SDT_VEXWrapper : SDTypeProfile <1, 1, [SDTCisSameAs<0, 1>,
                                            SDTCisPtrTy<0>]>;
 
+def SDT_VEXTWORESULT : SDTypeProfile<2, 3, [SDTCisVT<0, i32>,
+                                            SDTCisVT<1, i1>,
+                                            SDTCisVT<2, i32>,
+                                            SDTCisSameAs<1,4>,
+                                            SDTCisSameAs<0,2>,
+                                            SDTCisSameAs<0,3>]>;
+
 def SDT_VEXPseudoCall         : SDTypeProfile<0, -1, [SDTCisVT<0, iPTR>]>;
 def SDT_VEXCallSeqStart : SDCallSeqStart<[SDTCisVT<0, i32>]>;
 def SDT_VEXCallSeqEnd   : SDCallSeqEnd<[SDTCisVT<0, i32>, SDTCisVT<1, i32>]>;
@@ -90,6 +97,9 @@ def SDT_VEXCallSeqEnd   : SDCallSeqEnd<[SDTCisVT<0, i32>, SDTCisVT<1, i32>]>;
 
 def VEXPseudoRet : SDNode<"VEXISD::PSEUDO_RET", SDTNone,
                           [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
+
+def VEXADDCG    : SDNode<"VEXISD::ADDCG", SDT_VEXTWORESULT>;
+def VEXDIVS     : SDNode<"VEXISD::DIVS", SDT_VEXTWORESULT>;
 
 def VEXWrapper : SDNode<"VEXISD::WRAPPER", SDT_VEXWrapper>;
 
@@ -227,10 +237,11 @@ class ExtendInstr<string OpcStr, bits<8> OpVal, SDNode OpNode, InstrItinClass It
 //              [(set GPRegs:$dst, (OpNode GPRegs:$s1))], Itin>{
 }
 
-class TwoResultInstr<string OpcStr, bits<8> OpVal, InstrItinClass Itin>
-    : InstVEX<(outs GPRegs:$dst1, BrRegs:$cout ), (ins GPRegs:$s1, GPRegs:$s2, GPRegs:$cin),
+class TwoResultInstr<string OpcStr, bits<8> OpVal, SDNode OpNode, InstrItinClass Itin>
+    : InstVEX<(outs GPRegs:$dst1, BrRegs:$cout ), (ins GPRegs:$s1, GPRegs:$s2, BrRegs:$cin),
               !strconcat(OpcStr, " $dst1, $cout = $s1, $s2, $cin"),
-              [], Itin>{
+              [(set GPRegs:$dst1, BrRegs:$cout, (OpNode GPRegs:$s1, GPRegs:$s2, BrRegs:$cin))],
+              Itin>{
 }
 
 class StoreInstr<string OpcStr, bits<8> OpVal, PatFrag OpNode, InstrItinClass Itin>
@@ -443,8 +454,8 @@ def ZXTB    : ExtendInstr<"zxtb", 0b00000000, add, IIAlu>;
 def SXTH    : ExtendInstr<"sxth", 0b00000000, add, IIAlu>;
 def ZXTH    : ExtendInstr<"zxth", 0b00000000, add, IIAlu>;
 
-def DIVS    : TwoResultInstr<"divs", 0b00000000, IIAlu>;
-def ADDCG   : TwoResultInstr<"addcg", 0b00000000, IIAlu>;
+def DIVS    : TwoResultInstr<"divs", 0b00000000, VEXDIVS, IIAlu>;
+def ADDCG   : TwoResultInstr<"addcg", 0b00000000, VEXADDCG, IIAlu>;
 
 // Select Instructions
 defm SLCT   : SelectInstr<0b00000000, IIAlu>;
@@ -452,7 +463,7 @@ defm SLCT   : SelectInstr<0b00000000, IIAlu>;
 
 // Create Pattern to "not" instruction
 def : Pat<(not GPRegs:$in),
-  (XORi GPRegs:$in, 1)>;
+          (XORi GPRegs:$in, 1)>;
 
 //def : Pat<(zext8 GPRegs:$s1),(SXTB GPRegs:$s1)>;
 //def : Pat<(i32 (zext GPRegs:$s1)),(ZXTH GPRegs:$s1)>;
@@ -462,9 +473,27 @@ def : Pat<(not GPRegs:$in),
 
 // Immediates
 def : Pat<(i32 imm32:$in),
-(MOVi imm:$in)>;
+          (MOVi imm:$in)>;
 def : Pat<(i32 imm:$imm),
-(MOVi imm:$imm)>;
+          (MOVi imm:$imm)>;
+
+def : Pat<(select GPRegs:$cond, GPRegs:$s1, GPRegs:$s2),
+          (SLCTr (MTB GPRegs:$cond), GPRegs:$s1, GPRegs:$s2)>;
+def : Pat<(select GPRegs:$cond, GPRegs:$s1, imm32:$s2),
+          (SLCTi (MTB GPRegs:$cond), GPRegs:$s1, imm32:$s2)>;
+
+//def : Pat<(select GPRegs:$cond, GPRegs:$s1, imm32:$s2),
+//          (SLCTFr (not (MTB GPRegs:$cond)), GPRegs:$s1, imm32:$s2)>;
+//def : Pat<(select GPRegs:$cond, GPRegs:$s1, imm32:$s2),
+//          (SLCTFi (not (MTB GPRegs:$cond)), GPRegs:$s1, imm32:$s2)>;
+
+// Carry patterns
+def : Pat<(subc GPRegs:$lhs, GPRegs:$rhs),
+          (SUBr GPRegs:$lhs, GPRegs:$rhs)>;
+def : Pat<(addc GPRegs:$lhs, GPRegs:$rhs),
+          (ADDr GPRegs:$lhs, GPRegs:$rhs)>;
+def : Pat<(addc  GPRegs:$src, imm32:$imm),
+          (ADDi GPRegs:$src, imm32:$imm)>;
 
 //def : Pat<(i1 imm:$imm),
 //(MOVi imm:$imm)>;

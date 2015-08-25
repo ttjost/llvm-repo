@@ -19,6 +19,7 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/raw_ostream.h"
+#include <map>
 
 #define DEBUG_TYPE "vex-instprinter"
 
@@ -29,7 +30,9 @@ namespace llvm {
     class VEXInstPrinter : public MCInstPrinter{
 
         bool EnableVLIWScheduling;
-        
+
+        std::map<StringRef, bool> ExtFuncToPrint;
+
     public:
         VEXInstPrinter(const MCAsmInfo &mai, const MCInstrInfo &mii,
                        const MCRegisterInfo &mri)

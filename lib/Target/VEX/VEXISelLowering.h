@@ -40,6 +40,9 @@ namespace llvm {
             MAXU,
             MIN,
             MINU,
+
+            ADDCG,
+            DIVS,
             
             MPYLL,
             MPYLLU,

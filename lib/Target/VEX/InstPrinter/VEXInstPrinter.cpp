@@ -111,8 +111,11 @@ void VEXInstPrinter::printReturnDirective(const MCInst *MI, raw_ostream &O) {
 
 void VEXInstPrinter::printCallDirective(const MCInst *MI, raw_ostream &O) {
     O << ".call ";
-    printOperand(MI, 0, O);
-    O << ", caller, arg(), ret()\n";
+    //printOperand(MI, 0, O);
+    const MCExpr *Expr = MI->getOperand(0).getExpr();
+    const MCSymbolRefExpr *SRE = dyn_cast<MCSymbolRefExpr>(Expr);
+    O << SRE->getSymbol().getName();
+    O << ", caller, arg($r0.3:u32, $r0.4:u32, $r0.5:u32, $r0.6:u32, $r0.7:u32, $r0.8:u32, $r0.9:u32, $r0.10:u32), ret()\n";
 }
 
 

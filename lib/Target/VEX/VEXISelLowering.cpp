@@ -142,6 +142,8 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     setOperationAction(ISD::ExternalSymbol, MVT::i16, Promote);
     setOperationAction(ISD::ExternalSymbol, MVT::i32, Custom);
 
+    setOperationAction(ISD::ADDC, MVT::i32, Promote);
+
     // Perform DAG Combination of certain instructions
     setTargetDAGCombine(ISD::SELECT);
 

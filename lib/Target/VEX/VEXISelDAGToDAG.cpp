@@ -109,6 +109,7 @@ SDNode * VEXDAGToDAGISel::Select(SDNode *Node){
 
     // See if subclasses can handle this node
     std::pair<bool, SDNode*> Ret = selectNode(Node);
+    DEBUG(errs() << "Finished Selecting\n");
     if(Ret.first)
         return Ret.second;
     // Select the default instruction
@@ -122,6 +123,7 @@ SDNode * VEXDAGToDAGISel::Select(SDNode *Node){
     return ResNode;
 
 }
+
 
 std::pair<bool, SDNode*> VEXDAGToDAGISel::selectNode(SDNode *Node){
     
@@ -148,6 +150,20 @@ std::pair<bool, SDNode*> VEXDAGToDAGISel::selectNode(SDNode *Node){
 //                  MultOpc = VEX::MPYLU
             }
             break;
+            case ISD::ADDE: {
+                DEBUG(errs() << "Selecting ADDC or ADDE");
+                SDLoc dl(Node);
+                unsigned Opcode = VEXISD::ADDCG;
+
+                SDValue Op0 = Node->getOperand(0);
+                SDValue Op1 = Node->getOperand(1);
+                SDValue Op2 = Node->getOperand(2);
+
+                SDValue Result = CurDAG->getNode(Opcode, dl,
+                                                 CurDAG->getVTList(MVT::i32, MVT::i1),
+                                                 Op0, Op1, Op2);
+                return std::make_pair(true, Result.getNode());
+            }
         default: break;
     }
 
