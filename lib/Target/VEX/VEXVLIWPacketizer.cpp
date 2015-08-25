@@ -114,6 +114,9 @@ bool VEXPacketizerList::ignorePseudoInstruction(MachineInstr *MI,
 
 bool VEXPacketizerList::isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ) {
     
+    // Uncomment this to generate single issue
+    //return false;
+
     if (SUI->isPred(SUJ)){
         for (SDep dep : SUI->Preds) {
             if (dep.getKind() == SDep::Data)
@@ -121,6 +124,8 @@ bool VEXPacketizerList::isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ) {
         }
     }
     
+    if (SUJ->getInstr()->isCall() || SUJ->getInstr()->isBranch())
+        return false;
     return true;
 }
 
@@ -166,8 +171,41 @@ bool VEXPacketizer::runOnMachineFunction(MachineFunction &MF) {
         }
     }
 
-    for (MachineFunction::iterator MBBI = MF.begin() , MBBE = MF.end(); MBBI != MBBE; ++MBBI)
-        Packetizer.PacketizeMIs(MBBI.getNodePtrUnchecked(), MBBI->begin(), MBBI->end());
+    //for (MachineFunction::iterator MBBI = MF.begin() , MBBE = MF.end(); MBBI != MBBE; ++MBBI)
+    //    Packetizer.PacketizeMIs(MBBI.getNodePtrUnchecked(), MBBI->begin(), MBBI->end());
+
+    // Loop over all of the basic blocks.
+    for (MachineFunction::iterator MBB = MF.begin(), MBBe = MF.end();
+         MBB != MBBe; ++MBB) {
+        // Find scheduling regions and schedule / packetize each region.
+        unsigned RemainingCount = MBB->size();
+        for(MachineBasicBlock::iterator RegionEnd = MBB->end();
+            RegionEnd != MBB->begin();) {
+            // The next region starts above the previous region. Look backward in the
+            // instruction stream until we find the nearest boundary.
+            MachineBasicBlock::iterator I = RegionEnd;
+            for(;I != MBB->begin(); --I, --RemainingCount) {
+                if (TII->isSchedulingBoundary(std::prev(I), MBB, MF))
+                break;
+            }
+            I = MBB->begin();
+
+            // Skip empty scheduling regions.
+            if (I == RegionEnd) {
+                RegionEnd = std::prev(RegionEnd);
+                --RemainingCount;
+                continue;
+            }
+            // Skip regions with one instruction.
+            if (I == std::prev(RegionEnd)) {
+                RegionEnd = std::prev(RegionEnd);
+                continue;
+            }
+
+            Packetizer.PacketizeMIs(MBB, I, RegionEnd);
+            RegionEnd = I;
+        }
+    }
     
     return true;
     

@@ -24,7 +24,7 @@
 
 using namespace llvm;
 
-#define DEBUG_TYPE "asm-printer"
+#define DEBUG_TYPE "vex-inst-printer"
 
 #define PRINT_ALIAS_INSTR
 #include "VEXGenAsmWriter.inc"
@@ -66,8 +66,12 @@ void VEXInstPrinter::printInst(const MCInst *mi, raw_ostream &O,
                     O << "\tc0";
                     
                     const MCInst *inst = mi->getOperand(i).getInst();
-                    if (inst->getOpcode() == TargetOpcode::BUNDLE)
-                        O << "IS BUNDLE";
+                    // ||
+                    //inst->getOpcode() == TargetOpcode::GC_LABEL ||
+                    //inst->getOpcode() == TargetOpcode::KILL
+                    if (inst->getOpcode() == TargetOpcode::GC_LABEL ||
+                         inst->getOpcode() == TargetOpcode::IMPLICIT_DEF)
+                        DEBUG(dbgs() << "HERERERERERER GEERERERGEREG\n");
                     printInstruction(inst, O);
                 }
                 O << "\n";
