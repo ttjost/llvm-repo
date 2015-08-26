@@ -94,7 +94,7 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     //  added, this allows us to compute derived properties we expose.
     computeRegisterProperties(STI.getRegisterInfo());
     
-    setOperationAction(ISD::SIGN_EXTEND_INREG, MVT::i1,   Expand);
+    //setOperationAction(ISD::SIGN_EXTEND_INREG, MVT::i1,   Expand);
     
     // Load extented operations for i1 types must be promoted
     for (MVT VT : MVT::integer_valuetypes()) {
@@ -102,7 +102,9 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
         setLoadExtAction(ISD::ZEXTLOAD, VT, MVT::i1,  Promote);
         setLoadExtAction(ISD::SEXTLOAD, VT, MVT::i1,  Promote);
     }
-
+    
+    AddPromotedToType(ISD::SETCC, MVT::i1, MVT::i32);
+    
 //    setOperationAction(ISD::TargetConstant, MVT::i1, Promote);
 
     // See LowerConstant to see the reason for customizing i1 ISD::Constant
@@ -119,6 +121,7 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     
     setOperationAction(ISD::MUL, MVT::i16, Custom);
     setOperationAction(ISD::MUL, MVT::i32, Custom);
+    
 //    setOperationAction(ISD::SDIV, MVT::i32, Expand);
 //    setOperationAction(ISD::SDIVREM, MVT::i32, Expand);
     
@@ -132,7 +135,6 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     setOperationAction(ISD::BR_CC, MVT::i32, Expand);
     setOperationAction(ISD::ROTL,  MVT::i32, Expand);
     setOperationAction(ISD::ROTR,  MVT::i32, Expand);
-    
     //setOperationAction(ISD::SETCC, MVT::i32, Custom);
     
     setOperationAction(ISD::GlobalAddress, MVT::i8, Promote);
@@ -141,8 +143,6 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     setOperationAction(ISD::ExternalSymbol, MVT::i8, Promote);
     setOperationAction(ISD::ExternalSymbol, MVT::i16, Promote);
     setOperationAction(ISD::ExternalSymbol, MVT::i32, Custom);
-
-    setOperationAction(ISD::ADDC, MVT::i32, Promote);
 
     // Perform DAG Combination of certain instructions
     setTargetDAGCombine(ISD::SELECT);

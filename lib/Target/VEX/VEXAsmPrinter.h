@@ -44,7 +44,7 @@ class MachineBasicBlock;
 class Module;
 class raw_ostream;
 
-class LLVM_LIBRARY_VISIBILITY VEXAsmPrinter : public AsmPrinter{
+class LLVM_LIBRARY_VISIBILITY VEXAsmPrinter : public AsmPrinter {
 
     void EmitInstrWithMacroNoAT(const MachineInstr *MI);
 

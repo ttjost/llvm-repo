@@ -477,16 +477,6 @@ def : Pat<(i32 imm32:$in),
 def : Pat<(i32 imm:$imm),
           (MOVi imm:$imm)>;
 
-def : Pat<(select GPRegs:$cond, GPRegs:$s1, GPRegs:$s2),
-          (SLCTr (MTB GPRegs:$cond), GPRegs:$s1, GPRegs:$s2)>;
-def : Pat<(select GPRegs:$cond, GPRegs:$s1, imm32:$s2),
-          (SLCTi (MTB GPRegs:$cond), GPRegs:$s1, imm32:$s2)>;
-
-//def : Pat<(select GPRegs:$cond, GPRegs:$s1, imm32:$s2),
-//          (SLCTFr (not (MTB GPRegs:$cond)), GPRegs:$s1, imm32:$s2)>;
-//def : Pat<(select GPRegs:$cond, GPRegs:$s1, imm32:$s2),
-//          (SLCTFi (not (MTB GPRegs:$cond)), GPRegs:$s1, imm32:$s2)>;
-
 // Carry patterns
 def : Pat<(subc GPRegs:$lhs, GPRegs:$rhs),
           (SUBr GPRegs:$lhs, GPRegs:$rhs)>;
@@ -594,6 +584,16 @@ def CALL      : InstVEX<(outs), (ins i32imm:$offset),
 
 //def : Pat<(mul GPRegs:$lhs, GPRegs:$rhs), (ADDr (MPYLUr $lhs, $rhs), (MPYHSr $lhs, $rhs))>;
 //def : Pat<(mul GPRegs:$lhs, GPRegs:$rhs), (ADDr (MPYLUi $lhs, $rhs), (MPYHSi $lhs, $rhs))>;
+
+def : Pat<(select GPRegs:$cond, GPRegs:$s1, GPRegs:$s2),
+            (SLCTr (MTB GPRegs:$cond), GPRegs:$s1, GPRegs:$s2)>;
+def : Pat<(select GPRegs:$cond, GPRegs:$s1, imm32:$s2),
+            (SLCTi (MTB GPRegs:$cond), GPRegs:$s1, imm32:$s2)>;
+
+//def : Pat<(select GPRegs:$cond, GPRegs:$s1, imm32:$s2),
+//         (SLCTFr (not (MTB GPRegs:$cond)), GPRegs:$s1, imm32:$s2)>;
+//def : Pat<(select GPRegs:$cond, GPRegs:$s1, imm32:$s2),
+//          (SLCTFi (not (MTB GPRegs:$cond)), GPRegs:$s1, imm32:$s2)>;
 
 // 1-to-32-bit extension
 def : Pat<(i32 (anyext BrRegs:$src)), (MFB BrRegs:$src)>;
