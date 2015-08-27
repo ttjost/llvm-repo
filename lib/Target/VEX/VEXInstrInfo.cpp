@@ -193,6 +193,84 @@ unsigned VEXInstrInfo::InsertBranch(MachineBasicBlock &MBB, MachineBasicBlock *T
     return 1;
 }
 
+bool VEXInstrInfo::AnalyzeBranch(MachineBasicBlock &MBB,
+                                 MachineBasicBlock *&TBB,
+                                 MachineBasicBlock *&FBB,
+                                 SmallVectorImpl< MachineOperand > &Cond,
+                                 bool AllowModify) const {
+    return true;
+
+//    TBB = nullptr;
+//    FBB = nullptr;
+
+//    MachineBasicBlock::iterator LastInst = MBB.end();
+
+//    if (LastInst == MBB.begin())
+//    //if (LastInst = MBB.begin() || !isUnpredicatedTerminator(--LastOpc)
+//        return false;
+
+//    unsigned LastOpc = LastInst->getOpcode();
+
+////    // If it is a BUNDLE, then check if there is a
+////    // branch instruction in it.
+////    if (LastOpc == TargetOpcode::BUNDLE)
+//////        for (unsigned i = 0, e = LastInst->getNumOperands();
+//////             i != e; i++){
+//////            if (LastInst->getOperand(i) == VEX::GOTO ||
+//////                LastInst->getOperand(i) == VEX::BR ||
+//////                LastInst->getOperand(i) == VEX::BRF){
+////                LastOpc = LastInst->getOpcode();
+////                //LastInst = LastInst->getOperand(i);
+//////            }
+//////        }
+
+//    if (LastOpc == VEX::GOTO) {
+//      TBB = LastInst->getOperand(0).getMBB();
+//      return false;
+//    }
+
+//    MachineBasicBlock::iterator SecondLastInst = --LastInst;
+//    LastInst = MBB.end();
+//    unsigned SecondLastOpc = SecondLastInst->getOpcode();
+
+////    // If it is a BUNDLE, then check if there is a
+////    // branch instruction in it.
+////    if (SecondLastOpc == TargetOpcode::BUNDLE)
+//////        for (unsigned i = 0, e = SecondLastInst->getNumOperands();
+//////             i != e; i++){
+//////            if (SecondLastInst->getOperand(i) == VEX::GOTO ||
+//////                SecondLastInst->getOperand(i) == VEX::BR ||
+//////                SecondLastInst->getOperand(i) == VEX::BRF){
+////                SecondLastOpc = SecondLastInst->getOpcode();
+//////                //SecondLastInst = SecondLastInst->getOperand(i);
+//////                break;
+//////            }
+//////        }
+
+//    if ((SecondLastOpc == VEX::GOTO) &&
+//        (LastOpc == VEX::GOTO)) {
+//      TBB = SecondLastInst->getOperand(0).getMBB();
+//      LastInst->eraseFromParent();
+//      return false;
+//    }
+
+//    if (LastOpc == VEX::BR) {
+//      // Block ends with fall-through condbranch.
+//      TBB = LastInst->getOperand(0).getMBB();
+//      Cond.push_back(LastInst->getOperand(1));
+//      Cond.push_back(LastInst->getOperand(2));
+//      return false;
+//    }
+
+//    if ((SecondLastOpc == VEX::BR && LastOpc == VEX::GOTO)) {
+//      TBB =  SecondLastInst->getOperand(0).getMBB();
+//      Cond.push_back(SecondLastInst->getOperand(1));
+//      Cond.push_back(SecondLastInst->getOperand(2));
+//      FBB = LastInst->getOperand(0).getMBB();
+//      return false;
+//    }
+}
+
 // Used by the VLIW Scheduler
 DFAPacketizer* VEXInstrInfo::CreateTargetScheduleState
                                 (const TargetSubtargetInfo &STI) const{

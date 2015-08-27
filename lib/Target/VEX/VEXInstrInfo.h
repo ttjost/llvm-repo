@@ -76,6 +76,12 @@ namespace llvm{
                               const SmallVectorImpl<MachineOperand> &Cond,
                               DebugLoc DL) const;
 
+        bool AnalyzeBranch(MachineBasicBlock &MBB,
+                           MachineBasicBlock *&TBB,
+                           MachineBasicBlock *&FBB,
+                           SmallVectorImpl< MachineOperand > &Cond,
+                           bool AllowModify=false) const override;
+
         // Used by the VLIW Scheduler.
         DFAPacketizer* CreateTargetScheduleState(const TargetSubtargetInfo &STI) const;
     };

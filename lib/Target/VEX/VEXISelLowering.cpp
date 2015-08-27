@@ -121,7 +121,10 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     
     setOperationAction(ISD::MUL, MVT::i16, Custom);
     setOperationAction(ISD::MUL, MVT::i32, Custom);
-    
+
+    setOperationAction(ISD::ADDC, MVT::i32, Expand);
+    setOperationAction(ISD::SUBC, MVT::i32, Expand);
+
 //    setOperationAction(ISD::SDIV, MVT::i32, Expand);
 //    setOperationAction(ISD::SDIVREM, MVT::i32, Expand);
     
@@ -136,6 +139,12 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     setOperationAction(ISD::ROTL,  MVT::i32, Expand);
     setOperationAction(ISD::ROTR,  MVT::i32, Expand);
     //setOperationAction(ISD::SETCC, MVT::i32, Custom);
+
+    // Lower ADDE and ADDC
+    setOperationAction(ISD::ADDE, MVT::i32, Custom);
+    setOperationAction(ISD::UMUL_LOHI, MVT::i32, Expand);
+    setOperationAction(ISD::SMUL_LOHI, MVT::i32, Expand);
+    //setOperationAction(ISD::ADDC, MVT::i32, Custom);
     
     setOperationAction(ISD::GlobalAddress, MVT::i8, Promote);
     setOperationAction(ISD::GlobalAddress, MVT::i16, Promote);
@@ -162,6 +171,8 @@ SDValue VEXTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) const {
         case ISD::ExternalSymbol:       return LowerExternalSymbol(Op, DAG);
         case ISD::Constant:             return LowerConstant(Op, DAG);
         case ISD::MUL:                  return LowerMUL(Op, DAG);
+        case ISD::ADDE:
+        case ISD::ADDC:                 return LowerADDWithFlags(Op, DAG);
 //        case ISD::SETCC:                return LowerSETCC(Op, DAG);
         default:
             break;
@@ -623,15 +634,43 @@ SDValue VEXTargetLowering::LowerConstant(SDValue Op, SelectionDAG &DAG) const {
 //    return DAG.getNode(Op.getOpcode(), dl, MVT::i1, lhs, rhs, cond);
 //}
 
+
+// We should lower ADDE and ADDC instructions to ADDCG.
+SDValue VEXTargetLowering::LowerADDWithFlags(SDValue Op, SelectionDAG &DAG) const {
+
+    DEBUG(errs() << "Legalizing ADDE or ADDC instruction\n");
+
+    SDLoc dl(Op);
+    MachineFunction &MF = DAG.getMachineFunction();
+    MachineRegisterInfo &MRI = MF.getRegInfo();
+
+    bool CinFlag = Op.getOpcode() == ISD::ADDE ? true : false;
+
+    SDValue lhs = Op.getOperand(0);
+    SDValue rhs = Op.getOperand(1);
+    SDVTList VTs = DAG.getVTList(Op.getValueType(), MVT::i32);
+
+    if (CinFlag) {
+        DEBUG(errs() << "ADDE instruction\n");
+        return DAG.getNode(VEXISD::ADDCG, dl, VTs, lhs, rhs, Op.getOperand(2));
+    } else {
+        DEBUG(errs() << "ADDC instruction\n");
+        unsigned VReg = MRI.createVirtualRegister(&VEX::BrRegsRegClass);
+        SDValue Op3 = DAG.getCopyFromReg(Op, dl, VReg, MVT::i1);
+        return DAG.getNode(VEX::ADDCG, dl, VTs, lhs, rhs, Op3);
+    }
+
+
+}
+
 SDValue VEXTargetLowering::LowerMUL(SDValue Op, SelectionDAG &DAG) const {
     
     SDLoc dl(Op);
-    
+
     SDValue lhs = Op.getOperand(0);
     SDValue rhs = Op.getOperand(1);
-    
     unsigned Opc1, Opc2;
-    
+
     EVT ValueType = Op.getValueType();
     
     // TODO: Do we need to change this?
@@ -639,8 +678,7 @@ SDValue VEXTargetLowering::LowerMUL(SDValue Op, SelectionDAG &DAG) const {
         Opc1 = VEXISD::MPYLU;
         Opc2 = VEXISD::MPYHS;
     }else{
-        Opc1 = VEXISD::MPYLU;
-        Opc2 = VEXISD::MPYHS;
+        return DAG.getNode(VEXISD::MPYLL, dl, ValueType, lhs, rhs);
     }
 
     SDValue FirstPart = DAG.getNode(Opc1, dl, ValueType, lhs, rhs);
