@@ -68,7 +68,7 @@ int matrix_mul(){
 
 	return 0;
 }
-
+char fad[4] = "asa ";
 int main(void)
 {
 	int i, j;
@@ -78,8 +78,10 @@ int main(void)
 	{
 		for (j = 0; j < 10; j++)
 		{
-			if (c[i][j] != result[i][j])
-                return 100*i+j;
+			if (c[i][j] != result[i][j]){
+				printf("666\n");        	        
+				return 666;
+			}
 		}
     }
 	printf("-1");
