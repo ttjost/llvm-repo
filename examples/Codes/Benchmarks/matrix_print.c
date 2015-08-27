@@ -68,7 +68,6 @@ int matrix_mul(){
 
 	return 0;
 }
-char fad[4] = "asa ";
 int main(void)
 {
 	int i, j;
