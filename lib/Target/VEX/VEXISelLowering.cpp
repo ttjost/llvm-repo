@@ -122,8 +122,8 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     setOperationAction(ISD::MUL, MVT::i16, Custom);
     setOperationAction(ISD::MUL, MVT::i32, Custom);
 
-    setOperationAction(ISD::ADDC, MVT::i32, Expand);
-    setOperationAction(ISD::SUBC, MVT::i32, Expand);
+//    setOperationAction(ISD::ADDC, MVT::i32, Expand);
+//    setOperationAction(ISD::SUBC, MVT::i32, Expand);
 
 //    setOperationAction(ISD::SDIV, MVT::i32, Expand);
 //    setOperationAction(ISD::SDIVREM, MVT::i32, Expand);
@@ -142,9 +142,9 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
 
     // Lower ADDE and ADDC
     setOperationAction(ISD::ADDE, MVT::i32, Custom);
+    setOperationAction(ISD::ADDC, MVT::i32, Custom);
     setOperationAction(ISD::UMUL_LOHI, MVT::i32, Expand);
     setOperationAction(ISD::SMUL_LOHI, MVT::i32, Expand);
-    //setOperationAction(ISD::ADDC, MVT::i32, Custom);
     
     setOperationAction(ISD::GlobalAddress, MVT::i8, Promote);
     setOperationAction(ISD::GlobalAddress, MVT::i16, Promote);
@@ -648,16 +648,17 @@ SDValue VEXTargetLowering::LowerADDWithFlags(SDValue Op, SelectionDAG &DAG) cons
 
     SDValue lhs = Op.getOperand(0);
     SDValue rhs = Op.getOperand(1);
-    SDVTList VTs = DAG.getVTList(Op.getValueType(), MVT::i32);
+
 
     if (CinFlag) {
+        SDVTList VTs = DAG.getVTList(Op.getValueType(), MVT::i32, MVT::i32);
         DEBUG(errs() << "ADDE instruction\n");
         return DAG.getNode(VEXISD::ADDCG, dl, VTs, lhs, rhs, Op.getOperand(2));
     } else {
+        SDVTList VTs = DAG.getVTList(Op.getValueType(), MVT::i1);
         DEBUG(errs() << "ADDC instruction\n");
-        unsigned VReg = MRI.createVirtualRegister(&VEX::BrRegsRegClass);
-        SDValue Op3 = DAG.getCopyFromReg(Op, dl, VReg, MVT::i1);
-        return DAG.getNode(VEX::ADDCG, dl, VTs, lhs, rhs, Op3);
+        SDValue Op3 = DAG.getConstant(0, MVT::i1);
+        return DAG.getNode(VEXISD::ADDCG, dl, VTs, lhs, rhs, Op3);
     }
 
 
@@ -675,9 +676,11 @@ SDValue VEXTargetLowering::LowerMUL(SDValue Op, SelectionDAG &DAG) const {
     
     // TODO: Do we need to change this?
     if (ValueType == MVT::i32){
+        DEBUG(errs() << "ISD::MUL with MVT::i32");
         Opc1 = VEXISD::MPYLU;
         Opc2 = VEXISD::MPYHS;
     }else{
+        DEBUG(errs() << "ISD::MUL with MVT::i16");
         return DAG.getNode(VEXISD::MPYLL, dl, ValueType, lhs, rhs);
     }
 
