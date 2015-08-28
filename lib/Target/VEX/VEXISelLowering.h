@@ -124,6 +124,7 @@ private:
     SDValue LowerConstant(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerSETCC(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerMUL(SDValue Op, SelectionDAG &DAG) const;
+    SDValue LowerADDWithFlags(SDValue Op, SelectionDAG &DAG) const;
 
     SDValue
     LowerCall(CallLoweringInfo &CLI,
