@@ -94,7 +94,7 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     //  added, this allows us to compute derived properties we expose.
     computeRegisterProperties(STI.getRegisterInfo());
     
-    //setOperationAction(ISD::SIGN_EXTEND_INREG, MVT::i1,   Expand);
+    setOperationAction(ISD::SIGN_EXTEND_INREG, MVT::i1,   Expand);
     
     // Load extented operations for i1 types must be promoted
     for (MVT VT : MVT::integer_valuetypes()) {
