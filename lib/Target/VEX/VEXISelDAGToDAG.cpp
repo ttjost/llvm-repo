@@ -150,19 +150,17 @@ std::pair<bool, SDNode*> VEXDAGToDAGISel::selectNode(SDNode *Node){
 //                  MultOpc = VEX::MPYLU
             }
             break;
-            case ISD::ADDE: {
-                DEBUG(errs() << "Selecting ADDC or ADDE");
-                SDLoc dl(Node);
-                unsigned Opcode = VEXISD::ADDCG;
 
-                SDValue Op0 = Node->getOperand(0);
-                SDValue Op1 = Node->getOperand(1);
-                SDValue Op2 = Node->getOperand(2);
-
-                SDValue Result = CurDAG->getNode(Opcode, dl,
-                                                 CurDAG->getVTList(MVT::i32, MVT::i1),
-                                                 Op0, Op1, Op2);
-                return std::make_pair(true, Result.getNode());
+            case ISD::Constant: {
+                if (Node->getValueType(0) != MVT::i1){
+                    DEBUG(errs() << "NOT i1 constant\n");
+                    break;
+                } else {
+                    DEBUG(errs() << "This is a i1 constant\n");
+                    SDValue Reg0 = CurDAG->getRegister(VEX::Reg0, MVT::i32);
+                    SDNode* Result = CurDAG->SelectNodeTo(Node, VEX::MTB, Node->getValueType(0), Reg0);
+                    return std::make_pair(true, Result);
+                }
             }
         default: break;
     }

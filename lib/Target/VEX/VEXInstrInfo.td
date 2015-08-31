@@ -80,12 +80,12 @@ def brtarget : Operand<OtherVT> {
 def SDT_VEXWrapper : SDTypeProfile <1, 1, [SDTCisSameAs<0, 1>,
                                            SDTCisPtrTy<0>]>;
 
-def SDT_VEXTWORESULT : SDTypeProfile<2, 3, [SDTCisVT<0, i32>,
-                                            SDTCisVT<1, i1>,
-                                            SDTCisVT<2, i32>,
-                                            SDTCisSameAs<1,4>,
-                                            SDTCisSameAs<0,2>,
-                                            SDTCisSameAs<0,3>]>;
+def SDT_VEXTWORESULT : SDTypeProfile<2, 3,
+                                     [SDTCisSameAs<0, 2>,
+                                     SDTCisSameAs<0, 3>,
+                                     SDTCisInt<0>,
+                                     SDTCisVT<1, i1>,
+                                     SDTCisVT<4, i1>]>;
 
 def SDT_VEXPseudoCall         : SDTypeProfile<0, -1, [SDTCisVT<0, iPTR>]>;
 def SDT_VEXCallSeqStart : SDCallSeqStart<[SDTCisVT<0, i32>]>;
