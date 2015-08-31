@@ -61,6 +61,9 @@ const char *VEXTargetLowering::getTargetNodeName(unsigned Opcode) const {
         case VEXISD::MIN:           return "VEXISD::MIN";
         case VEXISD::MINU:          return "VEXISD::MINU";
             
+        case VEXISD::ADDCG:         return "VEXISD::ADDCG";
+        case VEXISD::DIVS:          return "VEXISD::DIVS";
+            
         case VEXISD::MPYLL:         return "VEXISD::MPYLL";
         case VEXISD::MPYLLU:        return "VEXISD::MPYLLU";
         case VEXISD::MPYLH:         return "VEXISD::MPYLH";
@@ -103,7 +106,7 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
         setLoadExtAction(ISD::SEXTLOAD, VT, MVT::i1,  Promote);
     }
     
-    AddPromotedToType(ISD::SETCC, MVT::i1, MVT::i32);
+    //AddPromotedToType(ISD::SETCC, MVT::i1, MVT::i32);
     
 //    setOperationAction(ISD::TargetConstant, MVT::i1, Promote);
 
@@ -143,8 +146,27 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     // Lower ADDE and ADDC
     setOperationAction(ISD::ADDE, MVT::i32, Custom);
     setOperationAction(ISD::ADDC, MVT::i32, Custom);
-    setOperationAction(ISD::UMUL_LOHI, MVT::i32, Expand);
+    setOperationAction(ISD::SUBE, MVT::i32, Custom);
+    setOperationAction(ISD::SUBC, MVT::i32, Custom);
+    
+    // 64-bit oprations
+    setOperationAction(ISD::ADD, MVT::i32, Custom);
+    setOperationAction(ISD::SUB, MVT::i32, Custom);
+    setOperationAction(ISD::OR, MVT::i32, Custom);
+    setOperationAction(ISD::AND, MVT::i32, Custom);
+    setOperationAction(ISD::XOR, MVT::i32, Custom);
+    setOperationAction(ISD::SRA, MVT::i32, Custom);
+    setOperationAction(ISD::SRL, MVT::i32, Custom);
+    
+    
+    // Lower
     setOperationAction(ISD::SMUL_LOHI, MVT::i32, Expand);
+    setOperationAction(ISD::UMUL_LOHI, MVT::i32, Expand);
+    
+    setOperationAction(ISD::MULHU, MVT::i32, Custom);
+    setOperationAction(ISD::MULHS, MVT::i32, Custom);
+    setOperationAction(ISD::UMULO, MVT::i32, Custom);
+    setOperationAction(ISD::SMULO, MVT::i32, Custom);
     
     setOperationAction(ISD::GlobalAddress, MVT::i8, Promote);
     setOperationAction(ISD::GlobalAddress, MVT::i16, Promote);
@@ -169,10 +191,16 @@ SDValue VEXTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) const {
     switch (Op.getOpcode()) {
         case ISD::GlobalAddress:        return LowerGlobalAddress(Op, DAG);
         case ISD::ExternalSymbol:       return LowerExternalSymbol(Op, DAG);
-        case ISD::Constant:             return LowerConstant(Op, DAG);
+        //case ISD::Constant:             return LowerConstant(Op, DAG);
+        case ISD::UMULO:
+        case ISD::SMULO:
+        case ISD::MULHS:
+        case ISD::MULHU:
         case ISD::MUL:                  return LowerMUL(Op, DAG);
+        case ISD::SUBE:
+        case ISD::SUBC:
         case ISD::ADDE:
-        case ISD::ADDC:                 return LowerADDWithFlags(Op, DAG);
+        case ISD::ADDC:                 return LowerADDSUBWithFlags(Op, DAG);
 //        case ISD::SETCC:                return LowerSETCC(Op, DAG);
         default:
             break;
@@ -636,34 +664,51 @@ SDValue VEXTargetLowering::LowerConstant(SDValue Op, SelectionDAG &DAG) const {
 
 
 // We should lower ADDE and ADDC instructions to ADDCG.
-SDValue VEXTargetLowering::LowerADDWithFlags(SDValue Op, SelectionDAG &DAG) const {
+SDValue VEXTargetLowering::LowerADDSUBWithFlags(SDValue Op, SelectionDAG &DAG) const {
 
     DEBUG(errs() << "Legalizing ADDE or ADDC instruction\n");
 
     SDLoc dl(Op);
-    MachineFunction &MF = DAG.getMachineFunction();
-    MachineRegisterInfo &MRI = MF.getRegInfo();
 
-    bool CinFlag = Op.getOpcode() == ISD::ADDE ? true : false;
-
+    bool CinFlag = Op.getOpcode() == ISD::ADDE ||  Op.getOpcode() == ISD::SUBE ? true : false;
+    bool isSub = Op.getOpcode() == ISD::SUBC ||  Op.getOpcode() == ISD::SUBE ? true : false;
+    
     SDValue lhs = Op.getOperand(0);
-    SDValue rhs = Op.getOperand(1);
-
-
+    SDValue rhs;
+    SDVTList VTs = DAG.getVTList(Op.getValueType(), MVT::Glue);
+    
     if (CinFlag) {
-        SDVTList VTs = DAG.getVTList(Op.getValueType(), MVT::i32, MVT::i32);
-        DEBUG(errs() << "ADDE instruction\n");
-        return DAG.getNode(VEXISD::ADDCG, dl, VTs, lhs, rhs, Op.getOperand(2));
+
+        if (isSub) {
+            DEBUG(errs() << "SUBE instruction\n");
+            SDValue ConstantZero = DAG.getConstant(0, MVT::i32);
+            rhs = DAG.getNode(ISD::SUB, dl, MVT::i32, ConstantZero, Op.getOperand(1));
+        } else {
+            DEBUG(errs() << "ADDE instruction\n");
+            rhs = Op.getOperand(1);
+        }
+        SDValue Op3 = Op.getOperand(2);
+        return DAG.getNode(VEXISD::ADDCG, dl, VTs, lhs, rhs, Op3);
     } else {
-        SDVTList VTs = DAG.getVTList(Op.getValueType(), MVT::i1);
-        DEBUG(errs() << "ADDC instruction\n");
+        
+        if (isSub) {
+            DEBUG(errs() << "SUBC instruction\n");
+            SDValue ConstantZero = DAG.getConstant(0, MVT::i32);
+            rhs = DAG.getNode(ISD::SUB, dl, MVT::i32, ConstantZero, Op.getOperand(1));
+
+        } else {
+            DEBUG(errs() << "ADDC instruction\n");
+            rhs = Op.getOperand(1);
+        }
         SDValue Op3 = DAG.getConstant(0, MVT::i1);
         return DAG.getNode(VEXISD::ADDCG, dl, VTs, lhs, rhs, Op3);
     }
-
-
 }
 
+// FIXME: Can we use this function to generate code for both
+// half and full mult instructions?
+// VEX does not natively support 64 bit instructions, so we should
+// not worry about the upper part of the result.
 SDValue VEXTargetLowering::LowerMUL(SDValue Op, SelectionDAG &DAG) const {
     
     SDLoc dl(Op);
@@ -671,6 +716,8 @@ SDValue VEXTargetLowering::LowerMUL(SDValue Op, SelectionDAG &DAG) const {
     SDValue lhs = Op.getOperand(0);
     SDValue rhs = Op.getOperand(1);
     unsigned Opc1, Opc2;
+    
+    bool isHalfMult = Op.getOpcode() == ISD::MUL ? true : false;
 
     EVT ValueType = Op.getValueType();
     
@@ -689,6 +736,7 @@ SDValue VEXTargetLowering::LowerMUL(SDValue Op, SelectionDAG &DAG) const {
     
     return DAG.getNode(ISD::ADD, dl, ValueType, FirstPart, SecondPart);
 }
+
 
 SDValue CombineMinMax(SDLoc DL, EVT VT, SDValue lhs, SDValue rhs,
                       SDValue True, SDValue False,
