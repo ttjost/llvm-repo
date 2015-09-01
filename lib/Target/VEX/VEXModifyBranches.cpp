@@ -75,6 +75,7 @@ public:
                                 *static_cast<const VEXTargetMachine &>(TM).getSubtargetImpl();
                             const VEXInstrInfo *TII =
                               static_cast<const VEXInstrInfo *>(Subtarget.getInstrInfo());
+                            
                             if (BranchInstr->getOpcode() == VEX::BR && BranchInstr->getOperand(1).getMBB() == OneAfterIteratorBB) {
                                 DEBUG(errs() << "We can replace VEX::BR with VEX::BRF!\n");
                                 
@@ -100,7 +101,6 @@ public:
                 }
             }
         }
-        return true;
     }
 
 };
