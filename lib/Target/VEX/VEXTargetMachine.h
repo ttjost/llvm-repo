@@ -41,9 +41,9 @@ public:
                       CodeGenOpt::Level OL, bool isNewScheduling);
     ~VEXTargetMachine() override;
 
-//    const VEXSubtarget *getSubtargetImpl() const {
-//        return &Subtarget;
-//    }
+    const VEXSubtarget *getSubtargetImpl() const {
+        return &Subtarget;
+    }
     
     const VEXSubtarget *getSubtargetImpl(const Function &F) const override{
         return &Subtarget;

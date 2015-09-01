@@ -15,6 +15,7 @@
 #include "VEXTargetMachine.h"
 #include "VEX.h"
 #include "VEXVLIWPacketizer.cpp"
+#include "VEXModifyBranches.cpp"
 //#include "VEXSubtarget.h"
 //#include "VEXTargetObjectFile.h"
 #include "llvm/IR/PassManager.h"
@@ -123,9 +124,9 @@ namespace {
             return getTM<VEXTargetMachine>();
         }
         
-//        const VEXSubtarget &getVEXSubtarget() const {
-//            return *getVEXTargetMachine().getSubtargetImpl();
-//        }
+        const VEXSubtarget &getVEXSubtarget() const {
+            return *getVEXTargetMachine().getSubtargetImpl();
+        }
     
         bool addInstSelector() override;
         void addPreEmitPass() override;
@@ -139,6 +140,7 @@ bool VEXPassConfig::addInstSelector() {
 
 void VEXPassConfig::addPreEmitPass() {
     DEBUG(errs() << "addPreEmitPass " << EnableVLIWScheduling << "\n");
+    addPass(createVEXModifyBranchesPass(getVEXTargetMachine()));
     //if (EnableVLIWScheduling)
         addPass(createVEXPacketizer(EnableVLIWScheduling), false);
 }
