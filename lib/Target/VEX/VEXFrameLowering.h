@@ -23,14 +23,21 @@ namespace llvm {
 class VEXSubtarget;
 
 class VEXFrameLowering : public TargetFrameLowering {
+    
+    unsigned ScratchArea;
 
 protected:
 
 public:
     explicit VEXFrameLowering()
-    :   TargetFrameLowering(StackGrowsDown,8,0,8 /**sti.stackAlignment(), 0, *sti.stackAlignment()*/)
+    :   ScratchArea(16), TargetFrameLowering(StackGrowsDown, 16, 0, 16)
     {
     }
+    
+    // This method returns the number of bytes that is reserved for the Scratch Area.
+    // A 16-byte region provided as scratch storage for procedures called by the current procedure
+    // so that each procedure may use the 16 bytes at the top of this own frame as scratch memory.
+    unsigned getScratchArea() const { return ScratchArea; }
  
     /// emitProlog/emitEpilog - These methods insert prolog and epilog code into
     /// the function.
@@ -52,6 +59,9 @@ public:
     
     bool hasFP(const MachineFunction &MF) const override;
     bool hasReservedCallFrame(const MachineFunction &MF) const override;
+    
+    int getFrameIndexOffset(const MachineFunction &MF,
+                                              int FI) const override;
 
     void processFunctionBeforeCalleeSavedScan(MachineFunction &MF,
                                                RegScavenger *RS) const override;

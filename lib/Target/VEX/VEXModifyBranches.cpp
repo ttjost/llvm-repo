@@ -111,5 +111,6 @@ FunctionPass *llvm::createVEXModifyBranchesPass(VEXTargetMachine &TM) {
     return new ModifyBranchesPass(TM);
 }
 
+
 char ModifyBranchesPass::ID = 0;
 //static RegisterPass<ModifyBranchesPass> X("modifybranches", "Modify Branches in VEX Target");

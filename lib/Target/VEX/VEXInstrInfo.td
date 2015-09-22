@@ -21,21 +21,21 @@ include "VEXInstrFormats.td"
 def imm32   : PatLeaf<(imm), [{ return isInt<32>(N->getSExtValue()); }]>;
 def imm32Op : Operand<i32>;
 
-def immZExt5 : PatLeaf<(imm32), [{
-    return N->getZExtValue() == ((N->getZExtValue()) & 0x1f) ;
-}]>;
+//def immZExt5 : PatLeaf<(imm32), [{
+//    return N->getZExtValue() == ((N->getZExtValue()) & 0x1f) ;
+//}]>;
 
-def imm5Op  : Operand<i32>;
+//def imm5Op  : Operand<i32>;
 
-// Node immediate is zero (e.g. insve.d)
-def imms : PatLeaf<(imm), [{ return isInt<1>(N->getSExtValue()); }]>;
-def immSExt8  : PatLeaf<(imm), [{ return isInt<8>(N->getSExtValue()); }]>;
-def immSExt16  : PatLeaf<(imm), [{ return isInt<16>(N->getSExtValue()); }]>;
+//// Node immediate is zero (e.g. insve.d)
+//def imms : PatLeaf<(imm), [{ return isInt<1>(N->getSExtValue()); }]>;
+//def immSExt8  : PatLeaf<(imm), [{ return isInt<8>(N->getSExtValue()); }]>;
+//def immSExt16  : PatLeaf<(imm), [{ return isInt<16>(N->getSExtValue()); }]>;
 
-// Node immediate is zero (e.g. insve.d)
-def immz : PatLeaf<(imm), [{ return isInt<1>(N->getZExtValue()); }]>;
-def immZExt8  : PatLeaf<(imm), [{ return isInt<8>(N->getZExtValue()); }]>;
-def immZExt16  : PatLeaf<(imm), [{ return isInt<16>(N->getZExtValue()); }]>;
+//// Node immediate is zero (e.g. insve.d)
+//def immz : PatLeaf<(imm), [{ return isInt<1>(N->getZExtValue()); }]>;
+//def immZExt8  : PatLeaf<(imm), [{ return isInt<8>(N->getZExtValue()); }]>;
+//def immZExt16  : PatLeaf<(imm), [{ return isInt<16>(N->getZExtValue()); }]>;
 
 def ADDR : ComplexPattern<iPTR, 2, "SelectAddr", [frameindex], []>;
 
@@ -204,13 +204,6 @@ let isCompare = 1 in {
 
 multiclass CMPInstr<string OpcStr, bits<8> OpVal, PatFrag cond_op, InstrItinClass Itin>{
 
-def Regr : InstVEX<(outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
-                    !strconcat(OpcStr, " $dst = $s1, $s2"),
-                    [(set GPRegs:$dst, (cond_op GPRegs:$s1, GPRegs:$s2))], Itin>;
-def Regi : InstVEX<(outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
-                    !strconcat(OpcStr, " $dst = $s1, $s2"),
-                    [(set GPRegs:$dst, (cond_op GPRegs:$s1, imm32:$s2))], Itin>;
-
 def BRegr: InstVEX<(outs BrRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                     !strconcat(OpcStr, " $dst = $s1, $s2"),
                     [(set BrRegs:$dst, (cond_op GPRegs:$s1, GPRegs:$s2))], Itin>;
@@ -218,6 +211,14 @@ def BRegr: InstVEX<(outs BrRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
 def BRegi : InstVEX<(outs BrRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                     !strconcat(OpcStr, " $dst = $s1, $s2"),
                     [(set BrRegs:$dst, (cond_op GPRegs:$s1, imm32:$s2))], Itin>;
+
+def Regr : InstVEX<(outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
+                    !strconcat(OpcStr, " $dst = $s1, $s2"),
+                    [(set GPRegs:$dst, (cond_op GPRegs:$s1, GPRegs:$s2))], Itin>;
+def Regi : InstVEX<(outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
+                    !strconcat(OpcStr, " $dst = $s1, $s2"),
+                    [(set GPRegs:$dst, (cond_op GPRegs:$s1, imm32:$s2))], Itin>;
+
 }
 }
 
@@ -463,7 +464,7 @@ defm SLCT   : SelectInstr<0b00000000, IIAlu>;
 
 // Create Pattern to "not" instruction
 def : Pat<(not GPRegs:$in),
-          (XORi GPRegs:$in, 1)>;
+          (XORi GPRegs:$in, -1)>;
 
 //def : Pat<(zext8 GPRegs:$s1),(SXTB GPRegs:$s1)>;
 //def : Pat<(i32 (zext GPRegs:$s1)),(ZXTH GPRegs:$s1)>;
@@ -614,8 +615,8 @@ def : Pat<(add (shl GPRegs:$lhs, (i32 4)), i32:$rhs), (SH4ADDi GPRegs:$lhs, i32:
 // truncs
 def : Pat<(i1 (trunc GPRegs:$src)), (MTB GPRegs:$src)>;
 
-def : Pat<(extloadi8 ADDR:$addr), (LDBU ADDR:$addr)>;
-def : Pat<(extloadi16 ADDR:$addr), (LDBU ADDR:$addr)>;
+//def : Pat<(extloadi8 ADDR:$addr), (LDBU ADDR:$addr)>;
+//def : Pat<(extloadi16 ADDR:$addr), (LDBU ADDR:$addr)>;
 
 def : Pat<(i32 (VEXWrapper tglobaladdr:$dst)), (MOVi tglobaladdr:$dst)>;
 def : Pat<(i32 (VEXWrapper texternalsym:$dst)), (MOVi texternalsym:$dst)>;

@@ -27,7 +27,7 @@ foreach I = 0-63 in
   def Reg#I : VexGPR<I, "r0."#I>, DwarfRegNum<[I]>;
 
 // Branch Registers
-foreach I = 0-7 in
+foreach I = 0-31 in
   def BrReg#I : Br<I, "b0."#I >, DwarfRegNum<[!add(I, 65)]>;
   
 // Define Link Register
@@ -42,6 +42,6 @@ def Lr    :  VexGPR<64, "l0.0">, DwarfRegNum<[64]>;
 // using the integer instructions.
 def GPRegs : RegisterClass<"VEX", [i32], 32, (add Lr, (sequence "Reg%u", 0, 63))>;
                             
-def BrRegs  : RegisterClass<"VEX", [i1], 32, (sequence "BrReg%u", 0, 7)>;
+def BrRegs  : RegisterClass<"VEX", [i1], 32, (sequence "BrReg%u", 0, 31)>;
                            
 //def LrReg   : RegisterClass<"VEX", [i32], 32, (add Lr)>;

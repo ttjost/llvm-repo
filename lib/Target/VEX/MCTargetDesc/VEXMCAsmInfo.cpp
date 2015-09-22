@@ -31,6 +31,8 @@ VEXMCAsmInfo::VEXMCAsmInfo(StringRef TT) {
     ZeroDirective               = "\t.skip\t";
     AscizDirective              = nullptr;
     
+    IsLittleEndian              = false;
+    
     // AUTHOR: Tiago Trevisan Jost
     // We need to set this to nullptr so we can generate correct code for VEX.
     // I added some lines of code in MCAsmStreamer::EmitBytes where

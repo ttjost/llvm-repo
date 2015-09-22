@@ -101,6 +101,16 @@ bool VEXFrameLowering::hasReservedCallFrame(const MachineFunction &MF) const {
     return !MF.getFrameInfo()->hasVarSizedObjects();
 }
 
+/// getFrameIndexOffset - Returns the displacement from the frame register to
+/// the stack frame of the specified index. This is the default implementation
+/// which is overridden for some targets.
+int VEXFrameLowering::getFrameIndexOffset(const MachineFunction &MF,
+                                             int FI) const {
+    const MachineFrameInfo *MFI = MF.getFrameInfo();
+    return MFI->getObjectOffset(FI) + MFI->getStackSize() -
+    getOffsetOfLocalArea() + MFI->getOffsetAdjustment() + getScratchArea();
+}
+
 void VEXFrameLowering::emitPrologue(MachineFunction &MF) const {
     DEBUG(errs() << "EmitPrologue\n");
     
@@ -121,9 +131,9 @@ void VEXFrameLowering::emitPrologue(MachineFunction &MF) const {
     uint64_t StackSize = MFI->getStackSize();
     
     // No need to allocate space on the stack
-    if (StackSize == 0 && !MFI->adjustsStack()) return;
+    if (StackSize == 0 && !MFI->adjustsStack() && !MFI->hasCalls()) return;
     
-    DEBUG(errs() << "StackSize is not ZERO: " << StackSize << "   " << MF.getName() << "\n");
+    DEBUG(errs() << "StackSize is not 0: " << StackSize << "   " << MF.getName() << "\n");
 
     uint64_t NumBytes = 0;
     
@@ -131,6 +141,7 @@ void VEXFrameLowering::emitPrologue(MachineFunction &MF) const {
     const MCRegisterInfo *MRI = MMI.getContext().getRegisterInfo();
     
     // Adjust Stack
+    StackSize = RoundUpToAlignment(StackSize + getScratchArea(), 32);
     TII.adjustStackPtr(VEXFI, VEX::Reg1, -StackSize, MBB, MBBI);
     
     const std::vector<CalleeSavedInfo> &CSI = MFI->getCalleeSavedInfo();

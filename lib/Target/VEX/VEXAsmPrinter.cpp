@@ -175,9 +175,9 @@ const char *VEXAsmPrinter::getCurrentABIString() const {
 // main:
 void VEXAsmPrinter::EmitFunctionEntryLabel() {
 //    if(OutStreamer.hasRawTextSupport())
-    unsigned stackSize = MF->getFrameInfo()->getStackSize();
+    unsigned StackSize = MF->getFrameInfo()->getStackSize() == 0 ? 0 : RoundUpToAlignment(MF->getFrameInfo()->getStackSize() + 16, 32);
     OutStreamer.EmitRawText(".section .text \n.proc \n.entry caller, sp=$r0.1, rl=$l0.0, asize=-" +
-                            Twine(stackSize) +
+                            Twine(StackSize) +
                             ", arg()");
     OutStreamer.EmitLabel(CurrentFnSym);
 }

@@ -105,7 +105,7 @@ eliminateFrameIndex(MachineBasicBlock::iterator II, int SPAdj,
     //int Offset = MF.getFrameInfo()->getObjectOffset(FrameIndex);
 
     // Skip the saved PC
-//    Offset += 4;
+    //Offset += 4;
 
 //    if(TFI->hasFP(MF))
 //        Offset += MF.getFrameInfo()->getStackSize();

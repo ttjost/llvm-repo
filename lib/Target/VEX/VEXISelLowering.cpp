@@ -86,7 +86,7 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
 : TargetLowering(TM), Subtarget(STI){
     //- Set .align 2
     // It will emit .align 2 later
-      setMinFunctionAlignment(2);
+      setMinFunctionAlignment(1);
 
     setBooleanContents(ZeroOrOneBooleanContent);
     
@@ -105,10 +105,6 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
         setLoadExtAction(ISD::ZEXTLOAD, VT, MVT::i1,  Promote);
         setLoadExtAction(ISD::SEXTLOAD, VT, MVT::i1,  Promote);
     }
-    
-    //AddPromotedToType(ISD::SETCC, MVT::i1, MVT::i32);
-    
-//    setOperationAction(ISD::TargetConstant, MVT::i1, Promote);
 
     // See LowerConstant to see the reason for customizing i1 ISD::Constant
     setOperationAction(ISD::Constant, MVT::i1, Promote);
@@ -131,6 +127,8 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
 //    setOperationAction(ISD::SDIV, MVT::i32, Expand);
 //    setOperationAction(ISD::SDIVREM, MVT::i32, Expand);
     
+    
+    setOperationAction(ISD::ADD, MVT::i1, Promote);
     setOperationAction(ISD::XOR, MVT::i1, Promote);
     setOperationAction(ISD::OR, MVT::i1, Promote);
     setOperationAction(ISD::AND, MVT::i1, Promote);
@@ -149,14 +147,14 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     setOperationAction(ISD::SUBE, MVT::i32, Custom);
     setOperationAction(ISD::SUBC, MVT::i32, Custom);
     
-    // 64-bit oprations
-    setOperationAction(ISD::ADD, MVT::i32, Custom);
-    setOperationAction(ISD::SUB, MVT::i32, Custom);
-    setOperationAction(ISD::OR, MVT::i32, Custom);
-    setOperationAction(ISD::AND, MVT::i32, Custom);
-    setOperationAction(ISD::XOR, MVT::i32, Custom);
-    setOperationAction(ISD::SRA, MVT::i32, Custom);
-    setOperationAction(ISD::SRL, MVT::i32, Custom);
+//    // 64-bit oprations
+//    setOperationAction(ISD::ADD, MVT::i32, Custom);
+//    setOperationAction(ISD::SUB, MVT::i32, Custom);
+//    setOperationAction(ISD::OR, MVT::i32, Custom);
+//    setOperationAction(ISD::AND, MVT::i32, Custom);
+//    setOperationAction(ISD::XOR, MVT::i32, Custom);
+//    setOperationAction(ISD::SRA, MVT::i32, Custom);
+//    setOperationAction(ISD::SRL, MVT::i32, Custom);
     
     
     // Lower
@@ -181,7 +179,7 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     //setStackPointerRegisterToSaveRestore(VEX::Reg1);
 
     // This should be enable when we implement the VLIW Packetizer
-    setSchedulingPreference(Sched::VLIW);
+    //setSchedulingPreference(Sched::VLIW);
     
 }
 
@@ -637,17 +635,17 @@ SDValue VEXTargetLowering::LowerExternalSymbol(SDValue Op, SelectionDAG &DAG) co
 // For some reason, We need to handle MVT::i1 types and promote them manually.
 // Not sure why this is not working automatically during tblgen phase, since
 // it should automatically promote i1 to higher/handlable types.
-SDValue VEXTargetLowering::LowerConstant(SDValue Op, SelectionDAG &DAG) const {
-    
-    SDLoc dl(Op);
-    EVT ValueType = Op.getValueType();
-    uint64_t Val = cast<ConstantSDNode>(Op)->getZExtValue();
-    
-    if (ValueType == MVT::i1){
-        return DAG.getConstant(Val, MVT::i32);
-    }
-    return SDValue();
-}
+//SDValue VEXTargetLowering::LowerConstant(SDValue Op, SelectionDAG &DAG) const {
+//    
+//    SDLoc dl(Op);
+//    EVT ValueType = Op.getValueType();
+//    uint64_t Val = cast<ConstantSDNode>(Op)->getZExtValue();
+//    
+//    if (ValueType == MVT::i1){
+//        return DAG.getConstant(Val, MVT::i32);
+//    }
+//    return SDValue();
+//}
 
 //SDValue VEXTargetLowering::LowerSETCC(SDValue Op, SelectionDAG &DAG) const {
     

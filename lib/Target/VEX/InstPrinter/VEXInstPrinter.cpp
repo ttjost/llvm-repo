@@ -167,7 +167,7 @@ void VEXInstPrinter::printOperand(const MCInst *mi, unsigned OpNo,
         return;
     }
     if(Op.isImm()){
-        O << Op.getImm();
+        O << (int)Op.getImm();
         return;
     }
 

@@ -69,7 +69,7 @@ bool VEXDAGToDAGISel::SelectAddr(SDValue Addr, SDValue &Base, SDValue &Offset) {
         Addr.getOpcode() == ISD::TargetGlobalTLSAddress)
         return false;  // direct calls.
     
-    if (Addr.getOpcode() == ISD::ADD) {
+    if (CurDAG->isBaseWithConstantOffset(Addr)) {
         if (ConstantSDNode *CN = dyn_cast<ConstantSDNode>(Addr.getOperand(1))) {
             if (isInt<13>(CN->getSExtValue())) {
                 if (FrameIndexSDNode *FIN =
@@ -85,8 +85,9 @@ bool VEXDAGToDAGISel::SelectAddr(SDValue Addr, SDValue &Base, SDValue &Offset) {
             }
         }
     }
+    
     Base = Addr;
-    Offset = CurDAG->getTargetConstant(0, MVT::i32);
+    Offset = CurDAG->getTargetConstant(0, Addr.getValueType());
     return true;
 }
 

@@ -15,6 +15,7 @@
 
 #include "VEXTargetMachine.h"
 #include "VEXMachineFunctionInfo.h"
+#include "VEXFrameLowering.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -77,7 +78,10 @@ bool VEXInstrInfo::expandPostRAPseudo(MachineBasicBlock::iterator MI) const {
             return false;
         case VEX::PSEUDO_RET:
             DEBUG(errs() << "\nReplacing PSEUDO_RET\n");
-            BuildMI(MBB, MI, MI->getDebugLoc(), get(VEX::RET)).addReg(VEX::Reg1).addReg(VEX::Reg1).addImm(MF.getFrameInfo()->getStackSize()).addReg(VEX::Lr);
+//            const VEXSubtarget* Subtarget = MF.getSubtarget<VEXSubtarget>();
+//            const VEXFrameLowering* FrameLowering = Subtarget.getFrameLowering<VEXFrameLowering>();
+            int StackSize = MF.getFrameInfo()->getStackSize() == 0 ? 0 : RoundUpToAlignment(MF.getFrameInfo()->getStackSize() + 16, 32);
+            BuildMI(MBB, MI, MI->getDebugLoc(), get(VEX::RET)).addReg(VEX::Reg1).addReg(VEX::Reg1).addImm(StackSize).addReg(VEX::Lr);
             MBB.erase(MI);
             return true;
     }
