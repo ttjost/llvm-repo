@@ -57,6 +57,8 @@ The list of missing that are still missing for VEX Backend can be viewed below:
 	
 	
 "VLIW PACKETIZER"-RELATED ISSUES
+
+(DONE)
 1. When a call instructions is found in the code, we should never schedule the next instruction in the same bundle. MatrixO0 generates code with this condition and we should fix ASAP.
  
 

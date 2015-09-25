@@ -448,6 +448,14 @@ def MFB     : MOV_r<0b00000000,
                     (outs GPRegs:$dst), (ins BrRegs:$s1),
                     "mfb $dst = $s1", [], IIAlu>;
 
+//def MFL     : MOV_r<0b00000000,
+//                    (outs GPRegs:$dst), (ins Lr:$s1),
+//                    "mfl $dst = $s1", [], IIAlu>;
+
+//def MTL     : MOV_r<0b00000000,
+//                   (outs GPRegs:$dst), (ins GPRegs:$s1),
+//                    "mtl $$l0dst = $s1", [], IIAlu>;
+
 // Extend Byte/Half Instructions
 def SXTB    : ExtendInstr<"sxtb", 0b00000000, add, IIAlu>;
 def ZXTB    : ExtendInstr<"zxtb", 0b00000000, add, IIAlu>;
@@ -550,10 +558,12 @@ defm CMPNE  : CMPInstr<"cmpne", 0b01001001, setne, IIAlu>;
 def LDW       : LoadInstr<"ldw", 0b00010000, load_a, IILoad>;
 def STW       : StoreInstr<"stw", 0b00010101, store_a, IIStore>;
 
+def LDHExt    : LoadInstr<"ldh", 0b00010000, extloadi16, IILoad>;
 def LDH       : LoadInstr<"ldh", 0b00010000, sextloadi16, IILoad>;
 def LDHU      : LoadInstr<"ldhu", 0b00010000, zextloadi16, IILoad>;
 def STH       : StoreInstr<"sth", 0b00010101, truncstorei16, IIStore>;
 
+def LDBExt    : LoadInstr<"ldb", 0b00010000, extloadi8, IILoad>;
 def LDB       : LoadInstr<"ldb", 0b00010000, sextloadi8, IILoad>;
 def LDBU      : LoadInstr<"ldbu", 0b00010000, zextloadi8, IILoad>;
 def STB       : StoreInstr<"stb", 0b00010101, truncstorei8, IIStore>;
@@ -620,6 +630,7 @@ def : Pat<(i1 (trunc GPRegs:$src)), (MTB GPRegs:$src)>;
 
 def : Pat<(i32 (VEXWrapper tglobaladdr:$dst)), (MOVi tglobaladdr:$dst)>;
 def : Pat<(i32 (VEXWrapper texternalsym:$dst)), (MOVi texternalsym:$dst)>;
+def : Pat<(i32 (VEXWrapper externalsym:$dst)), (MOVi texternalsym:$dst)>;
 def : Pat<(i32 (VEXWrapper tblockaddress:$dst)), (MOVi tblockaddress:$dst)>;
 
 //def : Pat<(zext BrRegs:$node), (MFB BrRegs:$node)>;

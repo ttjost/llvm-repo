@@ -48,19 +48,32 @@ void VEXInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
     
     // GP Register is Destination
     if (VEX::GPRegsRegClass.contains(DestReg)){
-        if(VEX::BrRegsRegClass.contains(SrcReg)){
-            Opc = VEX::MFB;
-        }else
-            if(VEX::GPRegsRegClass.contains(SrcReg)){
-                Opc = VEX::MOVr;
-        }
+        if (DestReg == 64) {
+//            Opc = VEX::MTL;
+        } else
+            if (SrcReg == 64) {
+//                Opc = VEX::MFL;
+            } else
+                if(VEX::BrRegsRegClass.contains(SrcReg)){
+                    Opc = VEX::MFB;
+                } else
+                    if(VEX::GPRegsRegClass.contains(SrcReg)){
+                        Opc = VEX::MOVr;
+                }
     }else if(VEX::BrRegsRegClass.contains(DestReg)){
         if (VEX::GPRegsRegClass.contains(SrcReg)){
             Opc = VEX::MTB;
         }else
             if(VEX::BrRegsRegClass.contains(SrcReg)){
-                llvm_unreachable("Impossible reg-to-reg copy. BrReg to BrReg");
-        }
+                // FIXME: Bad coding strategy to handle BrReg to BrReg Moves right now!
+                unsigned Reg = 10;
+                for (; Reg < 63; ++Reg)
+                    if (!MBB.isLiveIn(Reg))
+                        break;
+                BuildMI(MBB, MI, DL, get(VEX::MFB), Reg).addReg(SrcReg, getKillRegState(KillSrc));
+                BuildMI(MBB, MI, DL, get(VEX::MTB), DestReg).addReg(Reg);
+                return;
+            }
     }
     
     BuildMI(MBB, MI, DL, get(Opc), DestReg).addReg(SrcReg, getKillRegState(KillSrc));

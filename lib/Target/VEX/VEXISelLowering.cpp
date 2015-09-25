@@ -106,6 +106,10 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
         setLoadExtAction(ISD::SEXTLOAD, VT, MVT::i1,  Promote);
     }
 
+//    setOperationAction(ISD::ANY_EXTEND, MVT::i1, Promote);
+//    setOperationAction(ISD::ANY_EXTEND, MVT::i8, Promote);
+//    setOperationAction(ISD::ANY_EXTEND, MVT::i16, Promote);
+    
     // See LowerConstant to see the reason for customizing i1 ISD::Constant
     setOperationAction(ISD::Constant, MVT::i1, Promote);
     setOperationAction(ISD::TRUNCATE, MVT::i1, Promote);
@@ -148,13 +152,13 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     setOperationAction(ISD::SUBC, MVT::i32, Custom);
     
 //    // 64-bit oprations
-//    setOperationAction(ISD::ADD, MVT::i32, Custom);
-//    setOperationAction(ISD::SUB, MVT::i32, Custom);
-//    setOperationAction(ISD::OR, MVT::i32, Custom);
-//    setOperationAction(ISD::AND, MVT::i32, Custom);
-//    setOperationAction(ISD::XOR, MVT::i32, Custom);
-//    setOperationAction(ISD::SRA, MVT::i32, Custom);
-//    setOperationAction(ISD::SRL, MVT::i32, Custom);
+    setOperationAction(ISD::ADD, MVT::i64, Expand);
+    setOperationAction(ISD::SUB, MVT::i64, Expand);
+    setOperationAction(ISD::OR, MVT::i64, Expand);
+    setOperationAction(ISD::AND, MVT::i64, Expand);
+    setOperationAction(ISD::XOR, MVT::i64, Expand);
+    setOperationAction(ISD::SRA, MVT::i64, Expand);
+    setOperationAction(ISD::SRL, MVT::i64, Expand);
     
     
     // Lower
@@ -179,7 +183,7 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     //setStackPointerRegisterToSaveRestore(VEX::Reg1);
 
     // This should be enable when we implement the VLIW Packetizer
-    //setSchedulingPreference(Sched::VLIW);
+    setSchedulingPreference(Sched::VLIW);
     
 }
 
@@ -377,7 +381,7 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
         Callee = DAG.getTargetGlobalAddress(G->getGlobal(), DL, MVT::i32);
         Callee = DAG.getNode(VEXISD::WRAPPER, DL, PtrVT, Callee);
     }else if (auto *E = dyn_cast<ExternalSymbolSDNode>(Callee)) {
-        llvm_unreachable("Target does not implement External Symbol yet!");
+        //llvm_unreachable("Target does not implement External Symbol yet!");
         Callee = DAG.getTargetExternalSymbol(E->getSymbol(), MVT::i32);
         Callee = DAG.getNode(VEXISD::WRAPPER, DL, PtrVT, Callee);
     } else if (IsTailCall) {

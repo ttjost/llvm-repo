@@ -8,7 +8,7 @@
 //===----------------------------------------------------------------------===//
 //
 // This file implements a pass that remove unnecessary GOTO instructions from code
-// and also replaces VEX::BR instructions with VEX::BRF.
+// and also replaces VEX::BR instructions with VEX::BRF when it is better to do so.
 //
 //===----------------------------------------------------------------------===//
 
@@ -45,6 +45,9 @@ public:
     ModifyBranchesPass(TargetMachine &TM) :  MachineFunctionPass(ID),
                                                     TM(TM) {}
 
+    // --------------------------------------------------
+    // TODO: Improve code readability for this algorithm.
+    // --------------------------------------------------
     virtual bool runOnMachineFunction(MachineFunction &MF) {
 
         MachineFunction::iterator OneBeforeLastBB = MF.end();

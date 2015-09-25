@@ -61,6 +61,6 @@ InstrItinData<IIStore            , [InstrStage<1,  [IALU1]>]>,
 //InstrItinData<IIBranch           , [InstrStage<1,  [IBR]>]>
 InstrItinData<IIBranch           , [InstrStage<1,  [IALU4]>]>,
 //InstrItinData<IIAlu              , [InstrStage<1,  [IALU1, IALU2, IALU3, IALU4, IALU5, IALU6]>]>,
-InstrItinData<IIAlu              , [InstrStage<1,  [IALU1, IALU2, IALU3, IALU4]>]>
+InstrItinData<IIAlu              , [InstrStage<1,  [IALU2, IALU3, IALU1, IALU4]>]>
 //InstrItinData<IIAlu              , [InstrStage<1,  [IALU1, IALU2]>]>
 ]>;
