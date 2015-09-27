@@ -19,6 +19,11 @@ VEX_BIN_PATH=~/vex-3.43/bin
 
 FOLDER=./tmp
 
+if [ ! -d "$FOLDER" ]; then
+  # Control will enter here if $DIRECTORY doesn't exist.
+  mkdir "$FOLDER"
+fi
+
 export PATH=${PATH}:${LLVM_BIN_PATH}
 rm tmp.txt
 
