@@ -49,7 +49,9 @@ for i in ${BENCHMARKS[@]}; do
 				
 				line=$(head -n 1 tmp.txt)
 				if [[ -s tmp.txt &&  ! ${line} == "WARNING: No File Specified." ]] ; then
+					echo "*************				ERROR  			**************"
 					echo "LLC Error: Failed to ${i}_${TYPES[$j]}_$k.s. Check tmp.txt file"
+					echo "**********************************************************";
 					exit
 				else
 					echo "LLC: OK"
@@ -66,18 +68,20 @@ for i in ${BENCHMARKS[@]}; do
 				echo "VEX CC: Executing benchmark ${i}_${TYPES[$j]}_$k.s"
 				${VEX_BIN_PATH}/cc ${FOLDER}/${i}_${TYPES[$j]}_$k.s -o ${FOLDER}/${i}_${TYPES[$j]}_$k &> tmp.txt
 				if [ -s tmp.txt ]; then
+					echo "**************               ERROR               **************"
 					echo "VEX CC Error: Failed to create executable for ${i}_${TYPES[$j]}_$k.s. Check tmp.txt file"
+					echo "***************************************************************";
 					exit
 				else
 					echo "VEX CC: OK"
 					${FOLDER}/${i}_${TYPES[$j]}_$k > ${FOLDER}/${i}_${TYPES[$j]}_$k.log
 					line=$(head -n 1 ${FOLDER}/${i}_${TYPES[$j]}_$k.log)
 					if [ $line == "-1" ]; then
-						echo "**********************************************************";
+						echo "***************************************************************";
 						echo "Success ${i}_${TYPES[$j]}_$k.s";
-						echo "**********************************************************";
+						echo "***************************************************************";
 					else
-						echo "*************  ERROR in ${i}_${TYPES[$j]}_$k.s **************"
+						echo "**************  ERROR in ${i}_${TYPES[$j]}_$k.s ***************"
 					fi
 				fi
 			fi
