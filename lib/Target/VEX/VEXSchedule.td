@@ -10,17 +10,66 @@
 //===----------------------------------------------------------------------===//
 
 //===----------------------------------------------------------------------===//
+// // Functional units
+// //===----------------------------------------------------------------------===//
+// def IUnit0    : FuncUnit;
+// def IUnit1    : FuncUnit;
+// def IUnit2    : FuncUnit;
+// def IUnit3    : FuncUnit;
+// def IUnit4    : FuncUnit;
+// def IUnit5    : FuncUnit;
+// def IUnit6    : FuncUnit;
+// def IUnit7    : FuncUnit;
+// def IUnit8    : FuncUnit;
+// def IUnit9    : FuncUnit;
+// def IUnit10    : FuncUnit;
+// def IUnit11    : FuncUnit;
+// def IUnit12    : FuncUnit;
+// def IUnit13    : FuncUnit;
+// def IUnit14    : FuncUnit;
+// def IUnit15    : FuncUnit;
+
+// //===----------------------------------------------------------------------===//
+// // Instruction Itinerary classes used for VEX
+// //===----------------------------------------------------------------------===//
+// def IIAlu       : InstrItinClass;
+// def IIBranch    : InstrItinClass;
+// def IIMul       : InstrItinClass;
+// def IILoad      : InstrItinClass;
+// def IIStore     : InstrItinClass;
+
+// //===----------------------------------------------------------------------===//
+// // VEX Generic instruction itineraries.
+// //===----------------------------------------------------------------------===//
+// // http://llvm.org/docs/doxygen/html/structllvm_1_1InstrStage.html
+
+// //                          FIXME:
+// //      The latency of each class should be changed here.
+// //
+// //
+
+// def VEXGenericItineraries : ProcessorItineraries<[IUnit0, IUnit1, IUnit2, IUnit3,
+//                                                   IUnit4, IUnit5, IUnit6, IUnit7,
+//                                                   IUnit8, IUnit9, IUnit10, IUnit11,
+//                                                   IUnit12, IUnit13, IUnit14, IUnit15], [], [
+// InstrItinData<IIMul              , [InstrStage<1,  [IUnit1, IUnit2]>]>,
+// InstrItinData<IILoad             , [InstrStage<1,  [IUnit0]>]>,
+// InstrItinData<IIStore            , [InstrStage<1,  [IUnit0]>]>,
+// InstrItinData<IIBranch           , [InstrStage<1,  [IUnit3]>]>,
+// InstrItinData<IIAlu              , [InstrStage<1,  [IUnit1, IUnit2, IUnit0, IUnit3,
+//                                                     IUnit4, IUnit5, IUnit6, IUnit7,
+//                                                     IUnit8, IUnit9, IUnit10, IUnit11,
+//                                                     IUnit12, IUnit13, IUnit14, IUnit15]>]>
+// ]>;
+
+
+//===----------------------------------------------------------------------===//
 // Functional units
 //===----------------------------------------------------------------------===//
-def IALU1    : FuncUnit;
-def IALU2    : FuncUnit;
-def IALU3    : FuncUnit;
-def IALU4    : FuncUnit;
-def IALU5    : FuncUnit;
-def IALU6    : FuncUnit;
-def IBR     : FuncUnit;
-def IMUL    : FuncUnit;
-def IMEM    : FuncUnit;
+def IUnit0    : FuncUnit;
+def IUnit1    : FuncUnit;
+def IUnit2    : FuncUnit;
+def IUnit3    : FuncUnit;
 
 //===----------------------------------------------------------------------===//
 // Instruction Itinerary classes used for VEX
@@ -37,30 +86,14 @@ def IIStore     : InstrItinClass;
 // http://llvm.org/docs/doxygen/html/structllvm_1_1InstrStage.html
 
 //                          FIXME:
-//      The latency of each class should be changed here.    
+//      The latency of each class should be changed here.
 //
 //
-//def VEXGenericItineraries : ProcessorItineraries<[IALU1, IALU2, IALU3, IALU4,
-//                                                  IALU5, IALU6, IMUL, IBR, IMEM],
-//def VEXGenericItineraries : ProcessorItineraries<[IALU1, IALU2, IMUL, IMEM],
-//                                                  [], [
-//InstrItinData<IIMul              , [InstrStage<1,  [IMUL]>]>,
-//InstrItinData<IILoad             , [InstrStage<3,  [IMEM]>]>,
-//InstrItinData<IIStore            , [InstrStage<1,  [IMEM]>]>,
-////InstrItinData<IIBranch           , [InstrStage<1,  [IBR]>]>
-//InstrItinData<IIBranch           , [InstrStage<1,  [IALU1]>]>,
-////InstrItinData<IIAlu              , [InstrStage<1,  [IALU1, IALU2, IALU3, IALU4, IALU5, IALU6]>]>,
-//InstrItinData<IIAlu              , [InstrStage<1,  [IALU1, IALU2, IALU3, IALU4]>]>,
-////InstrItinData<IIAlu              , [InstrStage<1,  [IALU1, IALU2]>]>
-//]>;
 
-def VEXGenericItineraries : ProcessorItineraries<[IALU1, IALU2, IALU3, IALU4, IMUL, IMEM], [], [
-InstrItinData<IIMul              , [InstrStage<1,  [IALU2, IALU3]>]>,
-InstrItinData<IILoad             , [InstrStage<1,  [IALU1]>]>,
-InstrItinData<IIStore            , [InstrStage<1,  [IALU1]>]>,
-//InstrItinData<IIBranch           , [InstrStage<1,  [IBR]>]>
-InstrItinData<IIBranch           , [InstrStage<1,  [IALU4]>]>,
-//InstrItinData<IIAlu              , [InstrStage<1,  [IALU1, IALU2, IALU3, IALU4, IALU5, IALU6]>]>,
-InstrItinData<IIAlu              , [InstrStage<1,  [IALU2, IALU3, IALU1, IALU4]>]>
-//InstrItinData<IIAlu              , [InstrStage<1,  [IALU1, IALU2]>]>
+def VEXGenericItineraries : ProcessorItineraries<[IUnit0, IUnit1, IUnit2, IUnit3], [], [
+InstrItinData<IIMul              , [InstrStage<1,  [IUnit1, IUnit2]>]>,
+InstrItinData<IILoad             , [InstrStage<1,  [IUnit0]>]>,
+InstrItinData<IIStore            , [InstrStage<1,  [IUnit0]>]>,
+InstrItinData<IIBranch           , [InstrStage<1,  [IUnit3]>]>,
+InstrItinData<IIAlu              , [InstrStage<1,  [IUnit1, IUnit2, IUnit0, IUnit3]>]>
 ]>;

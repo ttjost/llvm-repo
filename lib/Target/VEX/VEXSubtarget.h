@@ -22,7 +22,7 @@
 
 
 #define GET_SUBTARGETINFO_HEADER
-#include "VEXGenSubtargetInfo.inc"
+#include "VEXSubtargetInfo.cpp"
 
 namespace llvm{
 

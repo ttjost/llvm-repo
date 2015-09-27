@@ -30,7 +30,7 @@ using namespace llvm;
 
 #define GET_SUBTARGETINFO_TARGET_DESC
 #define GET_SUBTARGETINFO_CTOR
-#include "VEXGenSubtargetInfo.inc"
+#include "VEXSubtargetInfo.cpp"
 
 static cl::opt<bool>
 EnableVEXCalls("vex-calls", cl::Hidden,
@@ -83,7 +83,7 @@ VEXSubtarget &VEXSubtarget::initializeSubtargetDependencies(StringRef CPU,
         VEXArchVersion = VEX_II;
     
     if (!isVEXI() && !isVEXII()) {
-        errs() << "-mcpu must be empty(default:VEX_II), VEX_I or VEX_II" << "\n";
+        errs() << "-mcpu must be empty(default:VEX_I), VEX_I or VEX_II" << "\n";
     }
     
     // Parse features string.

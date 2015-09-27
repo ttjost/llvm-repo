@@ -79,8 +79,6 @@ public:
 // as EHLabel. Though
 bool VEXPacketizerList::isSoloInstruction(MachineInstr *MI) {
 
-    DEBUG(dbgs() << "Instruction Number:" << MI->getOpcode() << "\n");
-
     if (MI->isInlineAsm()) {
         return true;
     }
@@ -117,10 +115,15 @@ bool VEXPacketizerList::isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ) {
     // Uncomment this to generate single issue
     //return false;
 
-    if (SUI->isPred(SUJ)){
-        for (SDep dep : SUI->Preds) {
-            if (dep.getKind() == SDep::Data)
-                return false;
+    DEBUG(dbgs() << "Instruction Number:" << SUI->getInstr()->getOpcode() << "\n");
+    
+    if (SUJ->isSucc(SUI)) {
+        for (SDep dep : SUJ->Succs) {
+            if (dep.getSUnit() == SUI)
+                if (dep.getKind() == SDep::Data)
+                    return false;
+            else
+                continue;
         }
     }
     
@@ -160,7 +163,7 @@ bool VEXPacketizer::runOnMachineFunction(MachineFunction &MF) {
         MachineBasicBlock::iterator End = MBB->end();
         MachineBasicBlock::iterator MI = MBB->begin();
         while (MI != End) {
-            if (MI->isKill() || MI->isImplicitDef()) {
+            if (MI->isKill() || MI->isImplicitDef() || MI->isCFIInstruction()) {
                 MachineBasicBlock::iterator DeleteMI = MI;
                 ++MI;
                 MBB->erase(DeleteMI);

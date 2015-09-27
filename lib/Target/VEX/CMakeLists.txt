@@ -10,7 +10,7 @@ set (LLVM_TARGET_DEFINITIONS Vex.td)
 
 tablegen(LLVM VEXGenRegisterInfo.inc -gen-register-info)
 tablegen(LLVM VEXGenInstrInfo.inc -gen-instr-info)
-tablegen(LLVM VEXGenSubtargetInfo.inc -gen-subtarget)
+#tablegen(LLVM VEXGenSubtargetInfo.inc -gen-subtarget)
 tablegen(LLVM VEXGenPseudoLowering.inc -gen-pseudo-lowering)
 tablegen(LLVM VEXGenDFAPacketizer.inc -gen-dfa-packetizer)
 tablegen(LLVM VEXGenDAGISel.inc -gen-dag-isel)
@@ -30,6 +30,7 @@ add_llvm_target(VEXCodeGen
   VEXMachineFunctionInfo.cpp
   VEXRegisterInfo.cpp
   VEXSubtarget.cpp
+  VEXSubtargetInfo.cpp
   VEXSelectionDAGInfo.cpp
   VEXAsmPrinter.cpp
   VEXMCInstLower.cpp

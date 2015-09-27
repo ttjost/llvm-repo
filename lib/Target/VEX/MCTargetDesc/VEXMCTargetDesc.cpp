@@ -38,7 +38,7 @@ using namespace llvm;
 #include "VEXGenInstrInfo.inc"
 
 #define GET_SUBTARGETINFO_MC_DESC
-#include "VEXGenSubtargetInfo.inc"
+#include "VEXSubtargetInfo.cpp"
 
 #define GET_REGINFO_MC_DESC
 #include "VEXGenRegisterInfo.inc"

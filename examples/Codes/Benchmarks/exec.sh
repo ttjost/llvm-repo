@@ -1,0 +1,74 @@
+#!/bin/bash
+
+BENCHMARKS=(dft_print)
+TYPES=(32)
+TARGETS=(mips-unknown-linux-gnu mips64_unknown-linux-gnu)
+OPT=(O0 O3)
+LLVM_BIN_PATH=~/llvm_build/build/bin
+VEX_BIN_PATH=~/Dropbox/Universidade/Mestrado/vex-3.43/bin
+
+FOLDER=./tmp/
+
+export PATH=${PATH}:${LLVM_BIN_PATH}
+rm tmp.txt
+
+for i in ${BENCHMARKS[@]}; do
+	for (( j=0; j<${TYPES}; j++ )); do
+		for k in ${OPT[@]}; do
+			# Generate Front-end file with CLANG
+			if [ ! -a ${FOLDER}/${i}_${TYPES[$j]}_$k.ll ]
+			then
+				echo "CLANG: Creating file ${i}_${TYPES[$j]}_$k.ll "
+				clang -target ${TARGETS[$j]} -c $i.c -$k -emit-llvm -S -o ${FOLDER}/${i}_${TYPES[$j]}_$k.ll &> tmp.txt
+
+				if [ -s tmp.txt ]
+				then
+        			echo "CLANG Error: Failed to create ${i}_${TYPES[$j]}_$k.ll. Check tmp.txt file"
+					cat tmp.txt
+					exit
+				else
+				    echo "CLANG: OK"
+				    # do something as file is empty
+				fi
+			fi
+	
+			# Generate Assembly with LLC
+			if [ ! -a ${FOLDER}/${i}_${TYPES[$j]}_$k.s ]; then
+				echo "LLC: Creating file ${i}_${TYPES[$j]}_$k.s"
+				llc -enable-vliw-scheduling -march=vex -filetype=asm ${FOLDER}/${i}_${TYPES[$j]}_$k.ll -o ${FOLDER}/${i}_${TYPES[$j]}_$k.s &> tmp.txt
+				
+				if [ -s tmp.txt ]; then
+					echo "LLC Error: Failed to ${i}_${TYPES[$j]}_$k.s. Check tmp.txt file"
+					exit
+				else
+					echo "LLC: OK"
+					sed -i -e 's/\.rodata\..*/\.data/g' ${FOLDER}/${i}_${TYPES[$j]}_$k.s
+					echo '.import printf' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
+					echo '.type printf, @function' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
+					echo '.import puts' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
+					echo '.type puts, @function' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
+				fi
+			fi
+		
+			# Simulate Executable
+			if [ ! -a ${FOLDER}/${i}_${TYPES[$j]}_$k.log ]; then
+				echo "VEX CC: Executing benchmark ${i}_${TYPES[$j]}_$k.s"
+				${VEX_BIN_PATH}/cc ${FOLDER}/${i}_${TYPES[$j]}_$k.s -o ${FOLDER}/${i}_${TYPES[$j]}_$k &> tmp.txt
+				if [ -s tmp.txt ]; then
+					echo "VEX CC Error: Failed to create executable for ${i}_${TYPES[$j]}_$k.s. Check tmp.txt file"
+					exit
+				else
+					echo "VEX CC: OK"
+					${FOLDER}/${i}_${TYPES[$j]}_$k.s > ${FOLDER}/${i}_${TYPES[$j]}_$k.log
+					while read line; do
+						if [ $line == "-1" ]; then
+							echo "Successful execution in $i_${TYPES[$j]}_$k.s";
+						else
+							echo "ERROR Execution in $i_${TYPES[$j]}_$k.s"
+						fi
+					done < ${FOLDER}/${i}_${TYPES[$j]}_$k.log
+				fi
+			fi
+		done
+	done
+done
