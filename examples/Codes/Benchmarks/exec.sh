@@ -7,7 +7,15 @@
 # 	set +x
 # fi
 
-BENCHMARKS=(dft_print)
+BENCHMARKS=($@)
+
+echo "****************************************"
+echo "  Benchmarks:"
+for arg in "${BENCHMARKS[@]}"; do
+   echo -e "\t$arg"
+done
+echo "****************************************"
+
 TYPES=(32 64)
 TARGETS=(mips-unknown-linux-gnu mips64-unknown-linux-gnu)
 OPT=(O0 O3)
