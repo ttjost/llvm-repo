@@ -8,11 +8,11 @@
 # fi
 
 BENCHMARKS=(dft_print)
-TYPES=(32)
-TARGETS=(mips-unknown-linux-gnu mips64_unknown-linux-gnu)
+TYPES=(32 64)
+TARGETS=(mips-unknown-linux-gnu mips64-unknown-linux-gnu)
 OPT=(O0 O3)
 LLVM_BIN_PATH=~/llvm_build/build/bin
-VEX_BIN_PATH=~/Dropbox/Universidade/Mestrado/vex-3.43/bin
+VEX_BIN_PATH=~/vex-3.43/bin
 
 FOLDER=./tmp
 
@@ -20,7 +20,7 @@ export PATH=${PATH}:${LLVM_BIN_PATH}
 rm tmp.txt
 
 for i in ${BENCHMARKS[@]}; do
-	for (( j=0; j<${TYPES}; j++ )); do
+	for (( j=0; j<${#TYPES[@]}; j++ )); do
 		for k in ${OPT[@]}; do
 			# Generate Front-end file with CLANG
 			if [ ! -a ${FOLDER}/${i}_${TYPES[$j]}_$k.ll ]
@@ -45,8 +45,7 @@ for i in ${BENCHMARKS[@]}; do
 				llc -enable-vliw-scheduling -march=vex -filetype=asm ${FOLDER}/${i}_${TYPES[$j]}_$k.ll -o ${FOLDER}/${i}_${TYPES[$j]}_$k.s &> tmp.txt
 				
 				line=$(head -n 1 tmp.txt)
-
-				if [ [ -s tmp.txt || "$line" != "WARNING: No File Specified." ] ] ; then
+				if [[ -s tmp.txt &&  ! ${line} == "WARNING: No File Specified." ]] ; then
 					echo "LLC Error: Failed to ${i}_${TYPES[$j]}_$k.s. Check tmp.txt file"
 					exit
 				else
@@ -68,14 +67,15 @@ for i in ${BENCHMARKS[@]}; do
 					exit
 				else
 					echo "VEX CC: OK"
-					${FOLDER}/${i}_${TYPES[$j]}_$k.s > ${FOLDER}/${i}_${TYPES[$j]}_$k.log
-					while read line; do
-						if [ $line == "-1" ]; then
-							echo "Successful execution in $i_${TYPES[$j]}_$k.s";
-						else
-							echo "ERROR Execution in $i_${TYPES[$j]}_$k.s"
-						fi
-					done < ${FOLDER}/${i}_${TYPES[$j]}_$k.log
+					${FOLDER}/${i}_${TYPES[$j]}_$k > ${FOLDER}/${i}_${TYPES[$j]}_$k.log
+					line=$(head -n 1 ${FOLDER}/${i}_${TYPES[$j]}_$k.log)
+					if [ $line == "-1" ]; then
+						echo "**********************************************************";
+						echo "Success ${i}_${TYPES[$j]}_$k.s";
+						echo "**********************************************************";
+					else
+						echo "*************  ERROR in ${i}_${TYPES[$j]}_$k.s **************"
+					fi
 				fi
 			fi
 		done
