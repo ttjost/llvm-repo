@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# if [ $1 == "show" ]; then
+# 	echo "Display Commands!"
+# 	set -x 
+# else
+# 	set +x
+# fi
+
 BENCHMARKS=(dft_print)
 TYPES=(32)
 TARGETS=(mips-unknown-linux-gnu mips64_unknown-linux-gnu)
@@ -7,7 +14,7 @@ OPT=(O0 O3)
 LLVM_BIN_PATH=~/llvm_build/build/bin
 VEX_BIN_PATH=~/Dropbox/Universidade/Mestrado/vex-3.43/bin
 
-FOLDER=./tmp/
+FOLDER=./tmp
 
 export PATH=${PATH}:${LLVM_BIN_PATH}
 rm tmp.txt
@@ -37,7 +44,9 @@ for i in ${BENCHMARKS[@]}; do
 				echo "LLC: Creating file ${i}_${TYPES[$j]}_$k.s"
 				llc -enable-vliw-scheduling -march=vex -filetype=asm ${FOLDER}/${i}_${TYPES[$j]}_$k.ll -o ${FOLDER}/${i}_${TYPES[$j]}_$k.s &> tmp.txt
 				
-				if [ -s tmp.txt ]; then
+				line=$(head -n 1 tmp.txt)
+
+				if [ [ -s tmp.txt || "$line" != "WARNING: No File Specified." ] ] ; then
 					echo "LLC Error: Failed to ${i}_${TYPES[$j]}_$k.s. Check tmp.txt file"
 					exit
 				else
