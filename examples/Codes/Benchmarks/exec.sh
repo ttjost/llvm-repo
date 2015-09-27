@@ -1,11 +1,6 @@
 #!/bin/bash
 
-# if [ $1 == "show" ]; then
-# 	echo "Display Commands!"
-# 	set -x 
-# else
-# 	set +x
-# fi
+[ $# -eq 0 ] && { echo "Usage: $0 <Benchmark1> <Benchmark2> ... "; exit 1; }
 
 BENCHMARKS=($@)
 
