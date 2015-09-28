@@ -63,10 +63,11 @@ void VEXInstPrinter::printInst(const MCInst *mi, raw_ostream &O,
                     else
                         DEBUG(dbgs() << "NO INSTRUCTION\n");
                     
-                    O << "\tc0";
-                    
                     const MCInst *inst = mi->getOperand(i).getInst();
-                    printInstruction(inst, O);
+                    if (inst->getOpcode() != 0) {
+                        O << "\tc0";
+                        printInstruction(inst, O);
+                    }
                 }
                 O << "\n";
             }
@@ -82,9 +83,11 @@ void VEXInstPrinter::printInst(const MCInst *mi, raw_ostream &O,
                 else if (mi->getOpcode() == VEX::RET)
                     printReturnDirective(mi, O);
                 
-                O << "\tc0";
-                printInstruction(mi, O);
-                O << "\n;;";
+                if (mi->getOpcode() != 0) {
+                    O << "\tc0";
+                    printInstruction(mi, O);
+                    O << "\n;;";
+                }
             }
         }
     } else {
