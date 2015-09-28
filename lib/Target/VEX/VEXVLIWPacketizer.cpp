@@ -123,7 +123,7 @@ void VEXPacketizerList::reserveResourcesForLongImmediate (MachineBasicBlock::ite
     PseudoMI = MF->CreateMachineInstr(QII->get(VEX::EXTIMM),
                                       MI->getDebugLoc());
     
-    DEBUG(errs() << "Reserving Issue to Long Immediate");
+    DEBUG(errs() << "Reserving Issue to Long Immediate\n");
     if (ResourceTracker->canReserveResources(PseudoMI)) {
         ResourceTracker->reserveResources(PseudoMI);
         MI->getParent()->getParent()->DeleteMachineInstr(PseudoMI);
@@ -152,6 +152,9 @@ MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
             continue;
     }
     
+    // Allocate Resource
+    VLIWPacketizerList::addToPacket(MI);
+    
     if (longImmediate) {
         if (canReserveResourcesForLongImmediate(MI)) {
             reserveResourcesForLongImmediate(MII);
@@ -161,12 +164,11 @@ MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
             reserveResourcesForLongImmediate(MI);
         }
         CurrentPacketMIs.push_back(MI);
+        return MII;
     } else {
         CurrentPacketMIs.push_back(MI);
-        ResourceTracker->reserveResources(MI);
         return MII;
     }
-    return MII;
 }
 
 
