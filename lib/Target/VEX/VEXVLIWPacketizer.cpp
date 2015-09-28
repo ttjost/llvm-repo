@@ -123,8 +123,8 @@ void VEXPacketizerList::reserveResourcesForLongImmediate (MachineBasicBlock::ite
     PseudoMI = MF->CreateMachineInstr(QII->get(VEX::EXTIMM),
                                       MI->getDebugLoc());
     
-    DEBUG(errs() << "Reserving Issue to Long Immediate\n");
     if (ResourceTracker->canReserveResources(PseudoMI)) {
+        DEBUG(errs() << "Reserving Issue to Long Immediate\n");
         ResourceTracker->reserveResources(PseudoMI);
         MI->getParent()->getParent()->DeleteMachineInstr(PseudoMI);
     } else {
@@ -138,7 +138,6 @@ MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
     MachineFunction::iterator MBB = MI->getParent();
     MachineBasicBlock::iterator MII = MI;
     
-    bool canStillReserveResources = true;
     bool longImmediate = false;
     for (unsigned i = 0, e = MI->getNumOperands(); i != e; ++i) {
         MachineOperand Op = MI->getOperand(i);
@@ -209,11 +208,6 @@ bool VEXPacketizerList::ignorePseudoInstruction(MachineInstr *MI,
 }
 
 bool VEXPacketizerList::isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ) {
-    
-    // Uncomment this to generate single issue
-    //return false;
-
-    DEBUG(dbgs() << "Instruction Number:" << SUI->getInstr()->getOpcode() << "\n");
     
     if (SUJ->isSucc(SUI)) {
         for (SDep dep : SUJ->Succs) {
