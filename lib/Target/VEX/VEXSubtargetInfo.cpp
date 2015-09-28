@@ -93,6 +93,7 @@ llvm::InstrStage VEXStages[] = {
   { 1, VEXGenericItinerariesFU::IUnit3, -1, (llvm::InstrStage::ReservationKinds)0 }, // 2
   { 1, VEXGenericItinerariesFU::IUnit0, -1, (llvm::InstrStage::ReservationKinds)0 }, // 3
   { 1, VEXGenericItinerariesFU::IUnit1 | VEXGenericItinerariesFU::IUnit2, -1, (llvm::InstrStage::ReservationKinds)0 }, // 4
+  { 1, VEXGenericItinerariesFU::IUnit0 | VEXGenericItinerariesFU::IUnit1 | VEXGenericItinerariesFU::IUnit2 | VEXGenericItinerariesFU::IUnit3, -1, (llvm::InstrStage::ReservationKinds)0 }, // 5
   { 0, 0, 0, llvm::InstrStage::Required } // End stages
 };
 
@@ -127,6 +128,7 @@ llvm::InstrItinerary VEXGenericItineraries[] = {
   { 1, 3, 4, 0, 0 }, // 3 IILoad
   { 1, 4, 5, 0, 0 }, // 4 IIMul
   { 1, 3, 4, 0, 0 }, // 5 IIStore
+  { 1, 5, 6, 0, 0 }, // 6 IIAll
   { 0, ~0U, ~0U, ~0U, ~0U } // end marker
 };
 

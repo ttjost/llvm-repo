@@ -79,6 +79,7 @@ def IIBranch    : InstrItinClass;
 def IIMul       : InstrItinClass;
 def IILoad      : InstrItinClass;
 def IIStore     : InstrItinClass;
+def IIAll       : InstrItinClass;
 
 //===----------------------------------------------------------------------===//
 // VEX Generic instruction itineraries.
@@ -95,5 +96,6 @@ InstrItinData<IIMul              , [InstrStage<1,  [IUnit1, IUnit2]>]>,
 InstrItinData<IILoad             , [InstrStage<1,  [IUnit0]>]>,
 InstrItinData<IIStore            , [InstrStage<1,  [IUnit0]>]>,
 InstrItinData<IIBranch           , [InstrStage<1,  [IUnit3]>]>,
-InstrItinData<IIAlu              , [InstrStage<1,  [IUnit1, IUnit2, IUnit0, IUnit3]>]>
+InstrItinData<IIAlu              , [InstrStage<1,  [IUnit1, IUnit2, IUnit0, IUnit3]>]>,
+InstrItinData<IIAll              , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>
 ]>;
