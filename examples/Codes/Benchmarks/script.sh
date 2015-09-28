@@ -15,16 +15,31 @@ echo "****************************************"
 TYPES=(32)
 #TARGETS=(mips-unknown-linux-gnu mips64-unknown-linux-gnu)
 TARGETS=(sparc-unknown-linux-gnu)
-#OPT=(O0 O1 O2 O3)
+OPT=(O0 O1 O2 O3)
 #OPT=(O0 O3)
 #OPT=(O0)
 #OPT=(O1)
 #OPT=(O2)
-OPT=(O3)
+#OPT=(O3)
 LLVM_BIN_PATH=~/llvm_build/build/bin
 VEX_BIN_PATH=~/vex-3.43/bin
 
 FOLDER=./tmp
+
+success=0
+errors=0
+
+successClang=0
+errorsClang=0
+
+successLLC=0
+errorsLLC=0
+
+successVEX=0
+errorsVEX=0
+
+totalExec=0
+
 
 if [ ! -d "$FOLDER" ]; then
   # Control will enter here if $DIRECTORY doesn't exist.
@@ -37,6 +52,7 @@ rm tmp.txt
 for i in ${BENCHMARKS[@]}; do
 	for (( j=0; j<${#TYPES[@]}; j++ )); do
 		for k in ${OPT[@]}; do
+			totalExec=$((totalExec+1))
 			# Generate Front-end file with CLANG
 			if [ ! -a ${FOLDER}/${i}_${TYPES[$j]}_$k.ll ]
 			then
@@ -46,15 +62,20 @@ for i in ${BENCHMARKS[@]}; do
 				if [ -s tmp.txt ]
 				then
 					variable=$(cat tmp.txt)
-                                        substring=" error"
-                                        if echo "$variable" | grep -q "$substring"; then
-        					echo "CLANG Error: Failed to create ${i}_${TYPES[$j]}_$k.ll. Check tmp.txt file"
-						exit
+                    substring=" error"
+                    if echo "$variable" | grep -q "$substring"; then
+        				echo "CLANG Error: Failed to create ${i}_${TYPES[$j]}_$k.ll. Check tmp.txt file"
+        				errorsClang=$((errorsClang+1))
+					else
+						successClang=$((successClang+1))
+						echo "CLANG: OK"
 					fi
+				else
+					successClang=$((successClang+1))
+					echo "CLANG: OK"
 				fi
-				echo "CLANG: OK"
-				# do something as file is empty
 			else	
+				successClang=$((successClang+1))
 				echo "CLANG: File ${i}_${TYPES[$j]}_$k.ll already exists "
 			fi
 	
@@ -68,20 +89,32 @@ for i in ${BENCHMARKS[@]}; do
 					substring1=$(grep -H "Stack dump" tmp.txt);
 					substring2=$(grep -H "ERROR" tmp.txt);
 					if [ ! -z "$substring1" -o ! -z "$substring2" ]; then
+						errorsLLC=$((errorsLLC+1))
 						echo "*************      ERROR      **************"
 						echo "LLC Error: Failed to ${i}_${TYPES[$j]}_$k.s. Check tmp.txt file"
 						echo "**********************************************************";
-						exit
+					else
+						successLLC=$((successLLC+1))
+						echo "LLC: OK"
+						sed -i -e 's/\.rodata.*/\.data/g' ${FOLDER}/${i}_${TYPES[$j]}_$k.s
+						sed -i -e 's/\.bss.*/\.bss \.section \.data/g' ${FOLDER}/${i}_${TYPES[$j]}_$k.s
+						echo '.import printf' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
+						echo '.type printf, @function' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
+						echo '.import puts' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
+						echo '.type puts, @function' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
 					fi
-				fi	
-				echo "LLC: OK"
-				sed -i -e 's/\.rodata.*/\.data/g' ${FOLDER}/${i}_${TYPES[$j]}_$k.s
-				sed -i -e 's/\.bss.*/\.bss \.section \.data/g' ${FOLDER}/${i}_${TYPES[$j]}_$k.s
-				echo '.import printf' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
-				echo '.type printf, @function' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
-				echo '.import puts' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
-				echo '.type puts, @function' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
+				else
+					successLLC=$((successLLC+1))
+					echo "LLC: OK"
+					sed -i -e 's/\.rodata.*/\.data/g' ${FOLDER}/${i}_${TYPES[$j]}_$k.s
+					sed -i -e 's/\.bss.*/\.bss \.section \.data/g' ${FOLDER}/${i}_${TYPES[$j]}_$k.s
+					echo '.import printf' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
+					echo '.type printf, @function' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
+					echo '.import puts' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
+					echo '.type puts, @function' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
+				fi
 			else
+				successLLC=$((successLLC+1))
 				echo "LLC: File ${i}_${TYPES[$j]}_$k.s already exists"
 			fi
 		
@@ -93,8 +126,9 @@ for i in ${BENCHMARKS[@]}; do
 					echo "**************      ERROR      **************"
 					echo "VEX CC Error: Failed to create executable for ${i}_${TYPES[$j]}_$k.s. Check tmp.txt file"
 					echo "***************************************************************";
-					exit
+					errorsVEX=$((errorsVEX+1))
 				else
+					successVEX=$((successVEX+1))
 					echo "VEX CC: OK"
 					${FOLDER}/${i}_${TYPES[$j]}_$k > ${FOLDER}/${i}_${TYPES[$j]}_$k.log
 					# Save log
@@ -111,7 +145,9 @@ for i in ${BENCHMARKS[@]}; do
 						echo "***************************************************************";
 						echo "Success ${i}_${TYPES[$j]}_$k.s";
 						echo "***************************************************************";
+						success=$((success+1))
 					else
+						errors=$((errors+1))
 						echo "**************  ERROR in ${i}_${TYPES[$j]}_$k.s ***************"
 					fi
 				fi
@@ -119,3 +155,25 @@ for i in ${BENCHMARKS[@]}; do
 		done
 	done
 done
+echo ""
+echo "***************************************************************";
+echo "                         Statistics"
+echo "***************************************************************";
+echo "  CLANG "
+echo "    Success: $successClang"
+echo "    Errors: $errorsClang"
+echo "***************************************************************";
+echo "  LLC "
+echo "    Success: $successLLC"
+echo "    Errors: $errorsLLC"
+echo "***************************************************************";
+echo "  VEX_CC "
+echo "    Success: $successVEX"
+echo "    Errors: $errorsVEX"
+echo "***************************************************************";
+echo "  Execution "
+echo "    Success: $success"
+echo "    Errors: $errors"
+echo "***************************************************************";
+echo "  Total: $totalExec"
+echo "***************************************************************";
