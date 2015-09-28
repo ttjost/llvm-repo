@@ -474,11 +474,17 @@ defm SLCT   : SelectInstr<0b00000000, IIAlu>;
 def : Pat<(not GPRegs:$in),
           (XORi GPRegs:$in, -1)>;
 
-//def : Pat<(zext8 GPRegs:$s1),(SXTB GPRegs:$s1)>;
-//def : Pat<(i32 (zext GPRegs:$s1)),(ZXTH GPRegs:$s1)>;
+def : Pat<(i32 (sext_inreg GPRegs:$src, i8)),
+          (SXTB GPRegs:$src)>;
 
-//def : Pat<(i32 (sext GPRegs:$s1)),(i16 (SXTB GPRegs:$s1))>;
-//def : Pat<(i32 (zext GPRegs:$s1)),(ZXTB GPRegs:$s1)>;
+def: Pat<(and (i32 GPRegs:$src1), 0xFF),
+         (ZXTB GPRegs:$src1)>;
+
+def: Pat<(and (i32 GPRegs:$src1), 0xFFFF),
+         (ZXTH GPRegs:$src1)>;
+
+def : Pat<(i32 (sext_inreg GPRegs:$src, i16)),
+          (SXTH GPRegs:$src)>;
 
 // Immediates
 def : Pat<(i32 imm32:$in),
