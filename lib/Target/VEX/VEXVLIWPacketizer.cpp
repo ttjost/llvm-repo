@@ -15,11 +15,13 @@
 
 #include "VEXInstrInfo.h"
 #include "VEXSubtarget.h"
+#include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/DFAPacketizer.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/MachineLoopInfo.h"
 #include "llvm/CodeGen/MachineDominators.h"
 #include "llvm/CodeGen/ScheduleDAG.h"
+#include "llvm/MC/MCInstrInfo.h"
 
 #define DEBUG_TYPE "vex-vliw-scheduling"
 
@@ -33,6 +35,9 @@ namespace {
 class VEXPacketizer : public MachineFunctionPass {
     
     bool EnableVLIWScheduling;
+    //MachineFunction::iterator currentMBB;
+    
+    bool canResourceResourcesForLongImmediate(MachineInstr *MI);
 
 public:
     static char ID;
@@ -59,7 +64,8 @@ public:
 
 class VEXPacketizerList : public VLIWPacketizerList {
 
-
+    MachineInstr *PseudoMI;
+    
 public:
     VEXPacketizerList(MachineFunction &MF,
                       MachineLoopInfo &MLI)
@@ -70,10 +76,101 @@ public:
     bool isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ) override;
     void initPacketizerState() override;
     MachineBasicBlock::iterator addToPacket(MachineInstr *MI);
-
+    bool canReserveResourcesForLongImmediate (MachineBasicBlock::iterator MI,
+                                              MachineOperand Op,
+                                              bool &hasLongImmediate);
+    void reserveResourcesForLongImmediate (MachineBasicBlock::iterator MI);
 };
 
 }
+
+bool VEXPacketizerList::canReserveResourcesForLongImmediate (MachineBasicBlock::iterator MI,
+                                                             MachineOperand Op,
+                                                             bool &hasLongImmediate) {
+    
+    const VEXInstrInfo *QII = (const VEXInstrInfo *) TII;
+    MachineFunction *MF = MI->getParent()->getParent();
+    
+    const int MAXIMUM_SHORTIMM = (1 << 8) - 1;
+    const int MINIMUM_SHORTIMM = -(1 << 8);
+    
+    int Immediate = Op.getImm();
+    
+    if (Immediate >= MINIMUM_SHORTIMM &&
+        Immediate <= MAXIMUM_SHORTIMM) {
+        DEBUG(errs() << "Immediate fits in 9 bits, so we won't need to extend\n");
+        return true;
+    } else {
+        hasLongImmediate = true;
+        
+        PseudoMI = MF->CreateMachineInstr(QII->get(VEX::EXTIMM),
+                                          MI->getDebugLoc());
+        
+        if (ResourceTracker->canReserveResources(PseudoMI)) {
+            MI->getParent()->getParent()->DeleteMachineInstr(PseudoMI);
+            return true;
+        } else {
+            MI->getParent()->getParent()->DeleteMachineInstr(PseudoMI);
+            return false;
+            //llvm_unreachable("can not reserve resources for constant extender.");
+        }
+        DEBUG(errs() << "WARNING: Immediate does not fit in 9 bits.\n");
+        return true;
+    }
+}
+
+void VEXPacketizerList::reserveResourcesForLongImmediate (MachineBasicBlock::iterator MI) {
+
+    const VEXInstrInfo *QII = (const VEXInstrInfo *) TII;
+    MachineFunction *MF = MI->getParent()->getParent();
+    
+    PseudoMI = MF->CreateMachineInstr(QII->get(VEX::EXTIMM),
+                                      MI->getDebugLoc());
+    
+    DEBUG(errs() << "Reserving Issue to Long Immediate");
+    if (ResourceTracker->canReserveResources(PseudoMI)) {
+        ResourceTracker->reserveResources(PseudoMI);
+        MI->getParent()->getParent()->DeleteMachineInstr(PseudoMI);
+    } else {
+        llvm_unreachable("can not reserve resources for constant extender.");
+    }
+}
+
+MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
+    
+    // Get MBB from Instruction
+    MachineFunction::iterator MBB = MI->getParent();
+    MachineBasicBlock::iterator MII = MI;
+    
+    bool canStillReserveResources = true;
+    bool hasLongImmediate = false;
+    for (unsigned i = 0, e = MI->getNumOperands(); i != e; ++i) {
+        MachineOperand Op = MI->getOperand(i);
+        
+        if (Op.isImm() && !canReserveResourcesForLongImmediate(MII, Op, hasLongImmediate)) {
+            canStillReserveResources = false;
+            break;
+        } else
+            continue;
+    }
+    
+    if (hasLongImmediate) {
+        if (canStillReserveResources) {
+            reserveResourcesForLongImmediate(MII);
+        } else {
+            endPacket(MBB, MI);
+            VLIWPacketizerList::addToPacket(MI);
+            reserveResourcesForLongImmediate(MI);
+        }
+        CurrentPacketMIs.push_back(MI);
+    } else {
+        CurrentPacketMIs.push_back(MI);
+        ResourceTracker->reserveResources(MI);
+        return MII;
+    }
+    return MII;
+}
+
 
 // Needs to implement this so we can detect when a instruction
 // has to be solo. This is normally true for inlineAsm, as well
@@ -109,13 +206,6 @@ bool VEXPacketizerList::ignorePseudoInstruction(MachineInstr *MI,
     ResourceTracker->getInstrItins()->beginStage(SchedClass);
     unsigned FuncUnits = IS->getUnits();
     return !FuncUnits;
-}
-
-MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
-    MachineBasicBlock::iterator MII = MI;
-    CurrentPacketMIs.push_back(MI);
-    ResourceTracker->reserveResources(MI);
-    return MII;
 }
 
 bool VEXPacketizerList::isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ) {
@@ -199,6 +289,8 @@ bool VEXPacketizer::runOnMachineFunction(MachineFunction &MF) {
                 if (TII->isSchedulingBoundary(std::prev(I), MBB, MF))
                 break;
             }
+            //currentMBB = MBB;
+            
             I = MBB->begin();
 
             // Skip empty scheduling regions.
