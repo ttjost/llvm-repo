@@ -139,22 +139,21 @@ MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
     MachineBasicBlock::iterator MII = MI;
     
     bool canStillReserveResources = true;
-    bool hasLongImmediate = false;
+    bool longImmediate = false;
     for (unsigned i = 0, e = MI->getNumOperands(); i != e; ++i) {
         MachineOperand Op = MI->getOperand(i);
         
-        bool longImmediate = (Op.isImm() && isLongImmediate(Op.getImm()))
+        longImmediate = (Op.isImm() && isLongImmediate(Op.getImm()))
                                 || Op.isGlobal() || Op.isSymbol();
         
-        if (longImmediate || !canReserveResourcesForLongImmediate(MI)) {
-            canStillReserveResources = false;
+        if (longImmediate)
             break;
-        } else
+        else
             continue;
     }
     
-    if (hasLongImmediate) {
-        if (canStillReserveResources) {
+    if (longImmediate) {
+        if (canReserveResourcesForLongImmediate(MI)) {
             reserveResourcesForLongImmediate(MII);
         } else {
             endPacket(MBB, MI);
