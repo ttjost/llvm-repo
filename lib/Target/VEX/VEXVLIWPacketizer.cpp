@@ -76,46 +76,42 @@ public:
     bool isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ) override;
     void initPacketizerState() override;
     MachineBasicBlock::iterator addToPacket(MachineInstr *MI);
-    bool canReserveResourcesForLongImmediate (MachineBasicBlock::iterator MI,
-                                              MachineOperand Op,
-                                              bool &hasLongImmediate);
+    bool canReserveResourcesForLongImmediate (MachineBasicBlock::iterator MI);
     void reserveResourcesForLongImmediate (MachineBasicBlock::iterator MI);
+    bool isLongImmediate(int64_t Immediate);
+
 };
 
 }
 
-bool VEXPacketizerList::canReserveResourcesForLongImmediate (MachineBasicBlock::iterator MI,
-                                                             MachineOperand Op,
-                                                             bool &hasLongImmediate) {
-    
-    const VEXInstrInfo *QII = (const VEXInstrInfo *) TII;
-    MachineFunction *MF = MI->getParent()->getParent();
+bool VEXPacketizerList::isLongImmediate(int64_t Immediate) {
     
     const int MAXIMUM_SHORTIMM = (1 << 8) - 1;
     const int MINIMUM_SHORTIMM = -(1 << 8);
     
-    int Immediate = Op.getImm();
-    
     if (Immediate >= MINIMUM_SHORTIMM &&
         Immediate <= MAXIMUM_SHORTIMM) {
-        DEBUG(errs() << "Immediate fits in 9 bits, so we won't need to extend\n");
-        return true;
+        return false;
     } else {
-        hasLongImmediate = true;
-        
-        PseudoMI = MF->CreateMachineInstr(QII->get(VEX::EXTIMM),
+        return true;
+    }
+}
+
+bool VEXPacketizerList::canReserveResourcesForLongImmediate (MachineBasicBlock::iterator MI) {
+    
+    const VEXInstrInfo *QII = (const VEXInstrInfo *) TII;
+    MachineFunction *MF = MI->getParent()->getParent();
+    
+    PseudoMI = MF->CreateMachineInstr(QII->get(VEX::EXTIMM),
                                           MI->getDebugLoc());
         
-        if (ResourceTracker->canReserveResources(PseudoMI)) {
-            MI->getParent()->getParent()->DeleteMachineInstr(PseudoMI);
-            return true;
-        } else {
-            MI->getParent()->getParent()->DeleteMachineInstr(PseudoMI);
-            return false;
-            //llvm_unreachable("can not reserve resources for constant extender.");
-        }
-        DEBUG(errs() << "WARNING: Immediate does not fit in 9 bits.\n");
+    if (ResourceTracker->canReserveResources(PseudoMI)) {
+        MI->getParent()->getParent()->DeleteMachineInstr(PseudoMI);
         return true;
+    } else {
+        MI->getParent()->getParent()->DeleteMachineInstr(PseudoMI);
+        return false;
+        //llvm_unreachable("can not reserve resources for constant extender.");
     }
 }
 
@@ -147,7 +143,10 @@ MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
     for (unsigned i = 0, e = MI->getNumOperands(); i != e; ++i) {
         MachineOperand Op = MI->getOperand(i);
         
-        if (Op.isImm() && !canReserveResourcesForLongImmediate(MII, Op, hasLongImmediate)) {
+        bool longImmediate = (Op.isImm() && isLongImmediate(Op.getImm()))
+                                || Op.isGlobal() || Op.isSymbol();
+        
+        if (longImmediate || !canReserveResourcesForLongImmediate(MI)) {
             canStillReserveResources = false;
             break;
         } else
