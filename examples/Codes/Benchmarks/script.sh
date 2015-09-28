@@ -11,9 +11,16 @@ for arg in "${BENCHMARKS[@]}"; do
 done
 echo "****************************************"
 
-TYPES=(32 64)
-TARGETS=(mips-unknown-linux-gnu mips64-unknown-linux-gnu)
-OPT=(O0 O3)
+#TYPES=(32 64)
+TYPES=(32)
+#TARGETS=(mips-unknown-linux-gnu mips64-unknown-linux-gnu)
+TARGETS=(sparc-unknown-linux-gnu)
+#OPT=(O0 O1 O2 O3)
+#OPT=(O0 O3)
+#OPT=(O0)
+#OPT=(O1)
+#OPT=(O2)
+OPT=(O3)
 LLVM_BIN_PATH=~/llvm_build/build/bin
 VEX_BIN_PATH=~/vex-3.43/bin
 
@@ -38,13 +45,17 @@ for i in ${BENCHMARKS[@]}; do
 
 				if [ -s tmp.txt ]
 				then
-        			echo "CLANG Error: Failed to create ${i}_${TYPES[$j]}_$k.ll. Check tmp.txt file"
-					cat tmp.txt
-					exit
-				else
-				    echo "CLANG: OK"
-				    # do something as file is empty
+					variable=$(cat tmp.txt)
+                                        substring=" error"
+                                        if echo "$variable" | grep -q "$substring"; then
+        					echo "CLANG Error: Failed to create ${i}_${TYPES[$j]}_$k.ll. Check tmp.txt file"
+						exit
+					fi
 				fi
+				echo "CLANG: OK"
+				# do something as file is empty
+			else	
+				echo "CLANG: File ${i}_${TYPES[$j]}_$k.ll already exists "
 			fi
 	
 			# Generate Assembly with LLC
@@ -53,33 +64,48 @@ for i in ${BENCHMARKS[@]}; do
 				llc -enable-vliw-scheduling -march=vex -filetype=asm ${FOLDER}/${i}_${TYPES[$j]}_$k.ll -o ${FOLDER}/${i}_${TYPES[$j]}_$k.s &> tmp.txt
 				
 				line=$(head -n 1 tmp.txt)
-				if [[ -s tmp.txt &&  ! ${line} == "WARNING: No File Specified." ]] ; then
-					echo "*************				ERROR  			**************"
-					echo "LLC Error: Failed to ${i}_${TYPES[$j]}_$k.s. Check tmp.txt file"
-					echo "**********************************************************";
-					exit
-				else
-					echo "LLC: OK"
-					sed -i -e 's/\.rodata\..*/\.data/g' ${FOLDER}/${i}_${TYPES[$j]}_$k.s
-					echo '.import printf' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
-					echo '.type printf, @function' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
-					echo '.import puts' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
-					echo '.type puts, @function' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
-				fi
+				if [ -s tmp.txt ] ; then
+					substring1=$(grep -H "Stack dump" tmp.txt);
+					substring2=$(grep -H "ERROR" tmp.txt);
+					if [ ! -z "$substring1" -o ! -z "$substring2" ]; then
+						echo "*************      ERROR      **************"
+						echo "LLC Error: Failed to ${i}_${TYPES[$j]}_$k.s. Check tmp.txt file"
+						echo "**********************************************************";
+						exit
+					fi
+				fi	
+				echo "LLC: OK"
+				sed -i -e 's/\.rodata.*/\.data/g' ${FOLDER}/${i}_${TYPES[$j]}_$k.s
+				sed -i -e 's/\.bss.*/\.bss \.section \.data/g' ${FOLDER}/${i}_${TYPES[$j]}_$k.s
+				echo '.import printf' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
+				echo '.type printf, @function' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
+				echo '.import puts' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
+				echo '.type puts, @function' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
+			else
+				echo "LLC: File ${i}_${TYPES[$j]}_$k.s already exists"
 			fi
 		
 			# Simulate Executable
-			if [ ! -a ${FOLDER}/${i}_${TYPES[$j]}_$k.log ]; then
+			#if [ ! -a ${FOLDER}/${i}_${TYPES[$j]}_$k.log ]; then
 				echo "VEX CC: Executing benchmark ${i}_${TYPES[$j]}_$k.s"
 				${VEX_BIN_PATH}/cc ${FOLDER}/${i}_${TYPES[$j]}_$k.s -o ${FOLDER}/${i}_${TYPES[$j]}_$k &> tmp.txt
 				if [ -s tmp.txt ]; then
-					echo "**************               ERROR               **************"
+					echo "**************      ERROR      **************"
 					echo "VEX CC Error: Failed to create executable for ${i}_${TYPES[$j]}_$k.s. Check tmp.txt file"
 					echo "***************************************************************";
 					exit
 				else
 					echo "VEX CC: OK"
 					${FOLDER}/${i}_${TYPES[$j]}_$k > ${FOLDER}/${i}_${TYPES[$j]}_$k.log
+					# Save log
+					line=$(grep "Avg. IPC (no stalls)" ta.log.000)
+					echo "$line"
+					echo "$line" >> ${FOLDER}/${i}_${TYPES[$j]}_$k.log
+					line=$(grep "cycle counter =" ta.log.000)
+					echo "$line"
+					echo "$line" >> ${FOLDER}/${i}_${TYPES[$j]}_$k.log
+					rm ta.log.000
+					
 					line=$(head -n 1 ${FOLDER}/${i}_${TYPES[$j]}_$k.log)
 					if [ $line == "-1" ]; then
 						echo "***************************************************************";
@@ -89,7 +115,7 @@ for i in ${BENCHMARKS[@]}; do
 						echo "**************  ERROR in ${i}_${TYPES[$j]}_$k.s ***************"
 					fi
 				fi
-			fi
+		#	fi
 		done
 	done
 done
