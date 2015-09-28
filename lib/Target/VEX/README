@@ -54,6 +54,9 @@ The list of missing that are still missing for VEX Backend can be viewed below:
 
 
 8. Add support to ISD::ADDE and ISD::ADDC, and any other ISD that cannot yet be lowered. We need to verify each one of those nodes to check what is the best approach for each case. We should carefully choose the best option for each, since it may generate non-optimized code.
+
+
+9. Need to fix problem that may cause compilation error in some benchmaks due spilling of Branch registers. For some reason, the compiler tries to spill branch register to memory and this should not be allowed since they are i1 types. Fix might be by telling the compiler that it should not spill  branch registers and instead, use general purpose registers.
 	
 	
 "VLIW PACKETIZER"-RELATED ISSUES

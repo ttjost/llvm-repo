@@ -238,6 +238,12 @@ class ExtendInstr<string OpcStr, bits<8> OpVal, SDNode OpNode, InstrItinClass It
 //              [(set GPRegs:$dst, (OpNode GPRegs:$s1))], Itin>{
 }
 
+
+class ExtendImmediateInstr<InstrItinClass Itin>
+    : InstVEX<(outs), (ins), "ExtendImmediateInstr", [], Itin>{
+    let isCodeGenOnly = 1;
+}
+
 class TwoResultInstr<string OpcStr, bits<8> OpVal, SDNode OpNode, InstrItinClass Itin>
     : InstVEX<(outs GPRegs:$dst1, BrRegs:$cout ), (ins GPRegs:$s1, GPRegs:$s2, BrRegs:$cin),
               !strconcat(OpcStr, " $dst1, $cout = $s1, $s2, $cin"),
@@ -463,8 +469,15 @@ def ZXTB    : ExtendInstr<"zxtb", 0b00000000, add, IIAlu>;
 def SXTH    : ExtendInstr<"sxth", 0b00000000, add, IIAlu>;
 def ZXTH    : ExtendInstr<"zxth", 0b00000000, add, IIAlu>;
 
+// Used to Extend Immediate from 9 to 32 bits.
+// This will be used in the VEXVLIWPacketizer.cpp file
+let isCodeGenOnly = 1 in {
+    def EXTIMM  : ExtendInstr<"extendinstr", 0b00000000, add, IIAll>;
+}
+
 def DIVS    : TwoResultInstr<"divs", 0b00000000, VEXDIVS, IIAlu>;
 def ADDCG   : TwoResultInstr<"addcg", 0b00000000, VEXADDCG, IIAlu>;
+
 
 // Select Instructions
 defm SLCT   : SelectInstr<0b00000000, IIAlu>;

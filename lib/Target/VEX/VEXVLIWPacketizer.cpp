@@ -69,6 +69,7 @@ public:
     bool ignorePseudoInstruction(MachineInstr *MI, MachineBasicBlock *MBB) override;
     bool isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ) override;
     void initPacketizerState() override;
+    MachineBasicBlock::iterator addToPacket(MachineInstr *MI);
 
 };
 
@@ -108,6 +109,13 @@ bool VEXPacketizerList::ignorePseudoInstruction(MachineInstr *MI,
     ResourceTracker->getInstrItins()->beginStage(SchedClass);
     unsigned FuncUnits = IS->getUnits();
     return !FuncUnits;
+}
+
+MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
+    MachineBasicBlock::iterator MII = MI;
+    CurrentPacketMIs.push_back(MI);
+    ResourceTracker->reserveResources(MI);
+    return MII;
 }
 
 bool VEXPacketizerList::isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ) {
