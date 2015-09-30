@@ -153,7 +153,6 @@ MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
     
     // Allocate Resource
     VLIWPacketizerList::addToPacket(MI);
-    
     if (longImmediate) {
         if (canReserveResourcesForLongImmediate(MI)) {
             reserveResourcesForLongImmediate(MII);
