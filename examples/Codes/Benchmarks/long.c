@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 long a;
 long b;
 
