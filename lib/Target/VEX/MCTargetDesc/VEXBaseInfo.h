@@ -178,8 +178,8 @@ inline static unsigned getVEXRegisterNumbering(unsigned RegEnum)
   }
 }
 
-    extern int VEXDFAStateInputTable[][2];
-    extern unsigned int VEXDFAStateEntryTable[];
+extern int VEXDFAStateInputTable[][2];
+extern unsigned int VEXDFAStateEntryTable[];
 
 //
 //
