@@ -18,6 +18,8 @@
 #include "llvm/MC/MCExpr.h"
 #include "llvm/Support/DataTypes.h"
 #include "llvm/Support/ErrorHandling.h"
+#include <map>
+#include <set>
 
 namespace llvm {
 
@@ -175,6 +177,99 @@ inline static unsigned getVEXRegisterNumbering(unsigned RegEnum)
   default: llvm_unreachable("Unknown register number!");
   }
 }
+
+    extern int VEXDFAStateInputTable[][2];
+    extern unsigned int VEXDFAStateEntryTable[];
+
+//
+//
+// State represents the usage of machine resources if the packet contains
+// a set of instruction classes.
+//
+// Specifically, currentState is a set of bit-masks.
+// The nth bit in a bit-mask indicates whether the nth resource is being used
+// by this state. The set of bit-masks in a state represent the different
+// possible outcomes of transitioning to this state.
+// For example: consider a two resource architecture: resource L and resource M
+// with three instruction classes: L, M, and L_or_M.
+// From the initial state (currentState = 0x00), if we add instruction class
+// L_or_M we will transition to a state with currentState = [0x01, 0x10]. This
+// represents the possible resource states that can result from adding a L_or_M
+// instruction
+//
+// Another way of thinking about this transition is we are mapping a NDFA with
+// two states [0x01] and [0x10] into a DFA with a single state [0x01, 0x10].
+//
+// A State instance also contains a collection of transitions from that state:
+// a map from inputs to new states.
+//
+class VEXState {
+ public:
+  static int currentStateNum;
+  // stateNum is the only member used for equality/ordering, all other members
+  // can be mutated even in const State objects.
+  const int stateNum;
+  mutable bool isInitial;
+  mutable std::set<unsigned> stateInfo;
+  typedef std::map<unsigned, const VEXState *> TransitionMap;
+  mutable TransitionMap Transitions;
+
+  VEXState();
+
+  bool operator<(const VEXState &s) const {
+    return stateNum < s.stateNum;
+  }
+
+  //
+  // canAddInsnClass - Returns true if an instruction of type InsnClass is a
+  // valid transition from this state, i.e., can an instruction of type InsnClass
+  // be added to the packet represented by this state.
+  //
+  // PossibleStates is the set of valid resource states that ensue from valid
+  // transitions.
+  //
+  bool canAddInsnClass(unsigned InsnClass) const;
+  //
+  // AddInsnClass - Return all combinations of resource reservation
+  // which are possible from this state (PossibleStates).
+  //
+  void AddInsnClass(unsigned InsnClass, std::set<unsigned> &PossibleStates) const;
+  // 
+  // addTransition - Add a transition from this state given the input InsnClass
+  //
+  void addTransition(unsigned InsnClass, const VEXState *To) const;
+  //
+  // hasTransition - Returns true if there is a transition from this state
+  // given the input InsnClass
+  //
+  bool hasTransition(unsigned InsnClass) const;
+};
+    
+    
+//
+// class DFA: deterministic finite automaton for processor resource tracking.
+//
+class VEXDFA {
+public:
+  VEXDFA();
+
+  // Set of states. Need to keep this sorted to emit the transition table.
+  typedef std::set<VEXState> StateSet;
+  StateSet states;
+
+  VEXState *currentState;
+
+  //
+  // Modify the DFA.
+  //
+  const VEXState &newState();
+
+  //
+  // writeTable: Print out a table representing the DFA.
+  //
+  void UpdateTables();
+};
+
 
 }
 

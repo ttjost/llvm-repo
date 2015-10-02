@@ -12,6 +12,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "VEXMCTargetDesc.h"
+#include "VEXBaseInfo.h"
+#include "../VEXDFAPacketizer.cpp"
 
 #include "llvm/MC/MachineLocation.h"
 #include "llvm/MC/MCCodeGenInfo.h"
@@ -32,6 +34,8 @@
 #include "VEXTargetStreamer.h"
 #include "VEXMCAsmInfo.h"
 
+#include "llvm/ADT/DenseSet.h"
+
 using namespace llvm;
 
 #define GET_INSTRINFO_MC_DESC
@@ -43,9 +47,103 @@ using namespace llvm;
 #define GET_REGINFO_MC_DESC
 #include "VEXGenRegisterInfo.inc"
 
+void collectAllInsnClasses (ConfigInfo Config, DenseSet<unsigned> &allInsnClasses) {
+    
+    std::map<std::string,unsigned> NameToBitsMap = Config.NameToBitsMap;
+    
+    SmallVector<StringRef, 16> UnitList = {"Alu", "Branch",
+        "Load", "Store",
+        "Multiply", "All",
+        "AddOtherType1", "AddOtherType2",
+        "AddOtherType3", "AddOtherType4",
+        "AddOtherType5", "AddOtherType6",
+        "AddOtherType7", "AddOtherType8",
+        "AddOtherType9", "AddOtherType10" };
+    
+    unsigned UnitBitValue;
+    for (unsigned i = 0; i < 6; ++i) {
+        // Conduct bitwise or.
+        std::string UnitName = UnitList[i];
+        assert(NameToBitsMap.count(UnitName));
+        UnitBitValue = NameToBitsMap[UnitName];
+    
+        if (UnitBitValue != 0)
+            allInsnClasses.insert(UnitBitValue);
+    }
+    
+    unsigned size = allInsnClasses.size();
+    
+}
+
+void generateDFA (VEXDFA &D, DenseSet<unsigned> &allInsnClasses) {
+
+    const VEXState *Initial = &D.newState();
+    Initial->isInitial = true;
+    Initial->stateInfo.insert(0x0);
+    SmallVector<const VEXState*, 32> WorkList;
+    std::map<std::set<unsigned>, const VEXState*> Visited;
+    
+    WorkList.push_back(Initial);
+    
+    //
+    // Worklist algorithm to create a DFA for processor resource tracking.
+    // C = {set of InsnClasses}
+    // Begin with initial node in worklist. Initial node does not have
+    // any consumed resources,
+    //     ResourceState = 0x0
+    // Visited = {}
+    // While worklist != empty
+    //    S = first element of worklist
+    //    For every instruction class C
+    //      if we can accommodate C in S:
+    //          S' = state with resource states = {S Union C}
+    //          Add a new transition: S x C -> S'
+    //          If S' is not in Visited:
+    //             Add S' to worklist
+    //             Add S' to Visited
+    //
+    int size = allInsnClasses.size();
+    while (!WorkList.empty()) {
+        const VEXState *current = WorkList.pop_back_val();
+        for (DenseSet<unsigned>::iterator CI = allInsnClasses.begin(),
+             CE = allInsnClasses.end(); CI != CE; ++CI) {
+            unsigned InsnClass = *CI;
+            
+            std::set<unsigned> NewStateResources;
+            //
+            // If we haven't already created a transition for this input
+            // and the state can accommodate this InsnClass, create a transition.
+            //
+            if (!current->hasTransition(InsnClass) &&
+                current->canAddInsnClass(InsnClass)) {
+                const VEXState *NewState;
+                current->AddInsnClass(InsnClass, NewStateResources);
+                assert(!NewStateResources.empty() && "New states must be generated");
+                
+                //
+                // If we have seen this state before, then do not create a new state.
+                //
+                //
+                auto VI = Visited.find(NewStateResources);
+                if (VI != Visited.end())
+                    NewState = VI->second;
+                else {
+                    NewState = &D.newState();
+                    NewState->stateInfo = NewStateResources;
+                    Visited[NewStateResources] = NewState;
+                    WorkList.push_back(NewState);
+                }
+                
+                current->addTransition(InsnClass, NewState);
+            }
+        }
+    }
+}
+
 // Select the VEX Architecture Feature for the given triple and cpu name
 // The function will be called at command 'llvm-objdump -d' for VEX elf input
 // FIXME:  Is this really necessary?
+
 static StringRef selectVEXArchFeature(StringRef TT, StringRef CPU){
     std::string VEXArchFeature;
 
@@ -83,6 +181,31 @@ static MCSubtargetInfo *createVEXMCSubtargetInfo(StringRef TT, StringRef CPU,
             ArchFS = FS;
 
     MCSubtargetInfo *X = new MCSubtargetInfo();
+    struct ConfigInfo Config;
+    DenseSet<unsigned> allInsnClasses;
+    VEXDFA D;
+    
+    // Read File
+    ConfigureMachineModel(Config.IssueWidth, Config.Resources, Config.Delays, Config.NumRegisters, Config.NameToBitsMap);
+    UpdateItinerariesTables(Config.Delays, Config.NameToBitsMap);
+    // Get Info on Instruction Classes
+    collectAllInsnClasses(Config, allInsnClasses);
+    // Generate DFA with correct transitions
+    generateDFA(D, allInsnClasses);
+    D.UpdateTables();
+    
+//    errs () << "VEXDFAStateInputTable[][2] = {";
+//    for (unsigned i = 0; i < 64; ++i) {
+//        errs() << "{" <<VEXDFAStateInputTable[i][0] << ", " << VEXDFAStateInputTable[i][1] <<"},";
+//    }
+//    errs () << "};\n";
+//    
+//    errs () << "VEXDFAStateEntryTable[] = {";
+//    for (unsigned i = 0; i < 64; ++i) {
+//        errs() << "" << VEXDFAStateEntryTable[i] << ", ";
+//    }
+//    errs () << "};\n";
+    
     InitVEXMCSubtargetInfo(X, TT, CPU, ArchFS); // defined in VEXGenRegisterInfo.inc
     return X;
 }

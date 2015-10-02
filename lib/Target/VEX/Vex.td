@@ -41,29 +41,23 @@ def     VEXInstrInfo    :   InstrInfo;
 // VEX Subtarget features                                                    //
 //===----------------------------------------------------------------------===//
 
-//def NoFeature     : SubtargetFeature<"VEX", "VEXArchVersion", "VEX", "VEX ISA Support", []>;
+def NoFeature     : SubtargetFeature<"VEX", "VEXArchVersion", "VEX", "VEX ISA Support", []>;
 
-//def VEXSchedMachineModel : SchedMachineModel {
-//    let IssueWidth = 4;
-//    let Itineraries = VEXGenericItineraries;
-//}
+def VEXSchedMachineModel : SchedMachineModel {
+    let IssueWidth = 4;
+    let Itineraries = VEXGenericItineraries;
+}
 
 //===----------------------------------------------------------------------===//
 // VEX supported processors.
 //===----------------------------------------------------------------------===//
-//class Proc<string Name, SchedMachineModel Model, list<SubtargetFeature> Features>
-//: ProcessorModel<Name, Model, Features>;
+def NoModel : SchedMachineModel {}
 
-//def: Proc<"VEX_I", NoModel, []>;
-//def: Proc<"VEX_II", NoModel, []>;
+class Proc<string Name, list<SubtargetFeature> Features>
+: ProcessorModel<Name, VEXSchedMachineModel, Features>;
 
-//def NoModel : SchedMachineModel {}
-
-//class Proc<string Name, list<SubtargetFeature> Features>
-//: ProcessorModel<Name, NoModel, Features>;
-
-//def: Proc<"VEX_I", []>;
-//def: Proc<"VEX_II", []>;
+def: Proc<"VEX_I", []>;
+def: Proc<"VEX_II", []>;
 
 //#if CH >= CH11_1 1
 def VEXAsmParser : AsmParser {

@@ -66,6 +66,9 @@
 //===----------------------------------------------------------------------===//
 // Functional units
 //===----------------------------------------------------------------------===//
+
+class FuncUnit;
+
 def IUnit0    : FuncUnit;
 def IUnit1    : FuncUnit;
 def IUnit2    : FuncUnit;
@@ -96,6 +99,6 @@ InstrItinData<IIMul              , [InstrStage<1,  [IUnit1, IUnit2]>]>,
 InstrItinData<IILoad             , [InstrStage<1,  [IUnit0]>]>,
 InstrItinData<IIStore            , [InstrStage<1,  [IUnit0]>]>,
 InstrItinData<IIBranch           , [InstrStage<1,  [IUnit3]>]>,
-InstrItinData<IIAlu              , [InstrStage<1,  [IUnit1, IUnit2, IUnit0, IUnit3]>]>,
+InstrItinData<IIAlu              , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
 InstrItinData<IIAll              , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>
 ]>;

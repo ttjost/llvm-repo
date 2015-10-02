@@ -45,7 +45,8 @@ namespace llvm{
 #define GET_INSTRINFO_ENUM
 #include "VEXGenInstrInfo.inc"
 
-//#define GET_SUBTARGETINFO_ENUM
+#define GET_SUBTARGETINFO_ENUM
 //#include "VEXGenSubtargetInfo.inc"
+#include "../VEXSubtargetInfo.cpp"
 
 #endif

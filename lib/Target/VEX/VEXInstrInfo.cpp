@@ -32,7 +32,8 @@ using namespace llvm;
 #define GET_INSTRINFO_CTOR_DTOR
 #include "VEXGenInstrInfo.inc"
 
-#include "VEXGenDFAPacketizer.inc"
+//#include "VEXGenDFAPacketizer.inc"
+#include "VEXSubtargetInfo.cpp"
 
 //@VEXInstrInfo(){
 VEXInstrInfo::VEXInstrInfo(const VEXSubtarget &STI) : Subtarget(STI), RI(STI) {
@@ -68,13 +69,14 @@ void VEXInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
             Opc = VEX::MTB;
         }else
             if(VEX::BrRegsRegClass.contains(SrcReg)){
-                // FIXME: Bad coding strategy to handle BrReg to BrReg Moves right now!
-                // Check if this new version Works.
+// FIXME: Bad coding strategy to handle BrReg to BrReg Moves right now!                
 //                unsigned Reg = 10;
 //                MRI.getLiveInPhysReg
 //                for (; Reg < 63; ++Reg)
 //                    if (!MBB.isLiveIn(Reg))
 //                        break;
+                
+                // I think this is a better solution.
                 MachineFunction *MF = MBB.getParent();
                 MachineRegisterInfo &MRI = MF->getRegInfo();
                 unsigned Reg = MRI.createVirtualRegister(&VEX::BrRegsRegClass);
@@ -137,6 +139,8 @@ void VEXInstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
                 .addFrameIndex(FrameIndex).addImm(0)
                 .addMemOperand(MMO);
     else
+        // We cannot directly Spill/Fill with Branch Registers
+        // First, we need to Load from Stack to a GPReg and then Move to Branch
         if (RC == &VEX::BrRegsRegClass) {
             MachineRegisterInfo &MRI = MF.getRegInfo();
             unsigned Reg = MRI.createVirtualRegister(&VEX::GPRegsRegClass);
@@ -177,7 +181,7 @@ void VEXInstrInfo::storeRegToStackSlot(MachineBasicBlock &MBB,
                 .addFrameIndex(FrameIndex).addImm(0);
     else
         // We cannot directly Spill/Fill with Branch Registers
-        // First, we send to a 
+        // First, we send to a Move From Branch and then Store in Stack
         if (RC == &VEX::BrRegsRegClass) {
             MachineRegisterInfo &MRI = MF.getRegInfo();
             unsigned DstReg = MRI.createVirtualRegister(&VEX::GPRegsRegClass);

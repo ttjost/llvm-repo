@@ -139,18 +139,19 @@ MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
     MachineBasicBlock::iterator MII = MI;
     
     bool longImmediate = false;
-    for (unsigned i = 0, e = MI->getNumOperands(); i != e; ++i) {
-        MachineOperand Op = MI->getOperand(i);
-        
-        longImmediate = (Op.isImm() && isLongImmediate(Op.getImm()))
+    // Early Exit for Branches and Calls
+    if(!(MI->isBranch() || MI->isCall()))
+        for (unsigned i = 0, e = MI->getNumOperands(); i != e; ++i) {
+            MachineOperand Op = MI->getOperand(i);
+            longImmediate = (Op.isImm() && isLongImmediate(Op.getImm()))
                                 || Op.isGlobal() || Op.isSymbol();
         
-        if (longImmediate)
-            break;
-        else
-            continue;
-    }
-    
+            if (longImmediate)
+                break;
+            else
+                continue;
+        }
+
     // Allocate Resource
     VLIWPacketizerList::addToPacket(MI);
     if (longImmediate) {

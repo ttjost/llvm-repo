@@ -471,7 +471,7 @@ def ZXTH    : ExtendInstr<"zxth", 0b00000000, add, IIAlu>;
 // Used to Extend Immediate from 9 to 32 bits.
 // This will be used in the VEXVLIWPacketizer.cpp file
 let isCodeGenOnly = 1, isPseudo = 1 in {
-    def EXTIMM  : ExtendImmediateInstr<IIAlu>;
+    def EXTIMM  : ExtendImmediateInstr<IIAll>;
 }
 
 def DIVS    : TwoResultInstr<"divs", 0b00000000, VEXDIVS, IIAlu>;
