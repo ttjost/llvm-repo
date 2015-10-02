@@ -13,7 +13,6 @@
 
 #include "VEXMCTargetDesc.h"
 #include "VEXBaseInfo.h"
-//#include "../VEXDFAPacketizer.cpp"
 
 #include "llvm/MC/MachineLocation.h"
 #include "llvm/MC/MCCodeGenInfo.h"
