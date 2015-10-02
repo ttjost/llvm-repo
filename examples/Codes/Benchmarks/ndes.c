@@ -232,6 +232,12 @@ int main(void)
    isw = value;
 
    des(inp, key, &newkey, isw, &out);
-   printf("%u %u\n", out.l, out.r);
+   	if(out.l != 2489587893){
+		printf("666\n");
+  	}
+   	if(out.r != 1806503748){
+		printf("666\n");
+  	}
+   printf("-1\n");
   return 0;
 }
