@@ -44,6 +44,11 @@ namespace llvm {
             ADDCG,
             DIVS,
             
+            // Used for ISD::SDIV and ISD::UDIV Instructions
+            ORC,
+            SH1ADD,
+            MTB,
+            
             MPYLL,
             MPYLLU,
             MPYLH,
@@ -124,6 +129,11 @@ private:
     SDValue LowerConstant(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerSETCC(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerMUL(SDValue Op, SelectionDAG &DAG) const;
+    SDValue LowerDIVISION(SDValue Op, SelectionDAG &DAG) const;
+    SDValue LowerSDIV(SDValue Op, SelectionDAG &DAG) const;
+    SDValue LowerUDIV(SDValue Op, SelectionDAG &DAG) const;
+    SDValue LowerSREM(SDValue Op, SelectionDAG &DAG) const;
+    SDValue LowerUREM(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerADDSUBWithFlags(SDValue Op, SelectionDAG &DAG) const;
 
     SDValue

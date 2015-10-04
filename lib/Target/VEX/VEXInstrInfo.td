@@ -87,6 +87,9 @@ def SDT_VEXTWORESULT : SDTypeProfile<2, 3,
                                      SDTCisVT<1, i1>,
                                      SDTCisVT<4, i1>]>;
 
+def SDT_MTB : SDTypeProfile<1, 1,
+                            [SDTCisVT<0, i1>,SDTCisVT<1, i32>]>;
+
 def SDT_VEXPseudoCall         : SDTypeProfile<0, -1, [SDTCisVT<0, iPTR>]>;
 def SDT_VEXCallSeqStart : SDCallSeqStart<[SDTCisVT<0, i32>]>;
 def SDT_VEXCallSeqEnd   : SDCallSeqEnd<[SDTCisVT<0, i32>, SDTCisVT<1, i32>]>;
@@ -127,6 +130,10 @@ def VEXMax   : SDNode<"VEXISD::MAX", SDTIntBinOp>;
 def VEXMaxu  : SDNode<"VEXISD::MAXU", SDTIntBinOp>;
 def VEXMin   : SDNode<"VEXISD::MIN", SDTIntBinOp>;
 def VEXMinu  : SDNode<"VEXISD::MINU", SDTIntBinOp>;
+
+def VEXOrc      : SDNode<"VEXISD::ORC", SDTIntBinOp>;
+def VEXSh1Add   : SDNode<"VEXISD::SH1ADD", SDTIntBinOp>;
+def VEXMTB      : SDNode<"VEXISD::MTB", SDT_MTB>;
 
 def VEXMPYLL    : SDNode<"VEXISD::MPYLL", SDTIntBinOp>;
 def VEXMPYLLU   : SDNode<"VEXISD::MPYLLU", SDTIntBinOp>;
@@ -377,11 +384,11 @@ defm OR     : ArithLogicInstr<"or", 0b01101001, or, IIAlu>;
 // ORC Instruction
 def ORCr      : ArithLogic_r<0b01101010,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
-                          "orc",
+                          "orc $dst = $s1, $s2",
                            [(set GPRegs:$dst, (or GPRegs:$s2, (not GPRegs:$s1)))], IIAlu, 1>;
 def ORCi      : ArithLogic_i<0b01101010,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
-                          "orc",
+                          "orc $dst = $s1, $s2",
                            [(set GPRegs:$dst, (or (not GPRegs:$s1), imm32:$s2))], IIAlu, 1>;
 
 // SH1ADD Instruction
@@ -475,6 +482,11 @@ let isCodeGenOnly = 1, isPseudo = 1 in {
 }
 
 def DIVS    : TwoResultInstr<"divs", 0b00000000, VEXDIVS, IIAlu>;
+
+// We need to set earlyclobber so we don't use the same registers
+// as both sources and destination in the instruction.
+// Using such causes some unwanted behaviour in the program
+let Constraints = "@earlyclobber $dst1" in
 def ADDCG   : TwoResultInstr<"addcg", 0b00000000, VEXADDCG, IIAlu>;
 
 
@@ -511,6 +523,14 @@ def : Pat<(addc GPRegs:$lhs, GPRegs:$rhs),
           (ADDr GPRegs:$lhs, GPRegs:$rhs)>;
 def : Pat<(addc  GPRegs:$src, imm32:$imm),
           (ADDi GPRegs:$src, imm32:$imm)>;
+
+// Used for ISD::SDIV and ISD::UDIV Instructions
+def : Pat<(VEXOrc GPRegs:$lhs, GPRegs:$rhs),
+          (ORCr GPRegs:$lhs, GPRegs:$rhs)>;
+def : Pat<(VEXSh1Add GPRegs:$lhs, GPRegs:$rhs),
+          (SH1ADDr GPRegs:$lhs, GPRegs:$rhs)>;
+def : Pat<(VEXMTB GPRegs:$src),
+          (MTB GPRegs:$src)>;
 
 //def : Pat<(i1 imm:$imm),
 //(MOVi imm:$imm)>;
