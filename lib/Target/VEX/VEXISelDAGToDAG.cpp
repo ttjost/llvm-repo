@@ -140,8 +140,8 @@ std::pair<bool, SDNode*> VEXDAGToDAGISel::selectNode(SDNode *Node){
     unsigned MultOpc;
 
     switch(Opcode){
-            case ISD::MUL: {
-                DEBUG(errs() << "Selecting node mult.");
+        case ISD::MUL: {
+            DEBUG(errs() << "Selecting node mult.");
 //                mpylu LO_REGISTER = rs, rt
 //                mpyhs aux = rs, rt
 //                add LO_REGISTER = LO_REGISTER, aux
@@ -149,20 +149,28 @@ std::pair<bool, SDNode*> VEXDAGToDAGISel::selectNode(SDNode *Node){
 //                  SDValue RHS = Node->getOperand(2);
 
 //                  MultOpc = VEX::MPYLU
+        }
+        break;
+            
+//        case ISD::SDIV: {
+//            DEBUG(errs() << "Selecting SDIV Node");
+//            
+//
+//            return std::make_pair(true, SLCTRes.getNode());
+//        }
+//        break;
+            
+        case ISD::Constant: {
+            if (Node->getValueType(0) != MVT::i1){
+                DEBUG(errs() << "NOT i1 constant\n");
+                break;
+            } else {
+                DEBUG(errs() << "This is a i1 constant\n");
+                SDValue Reg0 = CurDAG->getRegister(VEX::Reg0, MVT::i32);
+                SDNode* Result = CurDAG->SelectNodeTo(Node, VEX::MTB, Node->getValueType(0), Reg0);
+                return std::make_pair(true, Result);
             }
-            break;
-
-            case ISD::Constant: {
-                if (Node->getValueType(0) != MVT::i1){
-                    DEBUG(errs() << "NOT i1 constant\n");
-                    break;
-                } else {
-                    DEBUG(errs() << "This is a i1 constant\n");
-                    SDValue Reg0 = CurDAG->getRegister(VEX::Reg0, MVT::i32);
-                    SDNode* Result = CurDAG->SelectNodeTo(Node, VEX::MTB, Node->getValueType(0), Reg0);
-                    return std::make_pair(true, Result);
-                }
-            }
+        }
         default: break;
     }
 

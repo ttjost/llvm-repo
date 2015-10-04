@@ -212,7 +212,7 @@ bool VEXPacketizerList::isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ) {
     if (SUJ->isSucc(SUI)) {
         for (SDep dep : SUJ->Succs) {
             if (dep.getSUnit() == SUI)
-                if (dep.getKind() == SDep::Data)
+                if (dep.getKind() == SDep::Data || dep.getKind() == SDep::Output)
                     return false;
             else
                 continue;

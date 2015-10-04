@@ -64,6 +64,10 @@ const char *VEXTargetLowering::getTargetNodeName(unsigned Opcode) const {
         case VEXISD::ADDCG:         return "VEXISD::ADDCG";
         case VEXISD::DIVS:          return "VEXISD::DIVS";
             
+        case VEXISD::ORC:           return "VEXISD::ORC";
+        case VEXISD::SH1ADD:        return "VEXISD::SH1ADD";
+        case VEXISD::MTB:           return "VEXISD::MTB";
+            
         case VEXISD::MPYLL:         return "VEXISD::MPYLL";
         case VEXISD::MPYLLU:        return "VEXISD::MPYLLU";
         case VEXISD::MPYLH:         return "VEXISD::MPYLH";
@@ -128,7 +132,10 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
 //    setOperationAction(ISD::ADDC, MVT::i32, Expand);
 //    setOperationAction(ISD::SUBC, MVT::i32, Expand);
 
-//    setOperationAction(ISD::SDIV, MVT::i32, Expand);
+    setOperationAction(ISD::SDIV, MVT::i32, Custom);
+    setOperationAction(ISD::UDIV, MVT::i32, Custom);
+    setOperationAction(ISD::SREM, MVT::i32, Custom);
+    setOperationAction(ISD::UREM, MVT::i32, Custom);
 //    setOperationAction(ISD::SDIVREM, MVT::i32, Expand);
     
     
@@ -203,6 +210,10 @@ SDValue VEXTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) const {
         case ISD::SUBC:
         case ISD::ADDE:
         case ISD::ADDC:                 return LowerADDSUBWithFlags(Op, DAG);
+        case ISD::UDIV:                 return LowerUDIV(Op, DAG);
+        case ISD::SDIV:                 return LowerSDIV(Op, DAG);
+        case ISD::UREM:                 return LowerUREM(Op, DAG);
+        case ISD::SREM:                 return LowerSREM(Op, DAG);
 //        case ISD::SETCC:                return LowerSETCC(Op, DAG);
         default:
             break;
@@ -737,6 +748,346 @@ SDValue VEXTargetLowering::LowerMUL(SDValue Op, SelectionDAG &DAG) const {
     SDValue SecondPart = DAG.getNode(Opc2, dl, ValueType, lhs, rhs);
     
     return DAG.getNode(ISD::ADD, dl, ValueType, FirstPart, SecondPart);
+}
+
+SDValue VEXTargetLowering::LowerSDIV(SDValue Op, SelectionDAG &DAG) const {
+    
+    DEBUG(errs() << "ISD::SDIV Lowering\n");
+    
+    SDLoc DL(Op);
+    
+    SDVTList VTList = DAG.getVTList(MVT::i32, MVT::i1);
+    
+    SDValue Reg0 = DAG.getRegister(VEX::Reg0, MVT::i32);
+    SDValue BReg0 = DAG.getNode(VEXISD::MTB, DL, MVT::i1, Reg0);
+    
+    SDValue Dividend = Op.getOperand(0);
+    SDValue Divisor = Op.getOperand(1);
+    SDValue CondCode = DAG.getCondCode(ISD::SETLT);
+    SDValue CmpDividend = DAG.getNode(ISD::SETCC, DL, MVT::i32,
+                                          Dividend, Reg0, CondCode);
+    SDValue CmpDivisor = DAG.getNode(ISD::SETCC, DL, MVT::i32,
+                                         Divisor, Reg0, CondCode);
+    
+    SDValue CondCodeEq = DAG.getCondCode(ISD::SETEQ);
+    SDValue CmpEq = DAG.getNode(ISD::SETCC, DL, MVT::i1,
+                                CmpDividend, CmpDivisor, CondCodeEq);
+    
+    SDValue SubDividend = DAG.getNode(ISD::SUB, DL, MVT::i32, Reg0, Dividend);
+    SDValue SubDivisor = DAG.getNode(ISD::SUB, DL, MVT::i32, Reg0, Divisor);
+    SDValue SlctDividend = DAG.getNode(ISD::SELECT, DL, MVT::i32,
+                                           CmpDividend, SubDividend, Dividend);
+    SDValue SlctDivisor = DAG.getNode(ISD::SELECT, DL, MVT::i32,
+                                          CmpDivisor, SubDivisor, Divisor);
+    
+    SmallVector<SDValue, 34> ADDCGNodes;
+    SmallVector<SDValue, 32> DIVSNodes;
+    
+    ADDCGNodes.push_back(DAG.getNode(VEXISD::ADDCG, DL,
+                                     VTList,
+                                     SlctDividend, SlctDividend,
+                                     BReg0));
+    
+    ADDCGNodes.push_back(DAG.getNode(VEXISD::ADDCG, DL,
+                                     VTList,
+                                     ADDCGNodes[0].getValue(0),
+                                     ADDCGNodes[0].getValue(0),
+                                     BReg0));
+    
+    DIVSNodes.push_back(DAG.getNode(VEXISD::DIVS, DL,
+                                    VTList,
+                                    Reg0, SlctDivisor,
+                                    ADDCGNodes[0].getValue(1)));
+    
+    ADDCGNodes.push_back(DAG.getNode(VEXISD::ADDCG, DL,
+                                     VTList,
+                                     ADDCGNodes[1].getValue(0),
+                                     ADDCGNodes[1].getValue(0),
+                                     DIVSNodes[0].getValue(1)));
+    
+    for (unsigned i = 1; i < 32; i++) {
+        DIVSNodes.push_back(DAG.getNode(VEXISD::DIVS, DL,
+                                        VTList,
+                                        DIVSNodes[i-1].getValue(0), SlctDivisor,
+                                        ADDCGNodes[i].getValue(1)));
+        
+        ADDCGNodes.push_back(DAG.getNode(VEXISD::ADDCG, DL,
+                                         VTList,
+                                         ADDCGNodes[i+1].getValue(0),
+                                         ADDCGNodes[i+1].getValue(0),
+                                         DIVSNodes[i].getValue(1)));
+    }
+    
+    SDValue ORC = DAG.getNode(VEXISD::ORC, DL, MVT::i32,
+                              ADDCGNodes[33].getValue(0), Reg0);
+    
+    SDValue CondCodeRes = DAG.getCondCode(ISD::SETGE);
+    
+    SDValue CmpRes = DAG.getNode(ISD::SETCC, DL, MVT::i32,
+                                 DIVSNodes[31].getValue(0),
+                                 Reg0, CondCodeRes);
+    
+    SDValue SH1ADDNode = DAG.getNode(VEXISD::SH1ADD, DL,
+                                     MVT::i32, ORC,
+                                     CmpRes);
+    
+    SDValue SubRes = DAG.getNode(ISD::SUB, DL, MVT::i32, Reg0, SH1ADDNode);
+    return DAG.getNode(ISD::SELECT, DL, MVT::i32, CmpEq, SH1ADDNode, SubRes);
+}
+
+SDValue VEXTargetLowering::LowerUDIV(SDValue Op, SelectionDAG &DAG) const {
+    
+    DEBUG(errs() << "ISD::UDIV Lowering\n");
+    
+    SDLoc DL(Op);
+    
+    SDVTList VTList = DAG.getVTList(MVT::i32, MVT::i1);
+    
+    SDValue Reg0 = DAG.getRegister(VEX::Reg0, MVT::i32);
+    SDValue BReg0 = DAG.getNode(VEXISD::MTB, DL, MVT::i1, Reg0);
+    
+    SDValue Dividend = Op.getOperand(0);
+    SDValue Divisor = Op.getOperand(1);
+    
+    SDValue CondCode = DAG.getCondCode(ISD::SETUGE);
+    SDValue CmpDividend = DAG.getNode(ISD::SETCC, DL, MVT::i32,
+                                      Dividend, Divisor, CondCode);
+    
+    SDValue CondCodeDivisor = DAG.getCondCode(ISD::SETLT);
+    SDValue CmpDivisor = DAG.getNode(ISD::SETCC, DL, MVT::i32,
+                                     Divisor, Reg0, CondCodeDivisor);
+    
+    SDValue ShiftDividend = DAG.getNode(ISD::SRL, DL, MVT::i32,
+                                        Dividend, CmpDivisor);
+    SDValue ShiftDivisor = DAG.getNode(ISD::SRL, DL, MVT::i32,
+                                        Divisor, CmpDivisor);
+    
+    SmallVector<SDValue, 34> ADDCGNodes;
+    SmallVector<SDValue, 32> DIVSNodes;
+    
+    ADDCGNodes.push_back(DAG.getNode(VEXISD::ADDCG, DL,
+                                     VTList,
+                                     ShiftDividend, ShiftDividend,
+                                     BReg0));
+    
+    ADDCGNodes.push_back(DAG.getNode(VEXISD::ADDCG, DL,
+                                     VTList,
+                                     ADDCGNodes[0].getValue(0),
+                                     ADDCGNodes[0].getValue(0),
+                                     BReg0));
+    
+    DIVSNodes.push_back(DAG.getNode(VEXISD::DIVS, DL,
+                                    VTList,
+                                    Reg0, ShiftDivisor,
+                                    ADDCGNodes[0].getValue(1)));
+    
+    ADDCGNodes.push_back(DAG.getNode(VEXISD::ADDCG, DL,
+                                     VTList,
+                                     ADDCGNodes[1].getValue(0),
+                                     ADDCGNodes[1].getValue(0),
+                                     DIVSNodes[0].getValue(1)));
+    
+    for (unsigned i = 1; i < 32; i++) {
+        DIVSNodes.push_back(DAG.getNode(VEXISD::DIVS, DL,
+                                        VTList,
+                                        DIVSNodes[i-1].getValue(0), ShiftDivisor,
+                                        ADDCGNodes[i].getValue(1)));
+        
+        ADDCGNodes.push_back(DAG.getNode(VEXISD::ADDCG, DL,
+                                         VTList,
+                                         ADDCGNodes[i+1].getValue(0),
+                                         ADDCGNodes[i+1].getValue(0),
+                                         DIVSNodes[i].getValue(1)));
+    }
+    
+    SDValue ORC = DAG.getNode(VEXISD::ORC, DL, MVT::i32,
+                              ADDCGNodes[33].getValue(0), Reg0);
+    
+    SDValue CondCodeRes = DAG.getCondCode(ISD::SETGE);
+    SDValue CmpRes = DAG.getNode(ISD::SETCC, DL, MVT::i1,
+                                 DIVSNodes[31].getValue(0),
+                                 Reg0, CondCodeRes);
+    
+    SDValue SH1ADDNode = DAG.getNode(VEXISD::SH1ADD, DL,
+                                     MVT::i32, ORC,
+                                     CmpRes);
+    
+    return DAG.getNode(ISD::SELECT, DL, MVT::i32, CmpDivisor, CmpDividend, SH1ADDNode);
+}
+
+SDValue VEXTargetLowering::LowerSREM(SDValue Op, SelectionDAG &DAG) const {
+    
+    DEBUG(errs() << "ISD::SREM Lowering\n");
+    
+    SDLoc DL(Op);
+    
+    SDVTList VTList = DAG.getVTList(MVT::i32, MVT::i1);
+    
+    SDValue Reg0 = DAG.getRegister(VEX::Reg0, MVT::i32);
+    SDValue BReg0 = DAG.getNode(VEXISD::MTB, DL, MVT::i1, Reg0);
+    
+    SDValue Dividend = Op.getOperand(0);
+    SDValue Divisor = Op.getOperand(1);
+    
+    SDValue CondCode = DAG.getCondCode(ISD::SETLT);
+    SDValue CmpDividend = DAG.getNode(ISD::SETCC, DL, MVT::i1,
+                                      Dividend, Divisor, CondCode);
+    SDValue CmpDivisor = DAG.getNode(ISD::SETCC, DL, MVT::i1,
+                                     Divisor, Reg0, CondCode);
+    
+    SDValue SubDividend = DAG.getNode(ISD::SUB, DL, MVT::i32,
+                                      Reg0, Dividend);
+    SDValue SubDivisor = DAG.getNode(ISD::SUB, DL, MVT::i32,
+                                     Reg0, Divisor);
+    
+    SDValue SelectDividend = DAG.getNode(ISD::SELECT, DL, MVT::i32,
+                                         CmpDividend, SubDividend, Dividend);
+    
+    SDValue SelectDivisor = DAG.getNode(ISD::SELECT, DL, MVT::i32,
+                                        CmpDivisor, SubDivisor, Divisor);
+    
+    SmallVector<SDValue, 34> ADDCGNodes;
+    SmallVector<SDValue, 32> DIVSNodes;
+    
+    ADDCGNodes.push_back(DAG.getNode(VEXISD::ADDCG, DL,
+                                     VTList,
+                                     SelectDividend, SelectDividend,
+                                     BReg0));
+    
+    ADDCGNodes.push_back(DAG.getNode(VEXISD::ADDCG, DL,
+                                     VTList,
+                                     ADDCGNodes[0].getValue(0),
+                                     ADDCGNodes[0].getValue(0),
+                                     BReg0));
+    
+    DIVSNodes.push_back(DAG.getNode(VEXISD::DIVS, DL,
+                                    VTList,
+                                    Reg0, SelectDivisor,
+                                    ADDCGNodes[0].getValue(1)));
+    
+    ADDCGNodes.push_back(DAG.getNode(VEXISD::ADDCG, DL,
+                                     VTList,
+                                     ADDCGNodes[1].getValue(0),
+                                     ADDCGNodes[1].getValue(0),
+                                     DIVSNodes[0].getValue(1)));
+    
+    for (unsigned i = 1; i < 32; i++) {
+        DIVSNodes.push_back(DAG.getNode(VEXISD::DIVS, DL,
+                                        VTList,
+                                        DIVSNodes[i-1].getValue(0), SelectDivisor,
+                                        ADDCGNodes[i].getValue(1)));
+        
+        ADDCGNodes.push_back(DAG.getNode(VEXISD::ADDCG, DL,
+                                         VTList,
+                                         ADDCGNodes[i+1].getValue(0),
+                                         ADDCGNodes[i+1].getValue(0),
+                                         DIVSNodes[i].getValue(1)));
+    }
+    
+    SDValue CondCodeRes = DAG.getCondCode(ISD::SETGE);
+    SDValue CmpRes = DAG.getNode(ISD::SETCC, DL, MVT::i1,
+                                 DIVSNodes[31].getValue(0),
+                                 Reg0, CondCodeRes);
+    
+    SDValue AddRem = DAG.getNode(ISD::ADD, DL, MVT::i32,
+                                 DIVSNodes[31].getValue(0),
+                                 SelectDivisor);
+    
+    SDValue SelectRem1 = DAG.getNode(ISD::SELECT, DL, MVT::i32, CmpRes,
+                                     DIVSNodes[31].getValue(0), AddRem);
+    
+    SDValue SubRem = DAG.getNode(ISD::SUB, DL, MVT::i32,
+                                 Reg0, SelectRem1);
+    
+    return DAG.getNode(ISD::SELECT, DL, MVT::i32, CmpDividend,
+                       SubRem, SelectRem1);
+}
+
+SDValue VEXTargetLowering::LowerUREM(SDValue Op, SelectionDAG &DAG) const {
+    
+    DEBUG(errs() << "ISD::UREM Lowering\n");
+    
+    SDLoc DL(Op);
+    
+    SDVTList VTList = DAG.getVTList(MVT::i32, MVT::i1);
+    
+    SDValue Reg0 = DAG.getRegister(VEX::Reg0, MVT::i32);
+    SDValue BReg0 = DAG.getNode(VEXISD::MTB, DL, MVT::i1, Reg0);
+    
+    SDValue Dividend = Op.getOperand(0);
+    SDValue Divisor = Op.getOperand(1);
+    
+    SDValue CondCode = DAG.getCondCode(ISD::SETUGE);
+    SDValue CmpDividend = DAG.getNode(ISD::SETCC, DL, MVT::i32,
+                                      Dividend, Divisor, CondCode);
+    
+    SDValue CondCodeDivisor = DAG.getCondCode(ISD::SETLT);
+    SDValue CmpDivisor = DAG.getNode(ISD::SETCC, DL, MVT::i32,
+                                     Divisor, Reg0, CondCodeDivisor);
+    
+    SDValue ShiftDividend = DAG.getNode(ISD::SRL, DL, MVT::i32,
+                                        Dividend, CmpDivisor);
+    SDValue ShiftDivisor = DAG.getNode(ISD::SRL, DL, MVT::i32,
+                                       Divisor, CmpDivisor);
+    
+    SDValue SubRem = DAG.getNode(ISD::SUB, DL, MVT::i32,
+                                    Dividend, Divisor);
+    
+    SDValue SelectRem = DAG.getNode(ISD::SELECT, DL, MVT::i32,
+                                    CmpDividend, SubRem, Divisor);
+    
+    SmallVector<SDValue, 34> ADDCGNodes;
+    SmallVector<SDValue, 32> DIVSNodes;
+    
+    ADDCGNodes.push_back(DAG.getNode(VEXISD::ADDCG, DL,
+                                     VTList,
+                                     ShiftDividend, ShiftDividend,
+                                     BReg0));
+    
+    ADDCGNodes.push_back(DAG.getNode(VEXISD::ADDCG, DL,
+                                     VTList,
+                                     ADDCGNodes[0].getValue(0),
+                                     ADDCGNodes[0].getValue(0),
+                                     BReg0));
+    
+    DIVSNodes.push_back(DAG.getNode(VEXISD::DIVS, DL,
+                                    VTList,
+                                    Reg0, ShiftDivisor,
+                                    ADDCGNodes[0].getValue(1)));
+    
+    ADDCGNodes.push_back(DAG.getNode(VEXISD::ADDCG, DL,
+                                     VTList,
+                                     ADDCGNodes[1].getValue(0),
+                                     ADDCGNodes[1].getValue(0),
+                                     DIVSNodes[0].getValue(1)));
+    
+    for (unsigned i = 1; i < 32; i++) {
+        DIVSNodes.push_back(DAG.getNode(VEXISD::DIVS, DL,
+                                        VTList,
+                                        DIVSNodes[i-1].getValue(0), ShiftDivisor,
+                                        ADDCGNodes[i].getValue(1)));
+        
+        ADDCGNodes.push_back(DAG.getNode(VEXISD::ADDCG, DL,
+                                         VTList,
+                                         ADDCGNodes[i+1].getValue(0),
+                                         ADDCGNodes[i+1].getValue(0),
+                                         DIVSNodes[i].getValue(1)));
+    }
+    
+    SDValue CondCodeRes = DAG.getCondCode(ISD::SETGE);
+    SDValue CmpRes = DAG.getNode(ISD::SETCC, DL, MVT::i1,
+                                 DIVSNodes[31].getValue(0),
+                                 Reg0, CondCodeRes);
+    
+    SDValue AddRem = DAG.getNode(ISD::ADD, DL, MVT::i32,
+                                 DIVSNodes[31].getValue(0),
+                                 ShiftDivisor);
+    
+    SDValue SelectRem1 = DAG.getNode(ISD::SELECT, DL, MVT::i32, CmpRes,
+                                     DIVSNodes[31].getValue(0), AddRem);
+    
+    return DAG.getNode(ISD::SELECT, DL, MVT::i32, CmpDivisor,
+                                     SelectRem, SelectRem1);
 }
 
 
