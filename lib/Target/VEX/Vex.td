@@ -2,7 +2,7 @@
 //
 //                     The LLVM Compiler Infrastructure
 //
-// This file is distributed under the University of Illinois Open Source 
+// This file is distributed under the University of Illinois Open Source
 // License. See LICENSE.TXT for details.
 //
 //===----------------------------------------------------------------------===//
@@ -41,20 +41,13 @@ def     VEXInstrInfo    :   InstrInfo;
 // VEX Subtarget features                                                    //
 //===----------------------------------------------------------------------===//
 
-def NoFeature     : SubtargetFeature<"VEX", "VEXArchVersion", "VEX", "VEX ISA Support", []>;
-
-def VEXSchedMachineModel : SchedMachineModel {
-    let IssueWidth = 4;
-    let Itineraries = VEXGenericItineraries;
-}
+//def NoFeature     : SubtargetFeature<"VEX", "VEXArchVersion", "VEX", "VEX ISA Support", []>;
 
 //===----------------------------------------------------------------------===//
 // VEX supported processors.
 //===----------------------------------------------------------------------===//
-def NoModel : SchedMachineModel {}
-
 class Proc<string Name, list<SubtargetFeature> Features>
-: ProcessorModel<Name, VEXSchedMachineModel, Features>;
+: Processor<Name, VEXGenericItineraries, Features>;
 
 def: Proc<"VEX_I", []>;
 def: Proc<"VEX_II", []>;
@@ -79,5 +72,5 @@ def VEXAsmParserVariant : AsmParserVariant {
 //===----------------------------------------------------------------------===//
 
 def VEX : Target {
-  let InstructionSet = VEXInstrInfo;
+    let InstructionSet = VEXInstrInfo;
 }
