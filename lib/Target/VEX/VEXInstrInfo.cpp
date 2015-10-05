@@ -32,8 +32,8 @@ using namespace llvm;
 #define GET_INSTRINFO_CTOR_DTOR
 #include "VEXGenInstrInfo.inc"
 
-//#include "VEXGenDFAPacketizer.inc"
-#include "VEXSubtargetInfo.cpp"
+#include "VEXGenDFAPacketizer.inc"
+//#include "VEXSubtargetInfo.cpp"
 
 //@VEXInstrInfo(){
 VEXInstrInfo::VEXInstrInfo(const VEXSubtarget &STI) : Subtarget(STI), RI(STI) {
@@ -50,44 +50,39 @@ void VEXInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
     
     // GP Register is Destination
     if (VEX::GPRegsRegClass.contains(DestReg)){
-        if (DestReg == 64) {
-//            Opc = VEX::MTL;
-            assert("We still do not support Move From Link Instruction in this way.\n");
-        } else
-            if (SrcReg == 64) {
-                assert("We still do not support Move To Link Instruction in this way.\n");
-//                Opc = VEX::MFL;
-            } else
-                if(VEX::BrRegsRegClass.contains(SrcReg)){
-                    Opc = VEX::MFB;
+        if(VEX::BrRegsRegClass.contains(SrcReg))
+            Opc = VEX::MFB;
+        else
+            if(VEX::GPRegsRegClass.contains(SrcReg))
+                Opc = VEX::MOVr;
+            else
+                Opc = VEX::MFL;
+    } else
+        if(VEX::BrRegsRegClass.contains(DestReg)){
+            if (VEX::GPRegsRegClass.contains(SrcReg))
+                Opc = VEX::MTB;
+            else
+                if(VEX::BrRegsRegClass.contains(SrcReg)) {
+                    // I think this is a better solution.
+                    MachineFunction *MF = MBB.getParent();
+                    MachineRegisterInfo &MRI = MF->getRegInfo();
+                    unsigned Reg = MRI.createVirtualRegister(&VEX::BrRegsRegClass);
+                    BuildMI(MBB, MI, DL, get(VEX::MFB), Reg).addReg(SrcReg);
+                    BuildMI(MBB, MI, DL, get(VEX::MTB), DestReg).addReg(Reg, getKillRegState(KillSrc));
+                    return;
                 } else
-                    if(VEX::GPRegsRegClass.contains(SrcReg)){
-                        Opc = VEX::MOVr;
-                }
-    }else if(VEX::BrRegsRegClass.contains(DestReg)){
-        if (VEX::GPRegsRegClass.contains(SrcReg)){
-            Opc = VEX::MTB;
-        }else
-            if(VEX::BrRegsRegClass.contains(SrcReg)){
-// FIXME: Bad coding strategy to handle BrReg to BrReg Moves right now!                
-//                unsigned Reg = 10;
-//                MRI.getLiveInPhysReg
-//                for (; Reg < 63; ++Reg)
-//                    if (!MBB.isLiveIn(Reg))
-//                        break;
+                        llvm_unreachable("Impossible to Copy from Link Register to Branch register.");
                 
-                // I think this is a better solution.
-                MachineFunction *MF = MBB.getParent();
-                MachineRegisterInfo &MRI = MF->getRegInfo();
-                unsigned Reg = MRI.createVirtualRegister(&VEX::BrRegsRegClass);
-                BuildMI(MBB, MI, DL, get(VEX::MFB), Reg).addReg(SrcReg);
-                BuildMI(MBB, MI, DL, get(VEX::MTB), DestReg).addReg(Reg, getKillRegState(KillSrc));
-                return;
+        } else {
+            if(VEX::LrRegRegClass.contains(DestReg)) {
+                if (VEX::GPRegsRegClass.contains(SrcReg))
+                    Opc = VEX::MTL;
+                else
+                    llvm_unreachable("Impossible to Copy from Branch Register to Link register.");
             }
-    }
-    
+        }
     BuildMI(MBB, MI, DL, get(Opc), DestReg).addReg(SrcReg, getKillRegState(KillSrc));
-    
+
 }
 
 bool VEXInstrInfo::expandPostRAPseudo(MachineBasicBlock::iterator MI) const {
@@ -149,9 +144,14 @@ void VEXInstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
                     .addMemOperand(MMO);
             BuildMI(MBB, MI, DL, get(VEX::MTB), DestReg).addReg(Reg);
             
-        } else
-            llvm_unreachable("Can't store this register to stack slot. Register Class Unknown.");
-
+        } else {
+            if (RC == &VEX::LrRegRegClass) {
+                BuildMI(MBB, MI, DL, get(VEX::LDWLr), DestReg)
+                        .addFrameIndex(FrameIndex).addImm(0)
+                        .addMemOperand(MMO);
+            } else
+                llvm_unreachable("Can't store this register to stack slot. Register Class Unknown.");
+        }
 }
 
 void VEXInstrInfo::storeRegToStackSlot(MachineBasicBlock &MBB,
@@ -190,9 +190,15 @@ void VEXInstrInfo::storeRegToStackSlot(MachineBasicBlock &MBB,
                     .addReg(DstReg, getKillRegState(isKill))
                     .addMemOperand(MMO)
                     .addFrameIndex(FrameIndex).addImm(0);
-        } else
-            llvm_unreachable("Can't store this register to stack slot. Register Class Unknown.");
-
+        } else {
+            if (RC == &VEX::LrRegRegClass) {
+                BuildMI(MBB, MI, DL, get(VEX::STWLr))
+                        .addReg(SrcReg, getKillRegState(isKill))
+                        .addMemOperand(MMO)
+                        .addFrameIndex(FrameIndex).addImm(0);
+            } else
+                llvm_unreachable("Can't store this register to stack slot. Register Class Unknown.");
+        }
 }
 
 void VEXInstrInfo::makeFrame(unsigned SP, int64_t FrameSize,

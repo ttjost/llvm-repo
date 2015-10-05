@@ -209,22 +209,23 @@ multiclass MOVInstr<string OpcStr, bits<8> Opcode, RegisterClass DstOp, Register
 
 let isCompare = 1 in {
 
-multiclass CMPInstr<string OpcStr, bits<8> OpVal, PatFrag cond_op, InstrItinClass Itin>{
+multiclass CMPInstr<string OpcStr, bits<8> OpVal, PatFrag cond_op,
+                    InstrItinClass ItinBrReg, InstrItinClass ItinGPReg>{
 
 def BRegr: InstVEX<(outs BrRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                     !strconcat(OpcStr, " $dst = $s1, $s2"),
-                    [(set BrRegs:$dst, (cond_op GPRegs:$s1, GPRegs:$s2))], Itin>;
+                    [(set BrRegs:$dst, (cond_op GPRegs:$s1, GPRegs:$s2))], ItinBrReg>;
 
 def BRegi : InstVEX<(outs BrRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                     !strconcat(OpcStr, " $dst = $s1, $s2"),
-                    [(set BrRegs:$dst, (cond_op GPRegs:$s1, imm32:$s2))], Itin>;
+                    [(set BrRegs:$dst, (cond_op GPRegs:$s1, imm32:$s2))], ItinBrReg>;
 
 def Regr : InstVEX<(outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                     !strconcat(OpcStr, " $dst = $s1, $s2"),
-                    [(set GPRegs:$dst, (cond_op GPRegs:$s1, GPRegs:$s2))], Itin>;
+                    [(set GPRegs:$dst, (cond_op GPRegs:$s1, GPRegs:$s2))], ItinGPReg>;
 def Regi : InstVEX<(outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                     !strconcat(OpcStr, " $dst = $s1, $s2"),
-                    [(set GPRegs:$dst, (cond_op GPRegs:$s1, imm32:$s2))], Itin>;
+                    [(set GPRegs:$dst, (cond_op GPRegs:$s1, imm32:$s2))], ItinGPReg>;
 
 }
 }
@@ -236,6 +237,31 @@ class LoadInstr<string OpcStr, bits<8> OpVal, PatFrag OpNode, InstrItinClass Iti
 //    let DecoderMethod = "DecodeMem";
     let canFoldAsLoad = 1;
     let mayLoad = 1;
+}
+
+class LoadInstrLr<string OpcStr, bits<8> OpVal, PatFrag OpNode, InstrItinClass Itin>
+    : InstVEX<(outs LrReg:$dst), (ins MEM:$addr),
+                !strconcat(OpcStr, " $dst = $addr"),
+                [(set LrReg:$dst, (OpNode ADDR:$addr))], Itin>{
+    //    let DecoderMethod = "DecodeMem";
+    let canFoldAsLoad = 1;
+    let mayLoad = 1;
+}
+
+class StoreInstr<string OpcStr, bits<8> OpVal, PatFrag OpNode, InstrItinClass Itin>
+    : InstVEX<(outs), (ins GPRegs:$s1, MEM:$addr),
+                !strconcat(OpcStr, " $addr = $s1"),
+                [(OpNode GPRegs:$s1, ADDR:$addr)], Itin>{
+    //    let DecoderMethod = "DecodeMem";
+    let mayStore = 1;
+}
+
+class StoreInstrLr<string OpcStr, bits<8> OpVal, PatFrag OpNode, InstrItinClass Itin>
+    : InstVEX<(outs), (ins LrReg:$s1, MEM:$addr),
+                !strconcat(OpcStr, " $addr = $s1"),
+                [(OpNode LrReg:$s1, ADDR:$addr)], Itin>{
+    //    let DecoderMethod = "DecodeMem";
+    let mayStore = 1;
 }
 
 class ExtendInstr<string OpcStr, bits<8> OpVal, SDNode OpNode, InstrItinClass Itin>
@@ -255,14 +281,6 @@ class TwoResultInstr<string OpcStr, bits<8> OpVal, SDNode OpNode, InstrItinClass
               !strconcat(OpcStr, " $dst1, $cout = $s1, $s2, $cin"),
               [(set GPRegs:$dst1, BrRegs:$cout, (OpNode GPRegs:$s1, GPRegs:$s2, BrRegs:$cin))],
               Itin>{
-}
-
-class StoreInstr<string OpcStr, bits<8> OpVal, PatFrag OpNode, InstrItinClass Itin>
-    : InstVEX<(outs), (ins GPRegs:$s1, MEM:$addr),
-                !strconcat(OpcStr, " $addr = $s1"),
-                [(OpNode GPRegs:$s1, ADDR:$addr)], Itin>{
-//    let DecoderMethod = "DecodeMem";
-    let mayStore = 1;
 }
 
 class ReturnInstr<string OpcStr, bits<8> OpVal, InstrItinClass Itin>
@@ -454,19 +472,19 @@ defm MOV    : MOVInstr<"mov", 0b00000000, GPRegs, GPRegs, IIAlu>;
 
 def MTB     : MOV_r<0b00000000,
                     (outs BrRegs:$dst), (ins GPRegs:$s1),
-                    "mtb $dst = $s1", [], IIAlu>;
+                    "mtb $dst = $s1", [], IICpGrBr>;
 
 def MFB     : MOV_r<0b00000000,
                     (outs GPRegs:$dst), (ins BrRegs:$s1),
-                    "mfb $dst = $s1", [], IIAlu>;
+                    "mfb $dst = $s1", [], IICpBrGr>;
 
-//def MFL     : MOV_r<0b00000000,
-//                    (outs GPRegs:$dst), (ins Lr:$s1),
-//                    "mfl $dst = $s1", [], IIAlu>;
+def MFL     : MOV_r<0b00000000,
+                    (outs GPRegs:$dst), (ins LrReg:$s1),
+                    "mfl $dst = $s1", [], IICpGrLr>;
 
-//def MTL     : MOV_r<0b00000000,
-//                   (outs GPRegs:$dst), (ins GPRegs:$s1),
-//                    "mtl $$l0dst = $s1", [], IIAlu>;
+def MTL     : MOV_r<0b00000000,
+                   (outs LrReg:$dst), (ins GPRegs:$s1),
+                    "mtl $dst = $s1", [], IICpGrLr>;
 
 // Extend Byte/Half Instructions
 def SXTB    : ExtendInstr<"sxtb", 0b00000000, add, IIAlu>;
@@ -491,7 +509,7 @@ def ADDCG   : TwoResultInstr<"addcg", 0b00000000, VEXADDCG, IIAlu>;
 
 
 // Select Instructions
-defm SLCT   : SelectInstr<0b00000000, IIAlu>;
+defm SLCT   : SelectInstr<0b00000000, IISelect>;
 
 
 // Create Pattern to "not" instruction
@@ -550,25 +568,25 @@ def LEA_ADDri   : InstVEX<(outs GPRegs:$dst), (ins ADDR_FI:$addr),
 //                      Multiplication instructions
 //===----------------------------------------------------------------------===//
 
-defm MPYLL      : ArithLogicInstr<"mpyll", 0b00000000, VEXMPYLL, IIMul, 1, 1>;
+defm MPYLL      : ArithLogicInstr<"mpyll", 0b00000000, VEXMPYLL, IIMultiply, 1, 1>;
 
-defm MPYLLU     : ArithLogicInstr<"mpyllu", 0b00000001, VEXMPYLLU, IIMul, 1, 1>;
+defm MPYLLU     : ArithLogicInstr<"mpyllu", 0b00000001, VEXMPYLLU, IIMultiply, 1, 1>;
 
-defm MPYLH      : ArithLogicInstr<"mpylh", 0b00000010, VEXMPYLH, IIMul, 1, 1>;
+defm MPYLH      : ArithLogicInstr<"mpylh", 0b00000010, VEXMPYLH, IIMultiply, 1, 1>;
 
-defm MPYHH      : ArithLogicInstr<"mpyhh", 0b00000011, VEXMPYHH, IIMul, 1, 1>;
+defm MPYHH      : ArithLogicInstr<"mpyhh", 0b00000011, VEXMPYHH, IIMultiply, 1, 1>;
 
-defm MPYHHU     : ArithLogicInstr<"mpyhhu", 0b00000100, VEXMPYHHU, IIMul, 1, 1>;
+defm MPYHHU     : ArithLogicInstr<"mpyhhu", 0b00000100, VEXMPYHHU, IIMultiply, 1, 1>;
 
-defm MPYL       : ArithLogicInstr<"mpyl", 0b00000101, VEXMPYL, IIMul, 1, 1>;
+defm MPYL       : ArithLogicInstr<"mpyl", 0b00000101, VEXMPYL, IIMultiply, 1, 1>;
 
-defm MPYLU      : ArithLogicInstr<"mpylu", 0b00000110, VEXMPYLU, IIMul, 1, 1>;
+defm MPYLU      : ArithLogicInstr<"mpylu", 0b00000110, VEXMPYLU, IIMultiply, 1, 1>;
 
-defm MPYH       : ArithLogicInstr<"mpyh", 0b00000111, VEXMPYH, IIMul, 1, 1>;
+defm MPYH       : ArithLogicInstr<"mpyh", 0b00000111, VEXMPYH, IIMultiply, 1, 1>;
 
-defm MPYHU      : ArithLogicInstr<"mpyhh", 0b00001001, VEXMPYHU, IIMul, 1, 1>;
+defm MPYHU      : ArithLogicInstr<"mpyhh", 0b00001001, VEXMPYHU, IIMultiply, 1, 1>;
                            
-defm MPYHS      : ArithLogicInstr<"mpyhs", 0b00001010, VEXMPYHS, IIMul, 1, 1>;
+defm MPYHS      : ArithLogicInstr<"mpyhs", 0b00001010, VEXMPYHS, IIMultiply, 1, 1>;
                            
 //===----------------------------------------------------------------------===//
 //                      Compare instructions
@@ -577,16 +595,16 @@ defm MPYHS      : ArithLogicInstr<"mpyhs", 0b00001010, VEXMPYHS, IIMul, 1, 1>;
 // as a result to the set*** DAG operation. For now, it only pattern matches
 // with i1 type. It should also do the same for i32.
 
-defm CMPEQ  : CMPInstr<"cmpeq", 0b01000000, seteq, IIAlu>;
-defm CMPGE  : CMPInstr<"cmpge", 0b01000001, setge, IIAlu>;
-defm CMPGEU : CMPInstr<"cmpgeu", 0b01000010, setuge, IIAlu>;
-defm CMPGT  : CMPInstr<"cmpgt", 0b01000011, setgt, IIAlu>;
-defm CMPGTU : CMPInstr<"cmpgtu", 0b01000100, setugt, IIAlu>;
-defm CMPLE  : CMPInstr<"cmple", 0b01000101, setle, IIAlu>;
-defm CMPLEU : CMPInstr<"cmpleu", 0b01000110, setule, IIAlu>;
-defm CMPLT  : CMPInstr<"cmplt", 0b01000111, setlt, IIAlu>;
-defm CMPLTU : CMPInstr<"cmpltu", 0b01001000, setult, IIAlu>;
-defm CMPNE  : CMPInstr<"cmpne", 0b01001001, setne, IIAlu>;
+defm CMPEQ  : CMPInstr<"cmpeq", 0b01000000, seteq, IICmpBr, IICmpGr>;
+defm CMPGE  : CMPInstr<"cmpge", 0b01000001, setge, IICmpBr, IICmpGr>;
+defm CMPGEU : CMPInstr<"cmpgeu", 0b01000010, setuge, IICmpBr, IICmpGr>;
+defm CMPGT  : CMPInstr<"cmpgt", 0b01000011, setgt, IICmpBr, IICmpGr>;
+defm CMPGTU : CMPInstr<"cmpgtu", 0b01000100, setugt, IICmpBr, IICmpGr>;
+defm CMPLE  : CMPInstr<"cmple", 0b01000101, setle, IICmpBr, IICmpGr>;
+defm CMPLEU : CMPInstr<"cmpleu", 0b01000110, setule, IICmpBr, IICmpGr>;
+defm CMPLT  : CMPInstr<"cmplt", 0b01000111, setlt, IICmpBr, IICmpGr>;
+defm CMPLTU : CMPInstr<"cmpltu", 0b01001000, setult, IICmpBr, IICmpGr>;
+defm CMPNE  : CMPInstr<"cmpne", 0b01001001, setne, IICmpBr, IICmpGr>;
 
 
 //===----------------------------------------------------------------------===//
@@ -595,6 +613,9 @@ defm CMPNE  : CMPInstr<"cmpne", 0b01001001, setne, IIAlu>;
 
 def LDW       : LoadInstr<"ldw", 0b00010000, load_a, IILoad>;
 def STW       : StoreInstr<"stw", 0b00010101, store_a, IIStore>;
+
+def LDWLr     : LoadInstrLr<"ldw", 0b00010000, load_a, IILoadLr>;
+def STWLr     : StoreInstrLr<"stw", 0b00010101, store_a, IIStoreLr>;
 
 def LDHExt    : LoadInstr<"ldh", 0b00010000, extloadi16, IILoad>;
 def LDH       : LoadInstr<"ldh", 0b00010000, sextloadi16, IILoad>;

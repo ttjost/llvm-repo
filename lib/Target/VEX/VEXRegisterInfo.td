@@ -18,7 +18,7 @@ class VexGPR<bits<16> Enc, string n> : VEXReg<Enc, n>;
 class Br<bits<16> Enc, string n> : VEXReg<Enc, n>;
 
 // Class for Link Register
-//class Lr<bits<16> Enc, string n> : VEXReg<Enc, n>;
+class Lr<bits<16> Enc, string n> : VEXReg<Enc, n>;
 
 // Defining General Purpose registers
 // TODO: Make parametrizable
@@ -32,7 +32,8 @@ foreach I = 0-7 in
 //  def BrReg#I : Br<I, "b0."#I >, DwarfRegNum<[I]>;
   
 // Define Link Register
-def Lr    :  VexGPR<64, "l0.0">, DwarfRegNum<[64]>;
+//def Lr    :  VexGPR<64, "l0.0">, DwarfRegNum<[64]>;
+def Lr    :  Lr<0, "l0.0">, DwarfRegNum<[64]>;
 
 //
 // FIXME: the register order should be defined in terms of the preferred
@@ -49,4 +50,4 @@ def BrRegs  : RegisterClass<"VEX", [i1], 8, (sequence "BrReg%u", 0, 7)> {
     let Size = 32;
 }
 
-//def LrReg   : RegisterClass<"VEX", [i32], 32, (add Lr)>;
+def LrReg   : RegisterClass<"VEX", [i32], 32, (add Lr)>;

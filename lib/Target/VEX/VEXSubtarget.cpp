@@ -30,7 +30,8 @@ using namespace llvm;
 
 #define GET_SUBTARGETINFO_TARGET_DESC
 #define GET_SUBTARGETINFO_CTOR
-#include "VEXSubtargetInfo.cpp"
+//#include "VEXSubtargetInfo.cpp"
+#include "VEXGenSubtargetInfo.inc"
 
 static cl::opt<bool>
 EnableVEXCalls("vex-calls", cl::Hidden,
