@@ -759,9 +759,13 @@ SDValue VEXTargetLowering::LowerSDIV(SDValue Op, SelectionDAG &DAG) const {
     
     SDValue Reg0 = DAG.getRegister(VEX::Reg0, MVT::i32);
     
-    SDValue CondCodeBr = DAG.getCondCode(ISD::SETNE);
-    SDValue BReg0 = DAG.getNode(ISD::SETCC, DL, MVT::i1,
-                                Reg0, Reg0, CondCodeBr);
+    SDValue Zero = DAG.getConstant(0, MVT::i32);
+    
+//// This should be the code. But there is some problem in the RegAlloc Pass
+//// that makes LLVM crash
+//    SDValue CondCodeBr = DAG.getCondCode(ISD::SETNE);
+//    SDValue BReg0 = DAG.getNode(ISD::SETCC, DL, MVT::i1,
+//                                Reg0, Reg0, CondCodeBr);
     
     SDValue Dividend = Op.getOperand(0);
     SDValue Divisor = Op.getOperand(1);
@@ -788,13 +792,13 @@ SDValue VEXTargetLowering::LowerSDIV(SDValue Op, SelectionDAG &DAG) const {
     ADDCGNodes.push_back(DAG.getNode(VEXISD::ADDCG, DL,
                                      VTList,
                                      SlctDividend, SlctDividend,
-                                     BReg0));
+                                     Zero));
     
     ADDCGNodes.push_back(DAG.getNode(VEXISD::ADDCG, DL,
                                      VTList,
                                      ADDCGNodes[0].getValue(0),
                                      ADDCGNodes[0].getValue(0),
-                                     BReg0));
+                                     Zero));
     
     DIVSNodes.push_back(DAG.getNode(VEXISD::DIVS, DL,
                                     VTList,
@@ -847,9 +851,13 @@ SDValue VEXTargetLowering::LowerUDIV(SDValue Op, SelectionDAG &DAG) const {
     
     SDValue Reg0 = DAG.getRegister(VEX::Reg0, MVT::i32);
     
-    SDValue CondCodeBr = DAG.getCondCode(ISD::SETNE);
-    SDValue BReg0 = DAG.getNode(ISD::SETCC, DL, MVT::i1,
-                                Reg0, Reg0, CondCodeBr);
+    SDValue Zero = DAG.getConstant(0, MVT::i32);
+    
+//// This should be the code. But there is some problem in the RegAlloc Pass
+//// that makes LLVM crash
+//    SDValue CondCodeBr = DAG.getCondCode(ISD::SETNE);
+//    SDValue BReg0 = DAG.getNode(ISD::SETCC, DL, MVT::i1,
+//                                Reg0, Reg0, CondCodeBr);
     
     SDValue Dividend = Op.getOperand(0);
     SDValue Divisor = Op.getOperand(1);
@@ -873,13 +881,13 @@ SDValue VEXTargetLowering::LowerUDIV(SDValue Op, SelectionDAG &DAG) const {
     ADDCGNodes.push_back(DAG.getNode(VEXISD::ADDCG, DL,
                                      VTList,
                                      ShiftDividend, ShiftDividend,
-                                     BReg0));
+                                     Zero));
     
     ADDCGNodes.push_back(DAG.getNode(VEXISD::ADDCG, DL,
                                      VTList,
                                      ADDCGNodes[0].getValue(0),
                                      ADDCGNodes[0].getValue(0),
-                                     BReg0));
+                                     Zero));
     
     DIVSNodes.push_back(DAG.getNode(VEXISD::DIVS, DL,
                                     VTList,
@@ -930,9 +938,13 @@ SDValue VEXTargetLowering::LowerSREM(SDValue Op, SelectionDAG &DAG) const {
     
     SDValue Reg0 = DAG.getRegister(VEX::Reg0, MVT::i32);
     
-    SDValue CondCodeBr = DAG.getCondCode(ISD::SETNE);
-    SDValue BReg0 = DAG.getNode(ISD::SETCC, DL, MVT::i1,
-                                Reg0, Reg0, CondCodeBr);
+    SDValue Zero = DAG.getConstant(0, MVT::i32);
+    
+//// This should be the code. But there is some problem in the RegAlloc Pass
+//// that makes LLVM crash
+//    SDValue CondCodeBr = DAG.getCondCode(ISD::SETNE);
+//    SDValue BReg0 = DAG.getNode(ISD::SETCC, DL, MVT::i1,
+//                                Reg0, Reg0, CondCodeBr);
     
     SDValue Dividend = Op.getOperand(0);
     SDValue Divisor = Op.getOperand(1);
@@ -960,13 +972,13 @@ SDValue VEXTargetLowering::LowerSREM(SDValue Op, SelectionDAG &DAG) const {
     ADDCGNodes.push_back(DAG.getNode(VEXISD::ADDCG, DL,
                                      VTList,
                                      SelectDividend, SelectDividend,
-                                     BReg0));
+                                     Zero));
     
     ADDCGNodes.push_back(DAG.getNode(VEXISD::ADDCG, DL,
                                      VTList,
                                      ADDCGNodes[0].getValue(0),
                                      ADDCGNodes[0].getValue(0),
-                                     BReg0));
+                                     Zero));
     
     DIVSNodes.push_back(DAG.getNode(VEXISD::DIVS, DL,
                                     VTList,
@@ -1021,9 +1033,13 @@ SDValue VEXTargetLowering::LowerUREM(SDValue Op, SelectionDAG &DAG) const {
     
     SDValue Reg0 = DAG.getRegister(VEX::Reg0, MVT::i32);
     
-    SDValue CondCodeBr = DAG.getCondCode(ISD::SETNE);
-    SDValue BReg0 = DAG.getNode(ISD::SETCC, DL, MVT::i1,
-                                Reg0, Reg0, CondCodeBr);
+    SDValue Zero = DAG.getConstant(0, MVT::i32);
+    
+//// This should be the code. But there is some problem in the RegAlloc Pass
+//// that makes LLVM crash
+//    SDValue CondCodeBr = DAG.getCondCode(ISD::SETNE);
+//    SDValue BReg0 = DAG.getNode(ISD::SETCC, DL, MVT::i1,
+//                                Reg0, Reg0, CondCodeBr);
     
     SDValue Dividend = Op.getOperand(0);
     SDValue Divisor = Op.getOperand(1);
@@ -1053,13 +1069,13 @@ SDValue VEXTargetLowering::LowerUREM(SDValue Op, SelectionDAG &DAG) const {
     ADDCGNodes.push_back(DAG.getNode(VEXISD::ADDCG, DL,
                                      VTList,
                                      ShiftDividend, ShiftDividend,
-                                     BReg0));
+                                     Zero));
     
     ADDCGNodes.push_back(DAG.getNode(VEXISD::ADDCG, DL,
                                      VTList,
                                      ADDCGNodes[0].getValue(0),
                                      ADDCGNodes[0].getValue(0),
-                                     BReg0));
+                                     Zero));
     
     DIVSNodes.push_back(DAG.getNode(VEXISD::DIVS, DL,
                                     VTList,
