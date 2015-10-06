@@ -87,9 +87,6 @@ def SDT_VEXTWORESULT : SDTypeProfile<2, 3,
                                      SDTCisVT<1, i1>,
                                      SDTCisVT<4, i1>]>;
 
-def SDT_MTB : SDTypeProfile<1, 1,
-                            [SDTCisVT<0, i1>,SDTCisVT<1, i32>]>;
-
 def SDT_VEXPseudoCall         : SDTypeProfile<0, -1, [SDTCisVT<0, iPTR>]>;
 def SDT_VEXCallSeqStart : SDCallSeqStart<[SDTCisVT<0, i32>]>;
 def SDT_VEXCallSeqEnd   : SDCallSeqEnd<[SDTCisVT<0, i32>, SDTCisVT<1, i32>]>;
@@ -133,7 +130,6 @@ def VEXMinu  : SDNode<"VEXISD::MINU", SDTIntBinOp>;
 
 def VEXOrc      : SDNode<"VEXISD::ORC", SDTIntBinOp>;
 def VEXSh1Add   : SDNode<"VEXISD::SH1ADD", SDTIntBinOp>;
-def VEXMTB      : SDNode<"VEXISD::MTB", SDT_MTB>;
 
 def VEXMPYLL    : SDNode<"VEXISD::MPYLL", SDTIntBinOp>;
 def VEXMPYLLU   : SDNode<"VEXISD::MPYLLU", SDTIntBinOp>;
@@ -344,6 +340,8 @@ def Fi  : InstVEX<(outs GPRegs:$dst), (ins BrRegs:$cond, GPRegs:$s1, imm32Op:$s2
 // Instructions
 //===----------------------------------------------------------------------===//
 
+def NOP : Pseudo<(outs), (ins) , [], "nop">;
+
 
 // Pattern Fragments
 def zext8 : PatFrag<(ops node:$ptr), (i32 (zext (i8 node:$ptr)))>;
@@ -547,8 +545,6 @@ def : Pat<(VEXOrc GPRegs:$lhs, GPRegs:$rhs),
           (ORCr GPRegs:$lhs, GPRegs:$rhs)>;
 def : Pat<(VEXSh1Add GPRegs:$lhs, GPRegs:$rhs),
           (SH1ADDr GPRegs:$lhs, GPRegs:$rhs)>;
-def : Pat<(VEXMTB GPRegs:$src),
-          (MTB GPRegs:$src)>;
 
 //def : Pat<(i1 imm:$imm),
 //(MOVi imm:$imm)>;
