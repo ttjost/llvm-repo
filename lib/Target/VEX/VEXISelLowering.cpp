@@ -66,7 +66,6 @@ const char *VEXTargetLowering::getTargetNodeName(unsigned Opcode) const {
             
         case VEXISD::ORC:           return "VEXISD::ORC";
         case VEXISD::SH1ADD:        return "VEXISD::SH1ADD";
-        case VEXISD::MTB:           return "VEXISD::MTB";
             
         case VEXISD::MPYLL:         return "VEXISD::MPYLL";
         case VEXISD::MPYLLU:        return "VEXISD::MPYLLU";
@@ -759,7 +758,10 @@ SDValue VEXTargetLowering::LowerSDIV(SDValue Op, SelectionDAG &DAG) const {
     SDVTList VTList = DAG.getVTList(MVT::i32, MVT::i1);
     
     SDValue Reg0 = DAG.getRegister(VEX::Reg0, MVT::i32);
-    SDValue BReg0 = DAG.getNode(VEXISD::MTB, DL, MVT::i1, Reg0);
+    
+    SDValue CondCodeBr = DAG.getCondCode(ISD::SETNE);
+    SDValue BReg0 = DAG.getNode(ISD::SETCC, DL, MVT::i1,
+                                Reg0, Reg0, CondCodeBr);
     
     SDValue Dividend = Op.getOperand(0);
     SDValue Divisor = Op.getOperand(1);
@@ -844,7 +846,10 @@ SDValue VEXTargetLowering::LowerUDIV(SDValue Op, SelectionDAG &DAG) const {
     SDVTList VTList = DAG.getVTList(MVT::i32, MVT::i1);
     
     SDValue Reg0 = DAG.getRegister(VEX::Reg0, MVT::i32);
-    SDValue BReg0 = DAG.getNode(VEXISD::MTB, DL, MVT::i1, Reg0);
+    
+    SDValue CondCodeBr = DAG.getCondCode(ISD::SETNE);
+    SDValue BReg0 = DAG.getNode(ISD::SETCC, DL, MVT::i1,
+                                Reg0, Reg0, CondCodeBr);
     
     SDValue Dividend = Op.getOperand(0);
     SDValue Divisor = Op.getOperand(1);
@@ -924,7 +929,10 @@ SDValue VEXTargetLowering::LowerSREM(SDValue Op, SelectionDAG &DAG) const {
     SDVTList VTList = DAG.getVTList(MVT::i32, MVT::i1);
     
     SDValue Reg0 = DAG.getRegister(VEX::Reg0, MVT::i32);
-    SDValue BReg0 = DAG.getNode(VEXISD::MTB, DL, MVT::i1, Reg0);
+    
+    SDValue CondCodeBr = DAG.getCondCode(ISD::SETNE);
+    SDValue BReg0 = DAG.getNode(ISD::SETCC, DL, MVT::i1,
+                                Reg0, Reg0, CondCodeBr);
     
     SDValue Dividend = Op.getOperand(0);
     SDValue Divisor = Op.getOperand(1);
@@ -1012,7 +1020,10 @@ SDValue VEXTargetLowering::LowerUREM(SDValue Op, SelectionDAG &DAG) const {
     SDVTList VTList = DAG.getVTList(MVT::i32, MVT::i1);
     
     SDValue Reg0 = DAG.getRegister(VEX::Reg0, MVT::i32);
-    SDValue BReg0 = DAG.getNode(VEXISD::MTB, DL, MVT::i1, Reg0);
+    
+    SDValue CondCodeBr = DAG.getCondCode(ISD::SETNE);
+    SDValue BReg0 = DAG.getNode(ISD::SETCC, DL, MVT::i1,
+                                Reg0, Reg0, CondCodeBr);
     
     SDValue Dividend = Op.getOperand(0);
     SDValue Divisor = Op.getOperand(1);

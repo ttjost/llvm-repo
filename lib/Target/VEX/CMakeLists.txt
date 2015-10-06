@@ -30,8 +30,9 @@ add_llvm_target(VEXCodeGen
   VEXMachineFunctionInfo.cpp
   VEXRegisterInfo.cpp
   VEXSubtarget.cpp
-#  VEXSubtargetInfo.cpp
-#  VEXDFAPacketizer.cpp
+  VEXSubtargetInfo.cpp
+  VEXDFAPacketizer.cpp
+#  VEXHazardRecognizer.cpp
   VEXSelectionDAGInfo.cpp
   VEXAsmPrinter.cpp
   VEXMCInstLower.cpp

@@ -237,6 +237,11 @@ unsigned VEXInstrInfo::InsertBranch(MachineBasicBlock &MBB, MachineBasicBlock *T
     return 1;
 }
 
+void VEXInstrInfo::insertNoop(MachineBasicBlock &MBB,
+                                 MachineBasicBlock::iterator MI) const {
+    BuildMI(&MBB, MI->getDebugLoc(), get(VEX::NOP));
+}
+
 bool VEXInstrInfo::AnalyzeBranch(MachineBasicBlock &MBB,
                                  MachineBasicBlock *&TBB,
                                  MachineBasicBlock *&FBB,
@@ -315,10 +320,24 @@ bool VEXInstrInfo::AnalyzeBranch(MachineBasicBlock &MBB,
 //    }
 }
 
+
 // Used by the VLIW Scheduler
 DFAPacketizer* VEXInstrInfo::CreateTargetScheduleState
-                                (const TargetSubtargetInfo &STI) const{
+(const TargetSubtargetInfo &STI) const{
     const InstrItineraryData *II = STI.getInstrItineraryData();
     DEBUG(errs() << "Creating the DFAPacketizer!\n");
     return static_cast<const VEXSubtarget &>(STI).createDFAPacketizer(II);
 }
+
+
+/// CreateTargetPostRAHazardRecognizer - Return the postRA hazard recognizer
+/// to use for this target when scheduling the DAG.
+//ScheduleHazardRecognizer *
+//VEXInstrInfo::CreateTargetPostRAHazardRecognizer(const TargetSubtargetInfo *STI,
+//                                           const ScheduleDAG *DAG) const {
+//    // Dummy hazard recognizer allows all instructions to issue.
+//    const InstrItineraryData *II =
+//        static_cast<const VEXSubtarget *>(STI)->getInstrItineraryData();
+//    return new ScoreboardHazardRecognizer(II, DAG, "pre-RA-sched");
+//}
+

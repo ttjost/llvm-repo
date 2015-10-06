@@ -211,10 +211,10 @@ bool VEXPacketizerList::isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ) {
     
     if (SUJ->isSucc(SUI)) {
         for (SDep dep : SUJ->Succs) {
-            if (dep.getSUnit() == SUI)
+            if (dep.getSUnit() == SUI) {
                 if (dep.getKind() == SDep::Data || dep.getKind() == SDep::Output)
                     return false;
-            else
+            } else
                 continue;
         }
     }
@@ -313,7 +313,6 @@ bool VEXPacketizer::runOnMachineFunction(MachineFunction &MF) {
 //                         Public Constructor Functions
 //===----------------------------------------------------------------------===//
 FunctionPass *llvm::createVEXPacketizer(bool EnableVLIWScheduling) {
-    DEBUG(errs() << "VLIW Scheduling Disabled.\n");
     return new VEXPacketizer(EnableVLIWScheduling);
 }
 

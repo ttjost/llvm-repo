@@ -19,6 +19,7 @@
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "VEXMachineFunctionInfo.h"
 #include "llvm/Target/TargetInstrInfo.h"
+#include "llvm/CodeGen/ScoreboardHazardRecognizer.h"
 
 #define GET_INSTRINFO_HEADER
 #include "VEXGenInstrInfo.inc"
@@ -76,6 +77,9 @@ namespace llvm{
                               const SmallVectorImpl<MachineOperand> &Cond,
                               DebugLoc DL) const;
 
+        void insertNoop(MachineBasicBlock &MBB,
+                                            MachineBasicBlock::iterator MI) const;
+        
         bool AnalyzeBranch(MachineBasicBlock &MBB,
                            MachineBasicBlock *&TBB,
                            MachineBasicBlock *&FBB,
@@ -84,6 +88,13 @@ namespace llvm{
 
         // Used by the VLIW Scheduler.
         DFAPacketizer* CreateTargetScheduleState(const TargetSubtargetInfo &STI) const;
+        
+//        /// CreateTargetPostRAHazardRecognizer - Return the postRA hazard recognizer
+//        /// to use for this target when scheduling the DAG.
+//        ScheduleHazardRecognizer *
+//            CreateTargetPostRAHazardRecognizer(const TargetSubtargetInfo *STI,
+//                                                   const ScheduleDAG *DAG) const ;
+
     };
     
 }
