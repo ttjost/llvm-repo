@@ -13,6 +13,7 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/CodeGen/MachineOperand.h"
 #include "llvm/Support/Compiler.h"
+#include "llvm/ADT/StringRef.h"
 
 namespace llvm {
     class MCContext;
@@ -30,7 +31,8 @@ namespace llvm {
         VEXAsmPrinter &AsmPrinter;
 
         MCSymbol *GetGlobalAddressSymbol(const MachineOperand &MO) const;
-
+        MCSymbol *GetExternalSymbolSymbol(StringRef Symbol) const;
+        
     public:
         VEXMCInstLower(VEXAsmPrinter &asmprinter);
         void Initialize(MCContext* C);

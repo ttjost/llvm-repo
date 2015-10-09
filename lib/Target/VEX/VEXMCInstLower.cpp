@@ -56,6 +56,11 @@ GetGlobalAddressSymbol(const MachineOperand &MO) const{
     return AsmPrinter.getSymbol(MO.getGlobal());
 }
 
+MCSymbol *VEXMCInstLower::
+GetExternalSymbolSymbol(StringRef Symbol) const {
+    return AsmPrinter.GetExternalSymbolSymbol(Symbol);
+}
+
 
 
 // LowerOperand
@@ -76,6 +81,8 @@ MCOperand VEXMCInstLower::LowerOperand(const MachineOperand &MO,
             return MCOperand::CreateExpr(MCSymbolRefExpr::Create(MO.getMBB()->getSymbol(), *Ctx));
         case MachineOperand::MO_GlobalAddress:
             return MCOperand::CreateExpr(MCSymbolRefExpr::Create(GetGlobalAddressSymbol(MO), *Ctx));
+        case MachineOperand::MO_ExternalSymbol:
+            return MCOperand::CreateExpr(MCSymbolRefExpr::Create(GetExternalSymbolSymbol(MO.getSymbolName()), *Ctx));
         default:
             llvm_unreachable("unknown operand type");
             break;
