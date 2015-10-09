@@ -11,10 +11,7 @@ for arg in "${BENCHMARKS[@]}"; do
 done
 echo "****************************************"
 
-#TYPES=(32 64)
 TYPES=(32)
-#TARGETS=(mips-unknown-linux-gnu mips64-unknown-linux-gnu)
-TARGETS=(sparc-unknown-linux-gnu)
 OPT=(O0 O1 O2 O3)
 #OPT=(O0 O3)
 #OPT=(O0)
@@ -57,7 +54,7 @@ for i in ${BENCHMARKS[@]}; do
 			if [ ! -a ${FOLDER}/${i}_${TYPES[$j]}_$k.ll ]
 			then
 				echo "CLANG: Creating file ${i}_${TYPES[$j]}_$k.ll "
-				clang -target ${TARGETS[$j]} -c $i.c -$k -emit-llvm -S -o ${FOLDER}/${i}_${TYPES[$j]}_$k.ll &> tmp.txt
+				clang -m32 -msoft-float -c $i.c -$k -emit-llvm -S -o ${FOLDER}/${i}_${TYPES[$j]}_$k.ll &> tmp.txt
 
 				if [ -s tmp.txt ]
 				then
