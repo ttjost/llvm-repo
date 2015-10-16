@@ -21,6 +21,8 @@ OPT=(O0 O1 O2 O3)
 #OPT=(O1)
 #OPT=(O2)
 #OPT=(O3)
+#FILES=(pipe4.mm pipe8.mm)
+FILES=(pipe8.mm)
 LLVM_BIN_PATH=~/llvm_build/build/bin
 VEX_BIN_PATH=~/vex-3.43/bin
 
@@ -52,12 +54,14 @@ rm tmp.txt
 for i in ${BENCHMARKS[@]}; do
 	for (( j=0; j<${#TYPES[@]}; j++ )); do
 		for k in ${OPT[@]}; do
+		for w in ${FILES[@]}; do
 			totalExec=$((totalExec+1))
 			# Generate Front-end file with CLANG
 			if [ ! -a ${FOLDER}/${i}_${TYPES[$j]}_$k.ll ]
 			then
 				echo "CLANG: Creating file ${i}_${TYPES[$j]}_$k.ll "
-				clang -target ${TARGETS[$j]} -c $i.c -$k -emit-llvm -S -o ${FOLDER}/${i}_${TYPES[$j]}_$k.ll &> tmp.txt
+				#clang -target ${TARGETS[$j]} -c $i.c -$k -emit-llvm -S -o ${FOLDER}/${i}_${TYPES[$j]}_$k.ll &> tmp.txt 
+				clang -m32 -c $i.c -$k -emit-llvm -S -o ${FOLDER}/${i}_${TYPES[$j]}_$k.ll &> tmp.txt 
 
 				if [ -s tmp.txt ]
 				then
@@ -82,7 +86,8 @@ for i in ${BENCHMARKS[@]}; do
 			# Generate Assembly with LLC
 			if [ ! -a ${FOLDER}/${i}_${TYPES[$j]}_$k.s ]; then
 				echo "LLC: Creating file ${i}_${TYPES[$j]}_$k.s"
-				llc -enable-vliw-scheduling -march=vex -filetype=asm ${FOLDER}/${i}_${TYPES[$j]}_$k.ll -o ${FOLDER}/${i}_${TYPES[$j]}_$k.s &> tmp.txt
+				#llc -enable-vliw-scheduling -fmm=$w -march=vex -filetype=asm ${FOLDER}/${i}_${TYPES[$j]}_$k.ll -o ${FOLDER}/${i}_${TYPES[$j]}_$k.s &> tmp${i}_${TYPES[$j]}_$k.txt
+				llc -enable-vliw-scheduling -march=vex -filetype=asm ${FOLDER}/${i}_${TYPES[$j]}_$k.ll -o ${FOLDER}/${i}_${TYPES[$j]}_$k.s &> tmp${i}_${TYPES[$j]}_$k.txt
 				
 				line=$(head -n 1 tmp.txt)
 				if [ -s tmp.txt ] ; then
@@ -98,6 +103,7 @@ for i in ${BENCHMARKS[@]}; do
 						echo "LLC: OK"
 						sed -i -e 's/\.rodata.*/\.data/g' ${FOLDER}/${i}_${TYPES[$j]}_$k.s
 						sed -i -e 's/\.bss.*/\.bss \.section \.data/g' ${FOLDER}/${i}_${TYPES[$j]}_$k.s
+						sed -i -e 's/\.comm/\.section \.data  \.comm /g' ${FOLDER}/${i}_${TYPES[$j]}_$k.s
 						echo '.import printf' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
 						echo '.type printf, @function' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
 						echo '.import puts' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
@@ -108,6 +114,7 @@ for i in ${BENCHMARKS[@]}; do
 					echo "LLC: OK"
 					sed -i -e 's/\.rodata.*/\.data/g' ${FOLDER}/${i}_${TYPES[$j]}_$k.s
 					sed -i -e 's/\.bss.*/\.bss \.section \.data/g' ${FOLDER}/${i}_${TYPES[$j]}_$k.s
+					sed -i -e 's/\.comm/\.section \.data  \.comm /g' ${FOLDER}/${i}_${TYPES[$j]}_$k.s
 					echo '.import printf' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
 					echo '.type printf, @function' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
 					echo '.import puts' >> ${FOLDER}/${i}_${TYPES[$j]}_$k.s
@@ -152,6 +159,7 @@ for i in ${BENCHMARKS[@]}; do
 					fi
 				fi
 		#	fi
+		done
 		done
 	done
 done
