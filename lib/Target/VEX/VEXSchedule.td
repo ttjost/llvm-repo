@@ -112,18 +112,36 @@ def IIBranch    : InstrItinClass;
 //InstrItinData<IIAll              , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>
 //]>;
 
+//def VEXGenericItineraries : ProcessorItineraries<[IUnit0, IUnit1, IUnit2, IUnit3], [], [
+//InstrItinData<IIAll         , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
+//InstrItinData<IIAlu         , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
+//InstrItinData<IICmpBr       , [InstrStage<2,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
+//InstrItinData<IICmpGr       , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
+//InstrItinData<IISelect      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
+//InstrItinData<IIMultiply    , [InstrStage<2,  [IUnit1, IUnit2]>]>,
+//InstrItinData<IILoad        , [InstrStage<2,  [IUnit0]>]>,
+//InstrItinData<IILoadLr      , [InstrStage<4,  [IUnit0]>]>,
+//InstrItinData<IIStore       , [InstrStage<1,  [IUnit0]>]>,
+//InstrItinData<IIStoreLr     , [InstrStage<1,  [IUnit0]>]>,
+//InstrItinData<IICpGrBr      , [InstrStage<2,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
+//InstrItinData<IICpBrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
+//InstrItinData<IICpLrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
+//InstrItinData<IICpGrLr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
+//InstrItinData<IIBranch      , [InstrStage<1,  [IUnit3]>]>
+//]>;
+
 def VEXGenericItineraries : ProcessorItineraries<[IUnit0, IUnit1, IUnit2, IUnit3], [], [
 InstrItinData<IIAll         , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
 InstrItinData<IIAlu         , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
-InstrItinData<IICmpBr       , [InstrStage<2,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
+InstrItinData<IICmpBr       , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
 InstrItinData<IICmpGr       , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
 InstrItinData<IISelect      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
-InstrItinData<IIMultiply    , [InstrStage<2,  [IUnit1, IUnit2]>]>,
-InstrItinData<IILoad        , [InstrStage<2,  [IUnit0]>]>,
-InstrItinData<IILoadLr      , [InstrStage<4,  [IUnit0]>]>,
+InstrItinData<IIMultiply    , [InstrStage<1,  [IUnit1, IUnit2]>]>,
+InstrItinData<IILoad        , [InstrStage<1,  [IUnit0]>]>,
+InstrItinData<IILoadLr      , [InstrStage<1,  [IUnit0]>]>,
 InstrItinData<IIStore       , [InstrStage<1,  [IUnit0]>]>,
 InstrItinData<IIStoreLr     , [InstrStage<1,  [IUnit0]>]>,
-InstrItinData<IICpGrBr      , [InstrStage<2,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
+InstrItinData<IICpGrBr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
 InstrItinData<IICpBrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
 InstrItinData<IICpLrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
 InstrItinData<IICpGrLr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,

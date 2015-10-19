@@ -176,6 +176,9 @@ MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
 // as EHLabel. Though
 bool VEXPacketizerList::isSoloInstruction(MachineInstr *MI) {
 
+    if (MI->getOpcode() == VEX::NOP)
+        return true;
+    
     if (MI->isInlineAsm()) {
         return true;
     }

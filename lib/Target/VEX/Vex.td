@@ -45,7 +45,7 @@ def     VEXInstrInfo    :   InstrInfo;
 
 def VEXSchedModel : SchedMachineModel {
     let IssueWidth = 4;
-    let LoadLatency = 4;
+    let LoadLatency = 1;
     let Itineraries = VEXGenericItineraries;
 }
 

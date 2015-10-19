@@ -16,6 +16,7 @@
 #include "VEXTargetMachine.h"
 #include "VEXMachineFunctionInfo.h"
 #include "VEXFrameLowering.h"
+#include "VEXHazardRecognizer.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
@@ -239,7 +240,7 @@ unsigned VEXInstrInfo::InsertBranch(MachineBasicBlock &MBB, MachineBasicBlock *T
 
 void VEXInstrInfo::insertNoop(MachineBasicBlock &MBB,
                                  MachineBasicBlock::iterator MI) const {
-    BuildMI(&MBB, MI->getDebugLoc(), get(VEX::NOP));
+    BuildMI(MBB, MI, MI->getDebugLoc(), get(VEX::NOP));
 }
 
 bool VEXInstrInfo::AnalyzeBranch(MachineBasicBlock &MBB,
@@ -329,6 +330,20 @@ DFAPacketizer* VEXInstrInfo::CreateTargetScheduleState
     return static_cast<const VEXSubtarget &>(STI).createDFAPacketizer(II);
 }
 
+/// CreateTargetPostRAHazardRecognizer - Return the postRA hazard recognizer
+/// to use for this target when scheduling the DAG.
+ScheduleHazardRecognizer *VEXInstrInfo::CreateTargetPostRAHazardRecognizer(const InstrItineraryData *II,
+                                                                            const ScheduleDAG *DAG) const {
+    
+    return new VEXHazardRecognizer(II, DAG, "PostRA");
+}
+
+// Default implementation of CreateTargetMIHazardRecognizer.
+ScheduleHazardRecognizer *VEXInstrInfo::CreateTargetMIHazardRecognizer( const InstrItineraryData *II,
+                                                                        const ScheduleDAG *DAG) const {
+    
+    return new VEXHazardRecognizer(II, DAG, "misched");
+}
 
 /// CreateTargetPostRAHazardRecognizer - Return the postRA hazard recognizer
 /// to use for this target when scheduling the DAG.

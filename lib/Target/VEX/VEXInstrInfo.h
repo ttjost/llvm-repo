@@ -89,6 +89,15 @@ namespace llvm{
         // Used by the VLIW Scheduler.
         DFAPacketizer* CreateTargetScheduleState(const TargetSubtargetInfo &STI) const;
         
+        /// CreateTargetPostRAHazardRecognizer - Return the postRA hazard recognizer
+        /// to use for this target when scheduling the DAG.
+        ScheduleHazardRecognizer *CreateTargetPostRAHazardRecognizer(const InstrItineraryData *II,
+                                                                                   const ScheduleDAG *DAG) const;
+        
+        // Default implementation of CreateTargetMIHazardRecognizer.
+        ScheduleHazardRecognizer *CreateTargetMIHazardRecognizer( const InstrItineraryData *II,
+                                                                               const ScheduleDAG *DAG) const;
+        
 //        /// CreateTargetPostRAHazardRecognizer - Return the postRA hazard recognizer
 //        /// to use for this target when scheduling the DAG.
 //        ScheduleHazardRecognizer *
