@@ -482,7 +482,7 @@ def MFL     : MOV_r<0b00000000,
 
 def MTL     : MOV_r<0b00000000,
                    (outs LrReg:$dst), (ins GPRegs:$s1),
-                    "mtl $dst = $s1", [], IICpGrLr>;
+                    "mtl $dst = $s1", [], IICpLrGr>;
 
 // Extend Byte/Half Instructions
 def SXTB    : ExtendInstr<"sxtb", 0b00000000, add, IIAlu>;
@@ -613,6 +613,18 @@ def STW       : StoreInstr<"stw", 0b00010101, store_a, IIStore>;
 def LDWLr     : LoadInstrLr<"ldw", 0b00010000, load_a, IILoadLr>;
 def STWLr     : StoreInstrLr<"stw", 0b00010101, store_a, IIStoreLr>;
 
+def LDWPseudo : Pseudo<(outs GPRegs:$dst1, BrRegs:$dst2),
+                        (ins MEM:$addr),
+                        []>{
+    let mayLoad = 1;
+}
+
+def STWPseudo : Pseudo<(outs GPRegs:$dst),
+                        (ins BrRegs:$s1, MEM:$addr),
+                        []>{
+    let mayStore = 1;
+}
+
 def LDHExt    : LoadInstr<"ldh", 0b00010000, extloadi16, IILoad>;
 def LDH       : LoadInstr<"ldh", 0b00010000, sextloadi16, IILoad>;
 def LDHU      : LoadInstr<"ldhu", 0b00010000, zextloadi16, IILoad>;
@@ -662,9 +674,9 @@ def : Pat<(select GPRegs:$cond, GPRegs:$s1, imm32:$s2),
 //          (SLCTFi (not (MTB GPRegs:$cond)), GPRegs:$s1, imm32:$s2)>;
 
 // 1-to-32-bit extension
-def : Pat<(anyext BrRegs:$src), (MFB BrRegs:$src)>;
-def : Pat<(zext BrRegs:$src), (MFB BrRegs:$src)>;
-def : Pat<(sext BrRegs:$src), (MFB BrRegs:$src)>;
+def : Pat<(i32 (anyext (i1 BrRegs:$src))), (MFB BrRegs:$src)>;
+def : Pat<(i32 (zext (i1 BrRegs:$src))), (MFB BrRegs:$src)>;
+def : Pat<(i32 (sext (i1 BrRegs:$src))), (MFB BrRegs:$src)>;
 
 // Shift and add Instructions
 def : Pat<(add (shl GPRegs:$lhs, (i32 1)), GPRegs:$rhs), (SH1ADDr GPRegs:$lhs, GPRegs:$rhs)>;

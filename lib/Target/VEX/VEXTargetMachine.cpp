@@ -16,6 +16,7 @@
 #include "VEX.h"
 #include "VEXVLIWPacketizer.cpp"
 #include "VEXModifyBranches.cpp"
+#include "VEXMachineScheduler.h"
 //#include "VEXSubtarget.h"
 //#include "VEXTargetObjectFile.h"
 #include "llvm/IR/PassManager.h"
@@ -110,6 +111,14 @@ void VEXNewTargetMachine::anchor() {}
 //    return &DefaultSubtarget;
 //}
 
+static ScheduleDAGInstrs *createVLIWMachineSched(MachineSchedContext *C) {
+    return new VEXVLIWMachineScheduler(C, make_unique<ConvergingVEXVLIWScheduler>());
+}
+
+static MachineSchedRegistry
+SchedCustomRegistry("vex", "Run VEX custom scheduler",
+                    createVLIWMachineSched);
+
 namespace {
 
 // @ VEXPassConfig{
@@ -126,6 +135,11 @@ namespace {
         
         const VEXSubtarget &getVEXSubtarget() const {
             return *getVEXTargetMachine().getSubtargetImpl();
+        }
+        
+        ScheduleDAGInstrs *
+        createMachineScheduler(MachineSchedContext *C) const override {
+            return createVLIWMachineSched(C);
         }
     
         bool addInstSelector() override;
@@ -161,4 +175,5 @@ void VEXPassConfig::addPreEmitPass() {
 TargetPassConfig *VEXTargetMachine::createPassConfig(PassManagerBase &PM){
     return new VEXPassConfig(this, PM);
 }
+
 

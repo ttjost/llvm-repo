@@ -89,6 +89,7 @@ def IIStore     : InstrItinClass;
 def IICpGrBr    : InstrItinClass;
 def IICpBrGr    : InstrItinClass;
 def IICpLrGr    : InstrItinClass;
+def IICpGrLr    : InstrItinClass;
 def IISpill     : InstrItinClass;
 def IIBranch    : InstrItinClass;
 def IIMul       : InstrItinClass;

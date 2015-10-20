@@ -91,7 +91,8 @@ class VEXTargetMachine;
         bool abiUsesSoftFloat() const;
         
         // FIXME : Why is StackAlignment 8 ????
-        unsigned stackAlignment() const {   return 8;   }
+        //unsigned stackAlignment() const {   return 8;   }
+        unsigned stackAlignment() const {   return 32;   }
         
         VEXSubtarget &initializeSubtargetDependencies(StringRef CPU,
                                                       StringRef FS);
@@ -110,9 +111,9 @@ class VEXTargetMachine;
         
         const VEXTargetLowering *getTargetLowering() const override { return &TLInfo; }
         
-        //bool enableMachineScheduler() const override { return true; }
+        bool enableMachineScheduler() const override { return true; }
         
-        //bool enablePostMachineScheduler() const override { return true; }
+        bool enablePostMachineScheduler() const override { return true; }
         
     };
 }

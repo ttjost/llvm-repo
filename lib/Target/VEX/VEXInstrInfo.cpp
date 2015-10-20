@@ -16,6 +16,7 @@
 #include "VEXTargetMachine.h"
 #include "VEXMachineFunctionInfo.h"
 #include "VEXFrameLowering.h"
+#include "VEXHazardRecognizer.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
@@ -95,18 +96,54 @@ bool VEXInstrInfo::expandPostRAPseudo(MachineBasicBlock::iterator MI) const {
         default:
             return false;
         case VEX::PSEUDO_RET:
+        {
             DEBUG(errs() << "\nReplacing PSEUDO_RET\n");
 //            const VEXSubtarget* Subtarget = MF.getSubtarget<VEXSubtarget>();
 //            const VEXFrameLowering* FrameLowering = Subtarget.getFrameLowering<VEXFrameLowering>();
             int StackSize = MF.getFrameInfo()->getStackSize() == 0 ? 0 : RoundUpToAlignment(MF.getFrameInfo()->getStackSize() + 16, 32);
             BuildMI(MBB, MI, MI->getDebugLoc(), get(VEX::RET)).addReg(VEX::Reg1).addReg(VEX::Reg1).addImm(StackSize).addReg(VEX::Lr);
             MBB.erase(MI);
-            return true;
+            break;
+        }
+        case VEX::STWPseudo:
+        {
+            DEBUG(errs() << "\nReplacing STWPseudo with MFB and STW\n");
+            MachineOperand DstReg = MI->getOperand(0);
+            MachineOperand SrcReg = MI->getOperand(1);
+            MachineOperand MemOperand = MI->getOperand(2);
+            MachineOperand FrameIndex = MI->getOperand(3);
+            assert(DstReg.isReg() && "Operand must be Register");
+            assert(SrcReg.isReg() && "Operand must be Register");
+            
+            BuildMI(MBB, MI, MI->getDebugLoc(), get(VEX::MFB), DstReg.getReg()).addOperand(SrcReg);
+            BuildMI(MBB, MI, MI->getDebugLoc(), get(VEX::STW))
+                    .addOperand(DstReg)
+                    .addOperand(MemOperand)
+                    .addOperand(FrameIndex);
+            MBB.erase(MI);
+            break;
+        }
+        case VEX::LDWPseudo:
+        {
+            DEBUG(errs() << "\nReplacing LDWPseudo with MFB and STW\n");
+            MachineOperand DstRegLast = MI->getOperand(0);
+            MachineOperand DstRegFirst = MI->getOperand(1);
+            MachineOperand FrameIndex = MI->getOperand(2);
+            MachineOperand MemOperand = MI->getOperand(3);
+            assert(DstRegLast.isReg() && "Operand must be Register");
+            assert(DstRegFirst.isReg() && "Operand must be Register");
+            
+            BuildMI(MBB, MI, MI->getDebugLoc(), get(VEX::LDW), DstRegFirst.getReg())
+                    .addOperand(FrameIndex)
+                    .addOperand(MemOperand);
+            BuildMI(MBB, MI, MI->getDebugLoc(), get(VEX::MTB), DstRegLast.getReg())
+                    .addOperand(DstRegFirst);
+            MBB.erase(MI);
+            break;
+        }
     }
 
-    return false;
-    
-    
+    return true;
 }
 
 void VEXInstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
@@ -139,10 +176,10 @@ void VEXInstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
         if (RC == &VEX::BrRegsRegClass) {
             MachineRegisterInfo &MRI = MF.getRegInfo();
             unsigned Reg = MRI.createVirtualRegister(&VEX::GPRegsRegClass);
-            BuildMI(MBB, MI, DL, get(VEX::LDW), Reg)
+            BuildMI(MBB, MI, DL, get(VEX::LDWPseudo), DestReg)
+                    .addReg(Reg, RegState::Define)
                     .addFrameIndex(FrameIndex).addImm(0)
                     .addMemOperand(MMO);
-            BuildMI(MBB, MI, DL, get(VEX::MTB), DestReg).addReg(Reg);
             
         } else {
             if (RC == &VEX::LrRegRegClass) {
@@ -185,11 +222,10 @@ void VEXInstrInfo::storeRegToStackSlot(MachineBasicBlock &MBB,
         if (RC == &VEX::BrRegsRegClass) {
             MachineRegisterInfo &MRI = MF.getRegInfo();
             unsigned DstReg = MRI.createVirtualRegister(&VEX::GPRegsRegClass);
-            BuildMI(MBB, MI, DL, get(VEX::MFB), DstReg).addReg(SrcReg, getKillRegState(isKill));
-            BuildMI(MBB, MI, DL, get(VEX::STW))
-                    .addReg(DstReg, getKillRegState(isKill))
-                    .addMemOperand(MMO)
-                    .addFrameIndex(FrameIndex).addImm(0);
+            BuildMI(MBB, MI, DL, get(VEX::STWPseudo), DstReg)
+                                .addReg(SrcReg, getKillRegState(isKill))
+                                .addMemOperand(MMO)
+                                .addFrameIndex(FrameIndex).addImm(0);
         } else {
             if (RC == &VEX::LrRegRegClass) {
                 BuildMI(MBB, MI, DL, get(VEX::STWLr))
@@ -239,7 +275,7 @@ unsigned VEXInstrInfo::InsertBranch(MachineBasicBlock &MBB, MachineBasicBlock *T
 
 void VEXInstrInfo::insertNoop(MachineBasicBlock &MBB,
                                  MachineBasicBlock::iterator MI) const {
-    BuildMI(&MBB, MI->getDebugLoc(), get(VEX::NOP));
+    BuildMI(MBB, MI, MI->getDebugLoc(), get(VEX::NOP));
 }
 
 bool VEXInstrInfo::AnalyzeBranch(MachineBasicBlock &MBB,
@@ -329,6 +365,20 @@ DFAPacketizer* VEXInstrInfo::CreateTargetScheduleState
     return static_cast<const VEXSubtarget &>(STI).createDFAPacketizer(II);
 }
 
+/// CreateTargetPostRAHazardRecognizer - Return the postRA hazard recognizer
+/// to use for this target when scheduling the DAG.
+ScheduleHazardRecognizer *VEXInstrInfo::CreateTargetPostRAHazardRecognizer(const InstrItineraryData *II,
+                                                                            const ScheduleDAG *DAG) const {
+    
+    return new VEXHazardRecognizer(II, DAG, "PostRA");
+}
+
+// Default implementation of CreateTargetMIHazardRecognizer.
+ScheduleHazardRecognizer *VEXInstrInfo::CreateTargetMIHazardRecognizer( const InstrItineraryData *II,
+                                                                        const ScheduleDAG *DAG) const {
+    
+    return new VEXHazardRecognizer(II, DAG, "misched");
+}
 
 /// CreateTargetPostRAHazardRecognizer - Return the postRA hazard recognizer
 /// to use for this target when scheduling the DAG.
