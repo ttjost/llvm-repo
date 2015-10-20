@@ -130,12 +130,25 @@ namespace {
     
         bool addInstSelector() override;
         void addPreEmitPass() override;
+        void addPreRegAlloc() override;
+        void addMachineSSAOptimization() override;
+        
     };
 }
 
 bool VEXPassConfig::addInstSelector() {
     addPass(createVEXISelDag(getVEXTargetMachine()));
     return false;
+}
+
+void VEXPassConfig::addMachineSSAOptimization() {
+    addPass(createVEXModuloScheduler(getVEXTargetMachine()));
+    TargetPassConfig::addMachineSSAOptimization();
+    //addPass(createVEXModuloScheduler(getVEXTargetMachine()));
+}
+
+void VEXPassConfig::addPreRegAlloc() {
+    //addPass(createVEXModuloScheduler(getVEXTargetMachine()));
 }
 
 void VEXPassConfig::addPreEmitPass() {

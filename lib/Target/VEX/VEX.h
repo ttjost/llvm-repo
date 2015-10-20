@@ -24,6 +24,8 @@ namespace llvm {
     class FunctionPass;
 
     FunctionPass *createVEXISelDag(VEXTargetMachine &TM);
+    
+    FunctionPass *createVEXModuloScheduler(VEXTargetMachine &TM);
 
 } // end namespace llvm;
 

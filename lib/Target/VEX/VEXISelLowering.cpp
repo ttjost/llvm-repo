@@ -712,7 +712,7 @@ SDValue VEXTargetLowering::LowerADDSUBWithFlags(SDValue Op, SelectionDAG &DAG) c
             DEBUG(errs() << "ADDC instruction\n");
             rhs = Op.getOperand(1);
         }
-        SDValue Op3 = DAG.getConstant(0, MVT::i1);
+        SDValue Op3 = DAG.getConstant(0, MVT::i32);
         return DAG.getNode(VEXISD::ADDCG, dl, VTs, lhs, rhs, Op3);
     }
 }

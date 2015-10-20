@@ -662,9 +662,9 @@ def : Pat<(select GPRegs:$cond, GPRegs:$s1, imm32:$s2),
 //          (SLCTFi (not (MTB GPRegs:$cond)), GPRegs:$s1, imm32:$s2)>;
 
 // 1-to-32-bit extension
-def : Pat<(i32 (anyext BrRegs:$src)), (MFB BrRegs:$src)>;
-def : Pat<(i32 (zext BrRegs:$src)), (MFB BrRegs:$src)>;
-def : Pat<(i32 (sext BrRegs:$src)), (MFB BrRegs:$src)>;
+def : Pat<(anyext BrRegs:$src), (MFB BrRegs:$src)>;
+def : Pat<(zext BrRegs:$src), (MFB BrRegs:$src)>;
+def : Pat<(sext BrRegs:$src), (MFB BrRegs:$src)>;
 
 // Shift and add Instructions
 def : Pat<(add (shl GPRegs:$lhs, (i32 1)), GPRegs:$rhs), (SH1ADDr GPRegs:$lhs, GPRegs:$rhs)>;
@@ -703,6 +703,9 @@ def : Pat<(VEXPseudoCall (i32 tglobaladdr:$dst)),
 
 def : Pat<(VEXPseudoCall (i32 texternalsym:$dst)),
           (CALL texternalsym:$dst)>;
+
+def : Pat<(VEXPseudoCall (VEXWrapper texternalsym:$dst)),
+            (CALL texternalsym:$dst)>;
 
 //include "VEXInstrVIS.td"
 //include "VEXInstrAliases.td"

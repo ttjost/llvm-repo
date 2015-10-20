@@ -67,8 +67,8 @@ void VEXInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
                     MachineFunction *MF = MBB.getParent();
                     MachineRegisterInfo &MRI = MF->getRegInfo();
                     unsigned Reg = MRI.createVirtualRegister(&VEX::BrRegsRegClass);
-                    BuildMI(MBB, MI, DL, get(VEX::MFB), Reg).addReg(SrcReg);
-                    BuildMI(MBB, MI, DL, get(VEX::MTB), DestReg).addReg(Reg, getKillRegState(KillSrc));
+                    BuildMI(MBB, MI, DL, get(VEX::MFB), Reg).addReg(SrcReg, getKillRegState(KillSrc));
+                    BuildMI(MBB, MI, DL, get(VEX::MTB), DestReg).addReg(Reg);
                     return;
                 } else
                         llvm_unreachable("Impossible to Copy from Link Register to Branch register.");
