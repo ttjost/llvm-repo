@@ -613,6 +613,18 @@ def STW       : StoreInstr<"stw", 0b00010101, store_a, IIStore>;
 def LDWLr     : LoadInstrLr<"ldw", 0b00010000, load_a, IILoadLr>;
 def STWLr     : StoreInstrLr<"stw", 0b00010101, store_a, IIStoreLr>;
 
+def LDWPseudo : Pseudo<(outs GPRegs:$dst1, BrRegs:$dst2),
+                        (ins MEM:$addr),
+                        []>{
+    let mayLoad = 1;
+}
+
+def STWPseudo : Pseudo<(outs GPRegs:$dst),
+                        (ins BrRegs:$s1, MEM:$addr),
+                        []>{
+    let mayStore = 1;
+}
+
 def LDHExt    : LoadInstr<"ldh", 0b00010000, extloadi16, IILoad>;
 def LDH       : LoadInstr<"ldh", 0b00010000, sextloadi16, IILoad>;
 def LDHU      : LoadInstr<"ldhu", 0b00010000, zextloadi16, IILoad>;
