@@ -111,13 +111,13 @@ void VEXNewTargetMachine::anchor() {}
 //    return &DefaultSubtarget;
 //}
 
-static ScheduleDAGInstrs *createVLIWMachineSched(MachineSchedContext *C) {
-    return new VEXVLIWMachineScheduler(C, make_unique<ConvergingVEXVLIWScheduler>());
-}
+//static ScheduleDAGInstrs *createVLIWMachineSched(MachineSchedContext *C) {
+//    return new VEXVLIWMachineScheduler(C, make_unique<ConvergingVEXVLIWScheduler>());
+//}
 
-static MachineSchedRegistry
-SchedCustomRegistry("vex", "Run VEX custom scheduler",
-                    createVLIWMachineSched);
+//static MachineSchedRegistry
+//SchedCustomRegistry("vex", "Run VEX custom scheduler",
+//                    createVLIWMachineSched);
 
 namespace {
 
@@ -137,10 +137,10 @@ namespace {
             return *getVEXTargetMachine().getSubtargetImpl();
         }
         
-        ScheduleDAGInstrs *
-        createMachineScheduler(MachineSchedContext *C) const override {
-            return createVLIWMachineSched(C);
-        }
+//        ScheduleDAGInstrs *
+//        createMachineScheduler(MachineSchedContext *C) const override {
+//            return createVLIWMachineSched(C);
+//        }
     
         bool addInstSelector() override;
         void addPreEmitPass() override;
