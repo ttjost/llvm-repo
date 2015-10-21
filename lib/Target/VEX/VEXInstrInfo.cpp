@@ -367,18 +367,18 @@ DFAPacketizer* VEXInstrInfo::CreateTargetScheduleState
 
 /// CreateTargetPostRAHazardRecognizer - Return the postRA hazard recognizer
 /// to use for this target when scheduling the DAG.
-ScheduleHazardRecognizer *VEXInstrInfo::CreateTargetPostRAHazardRecognizer(const InstrItineraryData *II,
-                                                                            const ScheduleDAG *DAG) const {
-    
-    return new VEXHazardRecognizer(II, DAG, "PostRA");
-}
-
-// Default implementation of CreateTargetMIHazardRecognizer.
-ScheduleHazardRecognizer *VEXInstrInfo::CreateTargetMIHazardRecognizer( const InstrItineraryData *II,
-                                                                        const ScheduleDAG *DAG) const {
-    
-    return new VEXHazardRecognizer(II, DAG, "misched");
-}
+//ScheduleHazardRecognizer *VEXInstrInfo::CreateTargetPostRAHazardRecognizer(const InstrItineraryData *II,
+//                                                                            const ScheduleDAG *DAG) const {
+//    
+//    return new VEXHazardRecognizer(II, DAG, "PostRA");
+//}
+//
+//// Default implementation of CreateTargetMIHazardRecognizer.
+//ScheduleHazardRecognizer *VEXInstrInfo::CreateTargetMIHazardRecognizer( const InstrItineraryData *II,
+//                                                                        const ScheduleDAG *DAG) const {
+//    
+//    return new VEXHazardRecognizer(II, DAG, "misched");
+//}
 
 /// CreateTargetPostRAHazardRecognizer - Return the postRA hazard recognizer
 /// to use for this target when scheduling the DAG.
