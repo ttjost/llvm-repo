@@ -111,9 +111,9 @@ class VEXTargetMachine;
         
         const VEXTargetLowering *getTargetLowering() const override { return &TLInfo; }
         
-        bool enableMachineScheduler() const override { return true; }
-        
-        bool enablePostMachineScheduler() const override { return true; }
+//        bool enableMachineScheduler() const override { return true; }
+//        
+//        bool enablePostMachineScheduler() const override { return true; }
         
     };
 }
