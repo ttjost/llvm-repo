@@ -104,7 +104,7 @@ bool VEXVLIWResourceModel::reserveResources(SUnit *SU) {
 
   switch (SU->getInstr()->getOpcode()) {
   default:
-    ResourcesModel->reserveResources(&SU->getInstr()->getDesc());
+    ResourcesModel->reserveResources(SU->getInstr());
     break;
   case TargetOpcode::EXTRACT_SUBREG:
   case TargetOpcode::INSERT_SUBREG:
@@ -116,9 +116,9 @@ bool VEXVLIWResourceModel::reserveResources(SUnit *SU) {
   case TargetOpcode::COPY:
   case TargetOpcode::INLINEASM:
     break;
-  case VEX::ADJCALLSTACKUP:
-  case VEX::ADJCALLSTACKDOWN:  
-    return startNewCycle;
+  //case VEX::ADJCALLSTACKUP:
+  //case VEX::ADJCALLSTACKDOWN:
+  //  return startNewCycle;
   }
   Packet.push_back(SU);
 
@@ -335,7 +335,6 @@ void ConvergingVEXVLIWScheduler::SchedBoundary::bumpNode(SUnit *SU) {
       // scheduling, clear the pipeline state before emitting.
       HazardRec->Reset();
     }
-    // hazard_test = HazardRec->getHazardType(SU) != ScheduleHazardRecognizer::NoHazard;
     HazardRec->EmitInstruction(SU);
   }
 
@@ -372,12 +371,12 @@ void ConvergingVEXVLIWScheduler::SchedBoundary::releasePending() {
   for (unsigned i = 0, e = Pending.size(); i != e; ++i) {
     SUnit *SU = *(Pending.begin()+i);
     unsigned ReadyCycle = isTop() ? SU->TopReadyCycle : SU->BotReadyCycle;
-    
+
     if (ReadyCycle < MinReadyCycle)
       MinReadyCycle = ReadyCycle;
 
-    // if (ReadyCycle > CurrCycle)
-    //   continue;
+    if (ReadyCycle > CurrCycle)
+      continue;
 
     if (checkHazard(SU))
       continue;
@@ -407,7 +406,7 @@ SUnit *ConvergingVEXVLIWScheduler::SchedBoundary::pickOnlyChoice() {
     releasePending();
 
   for (unsigned i = 0; Available.empty(); ++i) {
-//    ResourceModel->reserveResources(0);
+    ResourceModel->reserveResources(nullptr);
 //    bumpCycle();
     // if (CheckPending)
     //   releasePending();
@@ -432,7 +431,7 @@ void ConvergingVEXVLIWScheduler::traceCandidate(const char *Label,
            << " ";
   else
     dbgs() << "     ";
-  // SU->dump(DAG);
+  SU->dump(DAG);
 }
 #endif
 
@@ -447,7 +446,7 @@ static SUnit *getSingleUnscheduledPred(SUnit *SU) {
       // We found an available, but not scheduled, predecessor.  If it's the
       // only one we have found, keep track of it... otherwise give up.
       if (OnlyAvailablePred && OnlyAvailablePred != &Pred)
-        return 0;
+        return nullptr;
       OnlyAvailablePred = &Pred;
     }
   }
@@ -457,7 +456,7 @@ static SUnit *getSingleUnscheduledPred(SUnit *SU) {
 /// getSingleUnscheduledSucc - If there is exactly one unscheduled successor
 /// of SU, return it, otherwise return null.
 static SUnit *getSingleUnscheduledSucc(SUnit *SU) {
-  SUnit *OnlyAvailableSucc = 0;
+  SUnit *OnlyAvailableSucc = nullptr;
   for (SUnit::const_succ_iterator I = SU->Succs.begin(), E = SU->Succs.end();
        I != E; ++I) {
     SUnit &Succ = *I->getSUnit();
@@ -465,7 +464,7 @@ static SUnit *getSingleUnscheduledSucc(SUnit *SU) {
       // We found an available, but not scheduled, successor.  If it's the
       // only one we have found, keep track of it... otherwise give up.
       if (OnlyAvailableSucc && OnlyAvailableSucc != &Succ)
-        return 0;
+        return nullptr;
       OnlyAvailableSucc = &Succ;
     }
   }
@@ -475,9 +474,7 @@ static SUnit *getSingleUnscheduledSucc(SUnit *SU) {
 // Constants used to denote relative importance of
 // heuristic components for cost computation.
 static const unsigned PriorityOne = 200;
-static const unsigned PriorityTwo = 100;
-static const unsigned PriorityThree = 50;
-static const unsigned PriorityFour = 20;
+static const unsigned PriorityTwo = 50;
 static const unsigned ScaleTwo = 10;
 static const unsigned FactorOne = 2;
 
@@ -535,8 +532,8 @@ int ConvergingVEXVLIWScheduler::SchedulingCost(ReadyQueue &Q, SUnit *SU,
   ResCount += (NumNodesBlocking * ScaleTwo);
 
   // Factor in reg pressure as a heuristic.
-  ResCount -= (Delta.Excess.getUnitInc()*PriorityThree);
-  ResCount -= (Delta.CriticalMax.getUnitInc()*PriorityThree);
+  ResCount -= (Delta.Excess.getUnitInc()*PriorityTwo);
+  ResCount -= (Delta.CriticalMax.getUnitInc()*PriorityTwo);
 
   DEBUG(if (verbose) dbgs() << " Total(" << ResCount << ")");
 
@@ -595,110 +592,166 @@ pickNodeFromQueue(ReadyQueue &Q, const RegPressureTracker &RPTracker,
 
 /// Pick the best candidate node from either the top or bottom queue.
 SUnit *ConvergingVEXVLIWScheduler::pickNodeBidrectional(bool &IsTopNode) {
-  // Schedule as far as possible in the direction of no choice. This is most
-  // efficient, but also provides the best heuristics for CriticalPSets.
-  bool BotHazard, TopHazard;
-  if (SUnit *SU = Bot.pickOnlyChoice()) {
-    IsTopNode = false;
-    return SU;
-  }
-  if (SUnit *SU = Top.pickOnlyChoice()) {
-    IsTopNode = true;
-    return SU;
-  }
-  SchedCandidate BotCand;
-  // Prefer bottom scheduling when heuristics are silent.
-  CandResult BotResult = pickNodeFromQueue(Bot.Available,
-                                           DAG->getBotRPTracker(), BotCand);
 
-  // if (BotResult == NoCand) {
-  //   Bot.bumpCycle();
-  //   Top.bumpCycle();
-  //   return NULL;
-  // }
-  
-  if (BotCand.SU != NULL)
-    BotHazard = Bot.HazardRec->getHazardType(BotCand.SU) != ScheduleHazardRecognizer::NoHazard;
-  else
-    BotHazard = true;
-
-
-  // assert(BotResult != NoCand && "failed to find the first candidate");
-
-  // If either Q has a single candidate that provides the least increase in
-  // Excess pressure, we can immediately schedule from that Q.
-  //
-  // RegionCriticalPSets summarizes the pressure within the scheduled region and
-  // affects picking from either Q. If scheduling in one direction must
-  // increase pressure for one of the excess PSets, then schedule in that
-  // direction first to provide more freedom in the other direction.
-  if (BotResult == SingleExcess || BotResult == SingleCritical) {
+    // // Schedule as far as possible in the direction of no choice. This is most
+    // // efficient, but also provides the best heuristics for CriticalPSets.
+    // bool BotHazard, TopHazard;
+    // if (SUnit *SU = Bot.pickOnlyChoice()) {
+    //   IsTopNode = false;
+    //   return SU;
+    // }
+    // if (SUnit *SU = Top.pickOnlyChoice()) {
+    //   IsTopNode = true;
+    //   return SU;
+    // }
+    // SchedCandidate BotCand;
+    // // Prefer bottom scheduling when heuristics are silent.
+    // CandResult BotResult = pickNodeFromQueue(Bot.Available,
+    //                                          DAG->getBotRPTracker(), BotCand);
+    
+    // // if (BotResult == NoCand) {
+    // //   Bot.bumpCycle();
+    // //   Top.bumpCycle();
+    // //   return NULL;
+    // // }
+    
+    // if (BotCand.SU != NULL)
+    //   BotHazard = Bot.HazardRec->getHazardType(BotCand.SU) != ScheduleHazardRecognizer::NoHazard;
+    // else
+    //   BotHazard = true;
+    
+    
+    // // assert(BotResult != NoCand && "failed to find the first candidate");
+    
+    // // If either Q has a single candidate that provides the least increase in
+    // // Excess pressure, we can immediately schedule from that Q.
+    // //
+    // // RegionCriticalPSets summarizes the pressure within the scheduled region and
+    // // affects picking from either Q. If scheduling in one direction must
+    // // increase pressure for one of the excess PSets, then schedule in that
+    // // direction first to provide more freedom in the other direction.
+    // if (BotResult == SingleExcess || BotResult == SingleCritical) {
+    //   IsTopNode = false;
+    //   return BotCand.SU;
+    // }
+    // // Check if the top Q has a better candidate.
+    // SchedCandidate TopCand;
+    // CandResult TopResult = pickNodeFromQueue(Top.Available,
+    //                                          DAG->getTopRPTracker(), TopCand);
+    
+    // if (TopCand.SU != NULL)
+    //   TopHazard = Top.HazardRec->getHazardType(TopCand.SU) != ScheduleHazardRecognizer::NoHazard;
+    // else
+    //   TopHazard = true;
+    
+    // if (BotHazard && TopHazard) {
+    //   DEBUG(dbgs() << "Found sched hazard\n");
+    //   // Bot.bumpCycle();
+    //   // Top.bumpCycle();
+    //   return NULL;
+    // }
+    
+    // // if (TopResult == NoCand) {
+    // //   return TopCand.SU;
+    // // }
+    
+    // // if (BotResult == NoCand) {
+    // //   return BotCand.SU;
+    // // }
+    
+    // // assert(TopResult != NoCand && "failed to find the first candidate");
+    
+    // if (TopResult == SingleExcess || TopResult == SingleCritical) {
+    //   IsTopNode = true;
+    //   if (TopHazard)
+    //     return NULL;
+    //   else
+    //     return TopCand.SU;
+    // }
+    // // If either Q has a single candidate that minimizes pressure above the
+    // // original region's pressure pick it.
+    // if (BotResult == SingleMax) {
+    //   IsTopNode = false;
+    //   if (BotHazard)
+    //     return NULL;
+    //   else
+    //     return BotCand.SU;
+    // }
+    // if (TopResult == SingleMax) {
+    //   IsTopNode = true;
+    //   if (TopHazard)
+    //     return NULL;
+    //   else
+    //     return TopCand.SU;
+    // }
+    // if (TopCand.SCost > BotCand.SCost) {
+    //   IsTopNode = true;
+    //   if (TopHazard)
+    //     return NULL;
+    //   else
+    //     return TopCand.SU;
+    // }
+    // // Otherwise prefer the bottom candidate in node order.
+    // IsTopNode = false;
+    // if (BotHazard)
+    //   return NULL;
+    // else
+    //   return BotCand.SU;
+    
+    // Schedule as far as possible in the direction of no choice. This is most
+    // efficient, but also provides the best heuristics for CriticalPSets.
+    if (SUnit *SU = Bot.pickOnlyChoice()) {
+        IsTopNode = false;
+        return SU;
+    }
+    if (SUnit *SU = Top.pickOnlyChoice()) {
+        IsTopNode = true;
+        return SU;
+    }
+    SchedCandidate BotCand;
+    // Prefer bottom scheduling when heuristics are silent.
+    CandResult BotResult = pickNodeFromQueue(Bot.Available,
+                                             DAG->getBotRPTracker(), BotCand);
+    assert(BotResult != NoCand && "failed to find the first candidate");
+    
+    // If either Q has a single candidate that provides the least increase in
+    // Excess pressure, we can immediately schedule from that Q.
+    //
+    // RegionCriticalPSets summarizes the pressure within the scheduled region and
+    // affects picking from either Q. If scheduling in one direction must
+    // increase pressure for one of the excess PSets, then schedule in that
+    // direction first to provide more freedom in the other direction.
+    if (BotResult == SingleExcess || BotResult == SingleCritical) {
+        IsTopNode = false;
+        return BotCand.SU;
+    }
+    // Check if the top Q has a better candidate.
+    SchedCandidate TopCand;
+    CandResult TopResult = pickNodeFromQueue(Top.Available,
+                                             DAG->getTopRPTracker(), TopCand);
+    assert(TopResult != NoCand && "failed to find the first candidate");
+    
+    if (TopResult == SingleExcess || TopResult == SingleCritical) {
+        IsTopNode = true;
+        return TopCand.SU;
+    }
+    // If either Q has a single candidate that minimizes pressure above the
+    // original region's pressure pick it.
+    if (BotResult == SingleMax) {
+        IsTopNode = false;
+        return BotCand.SU;
+    }
+    if (TopResult == SingleMax) {
+        IsTopNode = true;
+        return TopCand.SU;
+    }
+    if (TopCand.SCost > BotCand.SCost) {
+        IsTopNode = true;
+        return TopCand.SU;
+    }
+    // Otherwise prefer the bottom candidate in node order.
     IsTopNode = false;
     return BotCand.SU;
-  }
-  // Check if the top Q has a better candidate.
-  SchedCandidate TopCand;
-  CandResult TopResult = pickNodeFromQueue(Top.Available,
-                                           DAG->getTopRPTracker(), TopCand);
-
-  if (TopCand.SU != NULL)
-    TopHazard = Top.HazardRec->getHazardType(TopCand.SU) != ScheduleHazardRecognizer::NoHazard;
-  else
-    TopHazard = true;
-
-  if (BotHazard && TopHazard) {
-    DEBUG(dbgs() << "Found sched hazard\n");
-    // Bot.bumpCycle();
-    // Top.bumpCycle();
-    return NULL;
-  }  
-
-  // if (TopResult == NoCand) {
-  //   return TopCand.SU;  
-  // }
-
-  // if (BotResult == NoCand) {
-  //   return BotCand.SU;  
-  // }
-    
-  // assert(TopResult != NoCand && "failed to find the first candidate");
-
-  if (TopResult == SingleExcess || TopResult == SingleCritical) {
-    IsTopNode = true;
-    if (TopHazard)
-      return NULL;
-    else
-      return TopCand.SU;
-  }
-  // If either Q has a single candidate that minimizes pressure above the
-  // original region's pressure pick it.
-  if (BotResult == SingleMax) {
-    IsTopNode = false;
-    if (BotHazard)
-      return NULL;
-    else
-      return BotCand.SU;    
-  }
-  if (TopResult == SingleMax) {
-    IsTopNode = true;
-    if (TopHazard)
-      return NULL;
-    else
-      return TopCand.SU;
-  }
-  if (TopCand.SCost > BotCand.SCost) {
-    IsTopNode = true;
-    if (TopHazard)
-      return NULL;
-    else
-      return TopCand.SU;
-  }
-  // Otherwise prefer the bottom candidate in node order.
-  IsTopNode = false;
-  if (BotHazard)
-    return NULL;
-  else
-    return BotCand.SU;  
 }
 
 /// Pick the best node to balance the schedule. Implements MachineSchedStrategy.

@@ -212,18 +212,38 @@ bool VEXPacketizerList::ignorePseudoInstruction(MachineInstr *MI,
 
 bool VEXPacketizerList::isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ) {
     
-    if (SUJ->isSucc(SUI)) {
-        for (SDep dep : SUJ->Succs) {
-            if (dep.getSUnit() == SUI) {
-                if (dep.getKind() == SDep::Data || dep.getKind() == SDep::Output)
-                    return false;
-            } else
-                continue;
+    if (SUI->getInstr()->getOpcode() == VEX::DIVS
+        && SUJ->getInstr()->getOpcode() == VEX::DIVS) {
+        if (SUI->getInstr()->getOperand(1).getReg() == VEX::BrReg0
+            && SUJ->getInstr()->getOperand(1).getReg() == VEX::BrReg0) {
+            SUI->getInstr()->dump();
+            SUJ->getInstr()->dump();
         }
     }
     
     if (SUJ->getInstr()->isCall() || SUJ->getInstr()->isBranch())
         return false;
+    
+    if (SUJ->isSucc(SUI)) {
+        for (SDep dep : SUI->Preds) {
+            if (dep.getSUnit() == SUJ) {
+                if (dep.getKind() == SDep::Data || dep.getKind() == SDep::Output)
+                    return false;
+                else {
+                    if (dep.getKind() == SDep::Anti) {
+                        unsigned DepReg = dep.getReg();
+                        
+                        // Check if I and J really defines DepReg.
+                        if (SUI->getInstr()->definesRegister(DepReg) &&
+                            SUJ->getInstr()->definesRegister(DepReg))
+                            return false;
+                    }
+                }
+            } else
+                continue;
+        }
+    }
+    
     return true;
 }
 
@@ -289,7 +309,7 @@ bool VEXPacketizer::runOnMachineFunction(MachineFunction &MF) {
             //currentMBB = MBB;
             
             I = MBB->begin();
-
+            
             // Skip empty scheduling regions.
             if (I == RegionEnd) {
                 RegionEnd = std::prev(RegionEnd);
