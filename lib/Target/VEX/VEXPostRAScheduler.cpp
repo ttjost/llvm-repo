@@ -180,8 +180,6 @@ namespace {
 
 //char &llvm::PostRASchedulerID = PostRAScheduler::ID;
 
-
-
 SchedulePostRATDList::SchedulePostRATDList(
   MachineFunction &MF, MachineLoopInfo &MLI,
   AliasAnalysis *AA, const RegisterClassInfo &RCI,
