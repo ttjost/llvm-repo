@@ -110,8 +110,12 @@ class VEXTargetMachine;
         }
         
         const VEXTargetLowering *getTargetLowering() const override { return &TLInfo; }
-        
+
 //        bool enableMachineScheduler() const override { return true; }
+        
+        // We need to disable the Default Scheduler
+        // If we don't do that, poor VLIW Code is generated
+        bool enableMachineSchedDefaultSched() const override { return false; }
 //        
 //        bool enablePostMachineScheduler() const override { return true; }
         
