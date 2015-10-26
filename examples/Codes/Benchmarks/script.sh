@@ -57,7 +57,7 @@ for i in ${BENCHMARKS[@]}; do
 			if [ ! -a ${FOLDER}/${i}_${TYPES[$j]}_$k.ll ]
 			then
 				echo "CLANG: Creating file ${i}_${TYPES[$j]}_$k.ll "
-				clang -m32 -c $i.c -$k -emit-llvm -S -o ${FOLDER}/${i}_${TYPES[$j]}_$k.ll &> tmp.txt
+				clang -c -m32 $i.c -$k -emit-llvm -S -o ${FOLDER}/${i}_${TYPES[$j]}_$k.ll &> tmp.txt
 				if [ -s tmp.txt ]
 				then
 					variable=$(cat tmp.txt)
