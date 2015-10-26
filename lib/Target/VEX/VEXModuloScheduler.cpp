@@ -30,14 +30,17 @@
 #include "llvm/CodeGen/MachineLoopInfo.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/MachineTraceMetrics.h"
+#include "llvm/CodeGen/LiveIntervalAnalysis.h"
 #include "llvm/CodeGen/Passes.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/CodeGen/ScheduleDAGInstrs.h"
 
 using namespace llvm;
 
 #define DEBUG_TYPE "vex-mod-sched"
+
 
 static cl::opt<bool> VEXModSched("vex-mod-sched", cl::init(false),
                                  cl::Hidden, cl::desc("Enable VEX Modulo Scheduler"));
@@ -48,9 +51,42 @@ static cl::opt<bool> VEXModSched("vex-mod-sched", cl::init(false),
 
 #define DEBUG_TYPE "vex-mod-sched"
 
+
+namespace llvm {
+    
+class AliasAnalysis;
+class LiveIntervals;
+class MachineDominatorTree;
+class MachineLoopInfo;
+    
+    // DefaultVLIWScheduler - This class extends ScheduleDAGInstrs and overrides
+    // Schedule method to build the dependence graph.
+    class LoopScheduler : public ScheduleDAGInstrs {
+    public:
+        LoopScheduler (MachineFunction &MF,
+                       MachineLoopInfo &MLI,
+                       LiveIntervals *LIS);
+        // Schedule - Actual scheduling work.
+        void schedule() override;
+    };
+}
+
+LoopScheduler::LoopScheduler(MachineFunction &MF,
+                             MachineLoopInfo &MLI,
+                             LiveIntervals *LIS)
+: ScheduleDAGInstrs(MF, &MLI, false, false, LIS) {
+    // TODO: Is this really correct?
+    CanHandleTerminators = true;
+}
+
+void LoopScheduler::schedule() {
+    // Build the scheduling graph.
+    buildSchedGraph(nullptr);
+}
+
 namespace {
     
-    class VEXModuloScheduler : public MachineFunctionPass {
+    class LLVM_LIBRARY_VISIBILITY VEXModuloScheduler : public MachineFunctionPass {
     public:
         static char ID;
         VEXTargetMachine& TM;
@@ -65,8 +101,17 @@ namespace {
         
         void getAnalysisUsage(AnalysisUsage &AU) const override;
         
-    protected:
+        virtual const char *getPassName() const{
+            return "VEX Modulo Scheduler";
+        }
         
+        // VLIWPacketizerList Dtor
+        ~VEXModuloScheduler() {
+            if (Scheduler)
+                delete Scheduler;
+        }
+        
+    protected:
         
         
     private:
@@ -80,16 +125,25 @@ namespace {
         MachineLoopInfo *Loops;
         MachineTraceMetrics *Traces;
         MachineTraceMetrics::Ensemble *MinInstr;
+        LiveIntervals *LIS;
         
         DenseSet<MachineLoop *> innerLoops;
         
+        LoopScheduler *Scheduler;
+    
+        std::vector<SUnit> SUnits;            // The scheduling units.
+        
+        /// After calling BuildSchedGraph, each machine instruction in the current
+        /// scheduling region is mapped to an SUnit.
+        DenseMap<MachineInstr*, SUnit*> MISUnitMap;
+        
         MachineLoop *IsCandidateToSchedule(MachineFunction::iterator BasicBlock);
         void FindInnerLoops(MachineFunction &MF);
+        void initSUnits(MachineBasicBlock* Loop);
         
     };
     
 }
-
 
 void VEXModuloScheduler::getAnalysisUsage(AnalysisUsage &AU) const {
     AU.addRequired<MachineBranchProbabilityInfo>();
@@ -99,6 +153,9 @@ void VEXModuloScheduler::getAnalysisUsage(AnalysisUsage &AU) const {
     AU.addPreserved<MachineLoopInfo>();
     AU.addRequired<MachineTraceMetrics>();
     AU.addPreserved<MachineTraceMetrics>();
+    //AU.addRequired<LiveIntervals>();
+    //AU.addPreserved<LiveIntervals>();
+    //AU.addPreserved<SlotIndexes>();
     MachineFunctionPass::getAnalysisUsage(AU);
 }
 
@@ -117,18 +174,54 @@ void VEXModuloScheduler::FindInnerLoops(MachineFunction &MF) {
     
     for (MachineFunction::iterator MBBI = MF.begin(),
             MBBE = MF.end(); MBBI != MBBE; ++MBBI) {
-        if (MachineLoop* loop = IsCandidateToSchedule(MBBI))
+        
+        if (MachineLoop* loop = IsCandidateToSchedule(MBBI)){
+            loop->dump();
             innerLoops.insert(loop);
+        }
+    }
+    
+    for (MachineLoop* loopi : innerLoops) {
+        MachineBasicBlock* MBB = loopi->getTopBlock();
+        errs() << "Basic Block: " <<loopi->getTopBlock()->getName() << "\n";
+        
+//        Scheduler->startBlock(MBB);
+//        MachineBasicBlock::iterator BeginItr = MBB->begin();
+//        MachineBasicBlock::iterator EndItr = MBB->end();
+//        
+//        Scheduler->enterRegion(MBB, MBB->begin(), MBB->end(),
+//                               std::distance(BeginItr, EndItr));
+//        
+//        Scheduler->buildSchedGraph(nullptr);
+//        
+//        for (unsigned i = 0; i < Scheduler->SUnits.size(); ++i) {
+//            Scheduler->SUnits[i].dump(Scheduler);
+//        }
     }
     
     for (MachineLoop* loopi : innerLoops) {
         MachineBasicBlock* bb = loopi->getTopBlock();
-        errs() << "Basic Block: " <<loopi->getTopBlock()->getName() << "\n";
+        errs() << "Basic Block " <<loopi->getTopBlock()->getName() << " with " << std::distance(bb->begin(), bb->end()) << " instructions\n";
         
-        for (MachineBasicBlock::iterator i = bb->begin(), e = bb->end(); i != e; ++i)
+        for (MachineBasicBlock::iterator i = bb->begin(),
+             e = bb->end(); i != e; ++i) {
             i->dump();
+        }
+        
         errs() << "\n\n";
     }
+}
+
+void VEXModuloScheduler::initSUnits(MachineBasicBlock* Loop) {
+    
+    
+    for (MachineBasicBlock::iterator I = Loop->begin(),
+         E = Loop->end(); I != E; I++) {
+        MachineInstr *MI = I;
+        SUnits.push_back(SUnit(MI, SUnits.size()));
+        
+    }
+    
 }
 
 bool VEXModuloScheduler::runOnMachineFunction(MachineFunction &MF){
@@ -144,19 +237,21 @@ bool VEXModuloScheduler::runOnMachineFunction(MachineFunction &MF){
     DomTree = &getAnalysis<MachineDominatorTree>();
     Loops = getAnalysisIfAvailable<MachineLoopInfo>();
     Traces = &getAnalysis<MachineTraceMetrics>();
+    //LIS = &getAnalysis<LiveIntervals>();
     MinSize = MF.getFunction()->hasFnAttribute(Attribute::MinSize);
+    
+    //Scheduler = new LoopScheduler(MF, *Loops, LIS);
     
     FindInnerLoops(MF);
     
     for (MachineLoop* loopi : innerLoops) {
         MachineBasicBlock* bb = loopi->getTopBlock();
-        errs() << "Basic Block: " <<loopi->getTopBlock()->getName() << "\n";
-        
-        for (MachineBasicBlock::iterator i = bb->begin(), e = bb->end(); i != e; ++i)
-            i->dump();
-        errs() << "\n\n";
+//        errs() << "Basic Block: " <<loopi->getTopBlock()->getName() << "\n";
+//        
+//        for (MachineBasicBlock::iterator i = bb->begin(), e = bb->end(); i != e; ++i)
+//            i->dump();
+//        errs() << "\n\n";
     }
-    
     
     return false;
 }
