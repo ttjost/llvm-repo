@@ -149,6 +149,10 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     setOperationAction(ISD::BR_CC, MVT::i32, Expand);
     setOperationAction(ISD::ROTL,  MVT::i32, Expand);
     setOperationAction(ISD::ROTR,  MVT::i32, Expand);
+    
+    setOperationAction(ISD::SHL_PARTS, MVT::i32, Expand);
+    setOperationAction(ISD::SRA_PARTS, MVT::i32, Expand);
+    setOperationAction(ISD::SRL_PARTS, MVT::i32, Expand);
     //setOperationAction(ISD::SETCC, MVT::i32, Custom);
 
     // Lower ADDE and ADDC
