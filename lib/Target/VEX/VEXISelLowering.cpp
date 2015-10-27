@@ -337,7 +337,8 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
     bool IsVarArg = CLI.IsVarArg;
     MachineFunction &MF = DAG.getMachineFunction();
     EVT PtrVT = getPointerTy();
-    bool &IsTailCall = CLI.IsTailCall;
+//    bool &IsTailCall = CLI.IsTailCall;
+    bool IsTailCall = false;
 
     // Analyze the operands of the call, assigning locations to each operand.
     SmallVector<CCValAssign, 16> ArgLocs;
