@@ -535,15 +535,18 @@ int slct = 0;
 int main(void)
 {
 	int i;
-	itver2 (bswitch,
-			tcbuf,
-			acmod,
-			channum,
-			slct);
+	itver2 (bswitch, tcbuf, acmod, channum,	slct);
 	for (i = 0; i < N; i++)
 	{
-		if (tcbuf[i] != tcbuf_out[i])
-			return 0;
+		if (tcbuf[i] != tcbuf_out[i]){
+			#ifdef C
+			printf("Failed to complete: %d != %d\n", tcbuf[i], tcbuf_out[i]);
+			#endif
+			return i;
+		}
 	}
-	return 1;
+	#ifdef C
+	printf("Success!\n");
+	#endif
+	return -1;
 }
