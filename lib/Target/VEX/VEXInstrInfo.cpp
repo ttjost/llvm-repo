@@ -16,7 +16,6 @@
 #include "VEXTargetMachine.h"
 #include "VEXMachineFunctionInfo.h"
 #include "VEXFrameLowering.h"
-#include "VEXHazardRecognizer.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"

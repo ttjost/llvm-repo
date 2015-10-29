@@ -158,12 +158,11 @@ bool VEXPassConfig::addInstSelector() {
 }
 
 void VEXPassConfig::addMachineSSAOptimization() {
-    addPass(createVEXModuloScheduler(getVEXTargetMachine()));
+//    addPass(createVEXModuloScheduler(getVEXTargetMachine()));
     TargetPassConfig::addMachineSSAOptimization();
 }
 
 void VEXPassConfig::addPreRegAlloc() {
-    //addPass(createVEXModuloScheduler(getVEXTargetMachine()));
 }
 
 void VEXPassConfig::addPreEmitPass() {
