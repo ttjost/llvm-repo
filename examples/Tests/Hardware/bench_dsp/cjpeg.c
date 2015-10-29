@@ -24,10 +24,17 @@
  */
 
 //#define JPEG_INTERNALS
+#ifndef C
 typedef unsigned int size_t;
+#endif
 //#include "jinclude.h"
 //#include "jpeglib.h"
 //#include "jdct.h"		/* Private declarations for DCT subsystem */
+
+#ifdef C
+#include <stdio.h>
+#endif
+
 
 #define DCTSIZE		    8	/* The basic DCT block is 8x8 samples */
 #define DCTSIZE2	    64	/* DCTSIZE squared; # of elements in a block */
@@ -44,6 +51,26 @@ typedef int DCTELEM;		/* 16 or 32 bits is fine */
 #else
 typedef INT32 DCTELEM;		/* must have 32 bits */
 #endif
+
+DCTELEM data[8][8] = { {1, 2, 3, 4, 5, 6, 7, 8},
+            {11, 22, 33, 40, 51, 62, 73, 84},
+            {12, 23, 34, 41, 52, 63, 74, 85},
+            {13, 24, 35, 42, 53, 64, 75, 86},
+            {14, 25, 36, 43, 54, 65, 76, 87},
+            {15, 26, 37, 44, 55, 66, 77, 88},
+            {16, 27, 38, 45, 56, 67, 78, 89},
+            {17, 28, 39, 46, 57, 68, 79, 80} };
+
+DCTELEM data_ref[8][8] = { {2826, -1313, 22, -151, -38, -45, 9, 10},
+                            {-592, 215, 11, 12, 19, -1, 4,-6},
+                            {-447, 239, -24, 43, -8, 20, -9, 3},
+                            {-394, 182, 9, 11, 16, -1, 4, -5},
+                            {-342, 183, -18, 33, -6, 15, -7, 2},
+                            {-258, 122, 6, 7, 11, -1, 2, -3},
+                            {-185, 99, -10, 18, -3, 8, -4, 1},
+                            {-90, 43, 2, 2, 4, 0, 1, -1 } };
+
+int i = 0;
 
 /*
  * This module is specialized to the case DCTSIZE = 8.
@@ -152,7 +179,7 @@ typedef INT32 DCTELEM;		/* must have 32 bits */
  * Perform the forward DCT on one block of samples.
  */
   int a = 0;
-void jpeg_fdct_islow (DCTELEM * data)
+void jpeg_fdct_islow (DCTELEM* data)
 {
 	INT32 tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
 	INT32 tmp10, tmp11, tmp12, tmp13;
@@ -297,7 +324,27 @@ void jpeg_fdct_islow (DCTELEM * data)
 
 int main(void)
 {
-	DCTELEM data[8][8];
-	jpeg_fdct_islow (data);
-	return 0;
+    int j;
+    int k;
+    
+    for(i=0; i<1000; i++){
+        jpeg_fdct_islow(data);
+	
+	if (i == 0)
+            for(j = 0 ; j < 8; j++){
+                for(k = 0; k < 8 ; k++)
+                    if(data[j][k] != data_ref[j][k]){
+                        #ifdef C
+                        printf("%d != %d at %d!\n", data[j][k], data_ref[j][k], j+k);
+                        #else
+			return j+k;
+      			#endif
+	            }
+            }
+    }
+        #ifdef C
+        printf("Success!\n");
+        #endif
+
+	return -1;
 }
