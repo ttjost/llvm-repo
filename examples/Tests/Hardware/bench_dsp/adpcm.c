@@ -75,7 +75,6 @@ int main(void)
 		if (pcmdata_2[i] != pcmdata_2_ref[i])
 			return i;
 	}
-    printf("success\n");
     return -1;
 }
 
