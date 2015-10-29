@@ -1,0 +1,106 @@
+Total Cycles:                              152150 (0.3043 msec)
+Execution Cycles:                          125082 ( 82.21%)
+Stall Cycles:                               27068 ( 17.79%)
+Nops:                                        8694 (  5.71%)
+Executed operations:                       189786
+
+Executed branches:                          20870 ( 11.00% ops)(16.69% insts)
+Not taken branches:                          4152 (  2.19% ops)( 3.32% insts)(19.89% br)
+Taken branches:                             16718 (  8.81% ops)(13.37% insts)(80.11% br)
+  Taken uncond branches:                     6310 (  3.32% ops)( 5.04% insts)(30.23% br)
+  Taken cond branches:                      10408 (  5.48% ops)( 8.32% insts)(49.87% br)
+Size of Loaded Code:                        28672 Bytes
+
+Instruction Memory Operations:
+  Accesses:                                121966
+    Hits (Hit Rate):                       121800 ( 99.86%)
+    Misses (Miss Rate):                       166 (  0.14%)
+Instruction Memory Stall Cycles
+  Total (in cycles):                         7758 (100.00%)
+    Due to Misses:                           7470 ( 96.29%)
+    Due to Bus Conflicts:                     288 (  3.71%)
+
+Data Memory Operations:                     Cache          
+  Accesses:                                 33166 (100.00%)
+    Hits (Hit Rate):                        33094 ( 99.78%)
+    Misses (Miss Rate):                        72 (  0.22%)
+  Write Backs (% of Misses):                   11 ( 15.28%)
+Data Memory Stall Cycles
+  Total (in cycles):                         2592 (100.00%)
+    Due to Misses:                           2592 (100.00%)
+    Due to Bus Conflicts:                       0 (  0.00%)
+
+Percentage Bus Bandwidth Consumed:           6.85%
+
+
+Avg. IPC (no stalls):   1.52
+Avg. IPC (with stalls): 1.25
+
+  cycle counter =       125082
+  total ops     =       189786
+   width[ 0] =          750
+   width[ 1] =        54014
+   width[ 2] =        52921
+   width[ 3] =         4882
+   width[ 4] =         3821
+
+Flat profile (cycles)
+       Total   Total%        Insts   Insts%       Dcache  Dcache%       Icache  Icache% Function
+       31924    20.98        25460    20.35          468     0.37         2565     1.94 _vfprintf_r
+       21505    14.13        20748    16.59           -0    -0.00          225     0.17 _i_udiv
+       21063    13.84        20216    16.16            0     0.00          270     0.20 _i_urem
+       15446    10.15        12992    10.39           36     0.03          630     0.48 __sfvwrite
+        5758     3.78         4352     3.48           36     0.03           90     0.07 mbtowc
+        5476     3.60         3507     2.80          828     0.65          450     0.34 _bcopy
+        2386     1.57         1804     1.44            0     0.00           90     0.07 __wrap_memmove
+        2138     1.41         1664     1.33           -0    -0.00           90     0.07 __sprint
+        1998     1.31         1600     1.28          180     0.14           90     0.07 printf
+         875     0.58          576     0.46           36     0.03           90     0.07 vfprintf
+         766     0.50          512     0.41           36     0.03           90     0.07 localeconv
+         624     0.41           56     0.04          108     0.08          405     0.31 __smakebuf
+         475     0.31           64     0.05           72     0.06          315     0.24 _malloc_r
+         407     0.27          121     0.10           -0    -0.00          270     0.20 fflush
+         390     0.26           45     0.04          252     0.20           90     0.07 std
+         318     0.21           49     0.04           36     0.03          225     0.17 _morecore_r
+         283     0.19           52     0.04            0     0.00          225     0.17 __swsetup
+         265     0.17           18     0.01          108     0.08          135     0.10 _fstat_r
+         250     0.16           21     0.02           -0    -0.00          180     0.14 __sinit
+         248     0.16           27     0.02           36     0.03          180     0.14 exit
+         237     0.16          128     0.10           -0    -0.00           45     0.03 _localeconv_r
+         199     0.13           54     0.04            0     0.00          135     0.10 _fwalk
+         186     0.12           48     0.04           36     0.03           90     0.07 _sbrk_r
+         161     0.11           22     0.02            0     0.00          135     0.10 __swrite
+         159     0.10           20     0.02            0     0.00          135     0.10 _write_r
+          54     0.04            7     0.01            0     0.00           45     0.03 _cleanup_r
+       38559           324           180  (others not profiled)
+
+Simulation time  =     0.0194 s
+Simulation speed =     9.7833 MOPS
+
+
+ta_init using default
+
+	CoreCkFreq           500
+	BusCkFreq            200
+	lg2CacheSize         15	# (CacheSize            = 32768)
+	lg2Sets              2	# (Sets                 = 4)
+	lg2LineSize          5	# (LineSize             = 32)
+	MissPenalty          36
+	WBPenalty            33
+	lg2StrSize           9	# (StrSize              = 512)
+	lg2StrSets           4	# (StrSets              = 16)
+	lg2StrLineSize       5	# (StrLineSize          = 32)
+	StrMissPenalty       36
+	StrWBPenalty         33
+	lg2ICacheSize        15	# (ICacheSize           = 32768)
+	lg2ICacheSets        0	# (ICacheSets           = 1)
+	lg2ICacheLineSize    6	# (ICacheLineSize       = 64)
+	ICachePenalty        45
+	NumCaches            1
+	BranchStall          1
+	StreamEnable         FALSE
+	PrefetchEnable       TRUE
+	LockEnable           FALSE
+	ProfGranularity      AUTO
+
+

@@ -6,6 +6,7 @@ IMG_conv_3x3_c::
 ## BB#0:                                ## %entry
 	c0	cmplt $b0.0 = $r0.5, 1
 ;;
+;;
 	c0	br $b0.0, LBB0_5
 ;;
 ## BB#1:                                ## %for.cond2.preheader.lr.ph
@@ -38,32 +39,35 @@ LBB0_3::                                ## %for.body4
 ;;
 	c0	add $r0.22 = $r0.15, $r0.22
 	c0	ldbu $r0.21 = 0[$r0.21]
+	c0	add $r0.17 = $r0.17, 1
+;;
 ;;
 	c0	mpyhs $r0.24 = $r0.23, $r0.21
 	c0	mpylu $r0.21 = $r0.23, $r0.21
 	c0	ldb $r0.23 = 3[$r0.19]
+	c0	cmpne $b0.0 = $r0.17, 3
 ;;
-	c0	add $r0.21 = $r0.21, $r0.24
 	c0	ldbu $r0.20 = 0[$r0.20]
+	c0	add $r0.21 = $r0.21, $r0.24
+;;
 ;;
 	c0	mpyhs $r0.24 = $r0.23, $r0.20
 	c0	mpylu $r0.20 = $r0.23, $r0.20
+	c0	ldbu $r0.22 = 0[$r0.22]
 	c0	add $r0.18 = $r0.21, $r0.18
-	c0	ldbu $r0.21 = 0[$r0.22]
 ;;
-	c0	add $r0.20 = $r0.20, $r0.24
 	c0	ldb $r0.19 = 6[$r0.19]
+	c0	add $r0.20 = $r0.20, $r0.24
 ;;
-	c0	mpyhs $r0.22 = $r0.19, $r0.21
-	c0	mpylu $r0.19 = $r0.19, $r0.21
+;;
+	c0	mpyhs $r0.21 = $r0.19, $r0.22
+	c0	mpylu $r0.19 = $r0.19, $r0.22
 	c0	add $r0.18 = $r0.18, $r0.20
-	c0	add $r0.17 = $r0.17, 1
 ;;
-	c0	add $r0.19 = $r0.19, $r0.22
+;;
+	c0	add $r0.19 = $r0.19, $r0.21
 ;;
 	c0	add $r0.18 = $r0.18, $r0.19
-	c0	cmpne $b0.0 = $r0.17, 3
-;;
 	c0	br $b0.0, LBB0_3
 ;;
 ## BB#4:                                ## %for.end
@@ -71,18 +75,17 @@ LBB0_3::                                ## %for.body4
 	c0	shr $r0.17 = $r0.18, $r0.7
 ;;
 	c0	max $r0.17 = $r0.17, 0
-;;
-	c0	cmpgt $b0.0 = $r0.17, 255
-	c0	add $r0.18 = $r0.16, 1
-	c0	add $r0.15 = $r0.15, 1
-;;
-	c0	slct $r0.17 = $b0.0, $r0.13, $r0.17
 	c0	add $r0.14 = $r0.14, 1
 ;;
-	c0	stb 0[$r0.16] = $r0.17
-	c0	cmpne $b0.0 = $r0.14, $r0.5
-	c0	mov $r0.16 = $r0.18
+	c0	cmpgt $b0.0 = $r0.17, 255
 ;;
+;;
+	c0	slct $r0.17 = $b0.0, $r0.13, $r0.17
+	c0	cmpne $b0.0 = $r0.14, $r0.5
+;;
+	c0	stb 0[$r0.16] = $r0.17
+	c0	add $r0.16 = $r0.16, 1
+	c0	add $r0.15 = $r0.15, 1
 	c0	br $b0.0, LBB0_2
 ;;
 LBB0_5::                                ## %for.end39
@@ -98,15 +101,15 @@ main::
 ## BB#0:                                ## %entry
 	c0	add $r0.1 = $r0.1, -192
 ;;
-	c0	stw 188[$r0.1] = $l0.0
+	c0	stw 188[$r0.1] = $r0.57
 ;;
-	c0	stw 184[$r0.1] = $r0.57
+	c0	stw 184[$r0.1] = $r0.58
 ;;
-	c0	stw 180[$r0.1] = $r0.58
+	c0	stw 180[$r0.1] = $r0.59
 ;;
-	c0	stw 176[$r0.1] = $r0.59
+	c0	stw 176[$r0.1] = $r0.60
 ;;
-	c0	stw 172[$r0.1] = $r0.60
+	c0	stw 172[$r0.1] = $l0.0
 	c0	mov $r0.58 = 0
 	c0	mov $r0.3 = inptr
 ;;
@@ -127,30 +130,40 @@ LBB1_1::                                ## %for.body
 	c0	add $r0.60 = $r0.58, 1
 	c0	add $r0.11 = $r0.57, $r0.58
 ;;
+	c0	cmpne $b0.0 = $r0.60, 150
+;;
+;;
+	c0	mfb $r0.12 = $b0.0
+;;
+	c0	stw 16[$r0.1] = $r0.12
+;;
 	c0	ldbu $r0.4 = 0[$r0.11]
 	c0	mov $r0.3 = $r0.59
+;;
 ;;
 .call printf, caller, arg($r0.3:u32, $r0.4:u32, $r0.5:u32, $r0.6:u32, $r0.7:u32, $r0.8:u32, $r0.9:u32, $r0.10:u32), ret()
 	c0	call $l0.0 = printf
 ;;
-	c0	cmpne $b0.0 = $r0.60, 150
 	c0	mov $r0.58 = $r0.60
+	c0	ldw $r0.11 = 16[$r0.1]
+;;
+	c0	mtb $b0.0 = $r0.11
+;;
 ;;
 	c0	br $b0.0, LBB1_1
 ;;
 ## BB#2:                                ## %for.end
 	c0	mov $r0.3 = 0
-	c0	ldw $r0.60 = 172[$r0.1]
+	c0	ldw $l0.0 = 172[$r0.1]
 ;;
-	c0	ldw $r0.59 = 176[$r0.1]
+	c0	ldw $r0.60 = 176[$r0.1]
 ;;
-	c0	ldw $r0.58 = 180[$r0.1]
+	c0	ldw $r0.59 = 180[$r0.1]
 ;;
-	c0	ldw $r0.57 = 184[$r0.1]
-;;
-	c0	ldw $l0.0 = 188[$r0.1]
+	c0	ldw $r0.58 = 184[$r0.1]
 ;;
 .return ret($r0.3:s32)
+	c0	ldw $r0.57 = 188[$r0.1]
 	c0	return $r0.1 = $r0.1, 192, $l0.0
 ;;
 .endp
