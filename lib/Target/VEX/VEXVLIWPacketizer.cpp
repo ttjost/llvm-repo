@@ -1,4 +1,4 @@
-//===-- VEXPacketizer.cpp - VEX VLIW Packetizer     -------------------===//
+//===-- VEXVLIWPacketizer.cpp - VEX VLIW Packetizer     -------------------===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -13,7 +13,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "VEXInstrInfo.h"
 #include "VEXSubtarget.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/DFAPacketizer.h"
@@ -66,16 +65,35 @@ class VEXPacketizerList : public VLIWPacketizerList {
 
     MachineInstr *PseudoMI;
     
+    std::map<SUnit *, unsigned> DataHazards;
+    
+    const MachineFunction &MF;
+    
+    SUnit* CurrentSUnit;
+    
+    bool TrueDependence;
+    
+    const VEXInstrInfo *VEXII;
+    const VEXSubtarget* Subtarget;
+    const InstrItineraryData *II;
+    
 public:
     VEXPacketizerList(MachineFunction &MF,
                       MachineLoopInfo &MLI)
-                      : VLIWPacketizerList(MF, MLI, true) {}
+                      : VLIWPacketizerList(MF, MLI, true),
+                        MF(MF), TrueDependence(false) {
+        VEXII = (const VEXInstrInfo *) TII;
+        Subtarget = &MF.getSubtarget<VEXSubtarget>();
+        II = static_cast<const VEXSubtarget *>(Subtarget)->getInstrItineraryData();
+        DataHazards.clear();
+    }
 
     bool isSoloInstruction(MachineInstr *MI) override;
     bool ignorePseudoInstruction(MachineInstr *MI, MachineBasicBlock *MBB) override;
     bool isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ) override;
-    void initPacketizerState() override;
-    MachineBasicBlock::iterator addToPacket(MachineInstr *MI);
+    void AdvanceCycle();
+    MachineBasicBlock::iterator addToPacket(MachineInstr *MI) override;
+    
     bool canReserveResourcesForLongImmediate (MachineBasicBlock::iterator MI);
     void reserveResourcesForLongImmediate (MachineBasicBlock::iterator MI);
     bool isLongImmediate(int64_t Immediate);
@@ -99,10 +117,9 @@ bool VEXPacketizerList::isLongImmediate(int64_t Immediate) {
 
 bool VEXPacketizerList::canReserveResourcesForLongImmediate (MachineBasicBlock::iterator MI) {
     
-    const VEXInstrInfo *QII = (const VEXInstrInfo *) TII;
     MachineFunction *MF = MI->getParent()->getParent();
     
-    PseudoMI = MF->CreateMachineInstr(QII->get(VEX::EXTIMM),
+    PseudoMI = MF->CreateMachineInstr(VEXII->get(VEX::EXTIMM),
                                           MI->getDebugLoc());
         
     if (ResourceTracker->canReserveResources(PseudoMI)) {
@@ -111,16 +128,14 @@ bool VEXPacketizerList::canReserveResourcesForLongImmediate (MachineBasicBlock::
     } else {
         MI->getParent()->getParent()->DeleteMachineInstr(PseudoMI);
         return false;
-        //llvm_unreachable("can not reserve resources for constant extender.");
     }
 }
 
 void VEXPacketizerList::reserveResourcesForLongImmediate (MachineBasicBlock::iterator MI) {
 
-    const VEXInstrInfo *QII = (const VEXInstrInfo *) TII;
     MachineFunction *MF = MI->getParent()->getParent();
     
-    PseudoMI = MF->CreateMachineInstr(QII->get(VEX::EXTIMM),
+    PseudoMI = MF->CreateMachineInstr(VEXII->get(VEX::EXTIMM),
                                       MI->getDebugLoc());
     
     if (ResourceTracker->canReserveResources(PseudoMI)) {
@@ -132,11 +147,69 @@ void VEXPacketizerList::reserveResourcesForLongImmediate (MachineBasicBlock::ite
     }
 }
 
+
+// This function is extremely important on Packetizing Instruction to VEX
+// First, we need to check if we should insert Bubbles (NoOps Instructions)
+// Multiple Noops might be necessary, in case we have high-latency instructions
+// and No other instruction can be issued in that cycle.
+// Also, here we check if we can packetize instructions if long immediates
+// in the Current Bundle. If not, ends packet and starts a new one.
 MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
     
     // Get MBB from Instruction
     MachineFunction::iterator MBB = MI->getParent();
     MachineBasicBlock::iterator MII = MI;
+    
+    unsigned idx = MI->getDesc().getSchedClass();
+    unsigned Latency = II->getStageLatency(idx);
+    
+    bool AddToHazardTable = false;
+    
+    if (Latency > 1) {
+        MI->dump();
+        DEBUG(errs() <<  "Latency is: " << Latency <<  "\n");
+        AddToHazardTable = true;
+    }
+    
+    // We should Advance Cycle only when a new packet is created
+    // Note that this only means we should update the Latencies
+    if (CurrentPacketMIs.size() == 0)
+        AdvanceCycle();
+    
+    // We need to insert a NOP Here.
+    if (TrueDependence) {
+    
+        // If we have multiple nops, we will insert them using this loop
+        do {
+            TrueDependence = false;
+            
+            MachineBasicBlock *MBB = MI->getParent();
+            MachineInstr* NOP = BuildMI(*MBB, MI, MI->getDebugLoc(), VEXII->get(VEX::NOP));
+            CurrentPacketMIs.push_back(NOP);
+            endPacket(MBB, MI);
+            
+            SUnit* SUI = MIToSUnit[MI];
+        
+            for (std::map<SUnit *, unsigned>::iterator Inst = DataHazards.begin(),
+                 E = DataHazards.end(); Inst != E; ++Inst) {
+                SUnit* InstWithLatency = Inst->first;
+
+                if (InstWithLatency->isSucc(SUI))
+                    for (SDep dep : InstWithLatency->Succs)
+                        if (dep.getSUnit() == SUI) {
+                            if (dep.getKind() == SDep::Data) {
+                                TrueDependence = true;
+                            }
+                        } else
+                            continue;
+            }
+            
+            AdvanceCycle();
+            
+        } while (TrueDependence);
+    }
+    
+    TrueDependence = false;
     
     bool longImmediate = false;
     // Early Exit for Branches and Calls
@@ -163,11 +236,14 @@ MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
             reserveResourcesForLongImmediate(MI);
         }
         CurrentPacketMIs.push_back(MI);
-        return MII;
     } else {
         CurrentPacketMIs.push_back(MI);
-        return MII;
     }
+    
+    if (AddToHazardTable)
+        DataHazards[MIToSUnit[MI]] = Latency-1;
+    
+    return MII;
 }
 
 
@@ -215,7 +291,19 @@ bool VEXPacketizerList::isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ) {
    if (SUJ->isSucc(SUI)) {
         for (SDep dep : SUJ->Succs) {
             if (dep.getSUnit() == SUI) {
-                if (dep.getKind() == SDep::Data || dep.getKind() == SDep::Output)
+                if (dep.getKind() == SDep::Data) {
+                    
+                    unsigned idx = SUJ->getInstr()->getDesc().getSchedClass();
+                    unsigned Latency = II->getStageLatency(idx);
+                    
+                    // We have a true dependence and we should not issue this
+                    // instruction in the next cycle. We insert nops between them.
+                    if (Latency > 1)
+                        TrueDependence = true;
+                    
+                    return false;
+                    
+                } else if (dep.getKind() == SDep::Output)
                     return false;
             } else
                 continue;
@@ -224,10 +312,34 @@ bool VEXPacketizerList::isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ) {
     
     if (SUJ->getInstr()->isCall() || SUJ->getInstr()->isBranch())
         return false;
+    
+    for (std::map<SUnit *, unsigned>::iterator Inst = DataHazards.begin(),
+         E = DataHazards.end(); Inst != E; ++Inst) {
+        SUnit* InstWithLatency = Inst->first;
+        if (InstWithLatency->isSucc(SUI))
+            for (SDep dep : InstWithLatency->Succs) {
+                if (dep.getSUnit() == SUI) {
+                    if (dep.getKind() == SDep::Data) {
+                        TrueDependence = true;
+                        return false;
+                    }
+                } else
+                    continue;
+            }
+    }
     return true;    
 }
 
-void VEXPacketizerList::initPacketizerState() {
+void VEXPacketizerList::AdvanceCycle() {
+    
+    for (std::map<SUnit *, unsigned>::iterator Inst = DataHazards.begin(),
+         E = DataHazards.end();
+         Inst != E; ) {
+        if (--Inst->second == 0)
+            Inst = DataHazards.erase(Inst);
+        else
+            ++Inst;
+    }
     return;
 }
 
@@ -240,7 +352,7 @@ bool VEXPacketizer::runOnMachineFunction(MachineFunction &MF) {
 
     const TargetInstrInfo *TII = MF.getSubtarget().getInstrInfo();
     MachineLoopInfo &MLI = getAnalysis<MachineLoopInfo>();
-
+    
     VEXPacketizerList Packetizer(MF, MLI);
 
     //

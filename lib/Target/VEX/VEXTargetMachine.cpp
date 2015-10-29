@@ -111,13 +111,13 @@ void VEXNewTargetMachine::anchor() {}
 //    return &DefaultSubtarget;
 //}
 
-//static ScheduleDAGInstrs *createVLIWMachineSched(MachineSchedContext *C) {
-//    return new VEXVLIWMachineScheduler(C, make_unique<ConvergingVEXVLIWScheduler>());
-//}
+static ScheduleDAGInstrs *createVLIWMachineSched(MachineSchedContext *C) {
+    return new VEXVLIWMachineScheduler(C, make_unique<ConvergingVEXVLIWScheduler>());
+}
 
-//static MachineSchedRegistry
-//SchedCustomRegistry("vex", "Run VEX custom scheduler",
-//                    createVLIWMachineSched);
+static MachineSchedRegistry
+SchedCustomRegistry("vex", "Run VEX custom scheduler",
+                    createVLIWMachineSched);
 
 namespace {
 
@@ -127,7 +127,9 @@ namespace {
     
     public:
         VEXPassConfig(VEXTargetMachine *TM, PassManagerBase &PM)
-        : TargetPassConfig(TM, PM){}
+        : TargetPassConfig(TM, PM){
+            substitutePass(&PostRASchedulerID, &PostMachineSchedulerID);
+        }
         
         VEXTargetMachine &getVEXTargetMachine() const {
             return getTM<VEXTargetMachine>();
@@ -137,10 +139,10 @@ namespace {
             return *getVEXTargetMachine().getSubtargetImpl();
         }
         
-//        ScheduleDAGInstrs *
-//        createMachineScheduler(MachineSchedContext *C) const override {
-//            return createVLIWMachineSched(C);
-//        }
+        ScheduleDAGInstrs *
+        createMachineScheduler(MachineSchedContext *C) const override {
+            return createVLIWMachineSched(C);
+        }
     
         bool addInstSelector() override;
         void addPreEmitPass() override;
@@ -166,6 +168,8 @@ void VEXPassConfig::addPreRegAlloc() {
 
 void VEXPassConfig::addPreEmitPass() {
     DEBUG(errs() << "addPreEmitPass " << EnableVLIWScheduling << "\n");
+    //addPass(createVEXPostRAScheduler());
+    
     addPass(createVEXModifyBranchesPass(getVEXTargetMachine()));
     //if (EnableVLIWScheduling)
         addPass(createVEXPacketizer(EnableVLIWScheduling), false);

@@ -100,15 +100,30 @@ VEXVLIWResourceModel(const TargetMachine &TM, const TargetSchedModel *SM) :
 /// Extend the standard ScheduleDAGMI to provide more context and override the
 /// top-level schedule() driver.
 class VEXVLIWMachineScheduler : public ScheduleDAGMILive {
+    MachineBasicBlock *BB;
 public:
   VEXVLIWMachineScheduler(MachineSchedContext *C, std::unique_ptr<MachineSchedStrategy> S):
     ScheduleDAGMILive(C, std::move(S)) {}
+    
+    MachineBasicBlock *getBB() { return BB; }
 
   /// Schedule - This is called back from ScheduleDAGInstrs::Run() when it's
   /// time to do some work.
   void schedule() override;
   /// Perform platform specific DAG postprocessing.
   void postprocessDAG();
+    
+    /// enterRegion - Called back from MachineScheduler::runOnMachineFunction after
+    /// crossing a scheduling boundary. [begin, end) includes all instructions in
+    /// the region, including the boundary itself and single-instruction regions
+    /// that don't get scheduled.
+    void enterRegion(MachineBasicBlock *bb,
+                     MachineBasicBlock::iterator begin,
+                     MachineBasicBlock::iterator end,
+                     unsigned regioninstrs) override {
+        BB = bb;
+        ScheduleDAGMILive::enterRegion(bb, begin, end, regioninstrs);
+    }
 };
 
 /// ConvergingVEXVLIWScheduler shrinks the unscheduled zone using heuristics

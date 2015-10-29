@@ -38,6 +38,10 @@ EnableVEXCalls("vex-calls", cl::Hidden,
                cl::desc("VEX Call: use stack only to pass arguments."),
                cl::init(false));
 
+static cl::opt<bool> DisableVEXMISched("disable-vex-misched",
+                                       cl::Hidden, cl::ZeroOrMore, cl::init(false),
+                                       cl::desc("Disable VEX MI Scheduling"));
+
 extern bool FixGlobalBaseReg;
 
 // Select the VEX CPU for the given triple and cpu name.
@@ -61,9 +65,9 @@ VEXSubtarget::VEXSubtarget(const std::string &TT, const std::string &CPU,
     VEXGenSubtargetInfo(TT, CPU, FS),
     VEXABI(ABI32), isNewScheduling(isNewScheduling),
     EnableVLIWScheduling(EnableVLIWScheduling),
+    InstrInfo(initializeSubtargetDependencies(CPU, FS)),
     RM(_RM), TargetTriple(TT),
     TSInfo(*_TM.getDataLayout()),
-    InstrInfo(initializeSubtargetDependencies(CPU, FS)),
     FrameLowering(),
     TLInfo(_TM, *this) {
         DEBUG(errs() << "Subtaget\n");
@@ -94,6 +98,12 @@ VEXSubtarget &VEXSubtarget::initializeSubtargetDependencies(StringRef CPU,
     
     return *this;
     
+}
+
+bool VEXSubtarget::enableMachineScheduler() const {
+    if (DisableVEXMISched)
+        return false;
+    return true;
 }
 
 bool VEXSubtarget::abiUsesSoftFloat() const {

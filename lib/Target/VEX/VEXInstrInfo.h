@@ -16,10 +16,9 @@
 
 #include "VEX.h"
 #include "VEXRegisterInfo.h"
-#include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "VEXMachineFunctionInfo.h"
+#include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/Target/TargetInstrInfo.h"
-#include "llvm/CodeGen/ScoreboardHazardRecognizer.h"
 
 #define GET_INSTRINFO_HEADER
 #include "VEXGenInstrInfo.inc"
@@ -39,6 +38,8 @@ namespace llvm{
         /// such, whenever a client has an instance of instruction info, it should
         /// always be able to get register info as well (through this method).
         ///
+        
+        const VEXSubtarget &getSubtarget() const { return Subtarget; }
         
         const VEXRegisterInfo &getRegisterInfo() const { return RI; }
 
@@ -89,14 +90,19 @@ namespace llvm{
         // Used by the VLIW Scheduler.
         DFAPacketizer* CreateTargetScheduleState(const TargetSubtargetInfo &STI) const;
         
-//        /// CreateTargetPostRAHazardRecognizer - Return the postRA hazard recognizer
-//        /// to use for this target when scheduling the DAG.
+        /// CreateTargetPostRAHazardRecognizer - Return the postRA hazard recognizer
+        /// to use for this target when scheduling the DAG.
 //        ScheduleHazardRecognizer *CreateTargetPostRAHazardRecognizer(const InstrItineraryData *II,
 //                                                                                   const ScheduleDAG *DAG) const;
-//        
-//        // Default implementation of CreateTargetMIHazardRecognizer.
+
+        // Default implementation of CreateTargetMIHazardRecognizer.
 //        ScheduleHazardRecognizer *CreateTargetMIHazardRecognizer( const InstrItineraryData *II,
 //                                                                               const ScheduleDAG *DAG) const;
+
+//        // Default implementation of CreateTargetHazardRecognizer.
+//        // Default implementation of CreateTargetRAHazardRecognizer.
+//        ScheduleHazardRecognizer *CreateTargetHazardRecognizer(const TargetSubtargetInfo *STI,
+//                                                               const ScheduleDAG *DAG) const override;
         
 //        /// CreateTargetPostRAHazardRecognizer - Return the postRA hazard recognizer
 //        /// to use for this target when scheduling the DAG.

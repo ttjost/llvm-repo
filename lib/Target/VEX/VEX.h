@@ -27,7 +27,7 @@ namespace llvm {
     
     FunctionPass *createVEXModuloScheduler(VEXTargetMachine &TM);
     
-    //FunctionPass *createVEXPostRAScheduler();
+    FunctionPass *createVEXPostRAScheduler();
 
 } // end namespace llvm;
 

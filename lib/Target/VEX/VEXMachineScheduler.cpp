@@ -184,16 +184,14 @@ void VEXVLIWMachineScheduler::schedule() {
 
   initQueues(TopRoots, BotRoots);
 
-  bool IsTopNode = false;
+  bool IsTopNode = true;
 
   while (SUnit *SU = SchedImpl->pickNode(IsTopNode)) {
     if (!checkSchedLimit())
       break;
 
-    if (SU != NULL) {
       scheduleMI(SU, IsTopNode);
       updateQueues(SU, IsTopNode);
-    }
   }
   assert(CurrentTop == CurrentBottom && "Nonempty unscheduled zone.");
 
@@ -407,12 +405,8 @@ SUnit *ConvergingVEXVLIWScheduler::SchedBoundary::pickOnlyChoice() {
 
   for (unsigned i = 0; Available.empty(); ++i) {
     ResourceModel->reserveResources(nullptr);
-//    bumpCycle();
-    // if (CheckPending)
-    //   releasePending();
-      // CheckPending = true;
-
-    releasePending();
+      bumpCycle();
+      releasePending();
     return NULL;
     
   }
@@ -783,10 +777,10 @@ SUnit *ConvergingVEXVLIWScheduler::pickNode(bool &IsTopNode) {
     //SU->InsertNop = false;
     if (SU->Preds.size() != 0) {
       DEBUG(dbgs() << "Preds of:\n");
-      // SU->dump(DAG);
+      SU->dump(DAG);
       for (SUnit::const_pred_iterator I = SU->Preds.begin(), E = SU->Preds.end();
         I != E; ++I) {
-        // I->getSUnit()->dump(DAG);
+         I->getSUnit()->dump(DAG);
         unsigned Latency = I->getLatency();
         unsigned CurrentCycle = Top.ResourceModel->getTotalPackets();
         if(!isAvailable)
@@ -856,20 +850,16 @@ SUnit *ConvergingVEXVLIWScheduler::pickNode(bool &IsTopNode) {
 
   if (SU == NULL) {
     DEBUG(dbgs() << "Insert NOOP\n");
-
-    Top.HazardRec->EmitNoop();  
-    // Top.bumpCycle();    
-    
-    return NULL;
+      const TargetMachine &TM = DAG->MF.getTarget();
+      Top.HazardRec->EmitNoop();
+      Top.bumpCycle();
+      //return NULL;
+      return new SUnit(BuildMI(DAG->getBB(), DebugLoc(), TM.getSubtargetImpl(*DAG->MF.getFunction())->getInstrInfo()->get(VEX::NOP)), DAG->SUnits.size());
   }
   if (SU->isTopReady())
     Top.removeReady(SU);
   if (SU->isBottomReady())
     Bot.removeReady(SU);
-
-
-
-
 
   DEBUG(dbgs() << "*** " << (IsTopNode ? "Top" : "Bottom")
         << " Scheduling Instruction in cycle "
@@ -881,6 +871,34 @@ SUnit *ConvergingVEXVLIWScheduler::pickNode(bool &IsTopNode) {
   //DEBUG(dbgs() << "Real cycle: " << SU->ScheduledCycle <<"\n");
 
   return SU;
+//    if (DAG->top() == DAG->bottom()) {
+//        assert(Top.Available.empty() && Top.Pending.empty() &&
+//               Bot.Available.empty() && Bot.Pending.empty() && "ReadyQ garbage");
+//        return nullptr;
+//    }
+//    SUnit *SU;
+//    
+//        SU = Top.pickOnlyChoice();
+//        if (!SU) {
+//            SchedCandidate TopCand;
+//            CandResult TopResult =
+//            pickNodeFromQueue(Top.Available, DAG->getTopRPTracker(), TopCand);
+//            assert(TopResult != NoCand && "failed to find the first candidate");
+//            (void)TopResult;
+//            SU = TopCand.SU;
+//        }
+//        IsTopNode = true;
+//    
+//    if (SU->isTopReady())
+//        Top.removeReady(SU);
+//    if (SU->isBottomReady())
+//        Bot.removeReady(SU);
+//    
+//    DEBUG(dbgs() << "*** " << (IsTopNode ? "Top" : "Bottom")
+//          << " Scheduling Instruction in cycle "
+//          << (IsTopNode ? Top.CurrCycle : Bot.CurrCycle) << '\n';
+//          SU->dump(DAG));
+//    return SU;
 }
 
 /// Update the scheduler's state after scheduling a node. This is the same node
