@@ -279,13 +279,13 @@ int main(void)
             #ifdef C
             printf("Failed to complete: %d != %d\n", powers[i][0], powers_temp[i][0]);
             #endif
-            //return 100*i;
+            return 100*i;
         }
     } 
             #ifdef C
             printf("Success!\n");
             #endif
-    return 0;
+    return 1;
 }
  
 

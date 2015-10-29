@@ -67,7 +67,7 @@ int matrix_mul(){
 int main(void)
 {
 	int i, j;
- matrix_mul();
+	matrix_mul();
 	for (i = 0; i < 10; i++)
 	{
 		for (j = 0; j < 10; j++)
@@ -76,5 +76,5 @@ int main(void)
 				return 1;
 		}
 	}
-return 0;
+return -1;
 }
