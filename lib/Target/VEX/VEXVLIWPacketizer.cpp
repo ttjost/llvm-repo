@@ -67,12 +67,6 @@ class VEXPacketizerList : public VLIWPacketizerList {
     
     std::map<SUnit *, unsigned> DataHazards;
     
-    const MachineFunction &MF;
-    
-    SUnit* CurrentSUnit;
-    
-    bool TrueDependence;
-    
     const VEXInstrInfo *VEXII;
     const VEXSubtarget* Subtarget;
     const InstrItineraryData *II;
@@ -80,8 +74,7 @@ class VEXPacketizerList : public VLIWPacketizerList {
 public:
     VEXPacketizerList(MachineFunction &MF,
                       MachineLoopInfo &MLI)
-                      : VLIWPacketizerList(MF, MLI, true),
-                        MF(MF), TrueDependence(false) {
+                      : VLIWPacketizerList(MF, MLI, true) {
         VEXII = (const VEXInstrInfo *) TII;
         Subtarget = &MF.getSubtarget<VEXSubtarget>();
         II = static_cast<const VEXSubtarget *>(Subtarget)->getInstrItineraryData();
@@ -166,7 +159,6 @@ MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
     bool AddToHazardTable = false;
     
     if (Latency > 1) {
-        MI->dump();
         DEBUG(errs() <<  "Latency is: " << Latency <<  "\n");
         AddToHazardTable = true;
     }
@@ -177,39 +169,33 @@ MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
         AdvanceCycle();
     
     // We need to insert a NOP Here.
-    if (TrueDependence) {
-    
-        // If we have multiple nops, we will insert them using this loop
-        do {
-            TrueDependence = false;
+    // If we have multiple nops, we will insert them using this loop
+    bool Dependence;
+    do {
+        Dependence = false;
             
+        SUnit* SUI = MIToSUnit[MI];
+        for (std::map<SUnit *, unsigned>::iterator Inst = DataHazards.begin(),
+             E = DataHazards.end(); Inst != E; ++Inst) {
+             SUnit* InstWithLatency = Inst->first;
+    
+            if (InstWithLatency->isSucc(SUI))
+                for (SDep dep : InstWithLatency->Succs)
+                    if (dep.getSUnit() == SUI) {
+                        if (dep.getKind() == SDep::Data) {
+                            Dependence = true;
+                        }
+                    } else
+                        continue;
+        }
+        if (Dependence) {
             MachineBasicBlock *MBB = MI->getParent();
             MachineInstr* NOP = BuildMI(*MBB, MI, MI->getDebugLoc(), VEXII->get(VEX::NOP));
             CurrentPacketMIs.push_back(NOP);
             endPacket(MBB, MI);
-            
-            SUnit* SUI = MIToSUnit[MI];
-        
-            for (std::map<SUnit *, unsigned>::iterator Inst = DataHazards.begin(),
-                 E = DataHazards.end(); Inst != E; ++Inst) {
-                SUnit* InstWithLatency = Inst->first;
-
-                if (InstWithLatency->isSucc(SUI))
-                    for (SDep dep : InstWithLatency->Succs)
-                        if (dep.getSUnit() == SUI) {
-                            if (dep.getKind() == SDep::Data) {
-                                TrueDependence = true;
-                            }
-                        } else
-                            continue;
-            }
-            
             AdvanceCycle();
-            
-        } while (TrueDependence);
-    }
-    
-    TrueDependence = false;
+        }
+    } while (Dependence);
     
     bool longImmediate = false;
     // Early Exit for Branches and Calls
@@ -241,7 +227,7 @@ MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
     }
     
     if (AddToHazardTable)
-        DataHazards[MIToSUnit[MI]] = Latency-1;
+        DataHazards[MIToSUnit[MI]] = Latency;
     
     return MII;
 }
@@ -288,19 +274,10 @@ bool VEXPacketizerList::ignorePseudoInstruction(MachineInstr *MI,
 
 bool VEXPacketizerList::isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ) {
     
-   if (SUJ->isSucc(SUI)) {
+    if (SUJ->isSucc(SUI)) {
         for (SDep dep : SUJ->Succs) {
             if (dep.getSUnit() == SUI) {
                 if (dep.getKind() == SDep::Data) {
-                    
-                    unsigned idx = SUJ->getInstr()->getDesc().getSchedClass();
-                    unsigned Latency = II->getStageLatency(idx);
-                    
-                    // We have a true dependence and we should not issue this
-                    // instruction in the next cycle. We insert nops between them.
-                    if (Latency > 1)
-                        TrueDependence = true;
-                    
                     return false;
                     
                 } else if (dep.getKind() == SDep::Output)
@@ -320,7 +297,6 @@ bool VEXPacketizerList::isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ) {
             for (SDep dep : InstWithLatency->Succs) {
                 if (dep.getSUnit() == SUI) {
                     if (dep.getKind() == SDep::Data) {
-                        TrueDependence = true;
                         return false;
                     }
                 } else
