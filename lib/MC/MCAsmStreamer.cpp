@@ -643,9 +643,17 @@ void MCAsmStreamer::EmitBytes(StringRef Data) {
       if (MAI->getAsciiDirective()) {
           OS << MAI->getAsciiDirective();
       } else {
+          unsigned size = 0;
           // Generate code for VEX Simulator
-          for (int i = 0, j = Data.size(); i != j; i++)
+          // We also need to take care of alignment here.
+          for (int i = 0, j = Data.size(); i != j; i++) {
               OS << "\t.data1 " << (unsigned)(unsigned char)Data[i] << "\n";
+              size++;
+          }
+          unsigned padding;
+          if ((padding = size%8) != 0) {
+              OS << ".skip " << (unsigned)(unsigned char)(8 - padding) << "\n";
+          }
           return;
       }
   }

@@ -25,7 +25,7 @@ VEXMCAsmInfo::VEXMCAsmInfo(StringRef TT) {
     if ((TheTriple.getArch() == Triple::vex))
         isNewScheduling = false;
 
-    AlignmentIsInBytes          = false;
+    AlignmentIsInBytes          = true;
     LabelSuffix                 = "::";
     
     ZeroDirective               = "\t.skip\t";
@@ -52,6 +52,8 @@ VEXMCAsmInfo::VEXMCAsmInfo(StringRef TT) {
     HasFunctionAlignment        = false;
     HasSingleParameterDotFile   = false;
     UsesELFSectionDirectiveForBSS   = true;
+    
+    COMMDirectiveAlignmentIsInBytes = true;
     
     // We need this to omit the AsmPrinter from printing
     // an unwanted .globl <NameOfTheFunction> directive.
