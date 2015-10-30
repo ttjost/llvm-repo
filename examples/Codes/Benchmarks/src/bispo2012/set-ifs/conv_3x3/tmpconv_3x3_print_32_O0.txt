@@ -1,0 +1,64 @@
+  %Reg12<def> = LDW %Reg1, 108; mem:LD4[%inptr.addr]
+  %Reg13<def> = LDW %Reg1, 100; mem:LD4[%x_dim.addr]
+  %Reg13<def> = LDW %Reg1, 100; mem:LD4[%x_dim.addr]
+  %Reg12<def> = LDW %Reg1, 104; mem:LD4[%outptr.addr]
+  %Reg13<def> = LDW %Reg1, 100; mem:LD4[%x_dim.addr]
+  %Reg14<def> = LDW %Reg1, 28; mem:LD4[%j]
+  %BrReg0<def> = CMPGEBRegr %Reg14<kill>, %Reg13<kill>
+  %Reg13<def> = LDW %Reg1, 36; mem:LD4[%i]
+  %BrReg0<def> = CMPGTBRegi %Reg13<kill>, 2
+  %Reg13<def> = LDW %Reg1, 88; mem:LD4[%IN1]
+  %Reg14<def> = LDW %Reg1, 36; mem:LD4[%i]
+  %Reg13<def> = LDBU %Reg13<kill>, 0; mem:LD1[%arrayidx]
+  %Reg13<def> = LDW %Reg1, 84; mem:LD4[%IN2]
+  %Reg14<def> = LDW %Reg1, 36; mem:LD4[%i]
+  %Reg13<def> = LDBU %Reg13<kill>, 0; mem:LD1[%arrayidx5]
+  %Reg13<def> = LDW %Reg1, 80; mem:LD4[%IN3]
+  %Reg14<def> = LDW %Reg1, 36; mem:LD4[%i]
+  %Reg13<def> = LDBU %Reg13<kill>, 0; mem:LD1[%arrayidx7]
+  %Reg13<def> = LDW %Reg1, 96; mem:LD4[%mask.addr]
+  %Reg14<def> = LDW %Reg1, 36; mem:LD4[%i]
+  %Reg13<def> = LDB %Reg13<kill>, 0; mem:LD1[%arrayidx9]
+  %Reg13<def> = LDW %Reg1, 96; mem:LD4[%mask.addr]
+  %Reg14<def> = LDW %Reg1, 36; mem:LD4[%i]
+  %Reg13<def> = LDB %Reg13<kill>, 3; mem:LD1[%arrayidx11]
+  %Reg13<def> = LDW %Reg1, 96; mem:LD4[%mask.addr]
+  %Reg14<def> = LDW %Reg1, 36; mem:LD4[%i]
+  %Reg13<def> = LDB %Reg13<kill>, 6; mem:LD1[%arrayidx14]
+  %Reg13<def> = LDH %Reg1, 60; mem:LD2[%mask10](align=4)
+  %Reg14<def> = LDH %Reg1, 72; mem:LD2[%pix10](align=4)
+  %Reg15<def> = MPYLUr %Reg14, %Reg13
+  %Reg13<def> = MPYHSr %Reg14<kill>, %Reg13<kill>
+  %Reg13<def> = LDH %Reg1, 56; mem:LD2[%mask20](align=4)
+  %Reg14<def> = LDH %Reg1, 68; mem:LD2[%pix20](align=4)
+  %Reg15<def> = MPYLUr %Reg14, %Reg13
+  %Reg13<def> = MPYHSr %Reg14<kill>, %Reg13<kill>
+  %Reg13<def> = LDH %Reg1, 52; mem:LD2[%mask30](align=4)
+  %Reg14<def> = LDH %Reg1, 64; mem:LD2[%pix30](align=4)
+  %Reg15<def> = MPYLUr %Reg14, %Reg13
+  %Reg13<def> = MPYHSr %Reg14<kill>, %Reg13<kill>
+  %Reg14<def> = LDW %Reg1, 44; mem:LD4[%sum00]
+  %Reg15<def> = LDW %Reg1, 40; mem:LD4[%sum11]
+  %Reg16<def> = LDW %Reg1, 48; mem:LD4[%sum]
+  %Reg13<def> = LDW %Reg1, 36; mem:LD4[%i]
+  %Reg13<def> = LDW %Reg1, 88; mem:LD4[%IN1]
+  %Reg13<def> = LDW %Reg1, 84; mem:LD4[%IN2]
+  %Reg13<def> = LDW %Reg1, 80; mem:LD4[%IN3]
+  %Reg13<def> = LDW %Reg1, 92; mem:LD4[%shift.addr]
+  %Reg14<def> = LDW %Reg1, 48; mem:LD4[%sum]
+  %BrReg0<def> = CMPGTBRegi %Reg13<kill>, -1
+  %Reg13<def> = LDW %Reg1, 48; mem:LD4[%sum]
+  %BrReg0<def> = CMPLTBRegi %Reg13<kill>, 256
+  %Reg13<def> = LDW %Reg1, 76; mem:LD4[%OUT]
+  %Reg14<def> = LDW %Reg1, 48; mem:LD4[%sum]
+  %Reg13<def> = LDW %Reg1, 28; mem:LD4[%j]
+  STWLr %Lr<kill>, %Reg1, 196; mem:ST4[FixedStack7]
+  %Reg5<def> = LDW %Reg1, 36; mem:LD4[%x_dim]
+  %Reg11<def> = LDW %Reg1, 28; mem:LD4[%i]
+  %BrReg0<def> = CMPGTBRegi %Reg11<kill>, 149
+  %Reg11<def> = LDW %Reg1, 28; mem:LD4[%i]
+  %Reg4<def> = LDBU %Reg11<kill>, 0; mem:LD1[%arrayidx]
+  %Reg11<def> = LDW %Reg1, 28; mem:LD4[%i]
+  %Lr<def> = LDWLr %Reg1, 196; mem:LD4[FixedStack7]
+  %Reg58<def> = LDW %Reg1, 200; mem:LD4[FixedStack6]
+  %Reg57<def> = LDW %Reg1, 204; mem:LD4[FixedStack5]

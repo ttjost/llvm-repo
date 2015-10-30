@@ -1,0 +1,26 @@
+  %BrReg0<def> = CMPLTBRegi %Reg5, 1
+  %Reg23<def> = LDB %Reg19, 0; mem:LD1[%scevgep4](tbaa=<0x4cd68f8>)
+  %Reg21<def> = LDBU %Reg21<kill>, 0; mem:LD1[%scevgep7](tbaa=<0x4cd68f8>)
+  %Reg24<def> = MPYHSr %Reg23, %Reg21
+  %Reg21<def> = MPYLUr %Reg23<kill>, %Reg21<kill>
+  %Reg23<def> = LDB %Reg19, 3; mem:LD1[%scevgep3](tbaa=<0x4cd68f8>)
+  %BrReg0<def> = CMPNEBRegi %Reg17, 3
+  %Reg20<def> = LDBU %Reg20<kill>, 0; mem:LD1[%scevgep6](tbaa=<0x4cd68f8>)
+  %Reg24<def> = MPYHSr %Reg23, %Reg20
+  %Reg20<def> = MPYLUr %Reg23<kill>, %Reg20<kill>
+  %Reg22<def> = LDBU %Reg22<kill>, 0; mem:LD1[%scevgep5](tbaa=<0x4cd68f8>)
+  %Reg19<def> = LDB %Reg19<kill>, 6; mem:LD1[%scevgep1](tbaa=<0x4cd68f8>)
+  %Reg21<def> = MPYHSr %Reg19, %Reg22
+  %Reg19<def> = MPYLUr %Reg19<kill>, %Reg22<kill>
+  %BrReg0<def> = CMPGTBRegi %Reg17, 255
+  %BrReg0<def> = CMPNEBRegr %Reg14, %Reg5
+  STWLr %Lr<kill>, %Reg1, 172; mem:ST4[FixedStack6]
+  %BrReg0<def> = CMPNEBRegi %Reg60, 150
+  %Reg4<def> = LDBU %Reg11<kill>, 0; mem:LD1[%scevgep](tbaa=<0x4cd68f8>)
+  %Reg11<def> = LDW %Reg1, 16
+  %BrReg0<def>, %Reg11<def,dead> = MTB
+  %Lr<def> = LDWLr %Reg1, 172; mem:LD4[FixedStack6]
+  %Reg60<def> = LDW %Reg1, 176; mem:LD4[FixedStack5]
+  %Reg59<def> = LDW %Reg1, 180; mem:LD4[FixedStack4]
+  %Reg58<def> = LDW %Reg1, 184; mem:LD4[FixedStack3]
+  %Reg57<def> = LDW %Reg1, 188; mem:LD4[FixedStack2]
