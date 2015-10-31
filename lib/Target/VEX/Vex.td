@@ -50,8 +50,13 @@ class Proc<string Name, SchedMachineModel Model, list<SubtargetFeature> Features
 : ProcessorModel<Name, Model, Features>;
 
 
-def: Proc<"VEX_I", VEXDefaultSchedModel, []>;
-//def: Proc<"VEX_II", VEXSchedModel, []>;
+def: Proc<"rvex-2issue", rVEX2IssueModel, []>;
+def: Proc<"rvex-4issue", rVEX4IssueModel, []>;
+def: Proc<"rvex-8issue", rVEX8sIssueModel, []>;
+
+def: Proc<"simple-2issue", Simple2IssueModel, []>;
+def: Proc<"simple-4issue", Simple4IssueModel, []>;
+def: Proc<"simple-8issue", Simple8IssueModel, []>;
 
 
 //#if CH >= CH11_1 1
@@ -61,7 +66,6 @@ def VEXAsmParser : AsmParser {
 
 def VEXAsmParserVariant : AsmParserVariant {
     int Variant = 0;
-    
     // Recognize hard coded registers.
     string RegisterPrefix = "$";
 }

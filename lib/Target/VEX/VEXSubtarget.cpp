@@ -49,7 +49,7 @@ extern bool FixGlobalBaseReg;
 static StringRef selectVEXCPU(Triple TT, StringRef CPU){
     if(CPU.empty() || CPU == "generic"){
         if (TT.getArch() == Triple::vex || TT.getArch() == Triple::vexnew)
-            CPU = "VEX_I";
+            CPU = "rvex-4issue";
     }
     return CPU;
 }
@@ -62,10 +62,10 @@ VEXSubtarget::VEXSubtarget(const std::string &TT, const std::string &CPU,
                            const std::string &FS, bool isNewScheduling,
                            bool EnableVLIWScheduling, Reloc::Model _RM,
                            VEXTargetMachine &_TM):
-    VEXGenSubtargetInfo(TT, CPU, FS),
     VEXABI(ABI32), isNewScheduling(isNewScheduling),
     EnableVLIWScheduling(EnableVLIWScheduling),
     InstrInfo(initializeSubtargetDependencies(CPU, FS)),
+    VEXGenSubtargetInfo(TT, CPU, FS),
     RM(_RM), TargetTriple(TT),
     TSInfo(*_TM.getDataLayout()),
     FrameLowering(),
@@ -76,25 +76,29 @@ VEXSubtarget::VEXSubtarget(const std::string &TT, const std::string &CPU,
 
 VEXSubtarget &VEXSubtarget::initializeSubtargetDependencies(StringRef CPU,
                                                             StringRef FS){
-    std::string CPUName = selectVEXCPU(TargetTriple, CPU);
     
-    if (CPUName == "help")
-        CPUName = "VEX_I";
-
-    if (CPUName == "VEX_I")
-        VEXArchVersion = VEX_I;
-    
-    else if (CPUName == "VEX_II")
-        VEXArchVersion = VEX_II;
-    
-    if (!isVEXI() && !isVEXII()) {
-        errs() << "-mcpu must be empty(default:VEX_I), VEX_I or VEX_II" << "\n";
+    if (CPU == "help" || CPU.empty()) {
+        errs() << "-mcpu=<cpu-name>\n\tOptions: rvex-[2|4|8]issue, simple-[2|4|8]issue.\n\tDefault: rvex-4issue\n" << "\n";
+        CPU = "rvex-4issue";
     }
     
+    if (CPU == "rvex-2issue")
+        VEXArchVersion = rvex_2issue;
+    else if (CPU == "rvex-4issue")
+        VEXArchVersion = rvex_4issue;
+    else if (CPU == "rvex-8issue")
+        VEXArchVersion = rvex_8issue;
+    else if (CPU == "simple-2issue")
+        VEXArchVersion = simple_2issue;
+    else if (CPU == "simple-4issue")
+        VEXArchVersion = simple_4issue;
+    else if (CPU == "simple-8issue")
+        VEXArchVersion = simple_8issue;
+    
     // Parse features string.
-    ParseSubtargetFeatures(CPUName, FS);
+    ParseSubtargetFeatures(CPU, FS);
     // Initialize scheduling itinerary for the specified CPU.
-    InstrItins = getInstrItineraryForCPU(CPUName);
+    InstrItins = getInstrItineraryForCPU(CPU);
     
     return *this;
     
