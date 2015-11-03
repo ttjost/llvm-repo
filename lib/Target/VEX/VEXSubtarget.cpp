@@ -42,6 +42,8 @@ static cl::opt<bool> DisableVEXMISched("disable-vex-misched",
                                        cl::Hidden, cl::ZeroOrMore, cl::init(false),
                                        cl::desc("Disable VEX MI Scheduling"));
 
+extern cl::opt<bool> GenericBinary;
+
 extern bool FixGlobalBaseReg;
 
 // Select the VEX CPU for the given triple and cpu name.
@@ -70,14 +72,17 @@ VEXSubtarget::VEXSubtarget(const std::string &TT, const std::string &CPU,
     TSInfo(*_TM.getDataLayout()),
     FrameLowering(),
     TLInfo(_TM, *this) {
-        DEBUG(errs() << "Subtaget\n");
+        DEBUG(errs() << "Subtarget\n");
         
 }
 
 VEXSubtarget &VEXSubtarget::initializeSubtargetDependencies(StringRef CPU,
                                                             StringRef FS){
     
-    if (CPU == "help" || CPU.empty()) {
+    if (GenericBinary) {
+        errs() << "Generating Generic Binary.\n\t-mcpu=rvex-generic\n";
+        CPU = "rvex-generic";
+    } else if (CPU == "help" || CPU.empty()) {
         errs() << "-mcpu=<cpu-name>\n\tOptions: rvex-[2|4|8]issue, simple-[2|4|8]issue.\n\tDefault: rvex-4issue\n" << "\n";
         CPU = "rvex-4issue";
     }

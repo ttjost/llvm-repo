@@ -21,10 +21,17 @@
 #include "llvm/CodeGen/MachineDominators.h"
 #include "llvm/CodeGen/ScheduleDAG.h"
 #include "llvm/MC/MCInstrInfo.h"
+#include "llvm/Support/CommandLine.h"
+#include "llvm/CodeGen/Passes.h"
+#include "llvm/Support/TargetRegistry.h"
 
 #define DEBUG_TYPE "vex-vliw-scheduling"
 
 using namespace llvm;
+
+cl::opt<bool> GenericBinary("generic-binary",
+                            cl::Hidden, cl::desc("Enable Generic Binary"));
+
 
 namespace llvm {
     FunctionPass *createVEXPacketizer(bool EnableVLIWScheduling);
@@ -280,8 +287,11 @@ bool VEXPacketizerList::isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ) {
                 if (dep.getKind() == SDep::Data) {
                     return false;
                     
-                } else if (dep.getKind() == SDep::Output)
+                } else if (dep.getKind() == SDep::Output) {
                     return false;
+                } else if (GenericBinary && dep.getKind() == SDep::Anti) {
+                    return false;
+                }
             } else
                 continue;
         }

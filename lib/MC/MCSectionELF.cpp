@@ -87,12 +87,19 @@ void MCSectionELF::PrintSwitchToSection(const MCAsmInfo &MAI,
     // Added to give compatibility with VEX HP Simulator
     // We always add ".section" before sections named
     // ".text", ".data" and  ".bss"
+    // Also, we don't need to emit .rodata section directive
     if (ShouldNotOmitSectionDirective(SectionName, MAI)) {
-        OS << ".section";
-        OS << ' ' << getSectionName();
-        if (Subsection)
-            OS << '\t' << *Subsection;
-        OS << '\n';
+        if (SectionName != ".rodata") {
+            OS << ".section";
+            OS << ' ' << getSectionName();
+            if (Subsection)
+                OS << '\t' << *Subsection;
+            OS << '\n';
+        } else
+            OS << ".section .data";
+            if (Subsection)
+                OS << '\t' << *Subsection;
+            OS << '\n';
         return;
     }
     

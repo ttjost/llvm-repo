@@ -128,7 +128,7 @@ int main(void)
 	for (i = 0; i < 4; i++)
 	{
 		if (scores[i] != 1920)
-			return 0;
+			return i;
 	}
-	return 1;
+	return -1;
 }

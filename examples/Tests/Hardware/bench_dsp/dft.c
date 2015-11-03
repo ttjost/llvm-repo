@@ -265,7 +265,7 @@ void sum_rot_block_row(ufp27p5_t powers[4][24])
 ufp27p5_t powers_temp[4][24] = { {2436991, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {63546, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {131381, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {19272, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
+    {19271, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
 
 int main(void) 
 {
@@ -279,13 +279,13 @@ int main(void)
             #ifdef C
             printf("Failed to complete: %d != %d\n", powers[i][0], powers_temp[i][0]);
             #endif
-            return 100*i;
+            return powers[i][0];
         }
     } 
             #ifdef C
             printf("Success!\n");
             #endif
-    return 1;
+    return -1;
 }
  
 

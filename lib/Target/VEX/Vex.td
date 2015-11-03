@@ -52,11 +52,18 @@ class Proc<string Name, SchedMachineModel Model, list<SubtargetFeature> Features
 
 def: Proc<"rvex-2issue", rVEX2IssueModel, []>;
 def: Proc<"rvex-4issue", rVEX4IssueModel, []>;
-def: Proc<"rvex-8issue", rVEX8sIssueModel, []>;
+def: Proc<"rvex-8issue", rVEX8IssueModel, []>;
+def: Proc<"rvex-generic", rVEXGenericModel, []>;
 
 def: Proc<"simple-2issue", Simple2IssueModel, []>;
 def: Proc<"simple-4issue", Simple4IssueModel, []>;
 def: Proc<"simple-8issue", Simple8IssueModel, []>;
+
+
+def: Proc<"simple-4issue-4mem", Simple4Issue4MemModel, []>;
+
+def: Proc<"simple-8issue-4mem", Simple8Issue4MemModel, []>;
+
 
 
 //#if CH >= CH11_1 1

@@ -45,6 +45,7 @@ class VEXTargetMachine;
             rvex_2issue,
             rvex_4issue,
             rvex_8issue,
+            rvex_generic,
             simple_2issue,
             simple_4issue,
             simple_8issue

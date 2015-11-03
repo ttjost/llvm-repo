@@ -62,6 +62,7 @@ namespace llvm {
             MPYHS,
 
             PSEUDO_CALL,
+            PSEUDO_TAILCALL,
 
             WRAPPER,
 //            BR,

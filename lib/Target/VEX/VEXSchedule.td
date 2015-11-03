@@ -124,7 +124,7 @@ InstrItinData<IICmpGr       , [InstrStage<1,  [IUnit0, IUnit1]>]>,
 InstrItinData<IISelect      , [InstrStage<1,  [IUnit0, IUnit1]>]>,
 InstrItinData<IIMultiply    , [InstrStage<2,  [IUnit0, IUnit1]>]>,
 InstrItinData<IILoad        , [InstrStage<2,  [IUnit0]>]>,
-InstrItinData<IILoadLr      , [InstrStage<3,  [IUnit0]>]>,
+InstrItinData<IILoadLr      , [InstrStage<4,  [IUnit0]>]>,
 InstrItinData<IIStore       , [InstrStage<1,  [IUnit0]>]>,
 InstrItinData<IIStoreLr     , [InstrStage<2,  [IUnit0]>]>,
 InstrItinData<IICpGrBr      , [InstrStage<2,  [IUnit0, IUnit1]>]>,
@@ -142,7 +142,7 @@ InstrItinData<IICmpGr       , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]
 InstrItinData<IISelect      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
 InstrItinData<IIMultiply    , [InstrStage<2,  [IUnit1, IUnit2]>]>,
 InstrItinData<IILoad        , [InstrStage<2,  [IUnit0]>]>,
-InstrItinData<IILoadLr      , [InstrStage<3,  [IUnit0]>]>,
+InstrItinData<IILoadLr      , [InstrStage<4,  [IUnit0]>]>,
 InstrItinData<IIStore       , [InstrStage<1,  [IUnit0]>]>,
 InstrItinData<IIStoreLr     , [InstrStage<2,  [IUnit0]>]>,
 InstrItinData<IICpGrBr      , [InstrStage<2,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
@@ -167,7 +167,7 @@ InstrItinData<IISelect      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
 InstrItinData<IIMultiply    , [InstrStage<2,  [IUnit1, IUnit2, IUnit3, IUnit4,
                                                 IUnit5, IUnit6]>]>,
 InstrItinData<IILoad        , [InstrStage<2,  [IUnit0]>]>,
-InstrItinData<IILoadLr      , [InstrStage<3,  [IUnit0]>]>,
+InstrItinData<IILoadLr      , [InstrStage<4,  [IUnit0]>]>,
 InstrItinData<IIStore       , [InstrStage<1,  [IUnit0]>]>,
 InstrItinData<IIStoreLr     , [InstrStage<2,  [IUnit0]>]>,
 InstrItinData<IICpGrBr      , [InstrStage<2,  [IUnit0, IUnit1, IUnit2, IUnit3,
@@ -178,6 +178,34 @@ InstrItinData<IICpLrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
                                                IUnit4, IUnit5, IUnit6, IUnit7]>]>,
 InstrItinData<IICpGrLr      , [InstrStage<2,  [IUnit0, IUnit1, IUnit2, IUnit3,
                                                IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IIBranch      , [InstrStage<1,  [IUnit7]>]>
+]>;
+
+def rVEX8IssueGenericItineraries : ProcessorItineraries<[IUnit0, IUnit1, IUnit2, IUnit3,
+IUnit4, IUnit5, IUnit6, IUnit7], [], [
+InstrItinData<IIAll         , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+                                IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IIAlu         , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+                                IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IICmpBr       , [InstrStage<2,  [IUnit0, IUnit1, IUnit2, IUnit3,
+                                IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IICmpGr       , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+                                IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IISelect      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+                                IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IIMultiply    , [InstrStage<2,  [IUnit1, IUnit3, IUnit5, IUnit7]>]>,
+InstrItinData<IILoad        , [InstrStage<2,  [IUnit0]>]>,
+InstrItinData<IILoadLr      , [InstrStage<4,  [IUnit0]>]>,
+InstrItinData<IIStore       , [InstrStage<1,  [IUnit0]>]>,
+InstrItinData<IIStoreLr     , [InstrStage<2,  [IUnit0]>]>,
+InstrItinData<IICpGrBr      , [InstrStage<2,  [IUnit0, IUnit1, IUnit2, IUnit3,
+                                IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IICpBrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+                                IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IICpLrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+                                IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IICpGrLr      , [InstrStage<2,  [IUnit0, IUnit1, IUnit2, IUnit3,
+                                IUnit4, IUnit5, IUnit6, IUnit7]>]>,
 InstrItinData<IIBranch      , [InstrStage<1,  [IUnit7]>]>
 ]>;
 
@@ -217,6 +245,25 @@ InstrItinData<IICpGrLr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]
 InstrItinData<IIBranch      , [InstrStage<1,  [IUnit3]>]>
 ]>;
 
+def Simple4Issue4MemItineraries : ProcessorItineraries<[IUnit0, IUnit1, IUnit2, IUnit3], [], [
+InstrItinData<IIAll         , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
+InstrItinData<IIAlu         , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
+InstrItinData<IICmpBr       , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
+InstrItinData<IICmpGr       , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
+InstrItinData<IISelect      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
+InstrItinData<IIMultiply    , [InstrStage<1,  [IUnit1, IUnit2]>]>,
+InstrItinData<IILoad        , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
+InstrItinData<IILoadLr      , [InstrStage<1,  [IUnit0]>]>,
+InstrItinData<IIStore       , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
+InstrItinData<IIStoreLr     , [InstrStage<1,  [IUnit0]>]>,
+InstrItinData<IICpGrBr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
+InstrItinData<IICpBrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
+InstrItinData<IICpLrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
+InstrItinData<IICpGrLr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
+InstrItinData<IIBranch      , [InstrStage<1,  [IUnit3]>]>
+]>;
+
+
 def Simple8IssueItineraries : ProcessorItineraries<[IUnit0, IUnit1, IUnit2, IUnit3,
                                                  IUnit4, IUnit5, IUnit6, IUnit7], [], [
 InstrItinData<IIAll         , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
@@ -246,6 +293,37 @@ InstrItinData<IICpGrLr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
 InstrItinData<IIBranch      , [InstrStage<1,  [IUnit7]>]>
 ]>;
 
+def Simple8Issue4MemItineraries : ProcessorItineraries<[IUnit0, IUnit1, IUnit2, IUnit3,
+IUnit4, IUnit5, IUnit6, IUnit7], [], [
+InstrItinData<IIAll         , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IIAlu         , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IICmpBr       , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IICmpGr       , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IISelect      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IIMultiply    , [InstrStage<1,  [IUnit1, IUnit2, IUnit3, IUnit4,
+IUnit5, IUnit6]>]>,
+InstrItinData<IILoad        , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
+InstrItinData<IILoadLr      , [InstrStage<1,  [IUnit0]>]>,
+InstrItinData<IIStore       , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
+InstrItinData<IIStoreLr     , [InstrStage<1,  [IUnit0]>]>,
+InstrItinData<IICpGrBr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IICpBrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IICpLrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IICpGrLr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IIBranch      , [InstrStage<1,  [IUnit7]>]>
+]>;
+
+
+
 def rVEX2IssueModel : SchedMachineModel {
     let IssueWidth = 2;
     let LoadLatency = 2;
@@ -264,6 +342,12 @@ def rVEX8IssueModel : SchedMachineModel {
     let Itineraries = rVEX8IssueItineraries;
 }
 
+def rVEXGenericModel : SchedMachineModel {
+    let IssueWidth = 8;
+    let LoadLatency = 2;
+    let Itineraries = rVEX8IssueGenericItineraries;
+}
+
 def Simple2IssueModel : SchedMachineModel {
     let IssueWidth = 2;
     let LoadLatency = 1;
@@ -280,4 +364,16 @@ def Simple8IssueModel : SchedMachineModel {
     let IssueWidth = 8;
     let LoadLatency = 1;
     let Itineraries = Simple8IssueItineraries;
+}
+
+def Simple4Issue4MemModel : SchedMachineModel {
+    let IssueWidth = 4;
+    let LoadLatency = 1;
+    let Itineraries = Simple4Issue4MemItineraries;
+}
+
+def Simple8Issue4MemModel : SchedMachineModel {
+    let IssueWidth = 8;
+    let LoadLatency = 1;
+    let Itineraries = Simple8Issue4MemItineraries;
 }

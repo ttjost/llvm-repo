@@ -88,6 +88,7 @@ def SDT_VEXTWORESULT : SDTypeProfile<2, 3,
                                      SDTCisVT<4, i1>]>;
 
 def SDT_VEXPseudoCall         : SDTypeProfile<0, -1, [SDTCisVT<0, iPTR>]>;
+def SDT_VEXPseudoTailCall     : SDTypeProfile<0, -1, [SDTCisVT<0, iPTR>]>;
 def SDT_VEXCallSeqStart : SDCallSeqStart<[SDTCisVT<0, i32>]>;
 def SDT_VEXCallSeqEnd   : SDCallSeqEnd<[SDTCisVT<0, i32>, SDTCisVT<1, i32>]>;
 
@@ -106,6 +107,10 @@ def VEXWrapper : SDNode<"VEXISD::WRAPPER", SDT_VEXWrapper>;
 def VEXPseudoCall    : SDNode<"VEXISD::PSEUDO_CALL", SDT_VEXPseudoCall,
                         [SDNPHasChain, SDNPOutGlue,
                         SDNPOptInGlue, SDNPVariadic]>;
+
+def VEXPseudoTailCall    : SDNode<"VEXISD::PSEUDO_TAILCALL", SDT_VEXPseudoTailCall,
+                                [SDNPHasChain, SDNPOutGlue,
+                                SDNPOptInGlue, SDNPVariadic]>;
 
 def VEXCallseq_start :  SDNode<"ISD::CALLSEQ_START", SDT_VEXCallSeqStart,
                                [SDNPHasChain, SDNPOutGlue]>;
@@ -654,6 +659,9 @@ let isCall = 1 in {
 def CALL      : InstVEX<(outs), (ins i32imm:$offset),
                         "call $$l0.0 = $offset",
                         [(VEXPseudoCall imm:$offset)], IIBranch>;
+def TAILCALL      : InstVEX<(outs), (ins i32imm:$offset),
+                        "call $$l0.0 = $offset",
+                        [(VEXPseudoTailCall imm:$offset)], IIBranch>;
 }
 
 //===----------------------------------------------------------------------===//
@@ -718,6 +726,15 @@ def : Pat<(VEXPseudoCall (i32 texternalsym:$dst)),
 
 def : Pat<(VEXPseudoCall (VEXWrapper texternalsym:$dst)),
             (CALL texternalsym:$dst)>;
+
+// TODO: Is this correct?
+// Tail Call
+
+def : Pat<(VEXPseudoTailCall (VEXWrapper tglobaladdr:$dst)),
+            (TAILCALL tglobaladdr:$dst)>;
+
+def : Pat<(VEXPseudoTailCall (i32 tglobaladdr:$dst)),
+            (TAILCALL tglobaladdr:$dst)>;
 
 //include "VEXInstrVIS.td"
 //include "VEXInstrAliases.td"

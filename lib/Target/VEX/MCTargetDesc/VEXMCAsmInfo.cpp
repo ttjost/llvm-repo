@@ -51,9 +51,9 @@ VEXMCAsmInfo::VEXMCAsmInfo(StringRef TT) {
     HasDotTypeDotSizeDirective  = false;
     HasFunctionAlignment        = false;
     HasSingleParameterDotFile   = false;
-    UsesELFSectionDirectiveForBSS   = true;
+    //UsesELFSectionDirectiveForBSS   = true;
     
-    COMMDirectiveAlignmentIsInBytes = true;
+    //COMMDirectiveAlignmentIsInBytes = true;
     
     // We need this to omit the AsmPrinter from printing
     // an unwanted .globl <NameOfTheFunction> directive.

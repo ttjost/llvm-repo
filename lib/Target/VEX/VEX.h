@@ -18,6 +18,7 @@
 //#include "VEXConfig.h"
 #include "MCTargetDesc/VEXMCTargetDesc.h"
 #include "llvm/Target/TargetMachine.h"
+#include "llvm/Support/CommandLine.h"
 
 namespace llvm {
     class VEXTargetMachine;

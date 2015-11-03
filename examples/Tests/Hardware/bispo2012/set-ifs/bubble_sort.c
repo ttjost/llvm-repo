@@ -33,6 +33,15 @@ void bubblesort(int* ar, int n) {
 int main() {
 
 	bubblesort(ar, N);
+    
+    for (int i = 0; i < N-1; ++i) {
+        if (ar[i] > ar[i+1]){
+#ifdef C
+        printf("%d, ", ar[i]);
+#endif
+            return i+10;
+        }
+    }
 
-    return 0;
+    return -1;
 }

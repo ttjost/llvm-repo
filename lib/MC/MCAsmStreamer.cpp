@@ -368,14 +368,14 @@ void MCAsmStreamer::EmitDataRegion(MCDataRegionType Kind) {
 
 void MCAsmStreamer::EmitVersionMin(MCVersionMinType Kind, unsigned Major,
                                    unsigned Minor, unsigned Update) {
-  switch (Kind) {
-  case MCVM_IOSVersionMin:        OS << "\t.ios_version_min"; break;
-  case MCVM_OSXVersionMin:        OS << "\t.macosx_version_min"; break;
-  }
-  OS << " " << Major << ", " << Minor;
-  if (Update)
-    OS << ", " << Update;
-  EmitEOL();
+//  switch (Kind) {
+//  case MCVM_IOSVersionMin:        OS << "\t.ios_version_min"; break;
+//  //case MCVM_OSXVersionMin:        OS << "\t.macosx_version_min"; break;
+//  }
+//  OS << " " << Major << ", " << Minor;
+//  if (Update)
+//    OS << ", " << Update;
+//  EmitEOL();
 }
 
 void MCAsmStreamer::EmitThumbFunc(MCSymbol *Func) {

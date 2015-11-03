@@ -327,7 +327,7 @@ int main(void)
     int j;
     int k;
     
-    for(i=0; i<1000; i++){
+    //for(i=0; i<1000; i++){
         jpeg_fdct_islow(data);
 	
 	if (i == 0)
@@ -341,7 +341,7 @@ int main(void)
       			#endif
 	            }
             }
-    }
+    //}
         #ifdef C
         printf("Success!\n");
         #endif
