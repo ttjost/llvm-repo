@@ -30,7 +30,8 @@ using namespace llvm;
 #define DEBUG_TYPE "vex-targetmachine"
 
 static cl::opt<bool> EnableVLIWScheduling("enable-vliw-scheduling",
-                                          cl::Hidden, cl::desc("Enable VLIW Scheduling"));
+                                          cl::Hidden, cl::init(true),
+                                          cl::desc("Enable VLIW Scheduling"));
 
 extern "C" void LLVMInitializeVEXTarget() {
     

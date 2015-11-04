@@ -6636,6 +6636,100 @@ public:
 };
 } // end anonymous namespace
 
+class VEXTargetInfo : public TargetInfo {
+    static const char * const GCCRegNames[];
+    std::string CPU;
+  public:
+    VEXTargetInfo(const llvm::Triple &Triple) : TargetInfo(Triple) {
+      BigEndian = true;
+      TLSSupported = false;
+      IntWidth = 32; IntAlign = 32;
+      LongWidth = 32; LongLongWidth = 64;
+      LongAlign = LongLongAlign = 32;
+      PointerWidth = 32; PointerAlign = 32;
+      SuitableAlign = 32;
+      SizeType = UnsignedInt;
+      IntMaxType = SignedLongLong;
+      IntPtrType = SignedInt;
+      PtrDiffType = SignedInt;
+      SigAtomicType = SignedLong;
+      DescriptionString = "E-p:32:32-i8:8:32-i16:16:32-i32:32-i64:64-f128:64-n32-S32";
+    }
+    void getTargetDefines(const LangOptions &Opts,
+                          MacroBuilder &Builder) const override {
+      Builder.defineMacro("VEX");
+      Builder.defineMacro("__VEX__");
+      // FIXME: defines for different 'flavours' of MCU
+    }
+    void getTargetBuiltins(const Builtin::Info *&Records,
+                           unsigned &NumRecords) const override {
+      // FIXME: Implement.
+      Records = nullptr;
+      NumRecords = 0;
+    }
+    bool hasFeature(StringRef Feature) const override {
+      return Feature == "vex";
+    }
+    void getGCCRegNames(const char * const *&Names,
+                        unsigned &NumNames) const override;
+    void getGCCRegAliases(const GCCRegAlias *&Aliases,
+                          unsigned &NumAliases) const override {
+      // No aliases.
+      Aliases = nullptr;
+      NumAliases = 0;
+    }
+    bool
+    validateAsmConstraint(const char *&Name,
+                          TargetInfo::ConstraintInfo &info) const override {
+      // FIXME: implement
+      switch (*Name) {
+      case 'K': // the constant 1
+      case 'L': // constant -1^20 .. 1^19
+      case 'M': // constant 1-4:
+        return true;
+      }
+      // No target constraints for now.
+      return false;
+    }
+    const char *getClobbers() const override {
+      // FIXME: Is this really right?
+      return "";
+    }
+    BuiltinVaListKind getBuiltinVaListKind() const override {
+      // FIXME: implement
+      return TargetInfo::CharPtrBuiltinVaList;
+   }
+    
+    bool setCPU(const std::string &Name) override {
+        CPU = Name;
+        return llvm::StringSwitch<bool>(Name)
+        .Case("rvex-2issue", true)
+        .Case("rvex-4issue", true)
+        .Case("rvex-8issue", true)
+        .Case("rvex-generic", true)
+        .Case("simple-2issue", true)
+        .Case("simple-4issue", true)
+        .Case("simple-8issue", true)
+        .Case("rvex-default", true);
+    }
+  };
+
+  const char * const VEXTargetInfo::GCCRegNames[] = {
+      "$r0.0", "$r0.1", "$r0.2", "$r0.3", "$r0.4", "$r0.5", "$r0.6", "$r0.7",
+      "$r0.8", "$r0.9", "$r0.10", "$r0.11", "$r0.12", "$r0.13", "$r0.14", "$r0.15",
+      "$r0.16", "$r0.17", "$r0.18", "$r0.19", "$r0.20", "$r0.21", "$r0.22", "$r0.23",
+      "$r0.24", "$r0.25", "$r0.26", "$r0.27", "$r0.28", "$r0.29", "$r0.30", "$r0.31",
+      "$r0.32", "$r0.33", "$r0.34", "$r0.35", "$r0.36", "$r0.37", "$r0.38", "$r0.39",
+      "$r0.40", "$r0.41", "$r0.42", "$r0.43", "$r0.44", "$r0.45", "$r0.46", "$r0.47",
+      "$r0.48", "$r0.49", "$r0.50", "$r0.51", "$r0.52", "$r0.53", "$r0.54", "$r0.55",
+      "$r0.56", "$r0.57", "$r0.58", "$r0.59", "$r0.60", "$r0.61", "$r0.62", "$r0.63"
+  };
+
+  void VEXTargetInfo::getGCCRegNames(const char * const *&Names,
+                                        unsigned &NumNames) const {
+    Names = GCCRegNames;
+    NumNames = llvm::array_lengthof(GCCRegNames);
+  }
 
 //===----------------------------------------------------------------------===//
 // Driver code
@@ -7020,6 +7114,10 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple) {
           Triple.getEnvironment() != llvm::Triple::UnknownEnvironment)
         return nullptr;
       return new SPIR64TargetInfo(Triple);
+    }
+          
+    case llvm::Triple::vex: {
+      return new VEXTargetInfo(Triple);
     }
   }
 }

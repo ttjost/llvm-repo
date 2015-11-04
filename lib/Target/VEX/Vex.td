@@ -49,6 +49,7 @@ def     VEXInstrInfo    :   InstrInfo;
 class Proc<string Name, SchedMachineModel Model, list<SubtargetFeature> Features>
 : ProcessorModel<Name, Model, Features>;
 
+def: Proc<"rvex-default", rVEX4IssueModel, []>;
 
 def: Proc<"rvex-2issue", rVEX2IssueModel, []>;
 def: Proc<"rvex-4issue", rVEX4IssueModel, []>;

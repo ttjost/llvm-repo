@@ -1942,6 +1942,28 @@ defm stack_arrays : BooleanFFlag<"stack-arrays">, Group<gfortran_Group>;
 defm underscoring : BooleanFFlag<"underscoring">, Group<gfortran_Group>;
 defm whole_file : BooleanFFlag<"whole-file">, Group<gfortran_Group>;
 
+// added to VEX
+def rvex_2issue : Flag<["-"], "rvex-2issue">,
+    Alias<mcpu_EQ>, AliasArgs<["rvex-2issue"]>,
+    HelpText<"Equivalent to -march=rvex-2issue">, Flags<[HelpHidden]>;
+def rvex_4issue : Flag<["-"], "rvex-4issue">,
+    Alias<mcpu_EQ>, AliasArgs<["rvex-4issue"]>,
+    HelpText<"Equivalent to -march=rvex-4issue">, Flags<[HelpHidden]>;
+def rvex_8issue : Flag<["-"], "rvex-8issue">,
+    Alias<mcpu_EQ>, AliasArgs<["rvex-8issue"]>,
+    HelpText<"Equivalent to -march=rvex-8issue">, Flags<[HelpHidden]>;
+def rvex_generic : Flag<["-"], "rvex-generic">,
+    Alias<mcpu_EQ>, AliasArgs<["rvex-generic"]>,
+    HelpText<"Equivalent to -march=rvex-generic">, Flags<[HelpHidden]>;
+def simple_2issue : Flag<["-"], "simple-2issue">,
+    Alias<mcpu_EQ>, AliasArgs<["simple-2issue"]>,
+    HelpText<"Equivalent to -march=simple-2issue">, Flags<[HelpHidden]>;
+def simple_4issue : Flag<["-"], "simple-4issue">,
+    Alias<mcpu_EQ>, AliasArgs<["simple-4issue"]>,
+    HelpText<"Equivalent to -march=simple-4issue">, Flags<[HelpHidden]>;
+def simple_8issue : Flag<["-"], "simple-8issue">,
+    Alias<mcpu_EQ>, AliasArgs<["simple-8issue"]>,
+    HelpText<"Equivalent to -march=simple-8issue">, Flags<[HelpHidden]>;
 
 include "CC1Options.td"
 

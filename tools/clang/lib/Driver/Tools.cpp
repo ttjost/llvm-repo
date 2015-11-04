@@ -1466,7 +1466,8 @@ static const char *getX86TargetCPU(const ArgList &Args,
   // Select the default CPU if none was given (or detection failed).
 
   if (Triple.getArch() != llvm::Triple::x86_64 &&
-      Triple.getArch() != llvm::Triple::x86)
+      Triple.getArch() != llvm::Triple::x86 &&
+      Triple.getArch() != llvm::Triple::vex)
     return nullptr; // This routine is only handling x86 targets.
 
   bool Is64Bit = Triple.getArch() == llvm::Triple::x86_64;
@@ -1554,6 +1555,14 @@ static std::string getCPUName(const ArgList &Args, const llvm::Triple &T) {
       return A->getValue();
     return "";
 
+  case llvm::Triple::vex: {
+    if (Arg *A = Args.getLastArg(options::OPT_march_EQ,
+                                 options::OPT_mcpu_EQ))
+        return A->getValue();
+    else
+        return "rvex-default";
+  }
+          
   case llvm::Triple::x86:
   case llvm::Triple::x86_64:
     return getX86TargetCPU(Args, T);
@@ -3230,6 +3239,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
     AddSparcTargetArgs(Args, CmdArgs);
     break;
 
+  case llvm::Triple::vex:
   case llvm::Triple::x86:
   case llvm::Triple::x86_64:
     AddX86TargetArgs(Args, CmdArgs);

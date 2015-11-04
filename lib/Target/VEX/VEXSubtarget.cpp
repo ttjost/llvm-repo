@@ -39,7 +39,7 @@ EnableVEXCalls("vex-calls", cl::Hidden,
                cl::init(false));
 
 static cl::opt<bool> DisableVEXMISched("disable-vex-misched",
-                                       cl::Hidden, cl::ZeroOrMore, cl::init(false),
+                                       cl::Hidden, cl::ZeroOrMore, cl::init(true),
                                        cl::desc("Disable VEX MI Scheduling"));
 
 extern cl::opt<bool> GenericBinary;
@@ -82,6 +82,9 @@ VEXSubtarget &VEXSubtarget::initializeSubtargetDependencies(StringRef CPU,
     if (GenericBinary) {
         errs() << "Generating Generic Binary.\n\t-mcpu=rvex-generic\n";
         CPU = "rvex-generic";
+    } else if (CPU == "rvex-default") {
+        errs() << "clang: warning: unknown target CPU: assuming '-mcpu=rvex-4issue'\n" << "\n";
+        CPU = "rvex-4issue";
     } else if (CPU == "help" || CPU.empty()) {
         errs() << "-mcpu=<cpu-name>\n\tOptions: rvex-[2|4|8]issue, simple-[2|4|8]issue.\n\tDefault: rvex-4issue\n" << "\n";
         CPU = "rvex-4issue";
