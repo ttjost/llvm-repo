@@ -87,6 +87,12 @@ def SDT_VEXTWORESULT : SDTypeProfile<2, 3,
                                      SDTCisVT<1, i1>,
                                      SDTCisVT<4, i1>]>;
 
+def SDT_VEXSLCT : SDTypeProfile<1, 3,
+                                    [SDTCisSameAs<0, 2>,
+                                        SDTCisSameAs<0, 3>,
+                                        SDTCisInt<0>,
+                                        SDTCisVT<1, i1>]>;
+
 def SDT_VEXPseudoCall         : SDTypeProfile<0, -1, [SDTCisVT<0, iPTR>]>;
 def SDT_VEXPseudoTailCall     : SDTypeProfile<0, -1, [SDTCisVT<0, iPTR>]>;
 def SDT_VEXCallSeqStart : SDCallSeqStart<[SDTCisVT<0, i32>]>;
@@ -135,6 +141,8 @@ def VEXMinu  : SDNode<"VEXISD::MINU", SDTIntBinOp>;
 
 def VEXOrc      : SDNode<"VEXISD::ORC", SDTIntBinOp>;
 def VEXSh1Add   : SDNode<"VEXISD::SH1ADD", SDTIntBinOp>;
+
+def VEXSlct     : SDNode<"VEXISD::SLCT", SDT_VEXSLCT>;
 
 def VEXMPYLL    : SDNode<"VEXISD::MPYLL", SDTIntBinOp>;
 def VEXMPYLLU   : SDNode<"VEXISD::MPYLLU", SDTIntBinOp>;
@@ -384,11 +392,11 @@ defm SUB    : ArithLogicInstr<"sub", 0b01100011, sub, IIAlu, 1, 1>;
 def ANDCr      : ArithLogic_r<0b01100100,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                           "andc",
-                           [(set GPRegs:$dst, (and (not GPRegs:$s1), GPRegs:$s2))], IIAlu, 1>;
+                           [(set GPRegs:$dst, (and (not GPRegs:$s1), GPRegs:$s2))], IIAlu, 0>;
 def ANDCi      : ArithLogic_i<0b01100100,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                           "andc",
-                           [(set GPRegs:$dst, (and (not GPRegs:$s1), imm32:$s2))], IIAlu, 1>;
+                           [(set GPRegs:$dst, (and (not GPRegs:$s1), imm32:$s2))], IIAlu, 0>;
            
 // MAX/MIN Instructions
 defm MAX    : ArithLogicInstr<"max", 0b01100101, VEXMax, IIAlu>;
@@ -406,51 +414,51 @@ defm OR     : ArithLogicInstr<"or", 0b01101001, or, IIAlu>;
 def ORCr      : ArithLogic_r<0b01101010,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                           "orc $dst = $s1, $s2",
-                           [(set GPRegs:$dst, (or GPRegs:$s2, (not GPRegs:$s1)))], IIAlu, 1>;
+                           [(set GPRegs:$dst, (or GPRegs:$s2, (not GPRegs:$s1)))], IIAlu, 0>;
 def ORCi      : ArithLogic_i<0b01101010,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                           "orc $dst = $s1, $s2",
-                           [(set GPRegs:$dst, (or (not GPRegs:$s1), imm32:$s2))], IIAlu, 1>;
+                           [(set GPRegs:$dst, (or (not GPRegs:$s1), imm32:$s2))], IIAlu, 0>;
 
 // SH1ADD Instruction
 def SH1ADDr      : ArithLogic_r<0b01101011,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                           "sh1add $dst = $s1, $s2",
-                           [], IIAlu, 1>;
+                           [], IIAlu, 0>;
 def SH1ADDi      : ArithLogic_i<0b01101010,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                           "sh1add $dst = $s1, $s2",
-                           [], IIAlu, 1>;
+                           [], IIAlu, 0>;
 
 // SH2ADD Instruction
 def SH2ADDr      : ArithLogic_r<0b01101100,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                           "sh2add $dst = $s1, $s2",
-                           [], IIAlu, 1>;
+                           [], IIAlu, 0>;
 def SH2ADDi      : ArithLogic_i<0b01101100,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                           "sh2add $dst = $s1, $s2",
-                           [], IIAlu, 1>;
+                           [], IIAlu, 0>;
 
 // SH3ADD Instruction
 def SH3ADDr      : ArithLogic_r<0b01101101,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                           "sh3add $dst = $s1, $s2",
-                          [], IIAlu, 1>;
+                          [], IIAlu, 0>;
 def SH3ADDi      : ArithLogic_i<0b01101101,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                           "sh3add $dst = $s1, $s2",
-                           [], IIAlu, 1>;
+                           [], IIAlu, 0>;
 
 // SH4ADD Instruction
 def SH4ADDr      : ArithLogic_r<0b01101110,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
                           "sh4add $dst = $s1, $s2",
-                           [], IIAlu, 1>;
+                           [], IIAlu, 0>;
 def SH4ADDi      : ArithLogic_i<0b01101110,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                           "sh4add $dst = $s1, $s2",
-                           [], IIAlu, 1>;
+                           [], IIAlu, 0>;
                                                      
 // SHL Instruction
 def SHLr        : SHIFT_r<0b01101111,
@@ -551,6 +559,9 @@ def : Pat<(VEXOrc GPRegs:$lhs, GPRegs:$rhs),
 def : Pat<(VEXSh1Add GPRegs:$lhs, GPRegs:$rhs),
           (SH1ADDr GPRegs:$lhs, GPRegs:$rhs)>;
 
+def : Pat<(VEXSlct BrRegs:$cond, GPRegs:$s1, GPRegs:$s2),
+            (SLCTr BrRegs:$cond, GPRegs:$s1, GPRegs:$s2)>;
+
 //def : Pat<(i1 imm:$imm),
 //(MOVi imm:$imm)>;
 
@@ -574,6 +585,8 @@ defm MPYLL      : ArithLogicInstr<"mpyll", 0b00000000, VEXMPYLL, IIMultiply, 1, 
 defm MPYLLU     : ArithLogicInstr<"mpyllu", 0b00000001, VEXMPYLLU, IIMultiply, 1, 1>;
 
 defm MPYLH      : ArithLogicInstr<"mpylh", 0b00000010, VEXMPYLH, IIMultiply, 1, 1>;
+
+defm MPYLHU     : ArithLogicInstr<"mpylhu", 0b00000010, VEXMPYLHU, IIMultiply, 1, 1>;
 
 defm MPYHH      : ArithLogicInstr<"mpyhh", 0b00000011, VEXMPYHH, IIMultiply, 1, 1>;
 

@@ -49,6 +49,8 @@ namespace llvm {
             SH1ADD,
             MTB,
             
+            SLCT,
+            
             MPYLL,
             MPYLLU,
             MPYLH,
@@ -136,6 +138,9 @@ private:
     SDValue LowerSREM(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerUREM(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerADDSUBWithFlags(SDValue Op, SelectionDAG &DAG) const;
+    
+    SDValue LowerMULHS(SDValue Op, SelectionDAG &DAG) const;
+    SDValue LowerMULHU(SDValue Op, SelectionDAG &DAG) const;
 
     SDValue
     LowerCall(CallLoweringInfo &CLI,

@@ -66,6 +66,7 @@ const char *VEXTargetLowering::getTargetNodeName(unsigned Opcode) const {
             
         case VEXISD::ORC:           return "VEXISD::ORC";
         case VEXISD::SH1ADD:        return "VEXISD::SH1ADD";
+        case VEXISD::SLCT:          return "VEXISD::SLCT";
             
         case VEXISD::MPYLL:         return "VEXISD::MPYLL";
         case VEXISD::MPYLLU:        return "VEXISD::MPYLLU";
@@ -108,6 +109,11 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
         setLoadExtAction(ISD::ZEXTLOAD, VT, MVT::i1,  Promote);
         setLoadExtAction(ISD::SEXTLOAD, VT, MVT::i1,  Promote);
     }
+    
+    setOperationAction(ISD::SDIV, MVT::i32, Custom);
+    setOperationAction(ISD::UDIV, MVT::i32, Custom);
+    setOperationAction(ISD::SREM, MVT::i32, Custom);
+    setOperationAction(ISD::UREM, MVT::i32, Custom);
 
 //    setOperationAction(ISD::ANY_EXTEND, MVT::i1, Promote);
 //    setOperationAction(ISD::ANY_EXTEND, MVT::i8, Promote);
@@ -131,10 +137,6 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
 //    setOperationAction(ISD::ADDC, MVT::i32, Expand);
 //    setOperationAction(ISD::SUBC, MVT::i32, Expand);
 
-    setOperationAction(ISD::SDIV, MVT::i32, Custom);
-    setOperationAction(ISD::UDIV, MVT::i32, Custom);
-    setOperationAction(ISD::SREM, MVT::i32, Custom);
-    setOperationAction(ISD::UREM, MVT::i32, Custom);
 //    setOperationAction(ISD::SDIVREM, MVT::i32, Expand);
     
     
@@ -161,7 +163,7 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     setOperationAction(ISD::SUBE, MVT::i32, Custom);
     setOperationAction(ISD::SUBC, MVT::i32, Custom);
     
-//    // 64-bit oprations
+//    // 64-bit operations
     setOperationAction(ISD::ADD, MVT::i64, Expand);
     setOperationAction(ISD::SUB, MVT::i64, Expand);
     setOperationAction(ISD::OR, MVT::i64, Expand);
@@ -206,8 +208,8 @@ SDValue VEXTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) const {
         //case ISD::Constant:             return LowerConstant(Op, DAG);
         case ISD::UMULO:
         case ISD::SMULO:
-        case ISD::MULHS:
-        case ISD::MULHU:
+        case ISD::MULHS:                return LowerMULHS(Op, DAG);
+        case ISD::MULHU:                return LowerMULHU(Op, DAG);
         case ISD::MUL:                  return LowerMUL(Op, DAG);
         case ISD::SUBE:
         case ISD::SUBC:
@@ -752,6 +754,147 @@ SDValue VEXTargetLowering::LowerMUL(SDValue Op, SelectionDAG &DAG) const {
     SDValue SecondPart = DAG.getNode(Opc2, dl, ValueType, lhs, rhs);
     
     return DAG.getNode(ISD::ADD, dl, ValueType, FirstPart, SecondPart);
+}
+
+SDValue VEXTargetLowering::LowerMULHS(SDValue Op, SelectionDAG &DAG) const {
+    
+    DEBUG(errs() << "LowerMULHS!\n");
+    SDLoc dl = SDLoc(Op.getNode());
+    
+    SDValue LHS = Op.getOperand(0);
+    SDValue RHS = Op.getOperand(1);
+    
+    SDValue LHSinv, RHSinv;
+    
+    SDValue ShiftImm = DAG.getTargetConstant(16, MVT::i32);
+    SDValue MaskImm = DAG.getConstant(0xffff, MVT::i32);
+    
+    SDValue Zero = DAG.getRegister(VEX::Reg0, MVT::i32);
+    
+    SDValue tres, t, tneg, w3, k, w2, w1, PosL, PosR;
+    
+    LHSinv = DAG.getNode(ISD::SUB, dl, MVT::i32, Zero, LHS);
+    RHSinv = DAG.getNode(ISD::SUB, dl, MVT::i32, Zero, RHS);
+    
+    PosL = DAG.getSetCC(dl, MVT::i32, Zero, LHS, ISD::SETLT);
+    PosR = DAG.getSetCC(dl, MVT::i32, Zero, RHS, ISD::SETLT);
+    
+    LHS = DAG.getNode(VEXISD::SLCT, dl, MVT::i32, PosL, LHS, LHSinv);
+    RHS = DAG.getNode(VEXISD::SLCT, dl, MVT::i32, PosR, RHS, RHSinv);
+    
+    t = DAG.getNode(VEXISD::MPYLLU, dl, MVT::i32, LHS, RHS);
+    k = DAG.getNode(ISD::SRL, dl, MVT::i32, t, ShiftImm);
+    
+    t = DAG.getNode(VEXISD::MPYLHU, dl, MVT::i32, LHS, RHS);
+    t = DAG.getNode(ISD::ADD, dl, MVT::i32, t, k);
+    w2 = DAG.getNode(ISD::AND, dl, MVT::i32, t, MaskImm);
+    w1 = DAG.getNode(ISD::SRL, dl, MVT::i32, t, ShiftImm);
+    
+    t = DAG.getNode(VEXISD::MPYLHU, dl, MVT::i32, RHS, LHS);
+    t = DAG.getNode(ISD::ADD, dl, MVT::i32, t, w2);
+    k = DAG.getNode(ISD::SRL, dl, MVT::i32, t, ShiftImm);
+    
+    t = DAG.getNode(VEXISD::MPYHHU, dl, MVT::i32, LHS, RHS);
+//    t = DAG.getNode(ISD::ADD, dl, MVT::i32, t, w1);
+    t = DAG.getNode(ISD::ADD, dl, MVT::i32, t, k);
+    
+    tneg = DAG.getNode(VEXISD::ORC, dl, MVT::i32, t, Zero);
+    
+    tres = DAG.getNode(VEXISD::SLCT, dl, MVT::i32, PosL, t, tneg);
+    tneg = DAG.getNode(VEXISD::ORC, dl, MVT::i32, tres, Zero);
+    tres = DAG.getNode(VEXISD::SLCT, dl, MVT::i32, PosR, tres, tneg);
+    
+    return tres;
+}
+
+//SDValue VEXTargetLowering::LowerMULHS(SDValue Op, SelectionDAG &DAG) const {
+//    
+//    DEBUG(errs() << "LowerMULHS!\n");
+//    SDLoc dl = SDLoc(Op.getNode());
+//    
+//    SDValue LHS = Op.getOperand(0);
+//    SDValue RHS = Op.getOperand(1);
+//    
+//    SDVTList VTList = DAG.getVTList(MVT::i32, MVT::i1);
+//    
+//    SDValue LHSinv, RHSinv;
+//    
+//    SDValue ShiftImm = DAG.getTargetConstant(16, MVT::i32);
+//    SDValue MaskImm = DAG.getConstant(0xffff, MVT::i32);
+//    
+//    SDValue Zero = DAG.getRegister(VEX::Reg0, MVT::i32);
+//    
+//    SDValue tres, t, tneg, w3, k, w2, w1, PosL, PosR;
+//    
+//    LHSinv = DAG.getNode(ISD::SUB, dl, MVT::i32, Zero, LHS);
+//    RHSinv = DAG.getNode(ISD::SUB, dl, MVT::i32, Zero, RHS);
+//    
+//    PosL = DAG.getSetCC(dl, MVT::i32, Zero, LHS, ISD::SETLT);
+//    PosR = DAG.getSetCC(dl, MVT::i32, Zero, RHS, ISD::SETLT);
+//    
+//    LHS = DAG.getNode(VEXISD::SLCT, dl, MVT::i32, PosL, LHS, LHSinv);
+//    RHS = DAG.getNode(VEXISD::SLCT, dl, MVT::i32, PosR, RHS, RHSinv);
+//    
+//    SDValue A = DAG.getNode(VEXISD::MPYLLU, dl, MVT::i32, LHS, RHS);
+//    SDValue AHigh = DAG.getNode(ISD::SRA, dl, MVT::i32, A, ShiftImm);
+//    
+//    SDValue B = DAG.getNode(VEXISD::MPYLHU, dl, MVT::i32, LHS, RHS);
+//    SDValue BLow = DAG.getNode(ISD::AND, dl, MVT::i32, B, MaskImm);
+//    SDValue BHigh = DAG.getNode(ISD::SRA, dl, MVT::i32, B, ShiftImm);
+//    
+//    SDValue C = DAG.getNode(VEXISD::MPYLHU, dl, MVT::i32, RHS, LHS);
+//    SDValue CLow = DAG.getNode(ISD::AND, dl, MVT::i32, C, MaskImm);
+//    SDValue CHigh = DAG.getNode(ISD::SRA, dl, MVT::i32, C, ShiftImm);
+//    
+//    SDValue D = DAG.getNode(VEXISD::MPYHHU, dl, MVT::i32, LHS, RHS);
+//    
+//    SDValue AHighBLow = DAG.getNode(ISD::ADD, dl, MVT::i32, AHigh, BLow);
+//    SDValue AHighBLowCLow = DAG.getNode(ISD::ADD, dl, MVT::i32, AHighBLow, CLow);
+//    
+//    SDValue AHighBLowCLowHigh = DAG.getNode(ISD::SRA, dl, MVT::i32,
+//                                            AHighBLowCLow, ShiftImm);
+//    
+//    SDValue HighPart = DAG.getNode(ISD::ADD, dl, MVT::i32,
+//                                   BHigh, CHigh);
+//    HighPart = DAG.getNode(ISD::ADD, dl, MVT::i32,
+//                                   HighPart, AHighBLowCLowHigh);
+//    
+//    HighPart = DAG.getNode(ISD::ADD, dl, MVT::i32, D, HighPart);
+//    
+//    return HighPart;
+//}
+
+SDValue VEXTargetLowering::LowerMULHU(SDValue Op, SelectionDAG &DAG) const {
+    
+    DEBUG(errs() << "LowerMULHU!\n");
+    SDLoc dl = SDLoc(Op.getNode());
+    
+    SDValue LHS = Op.getOperand(0);
+    SDValue RHS = Op.getOperand(1);
+    
+    SDValue ShiftImm = DAG.getTargetConstant(16, MVT::i32);
+    SDValue MaskImm = DAG.getConstant(0xffff, MVT::i32);
+    
+    SDValue t, w3, k, w2, w1;
+    
+    t = DAG.getNode(VEXISD::MPYLLU, dl, MVT::i32, LHS, RHS);
+    w3 = DAG.getNode(ISD::AND, dl, MVT::i32, t, MaskImm);
+    k = DAG.getNode(ISD::SRL, dl, MVT::i32, t, ShiftImm);
+    
+    t = DAG.getNode(VEXISD::MPYLHU, dl, MVT::i32, LHS, RHS);
+    t = DAG.getNode(ISD::ADD, dl, MVT::i32, t, k);
+    w2 = DAG.getNode(ISD::AND, dl, MVT::i32, t, MaskImm);
+    w1 = DAG.getNode(ISD::SRL, dl, MVT::i32, t, ShiftImm);
+    
+    t = DAG.getNode(VEXISD::MPYLHU, dl, MVT::i32, RHS, LHS);
+    t = DAG.getNode(ISD::ADD, dl, MVT::i32, t, w2);
+    k = DAG.getNode(ISD::SRL, dl, MVT::i32, t, ShiftImm);
+    
+    t = DAG.getNode(VEXISD::MPYHHU, dl, MVT::i32, LHS, RHS);
+    t = DAG.getNode(ISD::ADD, dl, MVT::i32, t, w1);
+    t = DAG.getNode(ISD::ADD, dl, MVT::i32, t, k); 
+    
+    return t;
 }
 
 SDValue VEXTargetLowering::LowerSDIV(SDValue Op, SelectionDAG &DAG) const {
