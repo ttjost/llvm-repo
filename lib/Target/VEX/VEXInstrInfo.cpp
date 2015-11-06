@@ -66,7 +66,18 @@ void VEXInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
                     // I think this is a better solution.
                     MachineFunction *MF = MBB.getParent();
                     MachineRegisterInfo &MRI = MF->getRegInfo();
-                    unsigned Reg = MRI.createVirtualRegister(&VEX::BrRegsRegClass);
+//                    unsigned Reg = MRI.createVirtualRegister(&VEX::GPRegsRegClass);
+                    
+                    // TODO: Is there a better way of doing this?
+                    unsigned Reg = 0;
+                    for (Reg = VEX::Reg11 ; Reg < VEX::Reg63; ++Reg) {
+                        if (!MBB.isLiveIn(Reg))
+                            break;
+                    }
+                    
+                    if (!Reg)
+                        llvm_unreachable("CopyPhysReg Method: There is no more Register Available.");
+                    
                     BuildMI(MBB, MI, DL, get(VEX::MFB), Reg).addReg(SrcReg, getKillRegState(KillSrc));
                     BuildMI(MBB, MI, DL, get(VEX::MTB), DestReg).addReg(Reg);
                     return;

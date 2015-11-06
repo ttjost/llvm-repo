@@ -56,6 +56,10 @@ public:
 
     // Return GPR Register Class
     const TargetRegisterClass *intRegClass(unsigned Size);
+    
+    bool trackLivenessAfterRegAlloc(const MachineFunction &MF) const override {
+        return true;
+    }
 
 };
 
