@@ -35,6 +35,9 @@ using namespace llvm;
 #include "VEXGenDFAPacketizer.inc"
 //#include "VEXSubtargetInfo.cpp"
 
+cl::opt<bool> isHPCompiler("hp-compiler",
+                            cl::Hidden, cl::desc("Compiling for HP Compiler"));
+
 //@VEXInstrInfo(){
 VEXInstrInfo::VEXInstrInfo(const VEXSubtarget &STI) : Subtarget(STI), RI(STI) {
     DEBUG(errs() << "InstrInfo \n");
@@ -112,6 +115,24 @@ bool VEXInstrInfo::expandPostRAPseudo(MachineBasicBlock::iterator MI) const {
 //            const VEXFrameLowering* FrameLowering = Subtarget.getFrameLowering<VEXFrameLowering>();
             int StackSize = MF.getFrameInfo()->getStackSize() == 0 ? 0 : RoundUpToAlignment(MF.getFrameInfo()->getStackSize() + 16, 32);
             BuildMI(MBB, MI, MI->getDebugLoc(), get(VEX::RET)).addReg(VEX::Reg1).addReg(VEX::Reg1).addImm(StackSize).addReg(VEX::Lr);
+            MBB.erase(MI);
+            break;
+        }
+        case VEX::PSEUDO_TCALL:
+        {
+            DEBUG(errs() << "\nReplacing PSEUDO_TAILCALL\n");
+            //            const VEXSubtarget* Subtarget = MF.getSubtarget<VEXSubtarget>();
+            //            const VEXFrameLowering* FrameLowering = Subtarget.getFrameLowering<VEXFrameLowering>();
+            int StackSize = MF.getFrameInfo()->getStackSize() == 0 ? 0 : RoundUpToAlignment(MF.getFrameInfo()->getStackSize() + 16, 32);
+            BuildMI(MBB, MI, MI->getDebugLoc(), get(VEX::ADDi), VEX::Reg1).addReg(VEX::Reg1).addImm(StackSize);
+            
+            unsigned Opcode;
+            if (isHPCompiler)
+                Opcode = VEX::CALL;
+            else
+                Opcode = VEX::GOTO;
+            
+            BuildMI(MBB, MI, MI->getDebugLoc(), get(Opcode)).addOperand(MI->getOperand(0));
             MBB.erase(MI);
             break;
         }

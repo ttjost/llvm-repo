@@ -26,7 +26,7 @@ VEXMCAsmInfo::VEXMCAsmInfo(StringRef TT) {
         isNewScheduling = false;
 
     AlignmentIsInBytes          = true;
-    LabelSuffix                 = "::";
+    LabelSuffix                 = ":";
     
     ZeroDirective               = "\t.skip\t";
     AscizDirective              = nullptr;

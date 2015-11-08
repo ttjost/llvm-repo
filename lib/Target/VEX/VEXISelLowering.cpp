@@ -54,6 +54,7 @@ const char *VEXTargetLowering::getTargetNodeName(unsigned Opcode) const {
         case VEXISD::WRAPPER:       return "VEXISD::WRAPPER";
         case VEXISD::PSEUDO_RET:    return "VEXISD::PSEUDO_RET";
         case VEXISD::PSEUDO_CALL:   return "VEXISD::PSEUDO_CALL";
+        case VEXISD::PSEUDO_TAILCALL:   return "VEXISD::PSEUDO_TAILCALL";
             
             
         case VEXISD::MAX:           return "VEXISD::MAX";
@@ -97,10 +98,6 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     addRegisterClass(MVT::i32, &VEX::GPRegsRegClass);
     addRegisterClass(MVT::i1, &VEX::BrRegsRegClass);
     
-    // must, computeRegisterProperties - Once all of the register classes are
-    //  added, this allows us to compute derived properties we expose.
-    computeRegisterProperties(STI.getRegisterInfo());
-    
     setOperationAction(ISD::SIGN_EXTEND_INREG, MVT::i1, Expand);
     
     // Load extented operations for i1 types must be promoted
@@ -109,6 +106,9 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
         setLoadExtAction(ISD::ZEXTLOAD, VT, MVT::i1,  Promote);
         setLoadExtAction(ISD::SEXTLOAD, VT, MVT::i1,  Promote);
     }
+    
+    setOperationAction(ISD::LOAD, MVT::i1, Custom);
+    setOperationAction(ISD::STORE, MVT::i1, Custom);
     
     setOperationAction(ISD::SDIV, MVT::i32, Custom);
     setOperationAction(ISD::UDIV, MVT::i32, Custom);
@@ -120,7 +120,7 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
 //    setOperationAction(ISD::ANY_EXTEND, MVT::i16, Promote);
     
     // See LowerConstant to see the reason for customizing i1 ISD::Constant
-    setOperationAction(ISD::Constant, MVT::i1, Promote);
+//    setOperationAction(ISD::Constant, MVT::i1, Promote);
     setOperationAction(ISD::TRUNCATE, MVT::i1, Promote);
     setOperationAction(ISD::SETCC, MVT::i1, Promote);
     setOperationAction(ISD::SELECT, MVT::i1, Promote);
@@ -131,7 +131,7 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     setOperationAction(ISD::SELECT_CC, MVT::i32, Expand);
     setOperationAction(ISD::SELECT_CC, MVT::Other, Expand);
     
-    setOperationAction(ISD::MUL, MVT::i16, Custom);
+    setOperationAction(ISD::MUL, MVT::i16, Promote);
     setOperationAction(ISD::MUL, MVT::i32, Custom);
 
 //    setOperationAction(ISD::ADDC, MVT::i32, Expand);
@@ -145,8 +145,11 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     setOperationAction(ISD::OR, MVT::i1, Promote);
     setOperationAction(ISD::AND, MVT::i1, Promote);
     
-    setOperationAction(ISD::BR_CC, MVT::i1, Promote);
-    setOperationAction(ISD::BR_CC, MVT::i8, Promote);
+    setOperationAction(ISD::BR_JT,            MVT::Other, Expand);
+    setOperationAction(ISD::BRIND,            MVT::Other, Expand);
+    
+    setOperationAction(ISD::BR_CC, MVT::i1, Expand);
+    setOperationAction(ISD::BR_CC, MVT::i8, Expand);
     setOperationAction(ISD::BR_CC, MVT::i16, Promote);
     setOperationAction(ISD::BR_CC, MVT::i32, Expand);
     setOperationAction(ISD::ROTL,  MVT::i32, Expand);
@@ -172,7 +175,6 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     setOperationAction(ISD::SRA, MVT::i64, Expand);
     setOperationAction(ISD::SRL, MVT::i64, Expand);
     
-    
     // Lower
     setOperationAction(ISD::SMUL_LOHI, MVT::i32, Expand);
     setOperationAction(ISD::UMUL_LOHI, MVT::i32, Expand);
@@ -188,6 +190,12 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     setOperationAction(ISD::ExternalSymbol, MVT::i8, Promote);
     setOperationAction(ISD::ExternalSymbol, MVT::i16, Promote);
     setOperationAction(ISD::ExternalSymbol, MVT::i32, Custom);
+    
+    setOperationAction(ISD::CTTZ,  MVT::i32, Expand);
+    setOperationAction(ISD::CTPOP,  MVT::i32, Expand);
+    setOperationAction(ISD::CTLZ,  MVT::i32, Expand);
+    setOperationAction(ISD::CTTZ_ZERO_UNDEF  , MVT::i32  , Expand);
+    setOperationAction(ISD::CTLZ_ZERO_UNDEF  , MVT::i32  , Expand);
 
     // Perform DAG Combination of certain instructions
     setTargetDAGCombine(ISD::SELECT);
@@ -197,6 +205,9 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     // This should be enable when we implement the VLIW Packetizer
     setSchedulingPreference(Sched::VLIW);
     
+    // must, computeRegisterProperties - Once all of the register classes are
+    //  added, this allows us to compute derived properties we expose.
+    computeRegisterProperties(STI.getRegisterInfo());
 }
 
 SDValue VEXTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) const {
@@ -220,6 +231,8 @@ SDValue VEXTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) const {
         case ISD::UREM:                 return LowerUREM(Op, DAG);
         case ISD::SREM:                 return LowerSREM(Op, DAG);
 //        case ISD::SETCC:                return LowerSETCC(Op, DAG);
+        case ISD::LOAD:                 return LowerLOAD(Op, DAG);
+        case ISD::STORE:                return LowerSTORE(Op, DAG);
         default:
             break;
     }
@@ -320,6 +333,52 @@ static SDValue convertValVTToLocVT(SelectionDAG &DAG, SDLoc DL,
     }
 }
 
+/// IsEligibleForTailCallOptimization - Check whether the call is eligible
+/// for tail call optimization. Targets which want to do tail call
+/// optimization should implement this function.
+bool VEXTargetLowering::IsEligibleForTailCallOptimization(SDValue Callee,
+                                                              CallingConv::ID CalleeCC,
+                                                              bool isVarArg,
+                                                              bool isCalleeStructRet,
+                                                              bool isCallerStructRet,
+                                                              const SmallVectorImpl<ISD::OutputArg> &Outs,
+                                                              const SmallVectorImpl<SDValue> &OutVals,
+                                                              const SmallVectorImpl<ISD::InputArg> &Ins,
+                                                              SelectionDAG& DAG) const {
+    const Function *CallerF = DAG.getMachineFunction().getFunction();
+    CallingConv::ID CallerCC = CallerF->getCallingConv();
+    bool CCMatch = CallerCC == CalleeCC;
+    
+    // ***************************************************************************
+    //  Look for obvious safe cases to perform tail call optimization that do not
+    //  require ABI changes.
+    // ***************************************************************************
+    
+    // If this is a tail call via a function pointer, then don't do it!
+    if (!(dyn_cast<GlobalAddressSDNode>(Callee))
+        && !(dyn_cast<ExternalSymbolSDNode>(Callee))) {
+        return false;
+    }
+    
+    // Do not optimize if the calling conventions do not match.
+    if (!CCMatch)
+        return false;
+    
+    // Do not tail call optimize vararg calls.
+    if (isVarArg)
+        return false;
+    
+    // Also avoid tail call optimization if either caller or callee uses struct
+    // return semantics.
+    if (isCalleeStructRet || isCallerStructRet)
+        return false;
+    
+    // In addition to the cases above, we also disable Tail Call Optimization if
+    // the calling convention code that at least one outgoing argument needs to
+    // go on the stack. We cannot check that here because at this point that
+    // information is not available.
+    return true;
+}
 
 SDValue
 VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
@@ -339,8 +398,10 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
     bool IsVarArg = CLI.IsVarArg;
     MachineFunction &MF = DAG.getMachineFunction();
     EVT PtrVT = getPointerTy();
-//    bool &IsTailCall = CLI.IsTailCall;
-    bool IsTailCall = false;
+    bool &IsTailCall = CLI.IsTailCall;
+//    bool IsTailCall = false;
+    
+    bool IsStructRet    = (Outs.empty()) ? false : Outs[0].Flags.isSRet();
 
     // Analyze the operands of the call, assigning locations to each operand.
     SmallVector<CCValAssign, 16> ArgLocs;
@@ -349,14 +410,36 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
 
     // Get a count of how many bytes are to be pushed on to the stack.
     unsigned NumBytes = ArgCCInfo.getNextStackOffset();
+    
+    if(IsTailCall) {
+        bool StructAttrFlag =
+        DAG.getMachineFunction().getFunction()->hasStructRetAttr();
+        IsTailCall = IsEligibleForTailCallOptimization(Callee, CallConv,
+                                                       IsVarArg, IsStructRet,
+                                                       StructAttrFlag,
+                                                       Outs, OutVals, Ins, DAG);
+        for (unsigned i = 0, e = ArgLocs.size(); i != e; ++i){
+            CCValAssign &VA = ArgLocs[i];
+            if (VA.isMemLoc()) {
+                IsTailCall = false;
+                break;
+            }
+        }
+        if (IsTailCall) {
+            DEBUG(dbgs () << "Eligible for Tail Call\n");
+        } else {
+            DEBUG(dbgs () <<
+                  "Argument must be passed on stack. Not eligible for Tail Call\n");
+        }
+    }
 
     // Mark the start of the call.
     if (!IsTailCall)
         Chain = DAG.getCALLSEQ_START(Chain,
                                      DAG.getConstant(NumBytes, PtrVT, true),
                                      DL);
-    else
-        llvm_unreachable("Target does not yet support Tail Calls.");
+//    else
+//        llvm_unreachable("Target does not yet support Tail Calls.");
 
     // Copy argument values to their designated locations.
     SmallVector<std::pair<unsigned, SDValue>, 10> RegsToPass;
@@ -368,6 +451,8 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
         SDValue ArgValue = OutVals[I];
 
         if (VA.getLocInfo() == CCValAssign::Indirect) {
+            
+            if (!IsTailCall) {
             // Store the argument in a stack slot and pass its address.
             SDValue SpillSlot = DAG.CreateStackTemporary(VA.getValVT());
             int FI = cast<FrameIndexSDNode>(SpillSlot)->getIndex();
@@ -375,6 +460,13 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
                                                MachinePointerInfo::getFixedStack(FI),
                                                false, false, 0));
             ArgValue = SpillSlot;
+            } else {
+                MachineFrameInfo *MFI = DAG.getMachineFunction().getFrameInfo();
+                int FI = MFI->CreateFixedObject(ArgValue.getValueSizeInBits() / 8, VA.getLocMemOffset(), false);
+                SDValue FIN = DAG.getFrameIndex(FI, getPointerTy());
+                return DAG.getStore(Chain, DL, ArgValue, FIN, MachinePointerInfo(),
+                                    /*isVolatile=*/ true, false, 0);
+            }
         }else
             ArgValue = convertValVTToLocVT(DAG, DL, VA, ArgValue);
 
@@ -406,10 +498,31 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
     }
 
     // Build a sequence of copy-to-reg nodes, chained and glued together.
-    for (unsigned I = 0, E = RegsToPass.size(); I != E; ++I) {
-        Chain = DAG.getCopyToReg(Chain, DL, RegsToPass[I].first,
-                                 RegsToPass[I].second, Glue);
-        Glue = Chain.getValue(1);
+    if (!IsTailCall) {
+        for (unsigned I = 0, E = RegsToPass.size(); I != E; ++I) {
+            Chain = DAG.getCopyToReg(Chain, DL, RegsToPass[I].first,
+                                     RegsToPass[I].second, Glue);
+            Glue = Chain.getValue(1);
+        }
+    }
+    
+    // For tail calls lower the arguments to the 'real' stack slot.
+    if (IsTailCall) {
+        // Force all the incoming stack arguments to be loaded from the stack
+        // before any new outgoing arguments are stored to the stack, because the
+        // outgoing stack slots may alias the incoming argument stack slots, and
+        // the alias isn't otherwise explicit. This is slightly more conservative
+        // than necessary, because it means that each store effectively depends
+        // on every argument instead of just those arguments it would clobber.
+        //
+        // Do not flag preceding copytoreg stuff together with the following stuff.
+        Glue = SDValue();
+        for (unsigned i = 0, e = RegsToPass.size(); i != e; ++i) {
+            Chain = DAG.getCopyToReg(Chain, DL, RegsToPass[i].first,
+                                     RegsToPass[i].second, Glue);
+            Glue = Chain.getValue(1);
+        }
+        Glue = SDValue();
     }
 
     // The first call operand is the chain and the second is the target address.
@@ -435,6 +548,9 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
 
     // Emit the Call.
     SDVTList NodeTys = DAG.getVTList(MVT::Other, MVT::Glue);
+    
+    if (IsTailCall)
+        return DAG.getNode(VEXISD::PSEUDO_TAILCALL, DL, NodeTys, Ops);
 
     Chain = DAG.getNode(VEXISD::PSEUDO_CALL, DL, NodeTys, Ops);
     Glue = Chain.getValue(1);
@@ -681,6 +797,46 @@ SDValue VEXTargetLowering::LowerExternalSymbol(SDValue Op, SelectionDAG &DAG) co
 //    return DAG.getNode(Op.getOpcode(), dl, MVT::i1, lhs, rhs, cond);
 //}
 
+SDValue VEXTargetLowering::LowerLOAD(SDValue Op, SelectionDAG &DAG) const {
+
+    assert(Op.getValueType() == MVT::i1 &&
+           "Custom lowering only for i1 loads");
+    
+    // First, load 8 bits into 32 bits, then truncate to 1 bit.
+    
+    SDLoc dl(Op);
+    LoadSDNode *LD = cast<LoadSDNode>(Op);
+    
+    SDValue Chain = LD->getChain();
+    SDValue BasePtr = LD->getBasePtr();
+    MachineMemOperand *MMO = LD->getMemOperand();
+    
+    SDValue NewLD = DAG.getExtLoad(ISD::EXTLOAD, dl, getPointerTy(), Chain,
+                                   BasePtr, MVT::i8, MMO);
+    SDValue Result = DAG.getNode(ISD::TRUNCATE, dl, MVT::i1, NewLD);
+    
+    SDValue Ops[] = { Result, SDValue(NewLD.getNode(), 1) };
+    return DAG.getMergeValues(Ops, dl);
+}
+
+SDValue VEXTargetLowering::LowerSTORE(SDValue Op, SelectionDAG &DAG) const {
+    
+    assert(Op.getOperand(1).getValueType() == MVT::i1 &&
+           "Custom lowering only for i1 stores");
+    
+    // First, zero extend to 32 bits, then use a truncating store to 8 bits.
+    
+    SDLoc dl(Op);
+    StoreSDNode *ST = cast<StoreSDNode>(Op);
+    
+    SDValue Chain = ST->getChain();
+    SDValue BasePtr = ST->getBasePtr();
+    SDValue Value = ST->getValue();
+    MachineMemOperand *MMO = ST->getMemOperand();
+    
+    Value = DAG.getNode(ISD::ZERO_EXTEND, dl, getPointerTy(), Value);
+    return DAG.getTruncStore(Chain, dl, Value, BasePtr, MVT::i8, MMO);
+}
 
 // We should lower ADDE and ADDC instructions to ADDCG.
 SDValue VEXTargetLowering::LowerADDSUBWithFlags(SDValue Op, SelectionDAG &DAG) const {

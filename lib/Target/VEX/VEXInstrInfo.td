@@ -371,6 +371,13 @@ def PSEUDO_RET : Pseudo<(outs), (ins) , [(VEXPseudoRet)]>{
     let isReturn = 1;
 }
 
+def PSEUDO_TCALL : Pseudo<(outs), (ins i32imm:$offset), [(VEXPseudoTailCall imm:$offset)]> {
+    let isTerminator = 1;
+    let isBarrier = 1;
+    let isReturn = 1;
+    let isCall = 1;
+}
+
 def ADJCALLSTACKDOWN : Pseudo<(outs), (ins imm32Op:$amt),
                               [(VEXCallseq_start timm:$amt)],
                               "#ADJCALLSTACKDOWN">;
@@ -672,9 +679,6 @@ let isCall = 1 in {
 def CALL      : InstVEX<(outs), (ins i32imm:$offset),
                         "call $$l0.0 = $offset",
                         [(VEXPseudoCall imm:$offset)], IIBranch>;
-def TAILCALL      : InstVEX<(outs), (ins i32imm:$offset),
-                        "call $$l0.0 = $offset",
-                        [(VEXPseudoTailCall imm:$offset)], IIBranch>;
 }
 
 //===----------------------------------------------------------------------===//
@@ -711,15 +715,24 @@ def : Pat<(add (shl GPRegs:$lhs, (i32 3)), i32:$rhs), (SH3ADDi GPRegs:$lhs, i32:
 def : Pat<(add (shl GPRegs:$lhs, (i32 4)), i32:$rhs), (SH4ADDi GPRegs:$lhs, i32:$rhs)>;
 
 // truncs
-def : Pat<(i1 (trunc GPRegs:$src)), (MTB GPRegs:$src)>;
+def : Pat<(i32 (extloadi1 ADDR:$addr)), (LDBU ADDR:$addr)>;
+def : Pat<(i32 (extloadi8 ADDR:$addr)), (LDBU ADDR:$addr)>;
+def : Pat<(i32 (extloadi16 ADDR:$addr)), (LDHU ADDR:$addr)>;
 
-//def : Pat<(extloadi8 ADDR:$addr), (LDBU ADDR:$addr)>;
-//def : Pat<(extloadi16 ADDR:$addr), (LDBU ADDR:$addr)>;
+def : Pat<(i32 (zextloadi1 ADDR:$addr)), (LDBU ADDR:$addr)>;
+def : Pat<(i32 (zextloadi8 ADDR:$addr)), (LDBU ADDR:$addr)>;
+def : Pat<(i32 (zextloadi16 ADDR:$addr)), (LDHU ADDR:$addr)>;
+
+def : Pat<(i32 (sextloadi1 ADDR:$addr)), (LDB ADDR:$addr)>;
+def : Pat<(i32 (sextloadi8 ADDR:$addr)), (LDB ADDR:$addr)>;
+def : Pat<(i32 (sextloadi16 ADDR:$addr)), (LDH ADDR:$addr)>;
 
 def : Pat<(i32 (VEXWrapper tglobaladdr:$dst)), (MOVi tglobaladdr:$dst)>;
 def : Pat<(i32 (VEXWrapper texternalsym:$dst)), (MOVi texternalsym:$dst)>;
 def : Pat<(i32 (VEXWrapper externalsym:$dst)), (MOVi texternalsym:$dst)>;
 def : Pat<(i32 (VEXWrapper tblockaddress:$dst)), (MOVi tblockaddress:$dst)>;
+
+def : Pat<(i1 (trunc GPRegs:$src)), (MTB GPRegs:$src)>;
 
 //def : Pat<(zext BrRegs:$node), (MFB BrRegs:$node)>;
 
@@ -740,14 +753,17 @@ def : Pat<(VEXPseudoCall (i32 texternalsym:$dst)),
 def : Pat<(VEXPseudoCall (VEXWrapper texternalsym:$dst)),
             (CALL texternalsym:$dst)>;
 
+def : Pat<(VEXPseudoCall LrReg:$dst),
+            (CALL LrReg:$dst)>;
+
 // TODO: Is this correct?
 // Tail Call
 
 def : Pat<(VEXPseudoTailCall (VEXWrapper tglobaladdr:$dst)),
-            (TAILCALL tglobaladdr:$dst)>;
+            (PSEUDO_TCALL tglobaladdr:$dst)>;
 
 def : Pat<(VEXPseudoTailCall (i32 tglobaladdr:$dst)),
-            (TAILCALL tglobaladdr:$dst)>;
+            (PSEUDO_TCALL tglobaladdr:$dst)>;
 
 //include "VEXInstrVIS.td"
 //include "VEXInstrAliases.td"
