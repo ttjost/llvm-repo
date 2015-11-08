@@ -99,6 +99,7 @@ public:
     void reserveResourcesForLongImmediate (MachineBasicBlock::iterator MI);
     bool isLongImmediate(int64_t Immediate);
 
+    void clearHazardTable();
 };
 
 }
@@ -328,6 +329,10 @@ void VEXPacketizerList::AdvanceCycle() {
     return;
 }
 
+void VEXPacketizerList::clearHazardTable() {
+    DataHazards.clear();
+}
+
 bool VEXPacketizer::runOnMachineFunction(MachineFunction &MF) {
     
     if (EnableVLIWScheduling)
@@ -398,6 +403,8 @@ bool VEXPacketizer::runOnMachineFunction(MachineFunction &MF) {
                 RegionEnd = std::prev(RegionEnd);
                 continue;
             }
+            
+            Packetizer.clearHazardTable();
 
             Packetizer.PacketizeMIs(MBB, I, RegionEnd);
             RegionEnd = I;
