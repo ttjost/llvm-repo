@@ -28,7 +28,10 @@
 */
 
 //#include "XPP.h"
+
+#ifdef C
 #include <stdio.h>
+#endif
 
 // decoder input length
 #define N 189
@@ -41,6 +44,8 @@
     -27857, 3928, 6920, -20217, -19214, -12047, 25103,
     -28048, 26456, -22282
 };
+
+short old_ref[24] = {-21732, 10862, 4657, 26443, -11745, 2092, -9724, 10041, -17858, -22675, -13013, -4021, -15837, -5811, -27857, 3928, 6920, -20217, -19214, -12047, 25103, -28048, 26456, -22282};
 
 
 short sd[2*N+1] = {
@@ -141,12 +146,6 @@ void vitgsm(int n, short old[], short new_s[], short trans[], short m[], short s
   }
 
 
-int c;
-
-for (c=0; c < 24; c++)
-{
-	printf("%d, ", old[c]);
-}
 
 }
 
@@ -168,5 +167,24 @@ old e sd definidos no início
 n, new_s, trans e m definidos acima
 */
 
- return 0;
+ 
+int c;
+ 
+ for (c=0; c < 24; c++)
+{
+  if (old[c] != old_ref[c])
+    {
+      #ifdef C
+	printf("%d, ", old[c]);
+	#endif
+	
+	return 666;
+    }
+}
+
+ #ifdef C
+ printf("-1\n");
+ #endif
+
+ return -1;
 }

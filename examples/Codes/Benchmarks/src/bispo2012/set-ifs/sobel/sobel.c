@@ -1,6 +1,9 @@
 #define COLS 32
 #define ROWS 32
+
+#ifdef C
 #include <stdio.h>
+#endif
 
 const unsigned char in[COLS*ROWS] = {
     96, 56, 122, -66, -10, 58, -73, 3, 62, 109, 43, 75, 35, 77, 47, 88, 8, 7, -14, -15,
@@ -235,10 +238,14 @@ IMG_sobel_c(in,/* Input image data */ out,/* Output image data */cols, rows /* I
 	for (control = 1; control < cols*(rows-2) - 2; control++)    //(rows-2) - 2
 	{
 		if (out[control] != out_comp[control])
-		{	
+		{
+		  #ifdef C
 			printf ("666\n");
 			printf ("out: %d, out_comp: %d, indice: %d\n", out[control], out_comp[control], control);
+			#endif
+			
 			return 666;
+		      
 			
 		}		
 		//printf ("%d, ", out[control]);
@@ -246,7 +253,10 @@ IMG_sobel_c(in,/* Input image data */ out,/* Output image data */cols, rows /* I
 	//teste de comparação entre out e out_comp
 	//out_comp foi feito de acordo com o output usando gcc
 	//não testar o primeiro elemente de out
+	#ifdef C
 	printf ("-1\n");
+	#endif
+	
 	return -1;
 }
 

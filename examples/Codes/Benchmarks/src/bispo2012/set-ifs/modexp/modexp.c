@@ -1,5 +1,9 @@
 /* De CLRS, pg. 879  / Wikipedia: modular exponentiation */
 
+#ifdef C
+#include <stdio.h>
+#endif
+
 typedef unsigned int uint32;
 
 #define N_BASES 10
@@ -32,6 +36,8 @@ uint32 modulus[N_MODULUS] = {
 };
 
 uint32 output[N_BASES*N_EXPONENT*N_MODULUS];
+
+#include "output_ref.txt"
 
 /* Pode ter overflow ... */
 uint32 modular_pow(uint32 base, uint32 exponent, uint32 modulus)
@@ -70,10 +76,26 @@ int main()
 			}
 		}
 	}
-  //r = modular_pow(6, 21, 1000);
-  //r = modular_pow(6, 21, 657);
-  //printf("%d^%d mod %d = %d\n", b, a, x, r);
-  return 0;
+
+	for(i = 0; i < (N_BASES*N_EXPONENT*N_MODULUS); i++)
+	  {
+	    if (output[i] != output_ref[i])
+	      {
+#ifdef C
+		printf("%d, %d", output[i], i);
+#endif
+		printf("\n Error \n");
+		return 666;
+	      }
+	  }
+	//r = modular_pow(6, 21, 1000);
+	//r = modular_pow(6, 21, 657);
+	//printf("%d^%d mod %d = %d\n", b, a, x, r);
+
+#ifdef C
+	printf("-1\n");
+#endif
+	return -1;
 }
 
 /*

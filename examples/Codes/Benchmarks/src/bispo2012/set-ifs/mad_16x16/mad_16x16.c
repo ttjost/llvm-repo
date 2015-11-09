@@ -2,6 +2,10 @@
 // V must be multiple of 2
 #define V 16
 
+#ifdef C
+#include <stdio.h>
+#endif
+
 const unsigned char refImg[(H+16)*(V+16)] = {
     96, 56, 122, -66, -10, 58, -73, 3, 62, 109, 43, 75, 35, 77, 47, 88, 8, 7, -14, -15,
     15, 112, 88, -10, -104, 56, 31, -76, 8, 95, 67, 122, -53, -25, -92, 108, -101, -54, -27, -106,
@@ -170,14 +174,9 @@ const unsigned char srcImg[256] = {
 /*                           All Rights Reserved.                           */
 /* ======================================================================= */
 
-void IMG_mad_16x16_c
-(
-    const unsigned char* refImg,
-    const unsigned char* srcImg,
-    int pitch,
-    int h, int v,
-    unsigned int* match
-)
+unsigned match_ref[2] = {393224, 19322};
+
+void IMG_mad_16x16_c(const unsigned char* refImg,const unsigned char* srcImg,int pitch,int h, int v,unsigned int* match)
 {
     int i, j, x, y, matx, maty;
     unsigned matpos, matval;
@@ -215,16 +214,22 @@ int main() {
     int h = H; int v = V;
     unsigned int match[2];
 
-IMG_mad_16x16_c
-(
-    refImg,
-    srcImg,
-    pitch,
-    h, v,
-    match
-);
+IMG_mad_16x16_c(refImg, srcImg, pitch, h, v, match);
 
-	return 0;
+  if ((match[0] != match_ref[0]) || (match[1] != match[1]))
+    {
+      #ifdef C
+      printf("%d, %d", match[0],match[1]);
+      #endif
+      return 666;
+    }
+
+  #ifdef C
+  printf("-1\n");
+  #endif
+  
+  return -1;
+ 
 }
 
 /* ======================================================================= */

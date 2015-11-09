@@ -1,5 +1,8 @@
+#ifdef C
 #include <stdio.h>
-#include <stdlib.h>
+#endif
+
+//#include <stdlib.h>
 
 typedef unsigned char Xuint8;
 typedef unsigned long Xuint32;
@@ -48,6 +51,8 @@ Xuint8 imageR[N_ELEM] = {
     93, 109, 121, -102, -46, 26, -13,
     -8, -108
 };
+
+Xuint8 image_ref[N_ELEM] = {217, 177, 243, 255, 255, 179, 255, 124, 183, 230, 164, 196, 156, 198, 168, 209, 129, 128, 255, 255, 136, 233, 209, 255, 255, 177, 152, 255, 129, 216, 188, 243, 255, 255, 255, 229, 255, 255, 255, 255, 122, 167, 255, 189, 149, 255, 255, 255, 255, 255, 255, 180, 154, 255, 255, 255, 255, 255, 255, 255, 128, 255, 235, 142, 255, 164, 240, 255, 229, 246, 255, 255, 255, 231, 197, 255, 255, 133, 231, 255, 255, 211, 255, 196, 252, 185, 179, 223, 255, 255, 255, 255, 193, 237, 210, 255, 132, 166, 255, 255};
 
 // Seed 2
 signed char deltas[N_DELTA] = {
@@ -103,8 +108,18 @@ int main() {
 
 	for (i=0; i < nelem; i++)
 	{
-		printf("%lu, ", imageR[i]);
+	  if(imageR[i] != image_ref[i])
+	    {
+	      #ifdef C
+	       printf("%lu, ", imageR[i]);
+	       #endif
+	       return 666;
+	    }
 	}
 
-	return 0;
+	#ifdef C
+	printf ("-1\n");
+	#endif
+
+	return -1;
 }

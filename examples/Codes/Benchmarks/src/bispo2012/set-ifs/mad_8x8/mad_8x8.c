@@ -1,6 +1,10 @@
 #define X 16
 #define Y 16
 
+#ifdef C
+#include <stdio.h>
+#endif
+
 const unsigned char refImg[(X+8)*(Y+8)] = {
     96, 56, 122, -66, -10, 58, -73, 3, 62, 109, 43, 75, 35, 77, 47, 88, 8, 7, -14, -15,
     15, 112, 88, -10, -104, 56, 31, -76, 8, 95, 67, 122, -53, -25, -92, 108, -101, -54, -27, -106,
@@ -140,13 +144,9 @@ const unsigned char srcImg[8*8] = {
 /*                           All Rights Reserved.                           */
 /* ======================================================================== */
 
-void IMG_mad_8x8_c
-(
-    const unsigned char *refImg,
-    const unsigned char *srcImg,
-    int pitch, int sx, int sy,
-    unsigned int *motvec
-)
+unsigned int motvec_ref[2] = {524300, 4026};
+
+void IMG_mad_8x8_c(const unsigned char *refImg, const unsigned char *srcImg, int pitch, int sx, int sy, unsigned int *motvec)
 {
     int i, j, x, y, matx, maty;
     unsigned matpos, matval;
@@ -176,23 +176,29 @@ void IMG_mad_8x8_c
     motvec[1] = matval;
 }
 
-int main() {
+int main()
+{
+  int pitch = X+8;
+  int sx = X;
+  int sy = Y;
+  unsigned int motvec[2];
+  
 
+  IMG_mad_8x8_c(refImg, srcImg, pitch, sx, sy, motvec);
 
-    int pitch = X+8; int sx = X; int sy = Y;
-    unsigned int motvec[2];
+  if ((motvec[0] != motvec_ref[0]) || (motvec[1] != motvec[1]))
+    {
+      #ifdef C
+      printf("%d, %d", motvec[0],motvec[1]);
+      #endif
+      return 666;
+    }
 
-
-IMG_mad_8x8_c
-(
-    refImg,
-    srcImg,
-    pitch, sx, sy,
-    motvec
-);
-
-
-	return 0;
+  #ifdef C
+  printf("-1\n");
+  #endif
+  
+  return -1;
 }
 
 /* ======================================================================== */

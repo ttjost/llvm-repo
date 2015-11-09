@@ -1,5 +1,11 @@
 #define N 500
 
+#ifdef C
+#include <stdio.h>
+#endif
+
+#include "output_ref1.txt"
+
 /* Mais geradores de números aleatórios */
 /* Adaptados de: Source: http://random.mat.sbg.ac.at/publics/ftp/pub/software/gen/
    Ficheiro: external.c
@@ -100,18 +106,34 @@ inline prng_num prng_cmrg_get_next_int(struct cmrg_state *g)
   int h, p12, p13, p21, p23;
 
   /* Component 1 */
-  h = g->x10 / 11714;   p13 = 183326 * (g->x10 - h * 11714) - h * 2883;
-  h = g->x11 / 33921;   p12 = 63308 * (g->x11 - h * 33921) - h * 12979;
-  if (p13 < 0) p13 = p13 + 2147483647U; if (p12 < 0) p12 = p12 + 2147483647U;
-  g->x10 = g->x11; g->x11 = g->x12; g->x12 = p12 - p13;
-  if (g->x12 < 0) g->x12 = g->x12+2147483647U;
+  h = g->x10 / 11714;
+  p13 = 183326 * (g->x10 - h * 11714) - h * 2883;
+  h = g->x11 / 33921;
+  p12 = 63308 * (g->x11 - h * 33921) - h * 12979;
+  if (p13 < 0)
+    p13 = p13 + 2147483647U;
+  if (p12 < 0)
+    p12 = p12 + 2147483647U;
+  g->x10 = g->x11;
+  g->x11 = g->x12;
+  g->x12 = p12 - p13;
+  if (g->x12 < 0)
+    g->x12 = g->x12+2147483647U;
 
   /* Component 2 */
-  h = g->x20 / 3976;   p23 = 539608 * (g->x20 - h * 3976) - h * 2071;
-  h = g->x22 / 24919;   p21 = 86098 * (g->x22 - h * 24919) - h * 7417;
-  if (p23 < 0) p23 = p23 + 2145483479; if (p21 < 0) p21 = p21 + 2145483479U;
-  g->x20 = g->x21; g->x21 = g->x22; g->x22 = p21 - p23;
-  if (g->x22 < 0) g->x22 = g->x22+2145483479U;
+  h = g->x20 / 3976;
+  p23 = 539608 * (g->x20 - h * 3976) - h * 2071;
+  h = g->x22 / 24919;
+  p21 = 86098 * (g->x22 - h * 24919) - h * 7417;
+  if (p23 < 0)
+    p23 = p23 + 2145483479;
+  if (p21 < 0)
+    p21 = p21 + 2145483479U;
+  g->x20 = g->x21;
+  g->x21 = g->x22;
+  g->x22 = p21 - p23;
+  if (g->x22 < 0)
+    g->x22 = g->x22+2145483479U;
 
   /* Combination */
   if (g->x12 < g->x22)
@@ -125,7 +147,8 @@ inline prng_num prng_cmrg_get_next_int(struct cmrg_state *g)
 int main() {
 
 
-	int i;
+  int i;
+  unsigned long result[N];
 
 	g.x10 = -1155484576;
 	g.x11 =-723955400;
@@ -134,9 +157,26 @@ int main() {
 	g.x21 = -1557280266;
 	g.x22 = 1327362106;
 
-	for(i=0; i<N; i++) {
-		prng_cmrg_get_next_int(&g);
-	}
+	for(i=0; i<N; i++)
+	  {
+	    result[i] = prng_cmrg_get_next_int(&g);
+	  }
 
-	return 0;
+	int control, control1;
+	for (i = 0; i < N; i++)
+	  {
+	    if (result[i] != output_ref1[i])
+	      {
+#ifdef C
+		printf ("result %lu, ", result[i]);
+#endif
+	        return 666;
+	      }
+	  }
+
+	#ifdef C
+	printf ("-1\n");
+	#endif
+	
+	return -1;
 }

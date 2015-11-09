@@ -25,7 +25,10 @@ Retrieved from: http://en.literateprograms.org/RGB_to_HSV_color_space_conversion
 */
 
 //#include <stdlib.h>
-//#include <stdio.h>
+#ifdef C
+#include <stdio.h>
+#endif
+
 #define N 500
 
 //Seed 0
@@ -235,6 +238,8 @@ struct hsv_color {
     unsigned char val;        /* Value between 0 (black) and 255 */
 };
 
+#include "output_ref.txt"
+
 // output
 struct hsv_color hsv[N];
 
@@ -281,12 +286,31 @@ int main() {
     //rgb.b = (unsigned char)atoi(argv[3]);
 
 
-    for(i=0;i<N;i++) {
+    for(i = 0; i < N; i++) {
 		hsv[i] = rgb_to_hsv(r[i], g[i], b[i]);
+		/*#ifdef C
+		printf ("{%d, %d, %d},", hsv[i].hue, hsv[i].sat, hsv[i].val);
+		#endif*/
 	}
+      //return 0;
     //hsv = rgb_to_hsv(rgb);
+    
+    for(i = 0; i < N; i++)
+      {
+	if((hsv[i].hue != output_ref[i].hue) || (hsv[i].sat != output_ref[i].sat) || ( hsv[i].val != output_ref[i].val))
+	  {
+#ifdef C
+	    printf ("%d, %d, %d \n", hsv[i].hue, hsv[i].sat, hsv[i].val);
+#endif
+	    return 666;
+	  }
+      }
 
+#ifdef C
+    printf("-1\n");
+#endif
+    
     //printf("Hue: %d\nSaturation: %d\nValue: %d\n\n", hsv.hue, hsv.sat, hsv.val);
-    return 0;
+    return -1;
 }
 

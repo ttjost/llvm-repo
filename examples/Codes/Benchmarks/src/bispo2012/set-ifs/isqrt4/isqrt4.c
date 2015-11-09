@@ -1,5 +1,10 @@
 #define LOOP_COUNT 100
 
+#ifdef C
+#include <stdio.h>
+#endif
+
+
 short input[LOOP_COUNT] = {
     -10893, -25384, 3695, -1646, -13060, -18192, -3611,
     -31267, -9771, 2152, -6798, -18414, 23482, 7038,
@@ -18,13 +23,14 @@ short input[LOOP_COUNT] = {
     -16392, 14228
 };
 
-
+int output_ref[LOOP_COUNT] = {37, 0, 0, 0, 0, 0, 0, 0, 8192, -2177, 3748, -62, 10984, -2177, 3680, -62, -19734, -2179, 3600, -62, -32292, 2052, 3608, -62, 10892, -2177, 0, 0, -5288, -2180, 1, 0, 0, 0, 1, 0, 10544, -2177, -19712, -2178, 0, 0, 31040, -2208, 1, 0, 29, 0, 6, 0, 12361, 11444, 0, 0, 3748, -62, 3608, -62, 3600, -62, -32227, 2052, 10544, -2177, 0, 0, 191, 0, -14922, -2199, -1, -1, 3646, -62, 19448, -2207, -28189, -2205, 0, 0, 12361, 11444, 1, 0, -32099, 2052, 9414, -62, 47, 0, -26688, 2052, -31374, 2052, 1, 0, 3844, -62, 3852, -62};
 
 short ssqrt(short vsqn) {
 	int i;
 	short vsq = vsqn, asq = 0, a = 0, tvsq = 0;
+
 	for (i = 0; i < 6; i++) {
-		short nasq = (short) (((asq+a) << 2) | 1);
+	 		short nasq = (short) (((asq+a) << 2) | 1);
 		short sa = (short) (a << 1);
 		tvsq = (short) ((tvsq << 2) | ((vsq >> 10) & 3));
 		vsq = (short) (vsq << 2);
@@ -49,7 +55,26 @@ int main() {
 
 	for(i=0; i<LOOP_COUNT; i++) {
 		output[0] = ssqrt(input[i]);
+		printf("%d, ", output[i]);
 	}
 
+	/*
+	for (i = 0; i < LOOP_COUNT; i++)
+	  {
+	    if (output[i] != output_ref[i])
+	      {
+		#ifdef C
+		printf("%d, %d", output[i], i);
+		#endif
+		return 666;
+	      }
+	  }
+
+	#ifdef C
+	printf("-1\n");
+	#endif
+	*/
 	return 0;
+	
 }
+
