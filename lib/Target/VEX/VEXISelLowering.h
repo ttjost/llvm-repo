@@ -139,6 +139,9 @@ private:
     SDValue LowerUREM(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerADDSUBWithFlags(SDValue Op, SelectionDAG &DAG) const;
     
+    SDValue LowerLOAD(SDValue Op, SelectionDAG &DAG) const;
+    SDValue LowerSTORE(SDValue Op, SelectionDAG &DAG) const;
+    
     SDValue LowerMULHS(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerMULHU(SDValue Op, SelectionDAG &DAG) const;
 
@@ -146,7 +149,17 @@ private:
     LowerCall(CallLoweringInfo &CLI,
                 SmallVectorImpl<SDValue> &InVals) const override;
     
-    //- must be exist even without function all
+    bool IsEligibleForTailCallOptimization(SDValue Callee,
+                                           CallingConv::ID CalleeCC,
+                                           bool isVarArg,
+                                           bool isCalleeStructRet,
+                                           bool isCallerStructRet,
+                                           const SmallVectorImpl<ISD::OutputArg> &Outs,
+                                           const SmallVectorImpl<SDValue> &OutVals,
+                                           const SmallVectorImpl<ISD::InputArg> &Ins,
+                                           SelectionDAG& DAG) const ;
+    
+    //- must exist even without function all
     SDValue
     LowerFormalArguments(SDValue Chain,
                          CallingConv::ID CallConv, bool IsVarArg,

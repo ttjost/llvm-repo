@@ -74,6 +74,7 @@ class VEXPacketizerList : public VLIWPacketizerList {
     
     std::map<SUnit *, unsigned> DataHazards;
     
+    
     const VEXInstrInfo *VEXII;
     const VEXSubtarget* Subtarget;
     const InstrItineraryData *II;
@@ -98,6 +99,7 @@ public:
     void reserveResourcesForLongImmediate (MachineBasicBlock::iterator MI);
     bool isLongImmediate(int64_t Immediate);
 
+    void clearHazardTable();
 };
 
 }
@@ -185,7 +187,7 @@ MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
         for (std::map<SUnit *, unsigned>::iterator Inst = DataHazards.begin(),
              E = DataHazards.end(); Inst != E; ++Inst) {
              SUnit* InstWithLatency = Inst->first;
-    
+            //InstWithLatency->getInstr()->dump();
             if (InstWithLatency->isSucc(SUI))
                 for (SDep dep : InstWithLatency->Succs)
                     if (dep.getSUnit() == SUI) {
@@ -318,15 +320,17 @@ bool VEXPacketizerList::isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ) {
 
 void VEXPacketizerList::AdvanceCycle() {
     
-    for (std::map<SUnit *, unsigned>::iterator Inst = DataHazards.begin(),
-         E = DataHazards.end();
-         Inst != E; ) {
-        if (--Inst->second == 0)
-            Inst = DataHazards.erase(Inst);
-        else
-            ++Inst;
+    for (std::map<SUnit *, unsigned>::iterator Inst = DataHazards.begin();
+         Inst != DataHazards.end(); ) {
+        std::map<SUnit *, unsigned>::iterator thisInst = Inst++;
+        if (--thisInst->second == 0)
+            Inst = DataHazards.erase(thisInst);
     }
     return;
+}
+
+void VEXPacketizerList::clearHazardTable() {
+    DataHazards.clear();
 }
 
 bool VEXPacketizer::runOnMachineFunction(MachineFunction &MF) {
@@ -399,6 +403,8 @@ bool VEXPacketizer::runOnMachineFunction(MachineFunction &MF) {
                 RegionEnd = std::prev(RegionEnd);
                 continue;
             }
+            
+            Packetizer.clearHazardTable();
 
             Packetizer.PacketizeMIs(MBB, I, RegionEnd);
             RegionEnd = I;

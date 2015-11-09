@@ -179,7 +179,7 @@ void VEXAsmPrinter::EmitFunctionEntryLabel() {
     OutStreamer.EmitRawText(".section .text \n.proc \n.entry caller, sp=$r0.1, rl=$l0.0, asize=-" +
                             Twine(StackSize) +
                             ", arg()");
-    OutStreamer.EmitLabel(CurrentFnSym);
+    OutStreamer.EmitRawText(Twine(CurrentFnSym->getName())+"::");
 }
 
 // FIXME : Should this be implemented
