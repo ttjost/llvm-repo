@@ -47,7 +47,7 @@ void VEXInstPrinter::printInst(const MCInst *mi, raw_ostream &O,
                  i != e ; ++i){
                 const MCInst *inst = mi->getOperand(i).getInst();
                 
-                if (inst->getOpcode() == VEX::CALL)
+                if (inst->getOpcode() == VEX::CALL || inst->getOpcode() == VEX::ICALL)
                     printCallDirective(inst, O);
                 else if (inst->getOpcode() == VEX::RET)
                     printReturnDirective(inst, O);
@@ -78,7 +78,7 @@ void VEXInstPrinter::printInst(const MCInst *mi, raw_ostream &O,
                 // printInstruction(mi, O) defined in VEXGenAsmWriter.inc which came from
                 // VEX.td indicate.
                 
-                if (mi->getOpcode() == VEX::CALL)
+                if (mi->getOpcode() == VEX::CALL || mi->getOpcode() == VEX::ICALL)
                     printCallDirective(mi, O);
                 else if (mi->getOpcode() == VEX::RET)
                     printReturnDirective(mi, O);

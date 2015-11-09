@@ -51,5 +51,5 @@ def BrRegs  : RegisterClass<"VEX", [i1], 32, (sequence "BrReg%u", 0, 7)> {
 }
 
 def LrReg   : RegisterClass<"VEX", [i32], 32, (add Lr)> {
-    let isAllocatable = 0;
+ //   let isAllocatable = 0;
 }

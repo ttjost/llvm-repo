@@ -681,6 +681,12 @@ def CALL      : InstVEX<(outs), (ins i32imm:$offset),
                         [(VEXPseudoCall imm:$offset)], IIBranch>;
 }
 
+let isCall = 1 in {
+    def ICALL      : InstVEX<(outs), (ins i32imm:$offset),
+    "icall $$l0.0 = $offset",
+    [(VEXPseudoCall imm:$offset)], IIBranch>;
+}
+
 //===----------------------------------------------------------------------===//
 //                       Non-Instruction Patterns
 //===----------------------------------------------------------------------===//
@@ -753,8 +759,8 @@ def : Pat<(VEXPseudoCall (i32 texternalsym:$dst)),
 def : Pat<(VEXPseudoCall (VEXWrapper texternalsym:$dst)),
             (CALL texternalsym:$dst)>;
 
-def : Pat<(VEXPseudoCall LrReg:$dst),
-            (CALL LrReg:$dst)>;
+def : Pat<(VEXPseudoCall Lr),
+            (ICALL Lr)>;
 
 // TODO: Is this correct?
 // Tail Call
