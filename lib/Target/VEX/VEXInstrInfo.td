@@ -760,7 +760,7 @@ def : Pat<(VEXPseudoCall (VEXWrapper texternalsym:$dst)),
             (CALL texternalsym:$dst)>;
 
 def : Pat<(VEXPseudoCall Lr),
-            (ICALL Lr)>;
+            (CALL Lr)>;
 
 // TODO: Is this correct?
 // Tail Call
