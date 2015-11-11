@@ -50,6 +50,7 @@ namespace llvm {
             MTB,
             
             SLCT,
+            MOV,
             
             MPYLL,
             MPYLLU,

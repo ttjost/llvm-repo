@@ -80,6 +80,9 @@ def brtarget : Operand<OtherVT> {
 def SDT_VEXWrapper : SDTypeProfile <1, 1, [SDTCisSameAs<0, 1>,
                                            SDTCisPtrTy<0>]>;
 
+def SDT_VEXMov : SDTypeProfile <1, 1, [SDTCisSameAs<0, 1>,
+                                    SDTCisInt<0>]>;
+
 def SDT_VEXTWORESULT : SDTypeProfile<2, 3,
                                      [SDTCisSameAs<0, 2>,
                                      SDTCisSameAs<0, 3>,
@@ -104,6 +107,8 @@ def SDT_VEXCallSeqEnd   : SDCallSeqEnd<[SDTCisVT<0, i32>, SDTCisVT<1, i32>]>;
 
 def VEXPseudoRet : SDNode<"VEXISD::PSEUDO_RET", SDTNone,
                           [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
+
+def VEXMov : SDNode<"VEXISD::MOV", SDT_VEXMov>;
 
 def VEXADDCG    : SDNode<"VEXISD::ADDCG", SDT_VEXTWORESULT>;
 def VEXDIVS     : SDNode<"VEXISD::DIVS", SDT_VEXTWORESULT>;
@@ -551,6 +556,11 @@ def : Pat<(i32 imm32:$in),
           (MOVi imm:$in)>;
 def : Pat<(i32 imm:$imm),
           (MOVi imm:$imm)>;
+
+def : Pat<(VEXMov GPRegs:$src),
+            (MOVr GPRegs:$src)>;
+def : Pat<(VEXMov imm:$in),
+            (MOVi imm:$in)>;
 
 // Carry patterns
 def : Pat<(subc GPRegs:$lhs, GPRegs:$rhs),
