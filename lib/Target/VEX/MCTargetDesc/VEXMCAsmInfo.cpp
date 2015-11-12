@@ -60,6 +60,6 @@ VEXMCAsmInfo::VEXMCAsmInfo(StringRef TT) {
     // A Modification in MCAsmStreamer::EmitSymbolAttribute Function was also done.
     // See "case MCSA_Global:". I added a verification if GlobalDirective is nullptr.
     // This maybe a problem in the future, so we need to be aware of that.
-    GlobalDirective             = nullptr;
+    //GlobalDirective             = nullptr;
 
 }
