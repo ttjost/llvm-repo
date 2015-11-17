@@ -322,6 +322,35 @@ IUnit4, IUnit5, IUnit6, IUnit7]>]>,
 InstrItinData<IIBranch      , [InstrStage<1,  [IUnit7]>]>
 ]>;
 
+def Simple8Issue8MemItineraries : ProcessorItineraries<[IUnit0, IUnit1, IUnit2, IUnit3,
+IUnit4, IUnit5, IUnit6, IUnit7], [], [
+InstrItinData<IIAll         , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IIAlu         , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IICmpBr       , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IICmpGr       , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IISelect      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IIMultiply    , [InstrStage<1,  [IUnit1, IUnit3, IUnit5, IUnit7]>]>,
+InstrItinData<IILoad        , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IILoadLr      , [InstrStage<1,  [IUnit0]>]>,
+InstrItinData<IIStore       , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IIStoreLr     , [InstrStage<1,  [IUnit0]>]>,
+InstrItinData<IICpGrBr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IICpBrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IICpLrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IICpGrLr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IIBranch      , [InstrStage<1,  [IUnit7]>]>
+]>;
 
 
 def rVEX2IssueModel : SchedMachineModel {
@@ -376,4 +405,10 @@ def Simple8Issue4MemModel : SchedMachineModel {
     let IssueWidth = 8;
     let LoadLatency = 1;
     let Itineraries = Simple8Issue4MemItineraries;
+}
+
+def Simple8Issue8MemModel : SchedMachineModel {
+    let IssueWidth = 8;
+    let LoadLatency = 1;
+    let Itineraries = Simple8Issue8MemItineraries;
 }

@@ -34,6 +34,9 @@
 
 using namespace llvm;
 
+cl::opt<bool> is32Reg("is32Reg",
+                            cl::Hidden, cl::desc("Enable 32 Registers instead of 64"));
+
 VEXRegisterInfo::VEXRegisterInfo(const VEXSubtarget &ST)
     : VEXGenRegisterInfo(VEX::Lr), Subtarget(ST) {
         DEBUG(errs() << "Register Info\n");
@@ -48,6 +51,10 @@ VEXRegisterInfo::VEXRegisterInfo(const VEXSubtarget &ST)
 // llc create CSR_SaveList and CSR_RegMask from above defined.
 const uint16_t* VEXRegisterInfo::
 getCalleeSavedRegs(const MachineFunction *MF) const{
+    if (is32Reg) {
+        static const MCPhysReg CSR_List[] = { VEX::Reg25, VEX::Reg26, VEX::Reg27, VEX::Reg28, VEX::Reg29, VEX::Reg30, VEX::Reg31, VEX::Lr, 0 };
+        return CSR_List;
+    }
     return CSR_SaveList;
 }
 
@@ -67,15 +74,25 @@ BitVector VEXRegisterInfo::
 getReservedRegs(const MachineFunction &MF) const {
 // @getReservedRegs body
     // FIXME : Verify if this is correct
-    static const uint16_t ReservedVEXRegs[] = {
-        VEX::Reg0, VEX::Lr, VEX::Reg1, VEX::Reg2, VEX::Reg3,
-        VEX::Reg4, VEX::Reg5, VEX::Reg6, VEX::Reg7, VEX::Reg8,
-        VEX::Reg9, VEX::Reg10
+//    static const uint16_t ReservedVEXRegs[] = {
+//        VEX::Reg0, VEX::Lr, VEX::Reg1, VEX::Reg2, VEX::Reg3,
+//        VEX::Reg4, VEX::Reg5, VEX::Reg6, VEX::Reg7, VEX::Reg8,
+//        VEX::Reg9, VEX::Reg10
+//    };
+    // We don't need to reserve registers Reg3 to Reg10. We can still use them.
+    std::vector<uint16_t> ReservedVEXRegs = {
+            VEX::Reg0, VEX::Lr, VEX::Reg1
     };
+    
+    if (is32Reg) {
+        for (unsigned i = VEX::Reg32; i < VEX::NUM_TARGET_REGS; ++i)
+            ReservedVEXRegs.push_back(i);
+    }
+
     BitVector Reserved(getNumRegs());
     typedef TargetRegisterClass::iterator RegIter;
 
-    for(unsigned I = 0; I < array_lengthof(ReservedVEXRegs); ++I)
+    for(unsigned I = 0; I < ReservedVEXRegs.size(); ++I)
         Reserved.set(ReservedVEXRegs[I]);
 
     return Reserved;

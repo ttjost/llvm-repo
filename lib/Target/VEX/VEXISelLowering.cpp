@@ -406,10 +406,17 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
     // Analyze the operands of the call, assigning locations to each operand.
     SmallVector<CCValAssign, 16> ArgLocs;
     CCState ArgCCInfo(CallConv, IsVarArg, MF, ArgLocs, *DAG.getContext());
+    
+    auto *TFL = static_cast<const VEXFrameLowering *>(Subtarget.getFrameLowering());
+    
+    // If need, arguments on stack should be place after ScratchPad Area
+    ArgCCInfo.AllocateStack(TFL->getScratchArea(), 1);
+    
     ArgCCInfo.AnalyzeCallOperands(Outs, CC_VEX_Address);
 
     // Get a count of how many bytes are to be pushed on to the stack.
     unsigned NumBytes = ArgCCInfo.getNextStackOffset();
+    
     
     if(IsTailCall) {
         bool StructAttrFlag =
@@ -444,7 +451,8 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
     // Copy argument values to their designated locations.
     SmallVector<std::pair<unsigned, SDValue>, 10> RegsToPass;
     SmallVector<SDValue, 8> MemOpChains;
-    SDValue StackPtr;
+    SDValue StackPtr =
+            DAG.getCopyFromReg(Chain, DL, VEX::Reg1, getPointerTy());;
 
     for (unsigned I = 0, E = ArgLocs.size(); I != E; ++I){
         CCValAssign &VA = ArgLocs[I];
@@ -474,8 +482,32 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
             // Queue up the argument copies and emit them at the end.
             RegsToPass.push_back(std::make_pair(VA.getLocReg(), ArgValue));
         else{
-            //assert(VA.isMemLoc() && "Argument not register or memory");
-            llvm_unreachable("Argument not register or memory");
+            assert(VA.isMemLoc() && "Argument not register or memory");
+            
+            ISD::ArgFlagsTy Flags = Outs[I].Flags;
+            
+            unsigned LocMemOffset = VA.getLocMemOffset();
+            SDValue PtrOff = DAG.getConstant(LocMemOffset /*+ TFL->getScratchArea()*/, StackPtr.getValueType());
+            PtrOff = DAG.getNode(ISD::ADD, DL, MVT::i32, StackPtr, PtrOff );
+            
+            if (Flags.isByVal()) {
+                // The argument is a struct passed by value. According to LLVM, "Arg"
+                // is is pointer.
+                SDValue SizeNode = DAG.getConstant(Flags.getByValSize(), MVT::i32);
+                
+                MemOpChains.push_back(DAG.getMemcpy(Chain, DL, PtrOff, ArgValue, SizeNode, Flags.getByValAlign(),
+                                    /*isVolatile=*/false, /*AlwaysInline=*/false,
+                                    /*isTailCall=*/false,
+                                    MachinePointerInfo(), MachinePointerInfo()));
+            } else {
+                // The argument is not passed by value. "Arg" is a buildin type. It is
+                // not a pointer.
+                MemOpChains.push_back(DAG.getStore(Chain, DL, ArgValue, PtrOff,
+                                                   MachinePointerInfo(),false, false,
+                                                   0));
+            }
+            continue;
+            
         }
     }
 
@@ -621,6 +653,9 @@ const {
     SmallVector<CCValAssign, 16> ArgLocs;
     CCState CCInfo(CallConv, IsVarArg, MF, ArgLocs, *DAG.getContext());
     
+    // If need, arguments on stack should be place after ScratchPad Area
+    CCInfo.AllocateStack(TFL->getScratchArea(), 1);
+    
     CCInfo.AnalyzeFormalArguments(Ins, CC_VEX_Address);
     
     unsigned NumFixedGPRs = 0;
@@ -663,21 +698,18 @@ const {
             ArgValue = DAG.getCopyFromReg(Chain, DL, VReg, LocVT);
         }else{
             assert(VA.isMemLoc() && "Argument not register or memory");
-            llvm_unreachable("Not yet implemented!");
+//            llvm_unreachable("Not yet implemented!");
             // Create the frame index object for this incoming parameter.
-//            int FI = MFI->CreateFixedObject(LocVT.getSizeInBits()/8, VA.getLocMemOffset(), true);
+            int FI = MFI->CreateFixedObject(LocVT.getSizeInBits()/8, VA.getLocMemOffset()+TFL->getScratchArea(), true);
             
-//            // Create the SelectionDAG nodes corresponding to a load
-//            // from this parameter. Unpromoted ints are passed
-//            // as right-justified 8-byte values.
-//            EVT PtrVT = getPointerTy();
-//            SDValue FIN = DAG.getFrameIndex(FI, PtrVT);
-            
-//            if (VA.getLocVT() == MVT::i32)
-//                FIN = DAG.getNode(ISD::ADD, DL, PtrVT, FIN,
-//                                  DAG.getIntPtrConstant(4));
-//            ArgValue = DAG.getLoad(LocVT, DL, Chain, FIN,
-//                                   MachinePointerInfo::getFixedStack(FI), false, false, false, 0);
+            // Create the SelectionDAG nodes corresponding to a load
+            // from this parameter. Unpromoted ints are passed
+            // as right-justified 8-byte values.
+            EVT PtrVT = VA.getValVT();
+            SDValue FIN = DAG.getFrameIndex(FI, PtrVT);
+        
+            ArgValue = DAG.getLoad(LocVT, DL, Chain, FIN,
+                                   MachinePointerInfo::getFixedStack(FI), false, false, false, 0);
         }
         
         // Convert the value of the argument register into the value that's

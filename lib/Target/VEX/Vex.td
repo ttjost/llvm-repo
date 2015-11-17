@@ -60,11 +60,9 @@ def: Proc<"simple-2issue", Simple2IssueModel, []>;
 def: Proc<"simple-4issue", Simple4IssueModel, []>;
 def: Proc<"simple-8issue", Simple8IssueModel, []>;
 
-
 def: Proc<"simple-4issue-4mem", Simple4Issue4MemModel, []>;
-
 def: Proc<"simple-8issue-4mem", Simple8Issue4MemModel, []>;
-
+def: Proc<"simple-8issue-8mem", Simple8Issue4MemModel, []>;
 
 
 //#if CH >= CH11_1 1
