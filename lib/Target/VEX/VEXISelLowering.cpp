@@ -184,6 +184,14 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     setOperationAction(ISD::UMULO, MVT::i32, Custom);
     setOperationAction(ISD::SMULO, MVT::i32, Custom);
     
+    // VASTART needs to be custom lowered to use the VarArgsFrameIndex.
+    setOperationAction(ISD::VASTART, MVT::Other, Custom);
+    
+    // Use the default implementation.
+    setOperationAction(ISD::VAARG, MVT::Other, Expand);
+    setOperationAction(ISD::VACOPY, MVT::Other, Expand);
+    setOperationAction(ISD::VAEND, MVT::Other, Expand);
+    
     setOperationAction(ISD::GlobalAddress, MVT::i8, Promote);
     setOperationAction(ISD::GlobalAddress, MVT::i16, Promote);
     setOperationAction(ISD::GlobalAddress, MVT::i32, Custom);
@@ -233,6 +241,7 @@ SDValue VEXTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) const {
 //        case ISD::SETCC:                return LowerSETCC(Op, DAG);
         case ISD::LOAD:                 return LowerLOAD(Op, DAG);
         case ISD::STORE:                return LowerSTORE(Op, DAG);
+        case ISD::VASTART:              return LowerVASTART(Op, DAG);
         default:
             break;
     }
@@ -619,6 +628,97 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
 
 }
 
+void VEXTargetLowering::copyByValRegs(SDValue Chain, SDLoc DL, std::vector<SDValue> &OutChains, SelectionDAG &DAG,
+                                       const ISD::ArgFlagsTy &Flags, SmallVectorImpl<SDValue> &InVals,
+                                       const Argument *FuncArg, unsigned FirstReg, unsigned LastReg,
+                                       const CCValAssign &VA,
+                                        MachineRegisterInfo &MRI) const {
+    
+    MachineFunction &MF = DAG.getMachineFunction();
+    MachineFrameInfo *MFI = MF.getFrameInfo();
+    unsigned GPRSizeInBytes = 4;
+    unsigned NumRegs = LastReg - FirstReg;
+    unsigned RegAreaSize = NumRegs * GPRSizeInBytes;
+    unsigned FrameObjSize = std::max(Flags.getByValSize(), RegAreaSize);
+    int FrameObjOffset;
+    ArrayRef<MCPhysReg> ByValArgRegs = { VEX::Reg3, VEX::Reg4, VEX::Reg5, VEX::Reg6, VEX::Reg7, VEX::Reg8, VEX::Reg9, VEX::Reg10 };
+    
+    if (RegAreaSize)
+        FrameObjOffset = VA.getLocMemOffset();
+    
+    // Create frame object.
+    EVT PtrTy = getPointerTy();
+    int FI = MFI->CreateFixedObject(FrameObjSize, FrameObjOffset, true);
+    SDValue FIN = DAG.getFrameIndex(FI, PtrTy);
+    InVals.push_back(FIN);
+    
+    if (!NumRegs)
+        return;
+    
+    // Copy arg registers.
+    MVT RegTy = MVT::getIntegerVT(GPRSizeInBytes * 8);
+    const TargetRegisterClass *RC = getRegClassFor(RegTy);
+    
+    for (unsigned I = 0; I < NumRegs; ++I) {
+        unsigned ArgReg = ByValArgRegs[FirstReg + I];
+        
+        unsigned VReg = MF.getRegInfo().createVirtualRegister(RC);
+        MRI.addLiveIn(ArgReg, VReg);
+        unsigned Offset = I * GPRSizeInBytes;
+        SDValue StorePtr = DAG.getNode(ISD::ADD, DL, PtrTy, FIN,
+                                       DAG.getConstant(Offset, PtrTy));
+        SDValue Store = DAG.getStore(Chain, DL, DAG.getRegister(VReg, RegTy),
+                                     StorePtr, MachinePointerInfo(FuncArg, Offset),
+                                     false, false, 0);
+        OutChains.push_back(Store);
+    }
+}
+
+void VEXTargetLowering::writeVarArgRegs(std::vector<SDValue> &OutChains,
+                                         SDValue Chain, SDLoc DL,
+                                         SelectionDAG &DAG,
+                                         CCState &State,
+                                         MachineRegisterInfo &MRI) const {
+    const ArrayRef<MCPhysReg> ArgRegs = { VEX::Reg3, VEX::Reg4, VEX::Reg5, VEX::Reg6, VEX::Reg7, VEX::Reg8, VEX::Reg9, VEX::Reg10 };
+    unsigned Idx = State.getFirstUnallocated(ArgRegs);
+    unsigned RegSizeInBytes = 4;
+    MVT RegTy = MVT::getIntegerVT(RegSizeInBytes * 8);
+    const TargetRegisterClass *RC = getRegClassFor(RegTy);
+    MachineFunction &MF = DAG.getMachineFunction();
+    MachineFrameInfo *MFI = MF.getFrameInfo();
+    VEXFunctionInfo *VEXFI = MF.getInfo<VEXFunctionInfo>();
+    
+    // Offset of the first variable argument from stack pointer.
+    int VaArgOffset;
+    
+//    if (ArgRegs.size() == Idx)
+        VaArgOffset =
+        RoundUpToAlignment(State.getNextStackOffset(), RegSizeInBytes);
+    
+    // Record the frame index of the first variable argument
+    // which is a value necessary to VASTART.
+    int FI = MFI->CreateFixedObject(4, VaArgOffset, true);
+    VEXFI->setVarArgsFrameIndex(FI);
+    
+    // Copy the integer registers that have not been used for argument passing
+    // to the argument register save area. For O32, the save area is allocated
+    // in the caller's stack frame, while for N32/64, it is allocated in the
+    // callee's stack frame.
+    for (unsigned I = Idx; I < ArgRegs.size();
+         ++I, VaArgOffset += RegSizeInBytes) {
+        unsigned Reg = ArgRegs[I];
+        unsigned VReg = MF.getRegInfo().createVirtualRegister(RC);
+        MRI.addLiveIn(Reg, VReg);
+        SDValue ArgValue = DAG.getCopyFromReg(Chain, DL, VReg, RegTy);
+        FI = MFI->CreateFixedObject(RegSizeInBytes, VaArgOffset, true);
+        SDValue PtrOff = DAG.getFrameIndex(FI, getPointerTy());
+        SDValue Store = DAG.getStore(Chain, DL, ArgValue, PtrOff,
+                                     MachinePointerInfo(), false, false, 0);
+        cast<StoreSDNode>(Store.getNode())->getMemOperand()->setValue(
+                                                                      (Value *)nullptr);
+        OutChains.push_back(Store);
+    }
+}
 
 //===----------------------------------------------------------------------===//
 //             Formal Arguments Calling Convention Implementation
@@ -627,6 +727,10 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
 // @ LowerFormalArguments {
 // LowerFormalArguments - transform physical registers into virtual registers
 // and generate load operations for arguments places on the stack
+//
+// TODO: Maybe we don't need to promote Values from i8 and i16 to i32.
+// since we hace loads and store that handles these types.
+//
 SDValue
 VEXTargetLowering::LowerFormalArguments(SDValue Chain,
                                         CallingConv::ID CallConv,
@@ -637,24 +741,29 @@ VEXTargetLowering::LowerFormalArguments(SDValue Chain,
 const {
     DEBUG(errs() << "LowerFormalArguments\n");
 
-    if (IsVarArg)
-        llvm_unreachable("Variable number of arguments not yet implemented!");
+//    if (IsVarArg)
+//        llvm_unreachable("Variable number of arguments not yet implemented!");
 
     //DAG.dump();
     MachineFunction &MF = DAG.getMachineFunction();
     MachineFrameInfo *MFI = MF.getFrameInfo();
-    MachineRegisterInfo &MRI = MF.getRegInfo();;
+    MachineRegisterInfo &MRI = MF.getRegInfo();
     
     VEXFunctionInfo *FuncInfo = MF.getInfo<VEXFunctionInfo>();
+    Function::const_arg_iterator FuncArg =
+        DAG.getMachineFunction().getFunction()->arg_begin();
     
     auto *TFL = static_cast<const VEXFrameLowering *>(Subtarget.getFrameLowering());
+    
+    // Used with vargs to acumulate store chains.
+    std::vector<SDValue> OutChains;
     
     // Assign locations to all of the incoming arguments.
     SmallVector<CCValAssign, 16> ArgLocs;
     CCState CCInfo(CallConv, IsVarArg, MF, ArgLocs, *DAG.getContext());
     
     // If need, arguments on stack should be place after ScratchPad Area
-    CCInfo.AllocateStack(TFL->getScratchArea(), 1);
+    //CCInfo.AllocateStack(TFL->getScratchArea(), 1);
     
     CCInfo.AnalyzeFormalArguments(Ins, CC_VEX_Address);
     
@@ -664,6 +773,23 @@ const {
         SDValue ArgValue;
         CCValAssign &VA = ArgLocs[I];
         EVT LocVT = VA.getLocVT();
+        
+        ISD::ArgFlagsTy Flags = Ins[I].Flags;
+        
+        if (Flags.isByVal()) {
+            assert(Ins[I].isOrigArg() && "Byval arguments cannot be implicit");
+            unsigned FirstByValReg, LastByValReg;
+            unsigned ByValIdx = CCInfo.getInRegsParamsProcessed();
+            CCInfo.getInRegsParamInfo(ByValIdx, FirstByValReg, LastByValReg);
+            
+            assert(Flags.getByValSize() &&
+                   "ByVal args of size 0 should have been ignored by front-end.");
+            assert(ByValIdx < CCInfo.getInRegsParamsCount());
+            copyByValRegs(Chain, DL, OutChains, DAG, Flags, InVals, &*FuncArg,
+                          FirstByValReg, LastByValReg, VA, MRI);
+            CCInfo.nextInRegsParam();
+            continue;
+        }
         
         if (VA.isRegLoc()){
             // Arguments passed in registers
@@ -715,6 +841,21 @@ const {
         // Convert the value of the argument register into the value that's
         // being passed.
         InVals.push_back(convertLocVTToValVT(DAG, DL, VA, Chain, ArgValue));
+    }
+    
+    if (IsVarArg) {
+//        // This will point to the next argument passed via stack.
+//        int FrameIndex = MFI->CreateFixedObject(4, CCInfo.getNextStackOffset(),
+//                                                true);
+//        FuncInfo->setVarArgsFrameIndex(FrameIndex);
+        writeVarArgRegs(OutChains, Chain, DL, DAG, CCInfo, MRI);
+    }
+    
+    // All stores are grouped in one node to allow the matching between
+    // the size of Ins and InVals. This only happens when on varg functions
+    if (!OutChains.empty()) {
+        OutChains.push_back(Chain);
+        Chain = DAG.getNode(ISD::TokenFactor, DL, MVT::Other, OutChains);
     }
     
     return Chain;
@@ -800,6 +941,18 @@ SDValue VEXTargetLowering::LowerExternalSymbol(SDValue Op, SelectionDAG &DAG) co
                        getPointerTy(), Result);
 }
 
+SDValue
+VEXTargetLowering::LowerVASTART(SDValue Op, SelectionDAG &DAG) const {
+    // VASTART stores the address of the VarArgsFrameIndex slot into the
+    // memory location argument.
+    MachineFunction &MF = DAG.getMachineFunction();
+    VEXFunctionInfo *QFI = MF.getInfo<VEXFunctionInfo>();
+    SDValue Addr = DAG.getFrameIndex(QFI->getVarArgsFrameIndex(), MVT::i32);
+    const Value *SV = cast<SrcValueSDNode>(Op.getOperand(2))->getValue();
+    return DAG.getStore(Op.getOperand(0), SDLoc(Op), Addr,
+                        Op.getOperand(1), MachinePointerInfo(SV), false,
+                        false, 0);
+}
 
 // For some reason, We need to handle MVT::i1 types and promote them manually.
 // Not sure why this is not working automatically during tblgen phase, since

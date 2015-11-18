@@ -107,8 +107,9 @@ bool VEXFrameLowering::hasReservedCallFrame(const MachineFunction &MF) const {
 int VEXFrameLowering::getFrameIndexOffset(const MachineFunction &MF,
                                              int FI) const {
     const MachineFrameInfo *MFI = MF.getFrameInfo();
-    return MFI->getObjectOffset(FI) + MFI->getStackSize() -
-    getOffsetOfLocalArea() + MFI->getOffsetAdjustment() + getScratchArea();
+    unsigned ScratchArea = MFI->getStackSize() == 0 ? 0 : getScratchArea();
+    return MFI->getObjectOffset(FI) +  MFI->getStackSize() -
+    getOffsetOfLocalArea() + MFI->getOffsetAdjustment() + ScratchArea;
 }
 
 void VEXFrameLowering::emitPrologue(MachineFunction &MF) const {

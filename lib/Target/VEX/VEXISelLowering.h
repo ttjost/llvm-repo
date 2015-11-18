@@ -130,6 +130,8 @@ private:
     SDValue LowerGlobalAddress(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerJumpTable(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerExternalSymbol(SDValue Op, SelectionDAG &DAG) const;
+    SDValue LowerVASTART(SDValue Op, SelectionDAG &DAG) const;
+    
     SDValue LowerConstant(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerSETCC(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerMUL(SDValue Op, SelectionDAG &DAG) const;
@@ -174,6 +176,20 @@ private:
                 const SmallVectorImpl<ISD::OutputArg> &Outs,
                 const SmallVectorImpl<SDValue> &OutVals,
                 SDLoc dl, SelectionDAG &DAG) const override;
+    
+    
+    void copyByValRegs(SDValue Chain, SDLoc DL, std::vector<SDValue> &OutChains, SelectionDAG &DAG,
+                       const ISD::ArgFlagsTy &Flags, SmallVectorImpl<SDValue> &InVals,
+                       const Argument *FuncArg, unsigned FirstReg, unsigned LastReg,
+                       const CCValAssign &VA,
+                       MachineRegisterInfo &MRI) const;
+    
+    // Used in FormalArguments to Store register in stack when is a variadic function
+    void writeVarArgRegs(std::vector<SDValue> &OutChains,
+                         SDValue Chain, SDLoc DL,
+                         SelectionDAG &DAG,
+                         CCState &State,
+                         MachineRegisterInfo &MRI) const;
     
     //SDValue LowerBRCOND(SDValue Op, SelectionDAG &DAG) const;
     

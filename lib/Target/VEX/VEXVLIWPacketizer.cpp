@@ -283,6 +283,11 @@ bool VEXPacketizerList::ignorePseudoInstruction(MachineInstr *MI,
 
 bool VEXPacketizerList::isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ) {
     
+    // Fast escape for Calls.
+    // We can always Packetize Calls with the earlier instruction
+    if (SUI->getInstr()->isCall())
+        return true;
+    
     if (SUJ->isSucc(SUI)) {
         for (SDep dep : SUJ->Succs) {
             if (dep.getSUnit() == SUI) {
