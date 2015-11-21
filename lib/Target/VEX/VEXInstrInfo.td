@@ -403,11 +403,11 @@ defm SUB    : ArithLogicInstr<"sub", 0b01100011, sub, IIAlu, 1, 1>;
 // ANDC Instruction
 def ANDCr      : ArithLogic_r<0b01100100,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
-                          "andc",
+                          "andc $dst = $s1, $s2",
                            [(set GPRegs:$dst, (and (not GPRegs:$s1), GPRegs:$s2))], IIAlu, 0>;
 def ANDCi      : ArithLogic_i<0b01100100,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
-                          "andc",
+                          "andc $dst = $s1, $s2",
                            [(set GPRegs:$dst, (and (not GPRegs:$s1), imm32:$s2))], IIAlu, 0>;
            
 // MAX/MIN Instructions
