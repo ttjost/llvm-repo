@@ -60,13 +60,14 @@ namespace llvm {
     class VEXFunctionInfo : public MachineFunctionInfo {
     public:
         VEXFunctionInfo (MachineFunction &MF)
-        : MF(MF), VarArgsFrameIndex(0), MaxCallFrameSize(0) , EmitNOAT(false) {
+        : MF(MF), VarArgsFrameIndex(0), MaxCallFrameSize(0), IsVarArgFunction(false), EmitNOAT(false) {
             DEBUG(errs() << "Machine Function");
         }
         ~VEXFunctionInfo();
         
         int getVarArgsFrameIndex() const {return VarArgsFrameIndex; }
-        void setVarArgsFrameIndex(int index) { VarArgsFrameIndex = index; }
+        void setVarArgsFrameIndex(int index) { VarArgsFrameIndex = index; IsVarArgFunction = true;}
+        bool isVarArgFunction() { return IsVarArgFunction; }
         
         bool getEmitNOAT() const { return EmitNOAT; }
         void setEmitNOAT() { EmitNOAT = true; }
@@ -80,6 +81,7 @@ namespace llvm {
         
         // VarArgsFrameIndex - FrameIndex for start of varargs area.
         int VarArgsFrameIndex;
+        bool IsVarArgFunction;
         
         unsigned MaxCallFrameSize;
         

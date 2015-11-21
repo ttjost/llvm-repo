@@ -175,7 +175,7 @@ const char *VEXAsmPrinter::getCurrentABIString() const {
 // main:
 void VEXAsmPrinter::EmitFunctionEntryLabel() {
 //    if(OutStreamer.hasRawTextSupport())
-    unsigned StackSize = MF->getFrameInfo()->getStackSize() == 0 ? 0 : RoundUpToAlignment(MF->getFrameInfo()->getStackSize() + 16, 32);
+    unsigned StackSize = MF->getFrameInfo()->getStackSize() == 0 ? 0 : RoundUpToAlignment(MF->getFrameInfo()->getStackSize(), 32);
     OutStreamer.EmitRawText(".section .text \n.proc \n.entry caller, sp=$r0.1, rl=$l0.0, asize=-" +
                             Twine(StackSize) +
                             ", arg()");
@@ -253,27 +253,31 @@ void VEXAsmPrinter::PrintDebugValueComment(const MachineInstr *MI,
 bool VEXAsmPrinter::PrintAsmOperand(const MachineInstr *MI, unsigned OpNo,
                                     unsigned AsmVariant, const char *ExtraCode,
                                     raw_ostream &O){
-    // Does this asm operand have a single letter operand modifier?
     if (ExtraCode && ExtraCode[0]) {
         if (ExtraCode[1] != 0) return true; // Unknown modifier.
         
-        const MachineOperand &MO = MI->getOperand(OpNo);
         switch (ExtraCode[0]) {
             default:
-                return true;  // Unknown modifier.
-            case 'c': // Substitute immediate value without immediate syntax
-                if (MO.getType() != MachineOperand::MO_Immediate)
-                    return true;
-                O << MO.getImm();
-                return false;
-            case 'n':  // Negate the immediate constant.
-                if (MO.getType() != MachineOperand::MO_Immediate)
-                    return true;
-                O << -MO.getImm();
-                return false;
+                // See if this is a generic print operand
+                return AsmPrinter::PrintAsmOperand(MI, OpNo, AsmVariant, ExtraCode, O);
+            case 'r':
+                break;
         }
     }
-    return true;
+    
+    const MachineOperand &MO = MI->getOperand(OpNo);
+    switch (MO.getType()) {
+        default:
+            return true;  // Unknown modifier.
+        case MachineOperand::MO_Immediate: // Substitute immediate value without immediate syntax
+            O << MO.getImm();
+            return false;
+        case MachineOperand::MO_Register:
+            O << "$" << StringRef(VEXInstPrinter::getRegisterName(MO.getReg())).lower();
+            return false;
+    }
+    
+    return false;
 }
 
 // Force static initialization.

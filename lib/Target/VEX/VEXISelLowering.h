@@ -122,6 +122,16 @@ private:
     
     SDValue LowerOperation(SDValue Op, SelectionDAG &DAG) const override;
     
+    /// getConstraintType - Given a constraint letter, return the type of
+    /// constraint it is for this target.
+    TargetLowering::ConstraintType
+        getConstraintType(const std::string &Constraint) const;
+    
+    std::pair<unsigned, const TargetRegisterClass *>
+        getRegForInlineAsmConstraint(const TargetRegisterInfo *TRI,
+                                                    const std::string &Constraint,
+                                                    MVT VT) const;
+    
     bool isOffsetFoldingLegal(const GlobalAddressSDNode *GA) const;
 
     // Custom Lowering of Instructions

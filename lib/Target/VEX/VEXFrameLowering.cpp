@@ -107,9 +107,13 @@ bool VEXFrameLowering::hasReservedCallFrame(const MachineFunction &MF) const {
 int VEXFrameLowering::getFrameIndexOffset(const MachineFunction &MF,
                                              int FI) const {
     const MachineFrameInfo *MFI = MF.getFrameInfo();
-    unsigned ScratchArea = MFI->getStackSize() == 0 ? 0 : getScratchArea();
+    // We only need to Reserve the Scratch Area when we use the Stack.
+    // Otherwise, wrong offset might be generated in function that
+    // uses more than 8 parameters (i. e. from the Caller's Stack).
+    //unsigned ScratchArea = MFI->getStackSize() == 0 ? 0 : getScratchArea();
+    unsigned ObjectOffset = MFI->getObjectOffset(FI);
     return MFI->getObjectOffset(FI) +  MFI->getStackSize() -
-    getOffsetOfLocalArea() + MFI->getOffsetAdjustment() + ScratchArea;
+    getOffsetOfLocalArea() + MFI->getOffsetAdjustment() /*+ ScratchArea*/;
 }
 
 void VEXFrameLowering::emitPrologue(MachineFunction &MF) const {
@@ -132,7 +136,7 @@ void VEXFrameLowering::emitPrologue(MachineFunction &MF) const {
     uint64_t StackSize = MFI->getStackSize();
     
     // No need to allocate space on the stack
-    if (StackSize == 0 && !MFI->adjustsStack() && !MFI->hasCalls()) return;
+    if (StackSize == 0 && !MFI->adjustsStack() && !MFI->hasCalls() && !VEXFI->isVarArgFunction()) return;
     
     DEBUG(errs() << "StackSize is not 0: " << StackSize << "   " << MF.getName() << "\n");
 
@@ -141,9 +145,18 @@ void VEXFrameLowering::emitPrologue(MachineFunction &MF) const {
     MachineModuleInfo &MMI = MF.getMMI();
     const MCRegisterInfo *MRI = MMI.getContext().getRegisterInfo();
     
-    // Adjust Stack
+    // "Calculate" Stack Size. Note that the correct value of the stack
+    // is not really this one. We should always RoundUpToAlignment in 32 bytes.
+    // We do this because Variadic Functions should place registers in stack
+    // in a way that 16 bytes are its on stack and the rest is on the ScratchPad
+    // of the Caller.
+    // IMPORTANT: Do not forget that we should always align to 32 bytes.
     StackSize = RoundUpToAlignment(StackSize + getScratchArea(), 32);
-    TII.adjustStackPtr(VEXFI, VEX::Reg1, -StackSize, MBB, MBBI);
+    if (VEXFI->isVarArgFunction())
+        StackSize -= 12;
+    MFI->setStackSize(StackSize);
+    
+    TII.adjustStackPtr(VEXFI, VEX::Reg1, -RoundUpToAlignment(StackSize, 32), MBB, MBBI);
     
     const std::vector<CalleeSavedInfo> &CSI = MFI->getCalleeSavedInfo();
     
@@ -313,9 +326,10 @@ VEXFrameLowering::processFunctionBeforeCalleeSavedScan
 }
 
 bool VEXFrameLowering::hasFP(const MachineFunction &MF) const{
-    const MachineFrameInfo *MFI = MF.getFrameInfo();
-    return MF.getTarget().Options.DisableFramePointerElim(MF) ||
-            MFI->hasVarSizedObjects() || MFI->isFrameAddressTaken();
+    return false;
+//    const MachineFrameInfo *MFI = MF.getFrameInfo();
+//    return MF.getTarget().Options.DisableFramePointerElim(MF) ||
+//            MFI->hasVarSizedObjects() || MFI->isFrameAddressTaken();
 }
 
 

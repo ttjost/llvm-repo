@@ -113,7 +113,8 @@ bool VEXInstrInfo::expandPostRAPseudo(MachineBasicBlock::iterator MI) const {
             DEBUG(errs() << "\nReplacing PSEUDO_RET\n");
 //            const VEXSubtarget* Subtarget = MF.getSubtarget<VEXSubtarget>();
 //            const VEXFrameLowering* FrameLowering = Subtarget.getFrameLowering<VEXFrameLowering>();
-            int StackSize = MF.getFrameInfo()->getStackSize() == 0 ? 0 : RoundUpToAlignment(MF.getFrameInfo()->getStackSize() + 16, 32);
+//            int StackSize = MF.getFrameInfo()->getStackSize() == 0 ? 0 : RoundUpToAlignment(MF.getFrameInfo()->getStackSize() + 16, 32);
+            int StackSize = MF.getFrameInfo()->getStackSize() == 0 ? 0 : RoundUpToAlignment(MF.getFrameInfo()->getStackSize(), 32);
             BuildMI(MBB, MI, MI->getDebugLoc(), get(VEX::RET)).addReg(VEX::Reg1).addReg(VEX::Reg1).addImm(StackSize).addReg(VEX::Lr);
             MBB.erase(MI);
             break;
@@ -123,7 +124,8 @@ bool VEXInstrInfo::expandPostRAPseudo(MachineBasicBlock::iterator MI) const {
             DEBUG(errs() << "\nReplacing PSEUDO_TAILCALL\n");
             //            const VEXSubtarget* Subtarget = MF.getSubtarget<VEXSubtarget>();
             //            const VEXFrameLowering* FrameLowering = Subtarget.getFrameLowering<VEXFrameLowering>();
-            int StackSize = MF.getFrameInfo()->getStackSize() == 0 ? 0 : RoundUpToAlignment(MF.getFrameInfo()->getStackSize() + 16, 32);
+//            int StackSize = MF.getFrameInfo()->getStackSize() == 0 ? 0 : RoundUpToAlignment(MF.getFrameInfo()->getStackSize() + 16, 32);
+            int StackSize = MF.getFrameInfo()->getStackSize() == 0 ? 0 : RoundUpToAlignment(MF.getFrameInfo()->getStackSize(), 32);
             BuildMI(MBB, MI, MI->getDebugLoc(), get(VEX::ADDi), VEX::Reg1).addReg(VEX::Reg1).addImm(StackSize);
             
             unsigned Opcode;

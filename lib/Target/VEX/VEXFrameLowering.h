@@ -30,7 +30,7 @@ protected:
 
 public:
     explicit VEXFrameLowering()
-    :   ScratchArea(16), TargetFrameLowering(StackGrowsDown, 16, 0, 16)
+    :   ScratchArea(16), TargetFrameLowering(StackGrowsDown, 32, 0, 32)     // Is it 32?
     {
     }
     
@@ -56,6 +56,11 @@ public:
                                      MachineBasicBlock::iterator MI,
                                      const std::vector<CalleeSavedInfo> &CSI,
                                      const TargetRegisterInfo *TRI) const override;
+    
+    /// targetHandlesStackFrameRounding - Returns true if the target is
+    /// responsible for rounding up the stack frame (probably at emitPrologue
+    /// time).
+    bool targetHandlesStackFrameRounding() const override { return true; }
     
     bool hasFP(const MachineFunction &MF) const override;
     bool hasReservedCallFrame(const MachineFunction &MF) const override;

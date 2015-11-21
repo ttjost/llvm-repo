@@ -54,12 +54,12 @@ public:
         --OneBeforeLastBB;
         MachineFunction::iterator OneAfterIteratorBB = MF.begin();
         ++OneAfterIteratorBB;
-
+        return false;
         for (MachineFunction::iterator MBBI = MF.begin();
              MBBI != OneBeforeLastBB; ++MBBI, ++OneAfterIteratorBB) {
 
-            for (MachineBasicBlock::iterator InstrIter = MBBI->end(),
-                 InstrBegin = MBBI->begin(); InstrIter != InstrBegin;) {
+            for (MachineBasicBlock::iterator InstrIter = MBBI->end();
+                 InstrIter != MBBI->begin();) {
 
                 if (InstrIter->isBranch()) {
                     if (InstrIter->getOpcode() == VEX::GOTO){
@@ -98,9 +98,11 @@ public:
                                 --InstrIter;
                         }
                     } else
-                        --InstrIter;
+                        if (InstrIter != MBBI->begin())
+                            --InstrIter;
                 } else {
-                    --InstrIter;
+                    if (InstrIter != MBBI->begin())
+                        --InstrIter;
                 }
             }
         }

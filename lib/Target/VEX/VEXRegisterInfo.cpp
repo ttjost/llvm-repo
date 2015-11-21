@@ -118,6 +118,9 @@ eliminateFrameIndex(MachineBasicBlock::iterator II, int SPAdj,
     int FrameIndex = MI.getOperand(FIOperandNum).getIndex();
 
     unsigned BasePtr = VEX::Reg1;
+    
+    // We need to fix the offset by subtracting 12. Otherwise,
+    // variadic functions get all messed up.
     int Offset = TFI->getFrameIndexOffset(MF, FrameIndex);
     //int Offset = MF.getFrameInfo()->getObjectOffset(FrameIndex);
 

@@ -184,6 +184,8 @@ VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
     setOperationAction(ISD::UMULO, MVT::i32, Custom);
     setOperationAction(ISD::SMULO, MVT::i32, Custom);
     
+    setOperationAction(ISD::BSWAP, MVT::i32, Expand);
+    
     // VASTART needs to be custom lowered to use the VarArgsFrameIndex.
     setOperationAction(ISD::VASTART, MVT::Other, Custom);
     
@@ -248,6 +250,43 @@ SDValue VEXTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) const {
 
     return Op;
 
+}
+
+//===----------------------------------------------------------------------===//
+//                       MSP430 Inline Assembly Support
+//===----------------------------------------------------------------------===//
+
+/// getConstraintType - Given a constraint letter, return the type of
+/// constraint it is for this target.
+TargetLowering::ConstraintType
+VEXTargetLowering::getConstraintType(const std::string &Constraint) const {
+    if (Constraint.size() == 1) {
+        switch (Constraint[0]) {
+            case 'r':
+                return C_RegisterClass;
+            default:
+                break;
+        }
+    }
+    return TargetLowering::getConstraintType(Constraint);
+}
+
+std::pair<unsigned, const TargetRegisterClass *>
+VEXTargetLowering::getRegForInlineAsmConstraint(const TargetRegisterInfo *TRI,
+                                                const std::string &Constraint,
+                                                MVT VT) const {
+    if (Constraint.size() == 1) {
+        // GCC Constraint Letters
+        switch (Constraint[0]) {
+            default: break;
+            case 'r':   // GENERAL_REGS
+                if (VT == MVT::i32)
+                    return std::make_pair(0U, &VEX::GPRegsRegClass);
+                return std::make_pair(0U, &VEX::BrRegsRegClass);
+        }
+    }
+    
+    return TargetLowering::getRegForInlineAsmConstraint(TRI, Constraint, VT);
 }
 
 bool VEXTargetLowering::isOffsetFoldingLegal(const GlobalAddressSDNode *GA) const {
@@ -419,7 +458,7 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
     auto *TFL = static_cast<const VEXFrameLowering *>(Subtarget.getFrameLowering());
     
     // If need, arguments on stack should be place after ScratchPad Area
-    ArgCCInfo.AllocateStack(TFL->getScratchArea(), 1);
+    //ArgCCInfo.AllocateStack(TFL->getScratchArea(), 1);
     
     ArgCCInfo.AnalyzeCallOperands(Outs, CC_VEX_Address);
 
@@ -496,7 +535,7 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
             ISD::ArgFlagsTy Flags = Outs[I].Flags;
             
             unsigned LocMemOffset = VA.getLocMemOffset();
-            SDValue PtrOff = DAG.getConstant(LocMemOffset /*+ TFL->getScratchArea()*/, StackPtr.getValueType());
+            SDValue PtrOff = DAG.getConstant(LocMemOffset + TFL->getScratchArea(), StackPtr.getValueType());
             PtrOff = DAG.getNode(ISD::ADD, DL, MVT::i32, StackPtr, PtrOff );
             
             if (Flags.isByVal()) {
@@ -693,17 +732,15 @@ void VEXTargetLowering::writeVarArgRegs(std::vector<SDValue> &OutChains,
     
 //    if (ArgRegs.size() == Idx)
         VaArgOffset =
-        RoundUpToAlignment(State.getNextStackOffset(), RegSizeInBytes);
+        RoundUpToAlignment(State.getNextStackOffset(), 4);
+    
+    //VaArgOffset -= 4;
     
     // Record the frame index of the first variable argument
     // which is a value necessary to VASTART.
     int FI = MFI->CreateFixedObject(4, VaArgOffset, true);
     VEXFI->setVarArgsFrameIndex(FI);
     
-    // Copy the integer registers that have not been used for argument passing
-    // to the argument register save area. For O32, the save area is allocated
-    // in the caller's stack frame, while for N32/64, it is allocated in the
-    // callee's stack frame.
     for (unsigned I = Idx; I < ArgRegs.size();
          ++I, VaArgOffset += RegSizeInBytes) {
         unsigned Reg = ArgRegs[I];
@@ -848,6 +885,7 @@ const {
 //        int FrameIndex = MFI->CreateFixedObject(4, CCInfo.getNextStackOffset(),
 //                                                true);
 //        FuncInfo->setVarArgsFrameIndex(FrameIndex);
+
         writeVarArgRegs(OutChains, Chain, DL, DAG, CCInfo, MRI);
     }
     
