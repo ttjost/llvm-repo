@@ -78,7 +78,11 @@ void VEXAsmPrinter::EmitInstruction(const MachineInstr *MI){
         unsigned i;
         TmpInst0.setOpcode(I->getOpcode());
         for (++I, i = 0; E != I && I->isInsideBundle(); ++I){
-            if (!I->isCFIInstruction()) {
+            if (I->isCFIInstruction() ||
+                I->isDebugValue() ||
+                I->isImplicitDef()) {
+                continue;
+            } else {
                 MCInst Tmp;
                 TmpInst.push_back(Tmp);
                 MCInstLowering.Lower(I, TmpInst0, TmpInst[i++], I->isInsideBundle());

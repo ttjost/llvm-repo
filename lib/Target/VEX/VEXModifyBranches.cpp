@@ -54,7 +54,7 @@ public:
         --OneBeforeLastBB;
         MachineFunction::iterator OneAfterIteratorBB = MF.begin();
         ++OneAfterIteratorBB;
-        return false;
+        
         for (MachineFunction::iterator MBBI = MF.begin();
              MBBI != OneBeforeLastBB; ++MBBI, ++OneAfterIteratorBB) {
 
