@@ -539,14 +539,19 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
             PtrOff = DAG.getNode(ISD::ADD, DL, MVT::i32, StackPtr, PtrOff );
             
             if (Flags.isByVal()) {
-                // The argument is a struct passed by value. According to LLVM, "Arg"
-                // is is pointer.
-                SDValue SizeNode = DAG.getConstant(Flags.getByValSize(), MVT::i32);
+                unsigned FirstByValReg, LastByValReg;
+                unsigned ByValIdx = ArgCCInfo.getInRegsParamsProcessed();
+                ArgCCInfo.getInRegsParamInfo(ByValIdx, FirstByValReg, LastByValReg);
                 
-                MemOpChains.push_back(DAG.getMemcpy(Chain, DL, PtrOff, ArgValue, SizeNode, Flags.getByValAlign(),
-                                    /*isVolatile=*/false, /*AlwaysInline=*/false,
-                                    /*isTailCall=*/false,
-                                    MachinePointerInfo(), MachinePointerInfo()));
+                assert(Flags.getByValSize() &&
+                       "ByVal args of size 0 should have been ignored by front-end.");
+                assert(ByValIdx < ArgCCInfo.getInRegsParamsCount());
+                assert(!IsTailCall &&
+                       "Do not tail-call optimize if there is a byval argument.");
+                passByValArg(Chain, DL, RegsToPass, MemOpChains, StackPtr, MF.getFrameInfo(), DAG, ArgValue,
+                             FirstByValReg, LastByValReg, Flags, VA);
+                ArgCCInfo.nextInRegsParam();
+                continue;
             } else {
                 // The argument is not passed by value. "Arg" is a buildin type. It is
                 // not a pointer.
@@ -667,6 +672,97 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
 
 }
 
+// Copy byVal arg to registers and stack.
+void VEXTargetLowering::passByValArg(SDValue Chain, SDLoc DL,
+                                      SmallVector<std::pair<unsigned, SDValue>, 10> RegsToPass,
+                                      SmallVectorImpl<SDValue> &MemOpChains, SDValue StackPtr,
+                                      MachineFrameInfo *MFI, SelectionDAG &DAG, SDValue Arg, unsigned FirstReg,
+                                      unsigned LastReg, const ISD::ArgFlagsTy &Flags,
+                                      const CCValAssign &VA) const {
+    unsigned ByValSizeInBytes = Flags.getByValSize();
+    unsigned OffsetInBytes = 0; // From beginning of struct
+    unsigned RegSizeInBytes = 4;
+    unsigned Alignment = std::min(Flags.getByValAlign(), RegSizeInBytes);
+    EVT PtrTy = getPointerTy(), RegTy = MVT::getIntegerVT(RegSizeInBytes * 8);
+    unsigned NumRegs = LastReg - FirstReg;
+    
+    if (NumRegs) {
+        const ArrayRef<MCPhysReg> ArgRegs = { VEX::Reg3, VEX::Reg4, VEX::Reg5, VEX::Reg6, VEX::Reg7, VEX::Reg8, VEX::Reg9, VEX::Reg10 };
+        bool LeftoverBytes = (NumRegs * RegSizeInBytes > ByValSizeInBytes);
+        unsigned I = 0;
+        
+        // Copy words to registers.
+        for (; I < NumRegs - LeftoverBytes; ++I, OffsetInBytes += RegSizeInBytes) {
+            SDValue LoadPtr = DAG.getNode(ISD::ADD, DL, PtrTy, Arg,
+                                          DAG.getConstant(OffsetInBytes, PtrTy));
+            SDValue LoadVal = DAG.getLoad(RegTy, DL, Chain, LoadPtr,
+                                          MachinePointerInfo(), false, false, false,
+                                          Alignment);
+            MemOpChains.push_back(LoadVal.getValue(1));
+            unsigned ArgReg = ArgRegs[FirstReg + I];
+            RegsToPass.push_back(std::make_pair(ArgReg, LoadVal));
+        }
+        
+        // Return if the struct has been fully copied.
+        if (ByValSizeInBytes == OffsetInBytes)
+            return;
+        
+        // Copy the remainder of the byval argument with sub-word loads and shifts.
+        if (LeftoverBytes) {
+            SDValue Val;
+            
+            for (unsigned LoadSizeInBytes = RegSizeInBytes / 2, TotalBytesLoaded = 0;
+                 OffsetInBytes < ByValSizeInBytes; LoadSizeInBytes /= 2) {
+                unsigned RemainingSizeInBytes = ByValSizeInBytes - OffsetInBytes;
+                
+                if (RemainingSizeInBytes < LoadSizeInBytes)
+                    continue;
+                
+                // Load subword.
+                SDValue LoadPtr = DAG.getNode(ISD::ADD, DL, PtrTy, Arg,
+                                              DAG.getConstant(OffsetInBytes, PtrTy));
+                SDValue LoadVal = DAG.getExtLoad(
+                                                 ISD::ZEXTLOAD, DL, RegTy, Chain, LoadPtr, MachinePointerInfo(),
+                                                 MVT::getIntegerVT(LoadSizeInBytes * 8), false, false, false,
+                                                 Alignment);
+                MemOpChains.push_back(LoadVal.getValue(1));
+                
+                // Shift the loaded value.
+                unsigned Shamt = (RegSizeInBytes - (TotalBytesLoaded + LoadSizeInBytes)) * 8;
+                
+                SDValue Shift = DAG.getNode(ISD::SHL, DL, RegTy, LoadVal,
+                                            DAG.getConstant(Shamt, MVT::i32));
+                
+                if (Val.getNode())
+                    Val = DAG.getNode(ISD::OR, DL, RegTy, Val, Shift);
+                else
+                    Val = Shift;
+                
+                OffsetInBytes += LoadSizeInBytes;
+                TotalBytesLoaded += LoadSizeInBytes;
+                Alignment = std::min(Alignment, LoadSizeInBytes);
+            }
+            
+            unsigned ArgReg = ArgRegs[FirstReg + I];
+            RegsToPass.push_back(std::make_pair(ArgReg, Val));
+            return;
+        }
+    }
+    
+    // Copy remainder of byval arg to it with memcpy.
+    unsigned MemCpySize = ByValSizeInBytes - OffsetInBytes;
+    SDValue Src = DAG.getNode(ISD::ADD, DL, PtrTy, Arg,
+                              DAG.getConstant(OffsetInBytes, PtrTy));
+    SDValue Dst = DAG.getNode(ISD::ADD, DL, PtrTy, StackPtr,
+                              DAG.getIntPtrConstant(VA.getLocMemOffset()));
+    Chain = DAG.getMemcpy(Chain, DL, Dst, Src, DAG.getConstant(MemCpySize, PtrTy),
+                          Alignment, /*isVolatile=*/false, /*AlwaysInline=*/false,
+                          /*isTailCall=*/false,
+                          MachinePointerInfo(), MachinePointerInfo());
+    MemOpChains.push_back(Chain);
+}
+
+
 void VEXTargetLowering::copyByValRegs(SDValue Chain, SDLoc DL, std::vector<SDValue> &OutChains, SelectionDAG &DAG,
                                        const ISD::ArgFlagsTy &Flags, SmallVectorImpl<SDValue> &InVals,
                                        const Argument *FuncArg, unsigned FirstReg, unsigned LastReg,
@@ -755,6 +851,49 @@ void VEXTargetLowering::writeVarArgRegs(std::vector<SDValue> &OutChains,
                                                                       (Value *)nullptr);
         OutChains.push_back(Store);
     }
+}
+
+void VEXTargetLowering::HandleByVal(CCState *State, unsigned &Size,
+                                     unsigned Align) const {
+    const TargetFrameLowering *TFL = Subtarget.getFrameLowering();
+    
+    assert(Size && "Byval argument's size shouldn't be 0.");
+    
+    Align = std::min(Align, TFL->getStackAlignment());
+    
+    unsigned FirstReg = 0;
+    unsigned NumRegs = 0;
+    
+    if (State->getCallingConv() != CallingConv::Fast) {
+        unsigned RegSizeInBytes = 4;
+        const ArrayRef<MCPhysReg> IntArgRegs = { VEX::Reg3, VEX::Reg4, VEX::Reg5, VEX::Reg6, VEX::Reg7, VEX::Reg8, VEX::Reg9, VEX::Reg10 };
+        // FIXME: The O32 case actually describes no shadow registers.
+        
+        // We used to check the size as well but we can't do that anymore since
+        // CCState::HandleByVal() rounds up the size after calling this function.
+        assert(!(Align % RegSizeInBytes) &&
+               "Byval argument's alignment should be a multiple of"
+               "RegSizeInBytes.");
+        
+        FirstReg = State->getFirstUnallocated(IntArgRegs);
+        
+        // If Align > RegSizeInBytes, the first arg register must be even.
+        // FIXME: This condition happens to do the right thing but it's not the
+        //        right way to test it. We want to check that the stack frame offset
+        //        of the register is aligned.
+        if ((Align > RegSizeInBytes) && (FirstReg % 2)) {
+            State->AllocateReg(IntArgRegs[FirstReg]);
+            ++FirstReg;
+        }
+        
+        // Mark the registers allocated.
+        Size = RoundUpToAlignment(Size, RegSizeInBytes);
+        for (unsigned I = FirstReg; Size > 0 && (I < IntArgRegs.size());
+             Size -= RegSizeInBytes, ++I, ++NumRegs)
+            State->AllocateReg(IntArgRegs[I]);
+    }
+    
+    State->addInRegsParamInfo(FirstReg, FirstReg + NumRegs);
 }
 
 //===----------------------------------------------------------------------===//

@@ -201,6 +201,16 @@ private:
                          CCState &State,
                          MachineRegisterInfo &MRI) const;
     
+    void passByValArg(SDValue Chain, SDLoc DL,
+                      SmallVector<std::pair<unsigned, SDValue>, 10> RegsToPass,
+                      SmallVectorImpl<SDValue> &MemOpChains, SDValue StackPtr,
+                      MachineFrameInfo *MFI, SelectionDAG &DAG, SDValue Arg, unsigned FirstReg,
+                      unsigned LastReg, const ISD::ArgFlagsTy &Flags,
+                      const CCValAssign &VA) const;
+    
+    void HandleByVal(CCState *State, unsigned &Size,
+                     unsigned Align) const;
+    
     //SDValue LowerBRCOND(SDValue Op, SelectionDAG &DAG) const;
     
     SDValue PerformDAGCombine(SDNode *N, DAGCombinerInfo &DCI) const;
