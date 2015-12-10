@@ -244,6 +244,8 @@ SDValue VEXTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) const {
         case ISD::LOAD:                 return LowerLOAD(Op, DAG);
         case ISD::STORE:                return LowerSTORE(Op, DAG);
         case ISD::VASTART:              return LowerVASTART(Op, DAG);
+        case ISD::RETURNADDR:         return LowerRETURNADDR(Op, DAG);
+        case ISD::FRAMEADDR:          return LowerFRAMEADDR(Op, DAG);
         default:
             break;
     }
@@ -426,6 +428,50 @@ bool VEXTargetLowering::IsEligibleForTailCallOptimization(SDValue Callee,
     // go on the stack. We cannot check that here because at this point that
     // information is not available.
     return true;
+}
+
+SDValue
+VEXTargetLowering::LowerRETURNADDR(SDValue Op, SelectionDAG &DAG) const {
+    const VEXRegisterInfo *TRI = Subtarget.getRegisterInfo();
+    MachineFunction &MF = DAG.getMachineFunction();
+    MachineFrameInfo *MFI = MF.getFrameInfo();
+    MFI->setReturnAddressIsTaken(true);
+    
+    if (verifyReturnAddressArgumentIsConstant(Op, DAG))
+        return SDValue();
+    
+    EVT VT = Op.getValueType();
+    SDLoc dl(Op);
+    unsigned Depth = cast<ConstantSDNode>(Op.getOperand(0))->getZExtValue();
+    if (Depth) {
+        SDValue FrameAddr = LowerFRAMEADDR(Op, DAG);
+        SDValue Offset = DAG.getConstant(4, MVT::i32);
+        return DAG.getLoad(VT, dl, DAG.getEntryNode(),
+                           DAG.getNode(ISD::ADD, dl, VT, FrameAddr, Offset),
+                           MachinePointerInfo(), false, false, false, 0);
+    }
+    
+    // Return LR, which contains the return address. Mark it an implicit live-in.
+    unsigned Reg = MF.addLiveIn(TRI->getRARegister(), getRegClassFor(MVT::i32));
+    return DAG.getCopyFromReg(DAG.getEntryNode(), dl, Reg, VT);
+}
+
+SDValue
+VEXTargetLowering::LowerFRAMEADDR(SDValue Op, SelectionDAG &DAG) const {
+    const VEXRegisterInfo *TRI = Subtarget.getRegisterInfo();
+    MachineFrameInfo *MFI = DAG.getMachineFunction().getFrameInfo();
+    MFI->setFrameAddressIsTaken(true);
+    
+    EVT VT = Op.getValueType();
+    SDLoc dl(Op);
+    unsigned Depth = cast<ConstantSDNode>(Op.getOperand(0))->getZExtValue();
+    SDValue FrameAddr = DAG.getCopyFromReg(DAG.getEntryNode(), dl,
+                                           VEX::Reg1, VT);
+    while (Depth--)
+        FrameAddr = DAG.getLoad(VT, dl, DAG.getEntryNode(), FrameAddr,
+                                MachinePointerInfo(),
+                                false, false, false, 0);
+    return FrameAddr;
 }
 
 SDValue

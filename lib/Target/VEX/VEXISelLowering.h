@@ -211,6 +211,10 @@ private:
     void HandleByVal(CCState *State, unsigned &Size,
                      unsigned Align) const;
     
+    SDValue LowerRETURNADDR(SDValue Op, SelectionDAG &DAG) const;
+    
+    SDValue LowerFRAMEADDR(SDValue Op, SelectionDAG &DAG) const;
+    
     //SDValue LowerBRCOND(SDValue Op, SelectionDAG &DAG) const;
     
     SDValue PerformDAGCombine(SDNode *N, DAGCombinerInfo &DCI) const;
