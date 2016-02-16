@@ -1,0 +1,343 @@
+# vsim -do { run -all ; add list sim:/rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1/sim_values(3) sim:/rvex_system_tb_adpcm/DUT/done_s ; write list -window .main_pane.list ./Logs/Issue4/dftO3.log ; exit -f} work.rvex_system_tb_adpcm 
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading ieee.numeric_std(body)
+# Loading work.rvex_pkg(body)
+# Loading work.rvex_system_tb_adpcm(behavioral)
+# Loading ieee.std_logic_textio(body)
+# Loading work.type_pkg
+# Loading work.util_pkg(body)
+# Loading work.rvex_system(behavioural)
+# Loading work.i_mem(rtl)
+# Loading work.opcode_pkg(body)
+# Loading work.rvex(behavioural)
+# Loading work.registers_gr(behavioral)
+# Loading work.br_registers(behavioural)
+# Loading work.link_registers(behavioral)
+# Loading work.fetch(structural)
+# Loading work.decode_pkg(body)
+# Loading work.pipe_lane(str)
+# Loading work.ctrl_operations(body)
+# Loading work.decoder(structural)
+# Loading work.forward_link(behavioural)
+# Loading work.pre_forwarding(behavioral)
+# Loading work.reduced_and_vector(para_prefix_arch)
+# Loading work.bin_encoder(para_arch0)
+# Loading work.post_forward(behavioral)
+# Loading work.mem_operations(body)
+# Loading work.execute(behavioural)
+# Loading work.alu(behavioural)
+# Loading work.mem(behavioural)
+# Loading work.mul(behavioural)
+# Loading work.branch_unit(behavioural)
+# Loading work.forward_decode(behavioral)
+# Loading work.d_mem(behavioural)
+# ** Warning: (vsim-8684) No drivers exist on out port /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(1)/pipe_lane_1/execute_1/read_en, and its initial value is not used.
+# Therefore, simulation behavior may occur that is not in compliance with
+# the VHDL standard as the initial values come from the base signal /rvex_system_tb_adpcm/DUT/rvex_1/mem_re(1).
+# ** Warning: (vsim-8684) No drivers exist on out port /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(1)/pipe_lane_1/mem_re, and its initial value is not used.
+# Therefore, simulation behavior may occur that is not in compliance with
+# the VHDL standard as the initial values come from the base signal /rvex_system_tb_adpcm/DUT/rvex_1/mem_re(1).
+# ** Warning: (vsim-8684) No drivers exist on out port /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(2)/pipe_lane_1/execute_1/read_en, and its initial value is not used.
+# Therefore, simulation behavior may occur that is not in compliance with
+# the VHDL standard as the initial values come from the base signal /rvex_system_tb_adpcm/DUT/rvex_1/mem_re(2).
+# ** Warning: (vsim-8684) No drivers exist on out port /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(2)/pipe_lane_1/mem_re, and its initial value is not used.
+# Therefore, simulation behavior may occur that is not in compliance with
+# the VHDL standard as the initial values come from the base signal /rvex_system_tb_adpcm/DUT/rvex_1/mem_re(2).
+# ** Warning: (vsim-8684) No drivers exist on out port /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(3)/pipe_lane_1/execute_1/read_en, and its initial value is not used.
+# Therefore, simulation behavior may occur that is not in compliance with
+# the VHDL standard as the initial values come from the base signal /rvex_system_tb_adpcm/DUT/rvex_1/mem_re(3).
+# ** Warning: (vsim-8684) No drivers exist on out port /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(3)/pipe_lane_1/mem_re, and its initial value is not used.
+# Therefore, simulation behavior may occur that is not in compliance with
+# the VHDL standard as the initial values come from the base signal /rvex_system_tb_adpcm/DUT/rvex_1/mem_re(3).
+#  run -all  
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(3)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(3)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(3)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(3)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(3)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."<": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(3)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(3)/pipe_lane_1/forwarding_gen/post_forward_3
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(3)/pipe_lane_1/forwarding_gen/post_forward_2
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(3)/pipe_lane_1/forwarding_gen/post_forward_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(2)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(2)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(2)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(2)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(2)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."<": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(2)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(2)/pipe_lane_1/forwarding_gen/post_forward_3
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(2)/pipe_lane_1/forwarding_gen/post_forward_2
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(2)/pipe_lane_1/forwarding_gen/post_forward_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(1)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(1)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(1)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(1)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(1)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."<": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(1)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(1)/pipe_lane_1/forwarding_gen/post_forward_3
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(1)/pipe_lane_1/forwarding_gen/post_forward_2
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(1)/pipe_lane_1/forwarding_gen/post_forward_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(0)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(0)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(0)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(0)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(0)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."<": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(0)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(0)/pipe_lane_1/forwarding_gen/post_forward_3
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(0)/pipe_lane_1/forwarding_gen/post_forward_2
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(0)/pipe_lane_1/forwarding_gen/post_forward_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Region: /rvex_system_tb_adpcm/DUT/rvex_1/br_registers_1/forwarding_gen
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Region: /rvex_system_tb_adpcm/DUT/rvex_1/br_registers_1/forwarding_gen
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Region: /rvex_system_tb_adpcm/DUT/rvex_1/br_registers_1/forwarding_gen
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Region: /rvex_system_tb_adpcm/DUT/rvex_1/br_registers_1/forwarding_gen
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 0  Instance: /rvex_system_tb_adpcm/DUT/i_mem_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 1  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(3)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."<": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 1  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(3)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 1  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(3)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 1  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(3)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 1  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(3)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 1  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(3)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 1  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(2)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."<": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 1  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(2)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 1  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(2)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 1  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(2)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 1  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(2)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 1  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(2)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 1  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(1)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."<": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 1  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(1)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 1  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(1)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 1  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(1)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 1  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(1)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 1  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(1)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 1  Region: /rvex_system_tb_adpcm/DUT/rvex_1/br_registers_1/forwarding_gen
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 1  Region: /rvex_system_tb_adpcm/DUT/rvex_1/br_registers_1/forwarding_gen
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 1  Region: /rvex_system_tb_adpcm/DUT/rvex_1/br_registers_1/forwarding_gen
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 1  Region: /rvex_system_tb_adpcm/DUT/rvex_1/br_registers_1/forwarding_gen
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 1  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(0)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."<": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 1  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(0)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 1  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(0)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 1  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(0)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 1  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(0)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 1  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(0)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."<": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 2  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(3)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."<": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 2  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(2)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."<": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 2  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(1)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD."<": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 2  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/pipe_lane_gen(0)/pipe_lane_1/execute_1/alu_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 3  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 3  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 3  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 3  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 3  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 3  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 3  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 3  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 3  Region: /rvex_system_tb_adpcm/DUT/rvex_1/br_registers_1/forwarding_gen
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 3  Region: /rvex_system_tb_adpcm/DUT/rvex_1/br_registers_1/forwarding_gen
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 3  Region: /rvex_system_tb_adpcm/DUT/rvex_1/br_registers_1/forwarding_gen
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 0 ps  Iteration: 3  Region: /rvex_system_tb_adpcm/DUT/rvex_1/br_registers_1/forwarding_gen
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 29840 ns  Iteration: 5  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 29840 ns  Iteration: 5  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 29840 ns  Iteration: 5  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 29840 ns  Iteration: 5  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 29840 ns  Iteration: 5  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 29840 ns  Iteration: 5  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 29840 ns  Iteration: 5  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 29840 ns  Iteration: 5  Instance: /rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 29840 ns  Iteration: 5  Region: /rvex_system_tb_adpcm/DUT/rvex_1/br_registers_1/forwarding_gen
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 29840 ns  Iteration: 5  Region: /rvex_system_tb_adpcm/DUT/rvex_1/br_registers_1/forwarding_gen
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 29840 ns  Iteration: 5  Region: /rvex_system_tb_adpcm/DUT/rvex_1/br_registers_1/forwarding_gen
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 29840 ns  Iteration: 5  Region: /rvex_system_tb_adpcm/DUT/rvex_1/br_registers_1/forwarding_gen
+# ** Failure: Execution completed.
+#    Time: 29900 ns  Iteration: 4  Process: /rvex_system_tb_adpcm/WaveGen_Proc File: /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/rvex_system_tb_adpcm.vhd
+# Break in Process WaveGen_Proc at /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/rvex_system_tb_adpcm.vhd line 156
+#  add list sim:/rvex_system_tb_adpcm/DUT/rvex_1/registers_gr_1/sim_values(3) sim:/rvex_system_tb_adpcm/DUT/done_s  
+# ** Error: Unable to lock WLF file "vsim.wlf". Retrying 1 times, errno 11
+# ** Error: Unable to lock WLF file "vsim.wlf". Retrying 2 times, errno 11
+# ** Error: Unable to lock WLF file "vsim.wlf". Retrying 3 times, errno 11
+# ** Error: Cannot lock WLF file: "vsim.wlf"
+#           errno 11: Resource temporarily unavailable.
+# ** Warning: (vsim-WLF-5000) WLF file currently in use: vsim.wlf
+#           File in use by: jost  Hostname: ubuntu  ProcessID: 1649
+#           Attempting to use alternate WLF file "./wlftW8R7vx".
+# ** Warning: (vsim-WLF-5001) Could not open WLF file: vsim.wlf
+#           Using alternate file: ./wlftW8R7vx
+#  write list -window .main_pane.list ./Logs/Issue4/dftO3.log  
+#  exit -f 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  # # 2 Issue
+# cat ./Memory/Issue2/d_dftO0.hex > d_mem.hex
+# cat ./Memory/Issue2/i_dftO0.hex > i_mem.hex
+#/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0//simulation.do  ./Logs/Issue2/dftO0
+# cat ./Memory/Issue2/d_dftO1.hex > d_mem.hex
+# cat ./Memory/Issue2/i_dftO1.hex > i_mem.hex
+#/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0//simulation.do  ./Logs/Issue2/dftO1
+# cat ./Memory/Issue2/d_dftO2.hex > d_mem.hex
+# cat ./Memory/Issue2/i_dftO2.hex > i_mem.hex
+#/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0//simulation.do  ./Logs/Issue2/dftO2
+# cat ./Memory/Issue2/d_dftO3.hex > d_mem.hex
+# cat ./Memory/Issue2/i_dftO3.hex > i_mem.hex
+#/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0//simulation.do  ./Logs/Issue2/dftO3
+# 4 Issue
+# cat ./Memory/Issue4/d_dftO0.hex > d_mem.hex
+# cat ./Memory/Issue4/i_dftO0.hex > i_mem.hex
+# /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0//simulation.do  ./Logs/Issue4/dftO0
+# Reading /home/jost/altera/13.1/modelsim_ase/tcl/vsim/pref.tcl 
+# cat ./Memory/Issue4/d_dftO2.hex > d_mem.hex
+# cat ./Memory/Issue4/i_dftO2.hex > i_mem.hex
+# /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0//simulation.do  ./Logs/Issue4/dftO2
+# Reading /home/jost/altera/13.1/modelsim_ase/tcl/vsim/pref.tcl 
+# cat ./Memory/Issue4/d_dftO3.hex > d_mem.hex
+# cat ./Memory/Issue4/i_dftO3.hex > i_mem.hex
+# /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0//simulation.do  ./Logs/Issue4/dftO3
+# Reading /home/jost/altera/13.1/modelsim_ase/tcl/vsim/pref.tcl 
+# # 8 Issue
+# cat ./Memory/Issue8/d_dftO0.hex > d_mem.hex
+# cat ./Memory/Issue8/i_dftO0.hex > i_mem.hex
+# /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0//simulation.do  ./Logs/Issue8/dftO0
+# cat ./Memory/Issue8/d_dftO1.hex > d_mem.hex
+# cat ./Memory/Issue8/i_dftO1.hex > i_mem.hex
+# /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0//simulation.do  ./Logs/Issue8/dftO1
+# cat ./Memory/Issue8/d_dftO2.hex > d_mem.hex
+# cat ./Memory/Issue8/i_dftO2.hex > i_mem.hex
+# /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0//simulation.do  ./Logs/Issue8/dftO2
+# cat ./Memory/Issue8/d_dftO3.hex > d_mem.hex
+# cat ./Memory/Issue8/i_dftO3.hex > i_mem.hex
+# /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0//simulation.do  ./Logs/Issue8/dftO3
+# # Generic
+# cat ./Memory/Generic/d_dftO0.hex > d_mem.hex
+# cat ./Memory/Generic/i_dftO0.hex > i_mem.hex
+# /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0//simulation.do  ./Logs/Generic/dftO0
+# cat ./Memory/Generic/d_dftO1.hex > d_mem.hex
+# cat ./Memory/Generic/i_dftO1.hex > i_mem.hex
+# /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0//simulation.do  ./Logs/Generic/dftO1
+# cat ./Memory/Generic/d_dftO2.hex > d_mem.hex
+# cat ./Memory/Generic/i_dftO2.hex > i_mem.hex
+# /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0//simulation.do  ./Logs/Generic/dftO2
+# cat ./Memory/Generic/d_dftO3.hex > d_mem.hex
+# cat ./Memory/Generic/i_dftO3.hex > i_mem.hex
+# /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0//simulation.do  ./Logs/Generic/dftO3
+cd ../bispo2012/set-ifs
+# Cannot change directory while a simulation is in progress.
+# Use the "quit -sim" command to unload the design first.

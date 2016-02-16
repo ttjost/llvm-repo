@@ -214,8 +214,11 @@ int main(int argc, char **argv) {
     if (SetMergedModule && i == BaseArg) {
       // Transfer ownership to the code generator.
       CodeGen.setModule(Module.release());
-    } else if (!CodeGen.addModule(Module.get()))
+    } else if (!CodeGen.addModule(Module.get())) {
+      // Print a message here so that we know addModule() did not abort.
+      errs() << argv[0] << ": error adding file '" << InputFilenames[i] << "'\n";
       return 1;
+    }
 
     unsigned NumSyms = LTOMod->getSymbolCount();
     for (unsigned I = 0; I < NumSyms; ++I) {
@@ -253,11 +256,9 @@ int main(int argc, char **argv) {
     CodeGen.setAttr(attrs.c_str());
 
   if (!OutputFilename.empty()) {
-    size_t len = 0;
     std::string ErrorInfo;
-    const void *Code =
-        CodeGen.compile(&len, DisableInline, DisableGVNLoadPRE,
-                        DisableLTOVectorization, ErrorInfo);
+    std::unique_ptr<MemoryBuffer> Code = CodeGen.compile(
+        DisableInline, DisableGVNLoadPRE, DisableLTOVectorization, ErrorInfo);
     if (!Code) {
       errs() << argv[0]
              << ": error compiling the code: " << ErrorInfo << "\n";
@@ -272,7 +273,7 @@ int main(int argc, char **argv) {
       return 1;
     }
 
-    FileStream.write(reinterpret_cast<const char *>(Code), len);
+    FileStream.write(Code->getBufferStart(), Code->getBufferSize());
   } else {
     std::string ErrorInfo;
     const char *OutputName = nullptr;

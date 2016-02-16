@@ -294,7 +294,7 @@ int main()
     /* Verify results */
     for(i=0;i<700;i++)
         if (output[i]!=out_data[i]){
-            printf("666\n");
+            printf("%d ");
             return 666;
         }
         

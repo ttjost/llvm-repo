@@ -20,10 +20,10 @@ using namespace llvm;
 
 void VEXMCAsmInfo::anchor() { }
 
-VEXMCAsmInfo::VEXMCAsmInfo(StringRef TT) {
+VEXMCAsmInfo::VEXMCAsmInfo(const Triple &TT) {
     Triple TheTriple(TT);
-    if ((TheTriple.getArch() == Triple::vex))
-        isNewScheduling = false;
+//    if ((TheTriple.getArch() == Triple::vex))
+    isNewScheduling = false;
 
     AlignmentIsInBytes          = true;
     LabelSuffix                 = ":";

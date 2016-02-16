@@ -144,13 +144,13 @@ using namespace llvm;
 // The function will be called at command 'llvm-objdump -d' for VEX elf input
 // FIXME:  Is this really necessary?
 
-static StringRef selectVEXArchFeature(StringRef TT, StringRef CPU){
+static StringRef selectVEXArchFeature(const Triple TT, StringRef CPU){
     std::string VEXArchFeature;
 
     if(CPU.empty() || CPU == "generic"){
         Triple TheTriple(TT);
-        if(TheTriple.getArch() == Triple::vex ||
-           TheTriple.getArch() == Triple::vexnew)
+//        if(TheTriple.getArch() == Triple::vex
+//           || TheTriple.getArch() == Triple::vexnew)
             if(CPU.empty() || CPU == "vex_I")
                 VEXArchFeature = "+vexI";
             else if (CPU == "VEX_II")
@@ -165,23 +165,21 @@ static MCInstrInfo *createVEXMCInstrInfo(){
     return X;
 }
 
-static MCRegisterInfo *createVEXMCRegisterInfo(StringRef TT){
+static MCRegisterInfo *createVEXMCRegisterInfo(const Triple &TT) {
     MCRegisterInfo *X = new MCRegisterInfo();
     InitVEXMCRegisterInfo(X, VEX::Lr);   // defined in VEXGenRegisterInfo.inc
     return X;
 }
 
-static MCSubtargetInfo *createVEXMCSubtargetInfo(StringRef TT, StringRef CPU,
-                                                 StringRef FS){
+static MCSubtargetInfo *createVEXMCSubtargetInfo(const Triple &TT, StringRef CPU,
+                                                 StringRef FS) {
     std::string ArchFS = selectVEXArchFeature(TT, CPU);
     if(!FS.empty())
         if(ArchFS.empty())
             ArchFS = ArchFS + "," + FS.str();
         else
             ArchFS = FS;
-
-    MCSubtargetInfo *X = new MCSubtargetInfo();
-
+    
 //    // ********************************************
 //    struct ConfigInfo Config;
 //    DenseSet<unsigned> allInsnClasses;
@@ -210,11 +208,10 @@ static MCSubtargetInfo *createVEXMCSubtargetInfo(StringRef TT, StringRef CPU,
 //    }
 //    errs () << "};\n";
     
-    InitVEXMCSubtargetInfo(X, TT, CPU, ArchFS); // defined in VEXGenRegisterInfo.inc
-    return X;
+    return createVEXMCSubtargetInfoImpl(TT, CPU, ArchFS); // defined in VEXGenRegisterInfo.inc
 }
 
-static MCAsmInfo *createVEXMCAsmInfo(const MCRegisterInfo &MRI, StringRef TT){
+static MCAsmInfo *createVEXMCAsmInfo(const MCRegisterInfo &MRI, const Triple &TT){
 
     MCAsmInfo *MAI = new VEXMCAsmInfo(TT);
     unsigned stack_pointer = MRI.getDwarfRegNum(VEX::Reg1, true);
@@ -225,16 +222,16 @@ static MCAsmInfo *createVEXMCAsmInfo(const MCRegisterInfo &MRI, StringRef TT){
     return MAI;
 }
 
-static MCCodeGenInfo *createVEXMCCodeGenInfo(StringRef TT, Reloc::Model RM,
-                                             CodeModel::Model CM,
-                                             CodeGenOpt::Level OL){
+static MCCodeGenInfo *createVEXMCCodeGenInfo(const Triple &TT, Reloc::Model RM,
+                                              CodeModel::Model CM,
+                                             CodeGenOpt::Level OL) {
     MCCodeGenInfo *X = new MCCodeGenInfo();
 
     if(CM == CodeModel::JITDefault)
         RM = Reloc::Static;
     else if(RM == CodeModel::Default)
         RM = Reloc::PIC_;
-    X->InitMCCodeGenInfo(RM,CM, OL);    // defined in lib/MC/MCCodeGenInfo.cpp
+    X->initMCCodeGenInfo(RM,CM, OL);    // defined in lib/MC/MCCodeGenInfo.cpp
     return X;
 }
 
@@ -256,33 +253,29 @@ static MCInstPrinter *createVEXMCInstPrinter(const Triple &T,
 //LLVMInitializeVEXTargetMC
 extern "C" void LLVMInitializeVEXTargetMC(){
 
+    for (Target *T : {&TheVEXTarget}) {
     // Register the MC asm info.
-    RegisterMCAsmInfoFn X(TheVEXTarget, createVEXMCAsmInfo);
-    RegisterMCAsmInfoFn Y(TheVEXNewTarget, createVEXMCAsmInfo);
+    RegisterMCAsmInfoFn X(*T, createVEXMCAsmInfo);
 
     // Register the MC codegen Info.
-    TargetRegistry::RegisterMCCodeGenInfo(TheVEXTarget, createVEXMCCodeGenInfo);
-    TargetRegistry::RegisterMCCodeGenInfo(TheVEXNewTarget, createVEXMCCodeGenInfo);
+    TargetRegistry::RegisterMCCodeGenInfo(*T, createVEXMCCodeGenInfo);
 
     // Register the MC instruction info
-    TargetRegistry::RegisterMCInstrInfo(TheVEXTarget, createVEXMCInstrInfo);
-    TargetRegistry::RegisterMCInstrInfo(TheVEXNewTarget, createVEXMCInstrInfo);
+    TargetRegistry::RegisterMCInstrInfo(*T, createVEXMCInstrInfo);
 
     // Register the MC Register Info
-    TargetRegistry::RegisterMCRegInfo(TheVEXTarget, createVEXMCRegisterInfo);
-    TargetRegistry::RegisterMCRegInfo(TheVEXNewTarget, createVEXMCRegisterInfo);
+    TargetRegistry::RegisterMCRegInfo(*T, createVEXMCRegisterInfo);
 
     // Register the MC SubtargetInfo
-    TargetRegistry::RegisterMCSubtargetInfo(TheVEXTarget, createVEXMCSubtargetInfo);
-    TargetRegistry::RegisterMCSubtargetInfo(TheVEXNewTarget, createVEXMCSubtargetInfo);
+    TargetRegistry::RegisterMCSubtargetInfo(*T, createVEXMCSubtargetInfo);
 
     // Register the MCStreamer (needed to modify the way a string is writen into memory
     // Register the asm target streamer.
-    TargetRegistry::RegisterAsmTargetStreamer(TheVEXTarget, createAsmTargetStreamer);
-    TargetRegistry::RegisterAsmTargetStreamer(TheVEXNewTarget, createAsmTargetStreamer);
+    TargetRegistry::RegisterAsmTargetStreamer(*T, createAsmTargetStreamer);
 
     // Register the MC InstPrinter
-    TargetRegistry::RegisterMCInstPrinter(TheVEXTarget, createVEXMCInstPrinter);
-    TargetRegistry::RegisterMCInstPrinter(TheVEXNewTarget, createVEXMCInstPrinter);
+    TargetRegistry::RegisterMCInstPrinter(*T, createVEXMCInstPrinter);
+    
+    }
 
 }

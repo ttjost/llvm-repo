@@ -20,7 +20,7 @@ using namespace llvm;
 #define DEBUG_TYPE "vex-selectiondag"
 
 VEXSelectionDAGInfo::VEXSelectionDAGInfo(const DataLayout &DL)
-: TargetSelectionDAGInfo(&DL) {
+: TargetSelectionDAGInfo() {
     DEBUG(errs() << "selectiondaginfo\n");
 }
 

@@ -19,7 +19,7 @@ extern "C" void LLVMInitializeVEXTargetInfo() {
     RegisterTarget<Triple::vex,
         /*HasJIT=*/false> X(TheVEXTarget, "vex", "VEX");
     
-    RegisterTarget<Triple::vexnew,
-        /*HasJIT=*/false> Y(TheVEXNewTarget,"vexnew", "VEX New Scheduling");
+//    RegisterTarget<Triple::vexnew,
+//        /*HasJIT=*/false> Y(TheVEXNewTarget,"vexnew", "VEX New Scheduling");
 
 }

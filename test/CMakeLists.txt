@@ -19,7 +19,6 @@ set(LLVM_TEST_DEPENDS
           UnitTests
           BugpointPasses
           LLVMHello
-          LLVMReplaceHelloName
           bugpoint
           llc
           lli
@@ -35,6 +34,7 @@ set(LLVM_TEST_DEPENDS
           llvm-dsymutil
           llvm-dwarfdump
           llvm-extract
+          llvm-lib
           llvm-link
           llvm-lto
           llvm-mc
@@ -53,6 +53,7 @@ set(LLVM_TEST_DEPENDS
           FileCheck
           count
           not
+          yaml-bench
           yaml2obj
           obj2yaml
           verify-uselistorder

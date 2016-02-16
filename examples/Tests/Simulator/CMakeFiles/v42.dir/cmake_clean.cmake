@@ -1,0 +1,42 @@
+FILE(REMOVE_RECURSE
+  "CMakeFiles/v42"
+  "v42.simu"
+  "v42/v42_0.out"
+  "v42/v42_1.out"
+  "v42/v42_2.out"
+  "v42/v42_3.out"
+  "v42/v42_0.exec"
+  "v42/v42_1.exec"
+  "v42/v42_2.exec"
+  "v42/v42_3.exec"
+  "v42/v42_0.o"
+  "v42/memset_0.o"
+  "_start.o"
+  "v42/v42_1.o"
+  "v42/memset_1.o"
+  "v42/v42_2.o"
+  "v42/memset_2.o"
+  "v42/v42_3.o"
+  "v42/memset_3.o"
+  "v42/v42_0.s"
+  "v42/memset_0.s"
+  "v42/v42_1.s"
+  "v42/memset_1.s"
+  "v42/v42_2.s"
+  "v42/memset_2.s"
+  "v42/v42_3.s"
+  "v42/memset_3.s"
+  "v42/v42_0.ll"
+  "v42/memset_0.ll"
+  "v42/v42_1.ll"
+  "v42/memset_1.ll"
+  "v42/v42_2.ll"
+  "v42/memset_2.ll"
+  "v42/v42_3.ll"
+  "v42/memset_3.ll"
+)
+
+# Per-language clean rules from dependency scanning.
+FOREACH(lang)
+  INCLUDE(CMakeFiles/v42.dir/cmake_clean_${lang}.cmake OPTIONAL)
+ENDFOREACH(lang)

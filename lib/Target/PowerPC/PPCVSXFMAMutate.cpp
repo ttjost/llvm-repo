@@ -103,6 +103,11 @@ protected:
 
         VNInfo *AddendValNo =
           LIS->getInterval(MI->getOperand(1).getReg()).Query(FMAIdx).valueIn();
+        if (!AddendValNo) {
+          // This can be null if the register is undef.
+          continue;
+        }
+
         MachineInstr *AddendMI = LIS->getInstructionFromIndex(AddendValNo->def);
 
         // The addend and this instruction must be in the same block.
@@ -136,6 +141,16 @@ protected:
         // source of the copy, it must still be live here.  We can't use
         // interval testing for a physical register, so as long as we're
         // walking the MIs we may as well test liveness here.
+        //
+        // FIXME: There is a case that occurs in practice, like this:
+        //   %vreg9<def> = COPY %F1; VSSRC:%vreg9
+        //   ...
+        //   %vreg6<def> = COPY %vreg9; VSSRC:%vreg6,%vreg9
+        //   %vreg7<def> = COPY %vreg9; VSSRC:%vreg7,%vreg9
+        //   %vreg9<def,tied1> = XSMADDASP %vreg9<tied0>, %vreg1, %vreg4; VSSRC:
+        //   %vreg6<def,tied1> = XSMADDASP %vreg6<tied0>, %vreg1, %vreg2; VSSRC:
+        //   %vreg7<def,tied1> = XSMADDASP %vreg7<tied0>, %vreg1, %vreg3; VSSRC:
+        // which prevents an otherwise-profitable transformation.
         bool OtherUsers = false, KillsAddendSrc = false;
         for (auto J = std::prev(I), JE = MachineBasicBlock::iterator(AddendMI);
              J != JE; --J) {
@@ -171,11 +186,14 @@ protected:
         if (!KilledProdOp)
           continue;
 
-        // For virtual registers, verify that the addend source register
-        // is live here (as should have been assured above).
-        assert((!TargetRegisterInfo::isVirtualRegister(AddendSrcReg) ||
-                LIS->getInterval(AddendSrcReg).liveAt(FMAIdx)) &&
-               "Addend source register is not live!");
+	// If the addend copy is used only by this MI, then the addend source
+	// register is likely not live here. This could be fixed (based on the
+	// legality checks above, the live range for the addend source register
+	// could be extended), but it seems likely that such a trivial copy can
+	// be coalesced away later, and thus is not worth the effort.
+	if (TargetRegisterInfo::isVirtualRegister(AddendSrcReg) &&
+            !LIS->getInterval(AddendSrcReg).liveAt(FMAIdx))
+          continue;
 
         // Transform: (O2 * O3) + O1 -> (O2 * O1) + O3.
 

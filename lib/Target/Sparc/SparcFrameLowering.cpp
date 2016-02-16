@@ -82,10 +82,11 @@ void SparcFrameLowering::emitSPAdjustment(MachineFunction &MF,
     .addReg(SP::O6).addReg(SP::G1);
 }
 
-void SparcFrameLowering::emitPrologue(MachineFunction &MF) const {
+void SparcFrameLowering::emitPrologue(MachineFunction &MF,
+                                      MachineBasicBlock &MBB) const {
   SparcMachineFunctionInfo *FuncInfo = MF.getInfo<SparcMachineFunctionInfo>();
 
-  MachineBasicBlock &MBB = MF.front();
+  assert(&MF.front() == &MBB && "Shrink-wrapping not yet supported");
   MachineFrameInfo *MFI = MF.getFrameInfo();
   const SparcInstrInfo &TII =
       *static_cast<const SparcInstrInfo *>(MF.getSubtarget().getInstrInfo());
@@ -246,9 +247,10 @@ void SparcFrameLowering::remapRegsForLeafProc(MachineFunction &MF) const {
 #endif
 }
 
-void SparcFrameLowering::processFunctionBeforeCalleeSavedScan
-                  (MachineFunction &MF, RegScavenger *RS) const {
-
+void SparcFrameLowering::determineCalleeSaves(MachineFunction &MF,
+                                              BitVector &SavedRegs,
+                                              RegScavenger *RS) const {
+  TargetFrameLowering::determineCalleeSaves(MF, SavedRegs, RS);
   if (!DisableLeafProc && isLeafProc(MF)) {
     SparcMachineFunctionInfo *MFI = MF.getInfo<SparcMachineFunctionInfo>();
     MFI->setLeafProc(true);

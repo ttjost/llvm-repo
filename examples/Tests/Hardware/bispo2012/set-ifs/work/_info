@@ -1,0 +1,1282 @@
+m255
+K3
+13
+cModel Technology
+Z0 d/media/psf/Home/Dropbox/Universidade/Mestrado/llvm/examples/Tests/Hardware/bispo2012/set-ifs
+Ealu
+Z1 w1366254576
+Z2 DPx4 work 10 opcode_pkg 0 22 D1<E_m_W0gX=M[]Um1oB]1
+Z3 DPx4 ieee 11 numeric_std 0 22 O3PF8EB`?j9=z7KT`fn941
+Z4 DPx3 std 6 textio 0 22 5>J:;AW>W0[[dW0I6EN1Q0
+Z5 DPx4 ieee 14 std_logic_1164 0 22 5=aWaoGZSMWIcH0i^f`XF1
+Z6 d/media/psf/Home/Dropbox/Universidade/Mestrado/llvm/examples/Tests/Hardware/bispo2012/set-ifs
+Z7 8/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/alu.vhd
+Z8 F/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/alu.vhd
+l0
+L53
+V^go]ooEXkngch27f[Ya[Z1
+Z9 OV;C;10.1d;51
+31
+Z10 !s108 1446653623.431304
+Z11 !s90 -quiet|-93|-work|work|/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/alu.vhd|
+Z12 !s107 /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/alu.vhd|
+Z13 o-quiet -93 -work work -O0
+Z14 tExplicit 1
+!s100 =JiHLlN;EcdLmAP`<S29S3
+!i10b 1
+Abehavioural
+R2
+R3
+R4
+R5
+Z15 DEx4 work 3 alu 0 22 ^go]ooEXkngch27f[Ya[Z1
+l93
+L67
+V16J8_XGKR3CI`=SYS26@K0
+R9
+31
+R10
+R11
+R12
+R13
+R14
+!s100 Z3Z;fPJbMhkm8Al]5L<Lz2
+!i10b 1
+Ebin_encoder
+R1
+R3
+Z16 DPx4 work 8 rvex_pkg 0 22 LDPebGJY3:gP2kADA1zRD0
+Z17 DPx4 work 8 type_pkg 0 22 MlH^3EKnlP_G3e;;?fNBP2
+Z18 DPx4 ieee 16 std_logic_textio 0 22 ?Il0a149GV276[?[UMDWh2
+Z19 DPx4 work 8 util_pkg 0 22 0mAe>iY62H4?bgOD3]4WM1
+R4
+R5
+R6
+Z20 8/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/bin_encoder.vhd
+Z21 F/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/bin_encoder.vhd
+l0
+L49
+VE32hnAY_^Rg_><9C[D8243
+R9
+31
+Z22 !s108 1446653623.035863
+Z23 !s90 -quiet|-93|-work|work|/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/bin_encoder.vhd|
+Z24 !s107 /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/bin_encoder.vhd|
+R13
+R14
+!s100 8o>N41]cLjlc]`WMeZ><Z3
+!i10b 1
+Apara_arch0
+R3
+R16
+R17
+R18
+R19
+R4
+R5
+Z25 DEx4 work 11 bin_encoder 0 22 E32hnAY_^Rg_><9C[D8243
+l76
+L57
+VCB32fHEb9oDYi3JoKJD?90
+R9
+31
+R22
+R23
+R24
+R13
+R14
+!s100 e_DVX3HCf]@3Q;;T6e7^j0
+!i10b 1
+Ebr_registers
+R1
+R17
+R16
+R3
+R4
+R5
+R6
+Z26 8/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/br_registers.vhd
+Z27 F/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/br_registers.vhd
+l0
+L9
+VgTgCUMFVO@jPN_gSJFTa<3
+R9
+31
+Z28 !s108 1446653622.513306
+Z29 !s90 -quiet|-93|-work|work|/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/br_registers.vhd|
+Z30 !s107 /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/br_registers.vhd|
+R13
+R14
+!s100 l?eAHQg_OgTOZDkHDTJXz1
+!i10b 1
+Abehavioural
+R17
+R16
+R3
+R4
+R5
+Z31 DEx4 work 12 br_registers 0 22 gTgCUMFVO@jPN_gSJFTa<3
+l27
+L23
+VXO8mQ4;N]^hb=n;ilVHoR1
+R9
+31
+R28
+R29
+R30
+R13
+R14
+!s100 6Ec>`]YdXcRCJnT5YN1NX2
+!i10b 1
+Ebranch_unit
+R1
+R17
+R18
+R19
+Z32 DPx4 work 15 ctrl_operations 0 22 0bOA1HC<46FhMnW<8G<mZ2
+R2
+R3
+R16
+R4
+R5
+R6
+Z33 8/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/branch_unit.vhd
+Z34 F/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/branch_unit.vhd
+l0
+L54
+V@EQaW25<YCb1_8V6dh>4:2
+R9
+31
+Z35 !s108 1446653623.220182
+Z36 !s90 -quiet|-93|-work|work|/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/branch_unit.vhd|
+Z37 !s107 /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/branch_unit.vhd|
+R13
+R14
+!s100 5?JNX?lW>7aeI15YC>c5?3
+!i10b 1
+Abehavioural
+R17
+R18
+R19
+R32
+R2
+R3
+R16
+R4
+R5
+Z38 DEx4 work 11 branch_unit 0 22 @EQaW25<YCb1_8V6dh>4:2
+l74
+L71
+Vd8mKGHhi^`bU>0Q0J^a;K1
+R9
+31
+R35
+R36
+R37
+R13
+R14
+!s100 m8VJ1iBzlZiI5=EUAULVm3
+!i10b 1
+Pctrl_operations
+R17
+R18
+R19
+R16
+R3
+R4
+R5
+R1
+R6
+Z39 8/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/ctrl_operations.vhd
+Z40 F/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/ctrl_operations.vhd
+l0
+L54
+V0bOA1HC<46FhMnW<8G<mZ2
+R9
+31
+b1
+Z41 !s108 1446653622.362562
+Z42 !s90 -quiet|-93|-work|work|/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/ctrl_operations.vhd|
+Z43 !s107 /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/ctrl_operations.vhd|
+R13
+R14
+!s100 Z8L<MPNa76Yd`e28K41_n3
+!i10b 1
+Bbody
+R32
+R17
+R18
+R19
+R16
+R3
+R4
+R5
+l0
+L64
+V;]0@237_nD1lH8:lh3FLY3
+R9
+31
+R41
+R42
+R43
+R13
+R14
+nbody
+!s100 e2lJYl3Q8lIYfL6bQh5bN0
+!i10b 1
+Ed_mem
+Z44 w1446220867
+R17
+R18
+R19
+R16
+R3
+R4
+R5
+R6
+Z45 8/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/d_mem.vhd
+Z46 F/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/d_mem.vhd
+l0
+L55
+V5;jSE<>gJgFIW3CLKchOl1
+R9
+31
+Z47 !s108 1446653623.802122
+Z48 !s90 -quiet|-93|-work|work|/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/d_mem.vhd|
+Z49 !s107 /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/d_mem.vhd|
+R13
+R14
+!s100 YI9T7[QIGAG6Q5lg8a>nh1
+!i10b 1
+Abehavioural
+R17
+R18
+R19
+R16
+R3
+R4
+R5
+Z50 DEx4 work 5 d_mem 0 22 5;jSE<>gJgFIW3CLKchOl1
+l72
+L68
+Vz]W`<O0V1]QHPlWAIYYcZ1
+R9
+31
+R47
+R48
+R49
+R13
+R14
+!s100 Nhl0o4^?HY``an011Z_7j1
+!i10b 1
+Pdecode_pkg
+R17
+R2
+R16
+R3
+R4
+R5
+R1
+R6
+Z51 8/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/decode_pkg.vhd
+Z52 F/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/decode_pkg.vhd
+l0
+L55
+VbMLlHTZSO3I;NPO:ZY]]O1
+R9
+31
+b1
+Z53 !s108 1446653622.290802
+Z54 !s90 -quiet|-93|-work|work|/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/decode_pkg.vhd|
+Z55 !s107 /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/decode_pkg.vhd|
+R13
+R14
+!s100 e04GHNTR:>I9>2dhA0HaQ0
+!i10b 1
+Bbody
+Z56 DPx4 work 10 decode_pkg 0 22 bMLlHTZSO3I;NPO:ZY]]O1
+R17
+R2
+R16
+R3
+R4
+R5
+l0
+L153
+V5Mgl;^LNem]@68^JRQQ8b2
+R9
+31
+R53
+R54
+R55
+R13
+R14
+nbody
+!s100 A]EUlM^Ia]IUA>z8=98Ge0
+!i10b 1
+Edecoder
+Z57 w1390113958
+R2
+R56
+R17
+R16
+R3
+R4
+R5
+R6
+Z58 8/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/decoder.vhd
+Z59 F/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/decoder.vhd
+l0
+L55
+VcY02?n29bn[onUdW3Y12G1
+R9
+31
+Z60 !s108 1446653623.356645
+Z61 !s90 -quiet|-93|-work|work|/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/decoder.vhd|
+Z62 !s107 /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/decoder.vhd|
+R13
+R14
+!s100 n53zSW_?=ZJ^k3BGe@;Yn3
+!i10b 1
+Astructural
+Z63 DEx4 work 14 forward_decode 0 22 gmb]<bfmQ^o3;Pn13`GIN2
+R18
+R19
+R32
+R38
+Z64 DEx4 work 12 forward_link 0 22 ;L0h=T68j0;FckB0IczWW3
+R2
+R56
+R17
+R16
+R3
+R4
+R5
+Z65 DEx4 work 7 decoder 0 22 cY02?n29bn[onUdW3Y12G1
+l129
+L104
+V@i:J<Jhe4nIGSa]CL_DK82
+R9
+31
+R60
+R61
+R62
+R13
+R14
+!s100 SVKJAj74k8bNTM7S[jNeP2
+!i10b 1
+Eexecute
+R1
+R17
+R56
+R2
+R16
+R3
+R4
+R5
+R6
+Z66 8/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/execute.vhd
+Z67 F/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/execute.vhd
+l0
+L54
+V>_6d]8Lkj;nUjX7LJ8Lha2
+R9
+31
+Z68 !s108 1446653623.499553
+Z69 !s90 -quiet|-93|-work|work|/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/execute.vhd|
+Z70 !s107 /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/execute.vhd|
+R13
+R14
+!s100 @9H2A0DT^K:ikW2?BLl6N1
+!i10b 1
+Abehavioural
+Z71 DEx4 work 3 mul 0 22 L4`SBJc=BSE[9lQ44e@4`1
+R18
+R19
+Z72 DPx4 work 14 mem_operations 0 22 Z[bha2?ecNLSV_V^A1PZ=3
+Z73 DEx4 work 3 mem 0 22 VO5Y52[>^3APzZ^Im3ZSL2
+R15
+R17
+R56
+R2
+R16
+R3
+R4
+R5
+Z74 DEx4 work 7 execute 0 22 >_6d]8Lkj;nUjX7LJ8Lha2
+l139
+L100
+VHUdDUVjm<Z7HDaXMc5KbJ0
+R9
+31
+R68
+R69
+R70
+R13
+R14
+!s100 _l>>K^RIP^>Bg:5:=SLEb3
+!i10b 1
+Efetch
+R1
+R2
+R17
+R18
+R19
+R16
+R3
+R4
+R5
+R6
+Z75 8/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/fetch.vhd
+Z76 F/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/fetch.vhd
+l0
+L55
+VIjMVbcXIAODTm_`IYaaio3
+R9
+31
+Z77 !s108 1446653622.787573
+Z78 !s90 -quiet|-93|-work|work|/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/fetch.vhd|
+Z79 !s107 /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/fetch.vhd|
+R13
+R14
+!s100 S9IIGfGA^`89lNhjajQDm3
+!i10b 1
+Astructural
+R2
+R17
+R18
+R19
+R16
+R3
+R4
+R5
+Z80 DEx4 work 5 fetch 0 22 IjMVbcXIAODTm_`IYaaio3
+l100
+L77
+VnfW`:0YebYA]<Hcf[ocEd1
+R9
+31
+R77
+R78
+R79
+R13
+R14
+!s100 RQ^k3]O]gUc:YZkUR_J2M3
+!i10b 1
+Eforward_decode
+R1
+R17
+R16
+R3
+R4
+R5
+R6
+Z81 8/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/forward_decode.vhd
+Z82 F/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/forward_decode.vhd
+l0
+L54
+Vgmb]<bfmQ^o3;Pn13`GIN2
+R9
+31
+Z83 !s108 1446653623.096615
+Z84 !s90 -quiet|-93|-work|work|/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/forward_decode.vhd|
+Z85 !s107 /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/forward_decode.vhd|
+R13
+R14
+!s100 =nKb0L@_VAZMn3=a<7z410
+!i10b 1
+Abehavioral
+R17
+R16
+R3
+R4
+R5
+R63
+l68
+L67
+V5Bzd[fT6k>fCUiSkWMHzH1
+R9
+31
+R83
+R84
+R85
+R13
+R14
+!s100 4ZFA9]k8[F5Y5aji4Y5L;2
+!i10b 1
+Eforward_link
+R1
+R16
+R17
+R3
+R4
+R5
+R6
+Z86 8/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/forward_link.vhd
+Z87 F/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/forward_link.vhd
+l0
+L53
+V;L0h=T68j0;FckB0IczWW3
+R9
+31
+Z88 !s108 1446653622.853293
+Z89 !s90 -quiet|-93|-work|work|/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/forward_link.vhd|
+Z90 !s107 /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/forward_link.vhd|
+R13
+R14
+!s100 3<=ZFWDgD8DQg<]?nfdc?1
+!i10b 1
+Abehavioural
+R16
+R17
+R3
+R4
+R5
+R64
+l68
+L66
+VO^:U>`aYIogSb[:HU=6A41
+R9
+31
+R88
+R89
+R90
+R13
+R14
+!s100 nVF5[Oi_H5ITF0W7S4zI]1
+!i10b 1
+Ei_mem
+Z91 w1446220855
+R16
+R17
+R19
+R18
+R3
+R4
+R5
+R6
+Z92 8/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/i_mem.vhd
+Z93 F/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/i_mem.vhd
+l0
+L60
+VJB]EIleMcFk7dbB5VD]R;1
+R9
+31
+Z94 !s108 1446653623.735930
+Z95 !s90 -quiet|-93|-work|work|/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/i_mem.vhd|
+Z96 !s107 /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/i_mem.vhd|
+R13
+R14
+!s100 ZX78_CCfTiBAQTa5;0N563
+!i10b 1
+Artl
+R16
+R17
+R19
+R18
+R3
+R4
+R5
+Z97 DEx4 work 5 i_mem 0 22 JB]EIleMcFk7dbB5VD]R;1
+l121
+L77
+V;K>;o22z?k?:8OonQ1aQG0
+R9
+31
+R94
+R95
+R96
+R13
+R14
+!s100 @H5E?EFl7DeDm]nK3OBJb0
+!i10b 1
+Elink_registers
+R1
+R16
+R17
+R3
+R4
+R5
+R6
+Z98 8/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/link_registers.vhd
+Z99 F/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/link_registers.vhd
+l0
+L53
+VZ9MnPHeXR?3i_5mPdz0?F0
+R9
+31
+Z100 !s108 1446653623.299793
+Z101 !s90 -quiet|-93|-work|work|/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/link_registers.vhd|
+Z102 !s107 /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/link_registers.vhd|
+R13
+R14
+!s100 4]BlR6kbl8FgU[T28f?<81
+!i10b 1
+Abehavioral
+R16
+R17
+R3
+R4
+R5
+Z103 DEx4 work 14 link_registers 0 22 Z9MnPHeXR?3i_5mPdz0?F0
+l72
+L68
+V>8?:aeWNnBG=N<n_1jN7h1
+R9
+31
+R100
+R101
+R102
+R13
+R14
+!s100 XNaf5P6R:ZYc?19nT7h0W1
+!i10b 1
+Emem
+R1
+R2
+R17
+R18
+R19
+R72
+R16
+R3
+R4
+R5
+R6
+Z104 8/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/mem.vhd
+Z105 F/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/mem.vhd
+l0
+L54
+VVO5Y52[>^3APzZ^Im3ZSL2
+R9
+31
+Z106 !s108 1446653622.595857
+Z107 !s90 -quiet|-93|-work|work|/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/mem.vhd|
+Z108 !s107 /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/mem.vhd|
+R13
+R14
+!s100 AfB5ffBGZBHd[5]FO1DN=0
+!i10b 1
+Abehavioural
+R2
+R17
+R18
+R19
+R72
+R16
+R3
+R4
+R5
+R73
+l81
+L73
+VGM>eE>bJ2iN9zQFI^aX^T2
+R9
+31
+R106
+R107
+R108
+R13
+R14
+!s100 ld`ZKeX3O9haDk0;<i90K3
+!i10b 1
+Pmem_operations
+R2
+R17
+R18
+R19
+R16
+R3
+R4
+R5
+R1
+R6
+Z109 8/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/mem_operations.vhd
+Z110 F/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/mem_operations.vhd
+l0
+L55
+VZ[bha2?ecNLSV_V^A1PZ=3
+R9
+31
+b1
+Z111 !s108 1446653622.435208
+Z112 !s90 -quiet|-93|-work|work|/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/mem_operations.vhd|
+Z113 !s107 /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/mem_operations.vhd|
+R13
+R14
+!s100 V2VTbQg=GFHBSDI06?5Q11
+!i10b 1
+Bbody
+R72
+R2
+R17
+R18
+R19
+R16
+R3
+R4
+R5
+l0
+L80
+Vi>k`DX?NRG2MBMg087=??0
+R9
+31
+R111
+R112
+R113
+R13
+R14
+nbody
+!s100 B?;QVOX_0eaz6BUXn0W<82
+!i10b 1
+Emul
+R1
+R2
+R3
+R4
+R5
+R6
+Z114 8/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/mul.vhd
+Z115 F/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/mul.vhd
+l0
+L53
+VL4`SBJc=BSE[9lQ44e@4`1
+R9
+31
+Z116 !s108 1446653622.670073
+Z117 !s90 -quiet|-93|-work|work|/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/mul.vhd|
+Z118 !s107 /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/mul.vhd|
+R13
+R14
+!s100 9eG3PIDiO^T2Y>AAzBDP@2
+!i10b 1
+Abehavioural
+R2
+R3
+R4
+R5
+R71
+l81
+L70
+VTbU8k:kKoeaLKKU>LmZ_F3
+R9
+31
+R116
+R117
+R118
+R13
+R14
+!s100 9ja662FcD8HQm_PHa^moV0
+!i10b 1
+Popcode_pkg
+R3
+R4
+R5
+R1
+R6
+Z119 8/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/opcode_pkg.vhd
+Z120 F/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/opcode_pkg.vhd
+l0
+L50
+VD1<E_m_W0gX=M[]Um1oB]1
+R9
+31
+b1
+Z121 !s108 1446653622.220237
+Z122 !s90 -quiet|-93|-work|work|/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/opcode_pkg.vhd|
+Z123 !s107 /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/opcode_pkg.vhd|
+R13
+R14
+!s100 Yg`c7YL628oD5`o@iL@<E1
+!i10b 1
+Bbody
+R2
+R3
+R4
+R5
+l0
+L178
+VHc;YgoZ8nJiY2B1k_KcNi0
+R9
+31
+R121
+R122
+R123
+R13
+R14
+nbody
+!s100 b7ach]nRkXOSjifKd0C^@3
+!i10b 1
+Epipe_lane
+R1
+R18
+R19
+R17
+R3
+R16
+R4
+R5
+R6
+Z124 8/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/pipe_lane.vhd
+Z125 F/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/pipe_lane.vhd
+l0
+L55
+VMedi2ZO797_PL[P<SaJI`0
+R9
+31
+Z126 !s108 1446653623.574509
+Z127 !s90 -quiet|-93|-work|work|/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/pipe_lane.vhd|
+Z128 !s107 /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/pipe_lane.vhd|
+R13
+R14
+!s100 `lkGH<@:9??lDA2]JMJ=E3
+!i10b 1
+Astr
+R74
+Z129 DEx4 work 12 post_forward 0 22 Lf<^MM[oeU_NWNZ@LDkXM0
+Z130 DEx4 work 14 pre_forwarding 0 22 m4ofzDFI5<c0FhAc6eBZ^0
+R2
+R56
+R65
+R18
+R19
+R17
+R3
+R16
+R4
+R5
+Z131 DEx4 work 9 pipe_lane 0 22 Medi2ZO797_PL[P<SaJI`0
+l171
+L125
+VSY4UoZFgCX4RF3^I[OCz]1
+R9
+31
+R126
+R127
+R128
+R13
+R14
+!s100 6F9h?Zdm4ThK6GoYO@;VJ0
+!i10b 1
+Epost_forward
+R1
+R16
+R17
+R18
+R19
+R3
+R4
+R5
+R6
+Z132 8/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/post_forward.vhd
+Z133 F/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/post_forward.vhd
+l0
+L54
+VLf<^MM[oeU_NWNZ@LDkXM0
+R9
+31
+Z134 !s108 1446653622.912596
+Z135 !s90 -quiet|-93|-work|work|/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/post_forward.vhd|
+Z136 !s107 /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/post_forward.vhd|
+R13
+R14
+!s100 =TQI<mSF=MVGSRYUA5clU0
+!i10b 1
+Abehavioral
+R16
+R17
+R18
+R19
+R3
+R4
+R5
+R129
+l72
+L68
+V6kBo>;eNQ@SV[@ePFj_M42
+R9
+31
+R134
+R135
+R136
+R13
+R14
+!s100 5gj2>c`5AcYj`7CnH>mB_3
+!i10b 1
+Epre_forwarding
+R1
+R16
+R17
+R18
+R19
+R3
+R4
+R5
+R6
+Z137 8/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/pre_forwarding.vhd
+Z138 F/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/pre_forwarding.vhd
+l0
+L52
+Vm4ofzDFI5<c0FhAc6eBZ^0
+R9
+31
+Z139 !s108 1446653623.156729
+Z140 !s90 -quiet|-93|-work|work|/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/pre_forwarding.vhd|
+Z141 !s107 /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/pre_forwarding.vhd|
+R13
+R14
+!s100 gn;C^gDhSe9B^9TaJ97`b1
+!i10b 1
+Abehavioral
+R25
+Z142 DEx4 work 18 reduced_and_vector 0 22 PcK`Zod2bbSoi^:;JM[QZ1
+R16
+R17
+R18
+R19
+R3
+R4
+R5
+R130
+l83
+L72
+VEib>S8A?Qi21@124?9]Sa0
+R9
+31
+R139
+R140
+R141
+R13
+R14
+!s100 _d1RJAWZoUf63F833QVgC3
+!i10b 1
+Ereduced_and_vector
+R1
+R3
+R16
+R17
+R18
+R19
+R4
+R5
+R6
+Z143 8/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/reduced_and_vector.vhd
+Z144 F/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/reduced_and_vector.vhd
+l0
+L49
+VPcK`Zod2bbSoi^:;JM[QZ1
+R9
+31
+Z145 !s108 1446653622.730178
+Z146 !s90 -quiet|-93|-work|work|/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/reduced_and_vector.vhd|
+Z147 !s107 /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/reduced_and_vector.vhd|
+R13
+R14
+!s100 H>UQVUC]SDT9c033m0VCT1
+!i10b 1
+Apara_prefix_arch
+R3
+R16
+R17
+R18
+R19
+R4
+R5
+R142
+l60
+L57
+V[lTU32oc`n0zY5U5m?U^?0
+R9
+31
+R145
+R146
+R147
+R13
+R14
+!s100 RBfN@6?[za:?M4ZUa@Ime0
+!i10b 1
+Eregisters_gr
+R1
+R18
+R19
+R16
+R17
+R3
+R4
+R5
+R6
+Z148 8/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/registers_gr.vhd
+Z149 F/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/registers_gr.vhd
+l0
+L54
+VgXHNA[Z>zIf1f212lS_5<2
+R9
+31
+Z150 !s108 1446653622.972844
+Z151 !s90 -quiet|-93|-work|work|/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/registers_gr.vhd|
+Z152 !s107 /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/registers_gr.vhd|
+R13
+R14
+!s100 GGi;4DlO3fQ5BhS?QVfMb0
+!i10b 1
+Abehavioral
+R18
+R19
+R16
+R17
+R3
+R4
+R5
+Z153 DEx4 work 12 registers_gr 0 22 gXHNA[Z>zIf1f212lS_5<2
+l82
+L68
+V92IzVW5d<>UQn^5Rbj1^;1
+R9
+31
+R150
+R151
+R152
+R13
+R14
+!s100 PQi6VcSGzG>lL[b02gbOA0
+!i10b 1
+Ervex
+Z154 w1446218969
+R17
+R3
+R16
+R4
+R5
+R6
+Z155 8/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/rvex.vhd
+Z156 F/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/rvex.vhd
+l0
+L53
+V47gDg1O8Jze1;:]a[9>Ci2
+R9
+31
+Z157 !s108 1446653623.653232
+Z158 !s90 -quiet|-93|-work|work|/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/rvex.vhd|
+Z159 !s107 /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/rvex.vhd|
+R13
+R14
+!s100 d=SY>BLfYNeX@IzgzlTXU3
+!i10b 1
+Abehavioural
+R131
+R2
+R80
+R103
+R31
+R18
+R19
+R153
+R17
+R3
+R16
+R4
+R5
+Z160 DEx4 work 4 rvex 0 22 47gDg1O8Jze1;:]a[9>Ci2
+l138
+L79
+VnXcNR8i8@?7k5X9a_<4LD0
+R9
+31
+R157
+R158
+R159
+R13
+R14
+!s100 >TebV[<nHf]K6Vd6WAf`73
+!i10b 1
+Prvex_pkg
+R3
+R4
+R5
+Z161 w1446217537
+R6
+Z162 8/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/rvex_pkg.vhd
+Z163 F/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/rvex_pkg.vhd
+l0
+L50
+VLDPebGJY3:gP2kADA1zRD0
+R9
+31
+Z164 !s108 1446653621.940268
+Z165 !s90 -quiet|-93|-work|work|/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/rvex_pkg.vhd|
+Z166 !s107 /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/rvex_pkg.vhd|
+R13
+R14
+!s100 5<5;V?Wf>k_:@azzOE;VU3
+!i10b 1
+Bbody
+R16
+R3
+R4
+R5
+l0
+L119
+V0:k91S`F4Wh1>^E9Y@VgM2
+R9
+31
+R164
+R165
+R166
+R13
+R14
+nbody
+!s100 Z=BbURniJAdNM03KO;Cll0
+!i10b 1
+Ervex_system
+Z167 w1397038644
+R17
+R18
+R19
+R16
+R3
+R4
+R5
+R6
+Z168 8/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/rvex_system.vhd
+Z169 F/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/rvex_system.vhd
+l0
+L55
+V^T@REncUh=XMlkajheGLb0
+R9
+31
+Z170 !s108 1446653623.863339
+Z171 !s90 -quiet|-93|-work|work|/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/rvex_system.vhd|
+Z172 !s107 /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/rvex_system.vhd|
+R13
+R14
+!s100 aV9OS00=gF]oXCgS7@BT22
+!i10b 1
+Abehavioural
+R50
+R160
+R97
+R17
+R18
+R19
+R16
+R3
+R4
+R5
+DEx4 work 11 rvex_system 0 22 ^T@REncUh=XMlkajheGLb0
+l114
+L81
+VLAFiUe^3H;:mh1Yh:?:HV0
+!s100 19F[EGbF_m3=mImO>HlhZ1
+R9
+31
+R170
+R171
+R172
+R13
+R14
+!i10b 1
+Ervex_system_tb_adpcm
+Z173 w1446406557
+R16
+R3
+R4
+R5
+R6
+Z174 8/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/rvex_system_tb_adpcm.vhd
+Z175 F/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/rvex_system_tb_adpcm.vhd
+l0
+L54
+VQ>_WGBVejG`j=6Ci[?FlK3
+!s100 G`5NTE=bZf8]P1U_Vm7Ne3
+R9
+31
+!i10b 1
+Z176 !s108 1446653623.930871
+Z177 !s90 -quiet|-93|-work|work|/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/rvex_system_tb_adpcm.vhd|
+Z178 !s107 /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/rvex_system_tb_adpcm.vhd|
+R13
+R14
+Abehavioral
+R16
+R3
+R4
+R5
+Z179 DEx4 work 20 rvex_system_tb_adpcm 0 22 Q>_WGBVejG`j=6Ci[?FlK3
+l113
+L60
+Z180 Vf525cz7TolMJE2hi>>C9S3
+Z181 !s100 K8UD?JJbe2[]]8Cg>:[zR2
+R9
+31
+!i10b 1
+R176
+R177
+R178
+R13
+R14
+Ptype_pkg
+R3
+R16
+R4
+R5
+R1
+R6
+8/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/type_pkg.vhd
+F/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/type_pkg.vhd
+l0
+L52
+VMlH^3EKnlP_G3e;;?fNBP2
+R9
+31
+R13
+R14
+!s100 gl7LM>7PDmSiSzV4klInf1
+!i10b 1
+!s108 1446653622.053529
+!s90 -quiet|-93|-work|work|/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/type_pkg.vhd|
+!s107 /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/type_pkg.vhd|
+Putil_pkg
+R3
+R16
+R17
+R18
+R4
+R5
+R1
+R6
+Z182 8/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/util_pkg.vhd
+Z183 F/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/util_pkg.vhd
+l0
+L55
+V0mAe>iY62H4?bgOD3]4WM1
+R9
+31
+b1
+Z184 !s108 1446653622.136626
+Z185 !s90 -quiet|-93|-work|work|/home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/util_pkg.vhd|
+Z186 !s107 /home/jost/Dropbox/Universidade/Mestrado/rVEX/rvex-2.0/coreX4/util_pkg.vhd|
+R13
+R14
+!s100 R2=_4h]C4oeN5KP29n_^z1
+!i10b 1
+Bbody
+R19
+R3
+R16
+R17
+R18
+R4
+R5
+l0
+L80
+VQ7icRRoNUlL8VBoI;Liee3
+R9
+31
+R184
+R185
+R186
+R13
+R14
+nbody
+!s100 5@V[UZOW3d?kX?o3:LV<U1
+!i10b 1

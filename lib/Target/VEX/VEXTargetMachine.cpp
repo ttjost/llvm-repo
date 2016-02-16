@@ -72,7 +72,7 @@ static std::string computeDataLayout() {
 // an easier handling.
 // Using CodeModel::Large enables differente CALL behavior
 VEXTargetMachine::
-VEXTargetMachine(const Target &T, StringRef TT,
+VEXTargetMachine(const Target &T, const Triple TT,
                  StringRef CPU, StringRef FS, const TargetOptions &Options,
                  Reloc::Model RM, CodeModel::Model CM,
                  CodeGenOpt::Level OL,
@@ -88,7 +88,7 @@ VEXTargetMachine(const Target &T, StringRef TT,
 VEXTargetMachine::~VEXTargetMachine() {}
 
 VEXNormalTargetMachine::
-VEXNormalTargetMachine(const Target &T, StringRef TT,
+VEXNormalTargetMachine(const Target &T, const Triple TT,
                        StringRef CPU, StringRef FS, const TargetOptions &Options,
                        Reloc::Model RM, CodeModel::Model CM,
                        CodeGenOpt::Level OL)
@@ -97,7 +97,7 @@ VEXNormalTargetMachine(const Target &T, StringRef TT,
 void VEXNormalTargetMachine::anchor() {}
 
 VEXNewTargetMachine::
-VEXNewTargetMachine(const Target &T, StringRef TT,
+VEXNewTargetMachine(const Target &T, const Triple TT,
                     StringRef CPU, StringRef FS, const TargetOptions &Options,
                     Reloc::Model RM, CodeModel::Model CM,
                     CodeGenOpt::Level OL)

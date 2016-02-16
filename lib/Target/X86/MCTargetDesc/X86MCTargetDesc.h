@@ -31,6 +31,7 @@ class Target;
 class Triple;
 class StringRef;
 class raw_ostream;
+class raw_pwrite_stream;
 
 extern Target TheX86_32Target, TheX86_64Target;
 
@@ -51,16 +52,16 @@ namespace N86 {
 }
 
 namespace X86_MC {
-  std::string ParseX86Triple(StringRef TT);
+std::string ParseX86Triple(const Triple &TT);
 
-  unsigned getDwarfRegFlavour(Triple TT, bool isEH);
+unsigned getDwarfRegFlavour(const Triple &TT, bool isEH);
 
-  void InitLLVM2SEHRegisterMapping(MCRegisterInfo *MRI);
+void InitLLVM2SEHRegisterMapping(MCRegisterInfo *MRI);
 
-  /// Create a X86 MCSubtargetInfo instance. This is exposed so Asm parser, etc.
-  /// do not need to go through TargetRegistry.
-  MCSubtargetInfo *createX86MCSubtargetInfo(StringRef TT, StringRef CPU,
-                                            StringRef FS);
+/// Create a X86 MCSubtargetInfo instance. This is exposed so Asm parser, etc.
+/// do not need to go through TargetRegistry.
+MCSubtargetInfo *createX86MCSubtargetInfo(const Triple &TT, StringRef CPU,
+                                          StringRef FS);
 }
 
 MCCodeEmitter *createX86MCCodeEmitter(const MCInstrInfo &MCII,
@@ -68,28 +69,29 @@ MCCodeEmitter *createX86MCCodeEmitter(const MCInstrInfo &MCII,
                                       MCContext &Ctx);
 
 MCAsmBackend *createX86_32AsmBackend(const Target &T, const MCRegisterInfo &MRI,
-                                     StringRef TT, StringRef CPU);
+                                     const Triple &TT, StringRef CPU);
 MCAsmBackend *createX86_64AsmBackend(const Target &T, const MCRegisterInfo &MRI,
-                                     StringRef TT, StringRef CPU);
+                                     const Triple &TT, StringRef CPU);
 
 /// Construct an X86 Windows COFF machine code streamer which will generate
 /// PE/COFF format object files.
 ///
 /// Takes ownership of \p AB and \p CE.
 MCStreamer *createX86WinCOFFStreamer(MCContext &C, MCAsmBackend &AB,
-                                     raw_ostream &OS, MCCodeEmitter *CE,
+                                     raw_pwrite_stream &OS, MCCodeEmitter *CE,
                                      bool RelaxAll);
 
 /// Construct an X86 Mach-O object writer.
-MCObjectWriter *createX86MachObjectWriter(raw_ostream &OS, bool Is64Bit,
+MCObjectWriter *createX86MachObjectWriter(raw_pwrite_stream &OS, bool Is64Bit,
                                           uint32_t CPUType,
                                           uint32_t CPUSubtype);
 
 /// Construct an X86 ELF object writer.
-MCObjectWriter *createX86ELFObjectWriter(raw_ostream &OS, bool IsELF64,
+MCObjectWriter *createX86ELFObjectWriter(raw_pwrite_stream &OS, bool IsELF64,
                                          uint8_t OSABI, uint16_t EMachine);
 /// Construct an X86 Win COFF object writer.
-MCObjectWriter *createX86WinCOFFObjectWriter(raw_ostream &OS, bool Is64Bit);
+MCObjectWriter *createX86WinCOFFObjectWriter(raw_pwrite_stream &OS,
+                                             bool Is64Bit);
 
 /// Construct X86-64 Mach-O relocation info.
 MCRelocationInfo *createX86_64MachORelocationInfo(MCContext &Ctx);

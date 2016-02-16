@@ -32,7 +32,6 @@ class StringRef;
 class VEXTargetMachine;
 
     class VEXSubtarget : public VEXGenSubtargetInfo {
-        virtual void anchor();
         
     public:
         
@@ -78,7 +77,7 @@ class VEXTargetMachine;
         
         ///This constructor initializes the data members to match that
         /// of the specified triple
-        VEXSubtarget(const std::string &TT, const std::string &CPU,
+        VEXSubtarget(const Triple &TT, const std::string &CPU,
                      const std::string &FS, bool little, bool EnableVLIWScheduling,
                      Reloc::Model _RM, VEXTargetMachine &_TM);
         

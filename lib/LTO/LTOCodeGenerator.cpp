@@ -63,26 +63,21 @@ const char* LTOCodeGenerator::getVersionString() {
 #endif
 }
 
+static void handleLTODiagnostic(const DiagnosticInfo &DI) {
+  DiagnosticPrinterRawOStream DP(errs());
+  DI.print(DP);
+  errs() << "\n";
+}
+
 LTOCodeGenerator::LTOCodeGenerator()
-    : Context(getGlobalContext()), IRLinker(new Module("ld-temp.o", Context)) {
-  initialize();
+    : Context(getGlobalContext()), IRLinker(new Module("ld-temp.o", Context),
+                                            handleLTODiagnostic) {
+  initializeLTOPasses();
 }
 
 LTOCodeGenerator::LTOCodeGenerator(std::unique_ptr<LLVMContext> Context)
     : OwnedContext(std::move(Context)), Context(*OwnedContext),
-      IRLinker(new Module("ld-temp.o", *OwnedContext)), OptLevel(2) {
-  initialize();
-}
-
-void LTOCodeGenerator::initialize() {
-  TargetMach = nullptr;
-  EmitDwarfDebugInfo = false;
-  ScopeRestrictionsDone = false;
-  CodeModel = LTO_CODEGEN_PIC_MODEL_DEFAULT;
-  DiagHandler = nullptr;
-  DiagContext = nullptr;
-  OwnedModule = nullptr;
-
+      IRLinker(new Module("ld-temp.o", *OwnedContext), handleLTODiagnostic) {
   initializeLTOPasses();
 }
 
@@ -214,7 +209,7 @@ bool LTOCodeGenerator::writeMergedModules(const char *path,
   }
 
   // write bitcode to it
-  WriteBitcodeToFile(IRLinker.getModule(), Out.os());
+  WriteBitcodeToFile(IRLinker.getModule(), Out.os(), ShouldEmbedUselists);
   Out.os().close();
 
   if (Out.os().has_error()) {
@@ -262,8 +257,8 @@ bool LTOCodeGenerator::compileOptimizedToFile(const char **name,
   return true;
 }
 
-const void *LTOCodeGenerator::compileOptimized(size_t *length,
-                                               std::string &errMsg) {
+std::unique_ptr<MemoryBuffer>
+LTOCodeGenerator::compileOptimized(std::string &errMsg) {
   const char *name;
   if (!compileOptimizedToFile(&name, errMsg))
     return nullptr;
@@ -276,16 +271,11 @@ const void *LTOCodeGenerator::compileOptimized(size_t *length,
     sys::fs::remove(NativeObjectPath);
     return nullptr;
   }
-  NativeObjectFile = std::move(*BufferOrErr);
 
   // remove temp files
   sys::fs::remove(NativeObjectPath);
 
-  // return buffer, unless error
-  if (!NativeObjectFile)
-    return nullptr;
-  *length = NativeObjectFile->getBufferSize();
-  return NativeObjectFile->getBufferStart();
+  return std::move(*BufferOrErr);
 }
 
 
@@ -301,16 +291,14 @@ bool LTOCodeGenerator::compile_to_file(const char **name,
   return compileOptimizedToFile(name, errMsg);
 }
 
-const void* LTOCodeGenerator::compile(size_t *length,
-                                      bool disableInline,
-                                      bool disableGVNLoadPRE,
-                                      bool disableVectorization,
-                                      std::string &errMsg) {
+std::unique_ptr<MemoryBuffer>
+LTOCodeGenerator::compile(bool disableInline, bool disableGVNLoadPRE,
+                          bool disableVectorization, std::string &errMsg) {
   if (!optimize(disableInline, disableGVNLoadPRE,
                 disableVectorization, errMsg))
     return nullptr;
 
-  return compileOptimized(length, errMsg);
+  return compileOptimized(errMsg);
 }
 
 bool LTOCodeGenerator::determineTarget(std::string &errMsg) {
@@ -463,7 +451,7 @@ static void accumulateAndSortLibcalls(std::vector<StringRef> &Libcalls,
 }
 
 void LTOCodeGenerator::applyScopeRestrictions() {
-  if (ScopeRestrictionsDone)
+  if (ScopeRestrictionsDone || !ShouldInternalize)
     return;
   Module *mergedModule = IRLinker.getModule();
 
@@ -472,7 +460,7 @@ void LTOCodeGenerator::applyScopeRestrictions() {
   passes.add(createVerifierPass());
 
   // mark which symbols can not be internalized
-  Mangler Mangler(TargetMach->getDataLayout());
+  Mangler Mangler;
   std::vector<const char*> MustPreserveList;
   SmallPtrSet<GlobalValue*, 8> AsmUsed;
   std::vector<StringRef> Libcalls;
@@ -565,7 +553,8 @@ bool LTOCodeGenerator::optimize(bool DisableInline,
   return true;
 }
 
-bool LTOCodeGenerator::compileOptimized(raw_ostream &out, std::string &errMsg) {
+bool LTOCodeGenerator::compileOptimized(raw_pwrite_stream &out,
+                                        std::string &errMsg) {
   if (!this->determineTarget(errMsg))
     return false;
 

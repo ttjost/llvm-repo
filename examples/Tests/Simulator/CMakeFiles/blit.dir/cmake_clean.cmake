@@ -1,0 +1,42 @@
+FILE(REMOVE_RECURSE
+  "CMakeFiles/blit"
+  "blit.simu"
+  "blit/blit_0.out"
+  "blit/blit_1.out"
+  "blit/blit_2.out"
+  "blit/blit_3.out"
+  "blit/blit_0.exec"
+  "blit/blit_1.exec"
+  "blit/blit_2.exec"
+  "blit/blit_3.exec"
+  "blit/blit_0.o"
+  "blit/memset_0.o"
+  "_start.o"
+  "blit/blit_1.o"
+  "blit/memset_1.o"
+  "blit/blit_2.o"
+  "blit/memset_2.o"
+  "blit/blit_3.o"
+  "blit/memset_3.o"
+  "blit/blit_0.s"
+  "blit/memset_0.s"
+  "blit/blit_1.s"
+  "blit/memset_1.s"
+  "blit/blit_2.s"
+  "blit/memset_2.s"
+  "blit/blit_3.s"
+  "blit/memset_3.s"
+  "blit/blit_0.ll"
+  "blit/memset_0.ll"
+  "blit/blit_1.ll"
+  "blit/memset_1.ll"
+  "blit/blit_2.ll"
+  "blit/memset_2.ll"
+  "blit/blit_3.ll"
+  "blit/memset_3.ll"
+)
+
+# Per-language clean rules from dependency scanning.
+FOREACH(lang)
+  INCLUDE(CMakeFiles/blit.dir/cmake_clean_${lang}.cmake OPTIONAL)
+ENDFOREACH(lang)

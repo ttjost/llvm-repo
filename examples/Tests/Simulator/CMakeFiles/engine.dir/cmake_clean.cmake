@@ -1,0 +1,42 @@
+FILE(REMOVE_RECURSE
+  "CMakeFiles/engine"
+  "engine.simu"
+  "engine/engine_0.out"
+  "engine/engine_1.out"
+  "engine/engine_2.out"
+  "engine/engine_3.out"
+  "engine/engine_0.exec"
+  "engine/engine_1.exec"
+  "engine/engine_2.exec"
+  "engine/engine_3.exec"
+  "engine/engine_0.o"
+  "engine/memset_0.o"
+  "_start.o"
+  "engine/engine_1.o"
+  "engine/memset_1.o"
+  "engine/engine_2.o"
+  "engine/memset_2.o"
+  "engine/engine_3.o"
+  "engine/memset_3.o"
+  "engine/engine_0.s"
+  "engine/memset_0.s"
+  "engine/engine_1.s"
+  "engine/memset_1.s"
+  "engine/engine_2.s"
+  "engine/memset_2.s"
+  "engine/engine_3.s"
+  "engine/memset_3.s"
+  "engine/engine_0.ll"
+  "engine/memset_0.ll"
+  "engine/engine_1.ll"
+  "engine/memset_1.ll"
+  "engine/engine_2.ll"
+  "engine/memset_2.ll"
+  "engine/engine_3.ll"
+  "engine/memset_3.ll"
+)
+
+# Per-language clean rules from dependency scanning.
+FOREACH(lang)
+  INCLUDE(CMakeFiles/engine.dir/cmake_clean_${lang}.cmake OPTIONAL)
+ENDFOREACH(lang)

@@ -1,0 +1,80 @@
+Total Cycles:                               22506 (0.045012 msec)
+Execution Cycles:                           14892 ( 66.17%)
+Stall Cycles:                                7614 ( 33.83%)
+Nops:                                           7 (  0.03%)
+Executed operations:                        38218
+
+Executed branches:                           2200 (  5.76% ops)(14.77% insts)
+Not taken branches:                          1219 (  3.19% ops)( 8.19% insts)(55.41% br)
+Taken branches:                               981 (  2.57% ops)( 6.59% insts)(44.59% br)
+  Taken uncond branches:                      244 (  0.64% ops)( 1.64% insts)(11.09% br)
+  Taken cond branches:                        737 (  1.93% ops)( 4.95% insts)(33.50% br)
+Size of Loaded Code:                         4224 Bytes
+
+Instruction Memory Operations:
+  Accesses:                                 16584
+    Hits (Hit Rate):                        16519 ( 99.61%)
+    Misses (Miss Rate):                        65 (  0.39%)
+Instruction Memory Stall Cycles
+  Total (in cycles):                         2925 (100.00%)
+    Due to Misses:                           2925 (100.00%)
+    Due to Bus Conflicts:                       0 (  0.00%)
+
+Data Memory Operations:                     Cache          
+  Accesses:                                  8740 (100.00%)
+    Hits (Hit Rate):                         8637 ( 98.82%)
+    Misses (Miss Rate):                       103 (  1.18%)
+Data Memory Stall Cycles
+  Total (in cycles):                         3708 (100.00%)
+    Due to Misses:                           3708 (100.00%)
+    Due to Bus Conflicts:                       0 (  0.00%)
+
+Percentage Bus Bandwidth Consumed:          29.47%
+
+
+Avg. IPC (no stalls):   2.57
+Avg. IPC (with stalls): 1.70
+
+  cycle counter =        14892
+  total ops     =        38218
+   width[ 0] =            1
+   width[ 1] =         4533
+   width[ 2] =         3236
+   width[ 3] =         1247
+   width[ 4] =         5868
+
+Flat profile (cycles)
+       Total   Total%        Insts   Insts%       Dcache  Dcache%       Icache  Icache% Function
+         267     1.19           22     0.15          108     0.58          135     0.76 exit
+       22239          3600          2790  (others not profiled)
+
+Simulation time  =     0.0074 s
+Simulation speed =     5.1990 MOPS
+
+
+ta_init using default
+
+	CoreCkFreq           500
+	BusCkFreq            200
+	lg2CacheSize         15	# (CacheSize            = 32768)
+	lg2Sets              2	# (Sets                 = 4)
+	lg2LineSize          5	# (LineSize             = 32)
+	MissPenalty          36
+	WBPenalty            33
+	lg2StrSize           9	# (StrSize              = 512)
+	lg2StrSets           4	# (StrSets              = 16)
+	lg2StrLineSize       5	# (StrLineSize          = 32)
+	StrMissPenalty       36
+	StrWBPenalty         33
+	lg2ICacheSize        15	# (ICacheSize           = 32768)
+	lg2ICacheSets        0	# (ICacheSets           = 1)
+	lg2ICacheLineSize    6	# (ICacheLineSize       = 64)
+	ICachePenalty        45
+	NumCaches            1
+	BranchStall          1
+	StreamEnable         FALSE
+	PrefetchEnable       TRUE
+	LockEnable           FALSE
+	ProfGranularity      AUTO
+
+

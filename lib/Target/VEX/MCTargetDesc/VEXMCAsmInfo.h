@@ -17,7 +17,9 @@
 #include "llvm/MC/MCAsmInfo.h"
 
 namespace llvm {
-    class StringRef;
+    
+    class Triple;
+    
     class Target;
 
     class VEXMCAsmInfo : public MCAsmInfo {
@@ -25,7 +27,7 @@ namespace llvm {
 
         bool isNewScheduling;
     public:
-        explicit VEXMCAsmInfo(StringRef TT);
+        explicit VEXMCAsmInfo(const Triple &TT);
     };
 
 } // namespace llvm

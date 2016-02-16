@@ -59,9 +59,13 @@ bool VEXDAGToDAGISel::runOnMachineFunction(MachineFunction &MF){
 
 
 bool VEXDAGToDAGISel::SelectAddr(SDValue Addr, SDValue &Base, SDValue &Offset) {
+    
+    SDLoc dl(Addr);
+    const DataLayout &DLayout = CurDAG->getDataLayout();
+    
     if (FrameIndexSDNode *FIN = dyn_cast<FrameIndexSDNode>(Addr)) {
-        Base = CurDAG->getTargetFrameIndex(FIN->getIndex(), TLI->getPointerTy());
-        Offset = CurDAG->getTargetConstant(0, MVT::i32);
+        Base = CurDAG->getTargetFrameIndex(FIN->getIndex(), TLI->getPointerTy(DLayout));
+        Offset = CurDAG->getTargetConstant(0, dl, MVT::i32);
         return true;
     }
     if (Addr.getOpcode() == ISD::TargetExternalSymbol ||
@@ -76,18 +80,18 @@ bool VEXDAGToDAGISel::SelectAddr(SDValue Addr, SDValue &Base, SDValue &Offset) {
                     dyn_cast<FrameIndexSDNode>(Addr.getOperand(0))) {
                     // Constant offset from frame ref.
                     Base =
-                    CurDAG->getTargetFrameIndex(FIN->getIndex(), TLI->getPointerTy());
+                    CurDAG->getTargetFrameIndex(FIN->getIndex(), TLI->getPointerTy(DLayout));
                 } else {
                     Base = Addr.getOperand(0);
                 }
-                Offset = CurDAG->getTargetConstant(CN->getZExtValue(), MVT::i32);
+                Offset = CurDAG->getTargetConstant(CN->getZExtValue(), dl, MVT::i32);
                 return true;
             }
         }
     }
     
     Base = Addr;
-    Offset = CurDAG->getTargetConstant(0, Addr.getValueType());
+    Offset = CurDAG->getTargetConstant(0, dl, Addr.getValueType());
     return true;
 }
 

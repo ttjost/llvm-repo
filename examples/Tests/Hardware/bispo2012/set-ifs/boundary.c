@@ -593,23 +593,23 @@ int main() {
     int rows = ROWS; int cols = COLS;
     int o_coord[COLS*ROWS];
     int o_grey[COLS*ROWS];
+   int i; 
 
 	IMG_boundary_c(
 		i_data,
     rows, cols,
     o_coord,
     o_grey);
-    
-    for (int i = 0; i < COLS*ROWS-32; ++i) {
+    for (i = 0; i < COLS*ROWS-32; ++i) {
         if (o_coord[i] != o_coord_ref[i]) {
 #ifdef C
-            printf("%d, ", i);
+            printf("%d, ", o_coord[i]);
 #endif
             return i+10;
        }
     }
     
-    for (int i = 0; i < COLS*ROWS; ++i) {
+    for (i = 0; i < COLS*ROWS; ++i) {
         if (o_grey[i] != o_grey_ref[i]) {
 #ifdef C
             printf("%d, ", o_grey[i]);

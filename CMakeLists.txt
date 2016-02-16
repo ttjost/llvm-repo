@@ -32,15 +32,23 @@ project(LLVM)
 set(LLVM_PARALLEL_COMPILE_JOBS "" CACHE STRING
   "Define the maximum number of concurrent compilation jobs.")
 if(LLVM_PARALLEL_COMPILE_JOBS)
-  set_property(GLOBAL APPEND PROPERTY JOB_POOLS compile_job_pool=${LLVM_PARALLEL_COMPILE_JOBS})
-  set(CMAKE_JOB_POOL_COMPILE compile_job_pool)
+  if(CMAKE_VERSION VERSION_LESS 3.0 OR NOT CMAKE_MAKE_PROGRAM MATCHES "ninja$")
+    message(WARNING "Job pooling is only available with Ninja generators and CMake 3.0 and later.")
+  else()
+    set_property(GLOBAL APPEND PROPERTY JOB_POOLS compile_job_pool=${LLVM_PARALLEL_COMPILE_JOBS})
+    set(CMAKE_JOB_POOL_COMPILE compile_job_pool)
+  endif()
 endif()
 
 set(LLVM_PARALLEL_LINK_JOBS "" CACHE STRING
   "Define the maximum number of concurrent link jobs.")
 if(LLVM_PARALLEL_LINK_JOBS)
-  set_property(GLOBAL APPEND PROPERTY JOB_POOLS link_job_pool=${LLVM_PARALLEL_LINK_JOBS})
-  set(CMAKE_JOB_POOL_LINK link_job_pool)
+  if(CMAKE_VERSION VERSION_LESS 3.0 OR NOT CMAKE_MAKE_PROGRAM MATCHES "ninja$")
+    message(WARNING "Job pooling is only available with Ninja generators and CMake 3.0 and later.")
+  else()
+    set_property(GLOBAL APPEND PROPERTY JOB_POOLS link_job_pool=${LLVM_PARALLEL_LINK_JOBS})
+    set(CMAKE_JOB_POOL_LINK link_job_pool)
+  endif()
 endif()
 
 # Add path for custom modules
@@ -52,8 +60,8 @@ set(CMAKE_MODULE_PATH
 
 set(LLVM_VERSION_MAJOR 3)
 set(LLVM_VERSION_MINOR 7)
-set(LLVM_VERSION_PATCH 0)
-set(LLVM_VERSION_SUFFIX svn)
+set(LLVM_VERSION_PATCH 1)
+set(LLVM_VERSION_SUFFIX "")
 
 if (NOT PACKAGE_VERSION)
   set(PACKAGE_VERSION
@@ -93,6 +101,7 @@ set(CPACK_PACKAGE_VERSION_MINOR ${LLVM_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${LLVM_VERSION_PATCH})
 set(CPACK_PACKAGE_VERSION ${PACKAGE_VERSION})
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.TXT")
+set(CPACK_NSIS_COMPRESSOR "/SOLID lzma \r\n SetCompressorDictSize 32")
 if(WIN32 AND NOT UNIX)
   set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "LLVM")
   set(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}\\\\cmake\\\\nsis_logo.bmp")
@@ -167,14 +176,15 @@ set(LLVM_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/include)
 
 set(LLVM_ALL_TARGETS
   AArch64
+  AMDGPU
   ARM
+  BPF
   CppBackend
   Hexagon
   Mips
   MSP430
   NVPTX
   PowerPC
-  R600
   Sparc
   SystemZ
   X86
@@ -185,7 +195,7 @@ set(LLVM_ALL_TARGETS
 # List of targets with JIT support:
 set(LLVM_TARGETS_WITH_JIT X86 PowerPC AArch64 ARM Mips SystemZ)
 
-set(LLVM_TARGETS_TO_BUILD "X86"
+set(LLVM_TARGETS_TO_BUILD "all"
     CACHE STRING "Semicolon-separated list of targets to build, or \"all\".")
 
 set(LLVM_EXPERIMENTAL_TARGETS_TO_BUILD ""
@@ -509,7 +519,7 @@ if (APPLE)
 else(UNIX)
   if(NOT DEFINED CMAKE_INSTALL_RPATH)
     set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib${LLVM_LIBDIR_SUFFIX}")
-    if (${CMAKE_SYSTEM_NAME} MATCHES FreeBSD)
+    if(${CMAKE_SYSTEM_NAME} MATCHES "(FreeBSD|DragonFly)")
       set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-z,origin")
       set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,origin")
     endif()
@@ -521,7 +531,7 @@ endif()
 # check its symbols. This is wasteful (the check was done when foo.so
 # was created) and can fail since it is not the dynamic linker and
 # doesn't know how to handle search paths correctly.
-if (UNIX AND NOT APPLE)
+if (UNIX AND NOT APPLE AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "SunOS")
   set(CMAKE_EXE_LINKER_FLAGS
       "${CMAKE_EXE_LINKER_FLAGS} -Wl,-allow-shlib-undefined")
 endif()
@@ -535,12 +545,12 @@ if(LLVM_USE_HOST_TOOLS)
   include(CrossCompile)
 endif(LLVM_USE_HOST_TOOLS)
 
-if( ${CMAKE_SYSTEM_NAME} MATCHES FreeBSD )
+if(${CMAKE_SYSTEM_NAME} MATCHES "(FreeBSD|DragonFly)")
   # On FreeBSD, /usr/local/* is not used by default. In order to build LLVM
   # with libxml2, iconv.h, etc., we must add /usr/local paths.
   include_directories("/usr/local/include")
   link_directories("/usr/local/lib")
-endif( ${CMAKE_SYSTEM_NAME} MATCHES FreeBSD )
+endif(${CMAKE_SYSTEM_NAME} MATCHES "(FreeBSD|DragonFly)")
 
 if( ${CMAKE_SYSTEM_NAME} MATCHES SunOS )
    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include llvm/Support/Solaris.h")

@@ -54,7 +54,7 @@ struct ctg_state {
  *      gen:  Pointer to a struct prng.
  *
  */
-inline prng_num prng_ctg_get_next_int(struct ctg_state *g)
+unsigned int prng_num prng_ctg_get_next_int(struct ctg_state *g)
 {
   unsigned int b;
 

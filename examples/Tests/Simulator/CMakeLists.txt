@@ -15,14 +15,14 @@ if( NOT COMPILER STREQUAL "llvm")
     message(FATAL_ERROR "Unknown compiler \"${COMPILER}\".")
 endif()
 
-set( LLVM_DIR ${CMAKE_SOURCE_DIR}/../../../../build/bin )
+set( LLVM_DIR /home/jost/llvm/bin )
 set( LLVM_CLANG ${LLVM_DIR}/clang )
 set( LLVM_LLC ${LLVM_DIR}/llc )
 
-set( VEX_BINUTILS_DIR ${CMAKE_SOURCE_DIR}/../../../../binutils-rvex )
+set( VEX_BINUTILS_DIR ${CMAKE_SOURCE_DIR}/../../../../rVEX/binutils-gdb-linux )
 set( VEX_AS ${VEX_BINUTILS_DIR}/gas/as-new )
 set( VEX_LD ${VEX_BINUTILS_DIR}/ld/ld-new )
-set( XSTSIM /home/jost/llvm_build/xstsim-r-VEX-1.1.3 )
+set( XSTSIM /media/psf/Home/Downloads/xstsim-r-VEX-1.1.3 )
 
 set( CFLAGS -DCHECK_RESULTS=0 )
 
@@ -80,7 +80,7 @@ function(add_simu desc result source)
     add_custom_command(
         OUTPUT ${result}
         COMMAND
-            timeout 60s ${XSTSIM} --ips='"[r-VEX c]"' --c.trace=5 --c.trace_regs=2 --c.core.issue_width=${ISSUE_WIDTH_EXEC}
+            timeout 60s ${XSTSIM} --ips='"[r-VEX\tc]"' --c.trace=5 --c.trace_regs=2 --c.core.issue_width=${ISSUE_WIDTH_EXEC}
             --c.subsystem.ramsize=0x8000000 --accuracy=0 --c.target_exec='"${source}"' 
             | grep -e "'\# [0-9]* / [0-9]* @ [0-9.]*'" -e "'r0.3  = *[0-9a-f]*'" -o 
             | sed "'s/.*\# \\([0-9][0-9]*\\) \\/ \\([0-9][0-9]*\\) \\@ \\([0-9][0-9.]*\\)/\\1\\t\\2\\t\\3/'"
