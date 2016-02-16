@@ -64,7 +64,7 @@ public:
                 if (InstrIter->isBranch()) {
                     if (InstrIter->getOpcode() == VEX::GOTO){
 
-                        if (InstrIter->getOperand(0).getMBB() == OneAfterIteratorBB) {
+                        if (InstrIter->getOperand(0).isMBB() && InstrIter->getOperand(0).getMBB() == OneAfterIteratorBB) {
                             DEBUG(errs() << "We can remove this VEX::GOTO!\n");
                             MachineBasicBlock::iterator ErasedInst = InstrIter;
                             --InstrIter;
@@ -79,7 +79,7 @@ public:
                             const VEXInstrInfo *TII =
                               static_cast<const VEXInstrInfo *>(Subtarget.getInstrInfo());
                             
-                            if (BranchInstr->getOpcode() == VEX::BR && BranchInstr->getOperand(1).getMBB() == OneAfterIteratorBB) {
+                            if (BranchInstr->getOpcode() == VEX::BR && BranchInstr->getOperand(1).isMBB() && BranchInstr->getOperand(1).getMBB() == OneAfterIteratorBB) {
                                 DEBUG(errs() << "We can replace VEX::BR with VEX::BRF!\n");
                                 
                                 MachineBasicBlock::iterator NewBranchInstr = BuildMI(*MBBI, BranchInstr,
