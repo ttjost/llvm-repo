@@ -1,2 +1,0 @@
-[FATAL] syntax error at line 1777
-CS-S2CS FAILED /tmp/cpp13291a
