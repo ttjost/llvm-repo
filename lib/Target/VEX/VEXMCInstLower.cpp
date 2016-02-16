@@ -72,17 +72,17 @@ MCOperand VEXMCInstLower::LowerOperand(const MachineOperand &MO,
         case MachineOperand::MO_Register:
             // Ignore all implicit register operands
             if(MO.isImplicit()) break;
-            return MCOperand::CreateReg(MO.getReg());
+            return MCOperand::createReg(MO.getReg());
         case MachineOperand::MO_Immediate:
-            return MCOperand::CreateImm(MO.getImm() + Offset);
+            return MCOperand::createImm(MO.getImm() + Offset);
         case MachineOperand::MO_RegisterMask:
             break;
         case MachineOperand::MO_MachineBasicBlock:
-            return MCOperand::CreateExpr(MCSymbolRefExpr::Create(MO.getMBB()->getSymbol(), *Ctx));
+            return MCOperand::createExpr(MCSymbolRefExpr::create(MO.getMBB()->getSymbol(), *Ctx));
         case MachineOperand::MO_GlobalAddress:
-            return MCOperand::CreateExpr(MCSymbolRefExpr::Create(GetGlobalAddressSymbol(MO), *Ctx));
+            return MCOperand::createExpr(MCSymbolRefExpr::create(GetGlobalAddressSymbol(MO), *Ctx));
         case MachineOperand::MO_ExternalSymbol:
-            return MCOperand::CreateExpr(MCSymbolRefExpr::Create(GetExternalSymbolSymbol(MO.getSymbolName()), *Ctx));
+            return MCOperand::createExpr(MCSymbolRefExpr::create(GetExternalSymbolSymbol(MO.getSymbolName()), *Ctx));
         default:
             llvm_unreachable("unknown operand type");
             break;
@@ -108,7 +108,7 @@ void VEXMCInstLower::Lower(const MachineInstr *MI,
 
     if (isInsideBundle) {
         DEBUG(errs() << "Is Inside BUNDLE Instruction\n");
-        MCOperand MCOp = MCOperand::CreateInst(&InBundleMI);
+        MCOperand MCOp = MCOperand::createInst(&InBundleMI);
         OutMI.addOperand(MCOp);
     } else {
        DEBUG(errs() << "NOT BUNDLE\n");

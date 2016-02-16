@@ -88,7 +88,7 @@ class VEXSubtarget;
 class VEXTargetLowering : public TargetLowering{
 
 public:
-    explicit VEXTargetLowering(const VEXTargetMachine &TM,
+    explicit VEXTargetLowering(const TargetMachine &TM,
                                const VEXSubtarget &STI);
     
     static const VEXTargetLowering *create(const VEXTargetMachine &TM,

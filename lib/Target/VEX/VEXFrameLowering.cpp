@@ -116,11 +116,10 @@ int VEXFrameLowering::getFrameIndexOffset(const MachineFunction &MF,
     getOffsetOfLocalArea() + MFI->getOffsetAdjustment() /*+ ScratchArea*/;
 }
 
-void VEXFrameLowering::emitPrologue(MachineFunction &MF) const {
+void VEXFrameLowering::emitPrologue(MachineFunction &MF,
+                                    MachineBasicBlock &MBB) const {
     DEBUG(errs() << "EmitPrologue\n");
-    
-    MachineBasicBlock &MBB = MF.front();
-    
+
     assert(&MF.front() == &MBB && "Shrink-wrapping not yet supported");
     
     MachineBasicBlock::iterator MBBI = MBB.begin();

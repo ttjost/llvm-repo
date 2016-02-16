@@ -15,9 +15,3 @@ documentation setup.
 
 If you're writing a package for LLVM, see docs/Packaging.rst for our
 suggestions.
-
-
-
-Next steps:
-- Requiring implementation of EliminateFrameIndex Function in VEXRegisterInfo.cpp file
-  (It will hang LLC otherwise)

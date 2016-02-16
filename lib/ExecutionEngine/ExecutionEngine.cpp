@@ -153,6 +153,14 @@ Function *ExecutionEngine::FindFunctionNamed(const char *FnName) {
   return nullptr;
 }
 
+GlobalVariable *ExecutionEngine::FindGlobalVariableNamed(const char *Name, bool AllowInternal) {
+  for (unsigned i = 0, e = Modules.size(); i != e; ++i) {
+    GlobalVariable *GV = Modules[i]->getGlobalVariable(Name,AllowInternal);
+    if (GV && !GV->isDeclaration())
+      return GV;
+  }
+  return nullptr;
+}
 
 uint64_t ExecutionEngineState::RemoveMapping(StringRef Name) {
   GlobalAddressMapTy::iterator I = GlobalAddressMap.find(Name);
@@ -172,10 +180,17 @@ uint64_t ExecutionEngineState::RemoveMapping(StringRef Name) {
 }
 
 std::string ExecutionEngine::getMangledName(const GlobalValue *GV) {
+  assert(GV->hasName() && "Global must have name.");
+
   MutexGuard locked(lock);
-  Mangler Mang(DL);
   SmallString<128> FullName;
-  Mang.getNameWithPrefix(FullName, GV->getName());
+
+  const DataLayout &DL =
+    GV->getParent()->getDataLayout().isDefault()
+      ? *getDataLayout()
+      : GV->getParent()->getDataLayout();
+
+  Mangler::getNameWithPrefix(FullName, GV->getName(), DL);
   return FullName.str();
 }
 
@@ -376,7 +391,7 @@ void ExecutionEngine::runStaticConstructorsDestructors(Module &module,
 
     // Execute the ctor/dtor function!
     if (Function *F = dyn_cast<Function>(FP))
-      runFunction(F, std::vector<GenericValue>());
+      runFunction(F, None);
 
     // FIXME: It is marginally lame that we just do nothing here if we see an
     // entry we don't recognize. It might not be unreasonable for the verifier
@@ -438,7 +453,7 @@ int ExecutionEngine::runFunctionAsMain(Function *Fn,
       if (NumArgs > 2) {
         std::vector<std::string> EnvVars;
         for (unsigned i = 0; envp[i]; ++i)
-          EnvVars.push_back(envp[i]);
+          EnvVars.emplace_back(envp[i]);
         // Arg #2 = envp.
         GVArgs.push_back(PTOGV(CEnv.reset(Fn->getContext(), this, EnvVars)));
       }

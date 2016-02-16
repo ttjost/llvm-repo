@@ -86,7 +86,7 @@ const char *VEXTargetLowering::getTargetNodeName(unsigned Opcode) const {
 }
 
 //@VEXTargetLowering
-VEXTargetLowering::VEXTargetLowering(const VEXTargetMachine &TM,
+VEXTargetLowering::VEXTargetLowering(const TargetMachine &TM,
                                      const VEXSubtarget &STI)
 : TargetLowering(TM), Subtarget(STI){
     //- Set .align 2
@@ -445,7 +445,7 @@ VEXTargetLowering::LowerRETURNADDR(SDValue Op, SelectionDAG &DAG) const {
     unsigned Depth = cast<ConstantSDNode>(Op.getOperand(0))->getZExtValue();
     if (Depth) {
         SDValue FrameAddr = LowerFRAMEADDR(Op, DAG);
-        SDValue Offset = DAG.getConstant(4, MVT::i32);
+        SDValue Offset = DAG.getConstant(4, dl, MVT::i32);
         return DAG.getLoad(VT, dl, DAG.getEntryNode(),
                            DAG.getNode(ISD::ADD, dl, VT, FrameAddr, Offset),
                            MachinePointerInfo(), false, false, false, 0);
@@ -480,7 +480,7 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
 
     SelectionDAG &DAG = CLI.DAG;
 
-    //DAG.dump();
+    const DataLayout &DLayout = DAG.getDataLayout();
 
     SDLoc &DL = CLI.DL;
     SmallVectorImpl<ISD::OutputArg> &Outs = CLI.Outs;
@@ -491,7 +491,7 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
     CallingConv::ID CallConv = CLI.CallConv;
     bool IsVarArg = CLI.IsVarArg;
     MachineFunction &MF = DAG.getMachineFunction();
-    EVT PtrVT = getPointerTy();
+    EVT PtrVT = getPointerTy(DLayout);
     bool &IsTailCall = CLI.IsTailCall;
 //    bool IsTailCall = false;
     
@@ -537,7 +537,7 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
     // Mark the start of the call.
     if (!IsTailCall)
         Chain = DAG.getCALLSEQ_START(Chain,
-                                     DAG.getConstant(NumBytes, PtrVT, true),
+                                     DAG.getConstant(NumBytes, DL, PtrVT, true),
                                      DL);
 //    else
 //        llvm_unreachable("Target does not yet support Tail Calls.");
@@ -546,7 +546,7 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
     SmallVector<std::pair<unsigned, SDValue>, 10> RegsToPass;
     SmallVector<SDValue, 8> MemOpChains;
     SDValue StackPtr =
-            DAG.getCopyFromReg(Chain, DL, VEX::Reg1, getPointerTy());;
+            DAG.getCopyFromReg(Chain, DL, VEX::Reg1, getPointerTy(DLayout));;
 
     for (unsigned I = 0, E = ArgLocs.size(); I != E; ++I){
         CCValAssign &VA = ArgLocs[I];
@@ -565,7 +565,7 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
             } else {
                 MachineFrameInfo *MFI = DAG.getMachineFunction().getFrameInfo();
                 int FI = MFI->CreateFixedObject(ArgValue.getValueSizeInBits() / 8, VA.getLocMemOffset(), false);
-                SDValue FIN = DAG.getFrameIndex(FI, getPointerTy());
+                SDValue FIN = DAG.getFrameIndex(FI, getPointerTy(DLayout));
                 return DAG.getStore(Chain, DL, ArgValue, FIN, MachinePointerInfo(),
                                     /*isVolatile=*/ true, false, 0);
             }
@@ -581,7 +581,7 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
             ISD::ArgFlagsTy Flags = Outs[I].Flags;
             
             unsigned LocMemOffset = VA.getLocMemOffset();
-            SDValue PtrOff = DAG.getConstant(LocMemOffset + TFL->getScratchArea(), StackPtr.getValueType());
+            SDValue PtrOff = DAG.getConstant(LocMemOffset + TFL->getScratchArea(), DL, StackPtr.getValueType());
             PtrOff = DAG.getNode(ISD::ADD, DL, MVT::i32, StackPtr, PtrOff );
             
             if (Flags.isByVal()) {
@@ -688,8 +688,8 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
 
     // Mark the end of the call, which is glued to the call itself.
     Chain = DAG.getCALLSEQ_END(Chain,
-                               DAG.getConstant(NumBytes, PtrVT, true),
-                               DAG.getConstant(0, PtrVT, true),
+                               DAG.getConstant(NumBytes, DL, PtrVT, true),
+                               DAG.getConstant(0, DL, PtrVT, true),
                                Glue, DL);
     Glue = Chain.getValue(1);
 
@@ -728,8 +728,9 @@ void VEXTargetLowering::passByValArg(SDValue Chain, SDLoc DL,
     unsigned ByValSizeInBytes = Flags.getByValSize();
     unsigned OffsetInBytes = 0; // From beginning of struct
     unsigned RegSizeInBytes = 4;
+    const DataLayout &DLayout = DAG.getDataLayout();
     unsigned Alignment = std::min(Flags.getByValAlign(), RegSizeInBytes);
-    EVT PtrTy = getPointerTy(), RegTy = MVT::getIntegerVT(RegSizeInBytes * 8);
+    EVT PtrTy = getPointerTy(DLayout), RegTy = MVT::getIntegerVT(RegSizeInBytes * 8);
     unsigned NumRegs = LastReg - FirstReg;
     
     if (NumRegs) {
@@ -740,7 +741,7 @@ void VEXTargetLowering::passByValArg(SDValue Chain, SDLoc DL,
         // Copy words to registers.
         for (; I < NumRegs - LeftoverBytes; ++I, OffsetInBytes += RegSizeInBytes) {
             SDValue LoadPtr = DAG.getNode(ISD::ADD, DL, PtrTy, Arg,
-                                          DAG.getConstant(OffsetInBytes, PtrTy));
+                                          DAG.getConstant(OffsetInBytes, DL, PtrTy));
             SDValue LoadVal = DAG.getLoad(RegTy, DL, Chain, LoadPtr,
                                           MachinePointerInfo(), false, false, false,
                                           Alignment);
@@ -766,7 +767,7 @@ void VEXTargetLowering::passByValArg(SDValue Chain, SDLoc DL,
                 
                 // Load subword.
                 SDValue LoadPtr = DAG.getNode(ISD::ADD, DL, PtrTy, Arg,
-                                              DAG.getConstant(OffsetInBytes, PtrTy));
+                                              DAG.getConstant(OffsetInBytes, DL, PtrTy));
                 SDValue LoadVal = DAG.getExtLoad(
                                                  ISD::ZEXTLOAD, DL, RegTy, Chain, LoadPtr, MachinePointerInfo(),
                                                  MVT::getIntegerVT(LoadSizeInBytes * 8), false, false, false,
@@ -777,7 +778,7 @@ void VEXTargetLowering::passByValArg(SDValue Chain, SDLoc DL,
                 unsigned Shamt = (RegSizeInBytes - (TotalBytesLoaded + LoadSizeInBytes)) * 8;
                 
                 SDValue Shift = DAG.getNode(ISD::SHL, DL, RegTy, LoadVal,
-                                            DAG.getConstant(Shamt, MVT::i32));
+                                            DAG.getConstant(Shamt, DL, MVT::i32));
                 
                 if (Val.getNode())
                     Val = DAG.getNode(ISD::OR, DL, RegTy, Val, Shift);
@@ -798,10 +799,10 @@ void VEXTargetLowering::passByValArg(SDValue Chain, SDLoc DL,
     // Copy remainder of byval arg to it with memcpy.
     unsigned MemCpySize = ByValSizeInBytes - OffsetInBytes;
     SDValue Src = DAG.getNode(ISD::ADD, DL, PtrTy, Arg,
-                              DAG.getConstant(OffsetInBytes, PtrTy));
+                              DAG.getConstant(OffsetInBytes, DL, PtrTy));
     SDValue Dst = DAG.getNode(ISD::ADD, DL, PtrTy, StackPtr,
-                              DAG.getIntPtrConstant(VA.getLocMemOffset()));
-    Chain = DAG.getMemcpy(Chain, DL, Dst, Src, DAG.getConstant(MemCpySize, PtrTy),
+                              DAG.getIntPtrConstant(VA.getLocMemOffset(), DL));
+    Chain = DAG.getMemcpy(Chain, DL, Dst, Src, DAG.getConstant(MemCpySize, DL, PtrTy),
                           Alignment, /*isVolatile=*/false, /*AlwaysInline=*/false,
                           /*isTailCall=*/false,
                           MachinePointerInfo(), MachinePointerInfo());
@@ -821,14 +822,16 @@ void VEXTargetLowering::copyByValRegs(SDValue Chain, SDLoc DL, std::vector<SDVal
     unsigned NumRegs = LastReg - FirstReg;
     unsigned RegAreaSize = NumRegs * GPRSizeInBytes;
     unsigned FrameObjSize = std::max(Flags.getByValSize(), RegAreaSize);
+    
     int FrameObjOffset;
     ArrayRef<MCPhysReg> ByValArgRegs = { VEX::Reg3, VEX::Reg4, VEX::Reg5, VEX::Reg6, VEX::Reg7, VEX::Reg8, VEX::Reg9, VEX::Reg10 };
     
     if (RegAreaSize)
         FrameObjOffset = VA.getLocMemOffset();
     
+    const DataLayout &DLayout = DAG.getDataLayout();
     // Create frame object.
-    EVT PtrTy = getPointerTy();
+    EVT PtrTy = getPointerTy(DLayout);
     int FI = MFI->CreateFixedObject(FrameObjSize, FrameObjOffset, true);
     SDValue FIN = DAG.getFrameIndex(FI, PtrTy);
     InVals.push_back(FIN);
@@ -847,7 +850,7 @@ void VEXTargetLowering::copyByValRegs(SDValue Chain, SDLoc DL, std::vector<SDVal
         MRI.addLiveIn(ArgReg, VReg);
         unsigned Offset = I * GPRSizeInBytes;
         SDValue StorePtr = DAG.getNode(ISD::ADD, DL, PtrTy, FIN,
-                                       DAG.getConstant(Offset, PtrTy));
+                                       DAG.getConstant(Offset, DL, PtrTy));
         SDValue Store = DAG.getStore(Chain, DL, DAG.getRegister(VReg, RegTy),
                                      StorePtr, MachinePointerInfo(FuncArg, Offset),
                                      false, false, 0);
@@ -869,6 +872,8 @@ void VEXTargetLowering::writeVarArgRegs(std::vector<SDValue> &OutChains,
     MachineFrameInfo *MFI = MF.getFrameInfo();
     VEXFunctionInfo *VEXFI = MF.getInfo<VEXFunctionInfo>();
     
+    
+    const DataLayout &DLayout = DAG.getDataLayout();
     // Offset of the first variable argument from stack pointer.
     int VaArgOffset;
     
@@ -890,7 +895,7 @@ void VEXTargetLowering::writeVarArgRegs(std::vector<SDValue> &OutChains,
         MRI.addLiveIn(Reg, VReg);
         SDValue ArgValue = DAG.getCopyFromReg(Chain, DL, VReg, RegTy);
         FI = MFI->CreateFixedObject(RegSizeInBytes, VaArgOffset, true);
-        SDValue PtrOff = DAG.getFrameIndex(FI, getPointerTy());
+        SDValue PtrOff = DAG.getFrameIndex(FI, getPointerTy(DLayout));
         SDValue Store = DAG.getStore(Chain, DL, ArgValue, PtrOff,
                                      MachinePointerInfo(), false, false, 0);
         cast<StoreSDNode>(Store.getNode())->getMemOperand()->setValue(
@@ -1141,14 +1146,15 @@ SDValue VEXTargetLowering::LowerGlobalAddress(SDValue Op, SelectionDAG &DAG) con
 
     const GlobalValue *GV = cast<GlobalAddressSDNode>(Op)->getGlobal();
 
+    const DataLayout &DLayout = DAG.getDataLayout();
     int64_t Offset = cast<GlobalAddressSDNode>(Op)->getOffset();
 
     // Create TargetGlobalAddress node, folding in the constant offset.
     SDValue Result = DAG.getTargetGlobalAddress(GV, SDLoc(Op),
-                                                getPointerTy(), Offset);
+                                                getPointerTy(DLayout), Offset);
 
     return DAG.getNode(VEXISD::WRAPPER, SDLoc(Op),
-                       getPointerTy(), Result);
+                       getPointerTy(DLayout), Result);
 
 }
 
@@ -1156,12 +1162,12 @@ SDValue VEXTargetLowering::LowerExternalSymbol(SDValue Op, SelectionDAG &DAG) co
 
     SDLoc dl(Op);
     const char *Sym = cast<ExternalSymbolSDNode>(Op)->getSymbol();
-
+    const DataLayout &DLayout = DAG.getDataLayout();
     // Create TargetGlobalAddress node, folding in the constant offset.
-    SDValue Result = DAG.getTargetExternalSymbol(Sym, getPointerTy());
+    SDValue Result = DAG.getTargetExternalSymbol(Sym, getPointerTy(DLayout));
 
     return DAG.getNode(VEXISD::WRAPPER, dl,
-                       getPointerTy(), Result);
+                       getPointerTy(DLayout), Result);
 }
 
 SDValue
@@ -1211,7 +1217,7 @@ SDValue VEXTargetLowering::LowerLOAD(SDValue Op, SelectionDAG &DAG) const {
            "Custom lowering only for i1 loads");
     
     // First, load 8 bits into 32 bits, then truncate to 1 bit.
-    
+    const DataLayout &DLayout = DAG.getDataLayout();
     SDLoc dl(Op);
     LoadSDNode *LD = cast<LoadSDNode>(Op);
     
@@ -1219,7 +1225,7 @@ SDValue VEXTargetLowering::LowerLOAD(SDValue Op, SelectionDAG &DAG) const {
     SDValue BasePtr = LD->getBasePtr();
     MachineMemOperand *MMO = LD->getMemOperand();
     
-    SDValue NewLD = DAG.getExtLoad(ISD::EXTLOAD, dl, getPointerTy(), Chain,
+    SDValue NewLD = DAG.getExtLoad(ISD::EXTLOAD, dl, getPointerTy(DLayout), Chain,
                                    BasePtr, MVT::i8, MMO);
     SDValue Result = DAG.getNode(ISD::TRUNCATE, dl, MVT::i1, NewLD);
     
@@ -1236,13 +1242,13 @@ SDValue VEXTargetLowering::LowerSTORE(SDValue Op, SelectionDAG &DAG) const {
     
     SDLoc dl(Op);
     StoreSDNode *ST = cast<StoreSDNode>(Op);
-    
+    const DataLayout &DLayout = DAG.getDataLayout();
     SDValue Chain = ST->getChain();
     SDValue BasePtr = ST->getBasePtr();
     SDValue Value = ST->getValue();
     MachineMemOperand *MMO = ST->getMemOperand();
     
-    Value = DAG.getNode(ISD::ZERO_EXTEND, dl, getPointerTy(), Value);
+    Value = DAG.getNode(ISD::ZERO_EXTEND, dl, getPointerTy(DLayout), Value);
     return DAG.getTruncStore(Chain, dl, Value, BasePtr, MVT::i8, MMO);
 }
 
@@ -1264,7 +1270,7 @@ SDValue VEXTargetLowering::LowerADDSUBWithFlags(SDValue Op, SelectionDAG &DAG) c
 
         if (isSub) {
             DEBUG(errs() << "SUBE instruction\n");
-            SDValue ConstantZero = DAG.getConstant(0, MVT::i32);
+            SDValue ConstantZero = DAG.getConstant(0, dl, MVT::i32);
             rhs = DAG.getNode(ISD::SUB, dl, MVT::i32, ConstantZero, Op.getOperand(1));
         } else {
             DEBUG(errs() << "ADDE instruction\n");
@@ -1276,14 +1282,14 @@ SDValue VEXTargetLowering::LowerADDSUBWithFlags(SDValue Op, SelectionDAG &DAG) c
         
         if (isSub) {
             DEBUG(errs() << "SUBC instruction\n");
-            SDValue ConstantZero = DAG.getConstant(0, MVT::i32);
+            SDValue ConstantZero = DAG.getConstant(0, dl, MVT::i32);
             rhs = DAG.getNode(ISD::SUB, dl, MVT::i32, ConstantZero, Op.getOperand(1));
 
         } else {
             DEBUG(errs() << "ADDC instruction\n");
             rhs = Op.getOperand(1);
         }
-        SDValue Op3 = DAG.getConstant(0, MVT::i32);
+        SDValue Op3 = DAG.getConstant(0, dl, MVT::i32);
         return DAG.getNode(VEXISD::ADDCG, dl, VTs, lhs, rhs, Op3);
     }
 }
@@ -1327,8 +1333,8 @@ SDValue VEXTargetLowering::LowerMULHS(SDValue Op, SelectionDAG &DAG) const {
     
     SDValue LHS = Op.getOperand(0);
     SDValue RHS = Op.getOperand(1);
-    SDValue ShiftImm = DAG.getTargetConstant(16, MVT::i32);
-    SDValue MaskImm = DAG.getTargetConstant(0xFFFF, MVT::i32);
+    SDValue ShiftImm = DAG.getTargetConstant(16, dl, MVT::i32);
+    SDValue MaskImm = DAG.getTargetConstant(0xFFFF, dl, MVT::i32);
     
     SDValue v0, v1;
     
@@ -1373,8 +1379,8 @@ SDValue VEXTargetLowering::LowerMULHU(SDValue Op, SelectionDAG &DAG) const {
     
     SDValue LHS = Op.getOperand(0);
     SDValue RHS = Op.getOperand(1);
-    SDValue ShiftImm = DAG.getTargetConstant(16, MVT::i32);
-    SDValue MaskImm = DAG.getTargetConstant(0xFFFF, MVT::i32);
+    SDValue ShiftImm = DAG.getTargetConstant(16, dl, MVT::i32);
+    SDValue MaskImm = DAG.getTargetConstant(0xFFFF, dl, MVT::i32);
     
     SDValue v0, v1;
     
@@ -1422,7 +1428,7 @@ SDValue VEXTargetLowering::LowerSDIV(SDValue Op, SelectionDAG &DAG) const {
     
     SDValue Reg0 = DAG.getRegister(VEX::Reg0, MVT::i32);
     
-    SDValue Zero = DAG.getConstant(0, MVT::i32);
+    SDValue Zero = DAG.getConstant(0, DL, MVT::i32);
     
 //// This should be the code. But there is some problem in the RegAlloc Pass
 //// that makes LLVM crash
@@ -1514,7 +1520,7 @@ SDValue VEXTargetLowering::LowerUDIV(SDValue Op, SelectionDAG &DAG) const {
     
     SDValue Reg0 = DAG.getRegister(VEX::Reg0, MVT::i32);
     
-    SDValue Zero = DAG.getConstant(0, MVT::i32);
+    SDValue Zero = DAG.getConstant(0, DL, MVT::i32);
     
 //// This should be the code. But there is some problem in the RegAlloc Pass
 //// that makes LLVM crash
@@ -1601,7 +1607,7 @@ SDValue VEXTargetLowering::LowerSREM(SDValue Op, SelectionDAG &DAG) const {
     
     SDValue Reg0 = DAG.getRegister(VEX::Reg0, MVT::i32);
     
-    SDValue Zero = DAG.getConstant(0, MVT::i32);
+    SDValue Zero = DAG.getConstant(0, DL, MVT::i32);
     
 //// This should be the code. But there is some problem in the RegAlloc Pass
 //// that makes LLVM crash
@@ -1696,7 +1702,7 @@ SDValue VEXTargetLowering::LowerUREM(SDValue Op, SelectionDAG &DAG) const {
     
     SDValue Reg0 = DAG.getRegister(VEX::Reg0, MVT::i32);
     
-    SDValue Zero = DAG.getConstant(0, MVT::i32);
+    SDValue Zero = DAG.getConstant(0, DL, MVT::i32);
     
 //// This should be the code. But there is some problem in the RegAlloc Pass
 //// that makes LLVM crash

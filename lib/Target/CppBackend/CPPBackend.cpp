@@ -513,6 +513,7 @@ void CppWriter::printAttributes(const AttributeSet &PAL,
       HANDLE_ATTR(StackProtect);
       HANDLE_ATTR(StackProtectReq);
       HANDLE_ATTR(StackProtectStrong);
+      HANDLE_ATTR(SafeStack);
       HANDLE_ATTR(NoCapture);
       HANDLE_ATTR(NoRedZone);
       HANDLE_ATTR(NoImplicitFloat);
@@ -645,8 +646,7 @@ void CppWriter::printType(Type* Ty) {
     if (DefinedTypes.find(Ty) == DefinedTypes.end()) {
       std::string elemName(getCppName(ET));
       Out << "ArrayType* " << typeName << " = ArrayType::get("
-          << elemName
-          << ", " << utostr(AT->getNumElements()) << ");";
+          << elemName << ", " << AT->getNumElements() << ");";
       nl(Out);
     }
     break;
@@ -658,8 +658,7 @@ void CppWriter::printType(Type* Ty) {
     if (DefinedTypes.find(Ty) == DefinedTypes.end()) {
       std::string elemName(getCppName(ET));
       Out << "PointerType* " << typeName << " = PointerType::get("
-          << elemName
-          << ", " << utostr(PT->getAddressSpace()) << ");";
+          << elemName << ", " << PT->getAddressSpace() << ");";
       nl(Out);
     }
     break;
@@ -671,8 +670,7 @@ void CppWriter::printType(Type* Ty) {
     if (DefinedTypes.find(Ty) == DefinedTypes.end()) {
       std::string elemName(getCppName(ET));
       Out << "VectorType* " << typeName << " = VectorType::get("
-          << elemName
-          << ", " << utostr(PT->getNumElements()) << ");";
+          << elemName << ", " << PT->getNumElements() << ");";
       nl(Out);
     }
     break;
@@ -1029,7 +1027,7 @@ void CppWriter::printVariableHead(const GlobalVariable *GV) {
   }
   if (GV->getAlignment()) {
     printCppName(GV);
-    Out << "->setAlignment(" << utostr(GV->getAlignment()) << ");";
+    Out << "->setAlignment(" << GV->getAlignment() << ");";
     nl(Out);
   }
   if (GV->getVisibility() != GlobalValue::DefaultVisibility) {
@@ -1680,9 +1678,8 @@ void CppWriter::printFunctionUses(const Function* F) {
                 consts.insert(GVar->getInitializer());
         } else if (Constant* C = dyn_cast<Constant>(operand)) {
           consts.insert(C);
-          for (unsigned j = 0; j < C->getNumOperands(); ++j) {
+          for (Value* operand : C->operands()) {
             // If the operand references a GVal or Constant, make a note of it
-            Value* operand = C->getOperand(j);
             printType(operand->getType());
             if (GlobalValue* GV = dyn_cast<GlobalValue>(operand)) {
               gvs.insert(GV);
@@ -1724,7 +1721,7 @@ void CppWriter::printFunctionUses(const Function* F) {
   // initializers.
   if (GenerationType != GenFunction) {
     nl(Out) << "// Global Variable Definitions"; nl(Out);
-    for (const auto &GV : gvs) {
+    for (auto *GV : gvs) {
       if (GlobalVariable *Var = dyn_cast<GlobalVariable>(GV))
         printVariableBody(Var);
     }
@@ -2149,11 +2146,10 @@ char CppWriter::ID = 0;
 //                       External Interface declaration
 //===----------------------------------------------------------------------===//
 
-bool CPPTargetMachine::addPassesToEmitFile(PassManagerBase &PM, raw_ostream &o,
-                                           CodeGenFileType FileType,
-                                           bool DisableVerify,
-                                           AnalysisID StartAfter,
-                                           AnalysisID StopAfter) {
+bool CPPTargetMachine::addPassesToEmitFile(
+    PassManagerBase &PM, raw_pwrite_stream &o, CodeGenFileType FileType,
+    bool DisableVerify, AnalysisID StartBefore, AnalysisID StartAfter,
+    AnalysisID StopAfter, MachineFunctionInitializer *MFInitializer) {
   if (FileType != TargetMachine::CGFT_AssemblyFile)
     return true;
   auto FOut = llvm::make_unique<formatted_raw_ostream>(o);

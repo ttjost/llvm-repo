@@ -15,6 +15,7 @@
 #define LLVM_TARGET_TARGETMACHINE_H
 
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/Triple.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/CodeGen.h"
@@ -27,6 +28,7 @@ namespace llvm {
 class InstrItineraryData;
 class GlobalValue;
 class Mangler;
+class MachineFunctionInitializer;
 class MCAsmInfo;
 class MCCodeGenInfo;
 class MCContext;
@@ -48,6 +50,7 @@ class TargetSubtargetInfo;
 class TargetTransformInfo;
 class formatted_raw_ostream;
 class raw_ostream;
+class raw_pwrite_stream;
 class TargetLoweringObjectFile;
 
 // The old pass manager infrastructure is hidden in a legacy namespace now.
@@ -67,7 +70,7 @@ class TargetMachine {
   void operator=(const TargetMachine &) = delete;
 protected: // Can only create subclasses.
   TargetMachine(const Target &T, StringRef DataLayoutString,
-                StringRef TargetTriple, StringRef CPU, StringRef FS,
+                const Triple &TargetTriple, StringRef CPU, StringRef FS,
                 const TargetOptions &Options);
 
   /// The Target that this machine was created for.
@@ -78,7 +81,7 @@ protected: // Can only create subclasses.
 
   /// Triple string, CPU name, and target feature strings the TargetMachine
   /// instance is created with.
-  std::string TargetTriple;
+  Triple TargetTriple;
   std::string TargetCPU;
   std::string TargetFS;
 
@@ -102,7 +105,7 @@ public:
 
   const Target &getTarget() const { return TheTarget; }
 
-  StringRef getTargetTriple() const { return TargetTriple; }
+  const Triple &getTargetTriple() const { return TargetTriple; }
   StringRef getTargetCPU() const { return TargetCPU; }
   StringRef getTargetFeatureString() const { return TargetFS; }
 
@@ -122,9 +125,14 @@ public:
     return *static_cast<const STC*>(getSubtargetImpl(F));
   }
 
+  /// Deprecated in 3.7, will be removed in 3.8. Use createDataLayout() instead.
+  ///
   /// This method returns a pointer to the DataLayout for the target. It should
   /// be unchanging for every subtarget.
   const DataLayout *getDataLayout() const { return &DL; }
+
+  /// Create a DataLayout.
+  const DataLayout createDataLayout() const { return DL; }
 
   /// \brief Reset the target options based on the function's attributes.
   // FIXME: Remove TargetOptions that affect per-function code generation
@@ -207,11 +215,11 @@ public:
   /// emitted.  Typically this will involve several steps of code generation.
   /// This method should return true if emission of this file type is not
   /// supported, or false on success.
-  virtual bool addPassesToEmitFile(PassManagerBase &, raw_ostream &,
-                                   CodeGenFileType,
-                                   bool /*DisableVerify*/ = true,
-                                   AnalysisID /*StartAfter*/ = nullptr,
-                                   AnalysisID /*StopAfter*/ = nullptr) {
+  virtual bool addPassesToEmitFile(
+      PassManagerBase &, raw_pwrite_stream &, CodeGenFileType,
+      bool /*DisableVerify*/ = true, AnalysisID /*StartBefore*/ = nullptr,
+      AnalysisID /*StartAfter*/ = nullptr, AnalysisID /*StopAfter*/ = nullptr,
+      MachineFunctionInitializer * /*MFInitializer*/ = nullptr) {
     return true;
   }
 
@@ -220,9 +228,8 @@ public:
   /// fills the MCContext Ctx pointer which can be used to build custom
   /// MCStreamer.
   ///
-  virtual bool addPassesToEmitMC(PassManagerBase &,
-                                 MCContext *&,
-                                 raw_ostream &,
+  virtual bool addPassesToEmitMC(PassManagerBase &, MCContext *&,
+                                 raw_pwrite_stream &,
                                  bool /*DisableVerify*/ = true) {
     return true;
   }
@@ -238,7 +245,7 @@ public:
 class LLVMTargetMachine : public TargetMachine {
 protected: // Can only create subclasses.
   LLVMTargetMachine(const Target &T, StringRef DataLayoutString,
-                    StringRef TargetTriple, StringRef CPU, StringRef FS,
+                    const Triple &TargetTriple, StringRef CPU, StringRef FS,
                     TargetOptions Options, Reloc::Model RM, CodeModel::Model CM,
                     CodeGenOpt::Level OL);
 
@@ -256,17 +263,19 @@ public:
 
   /// Add passes to the specified pass manager to get the specified file
   /// emitted.  Typically this will involve several steps of code generation.
-  bool addPassesToEmitFile(PassManagerBase &PM, raw_ostream &Out,
-                           CodeGenFileType FileType, bool DisableVerify = true,
-                           AnalysisID StartAfter = nullptr,
-                           AnalysisID StopAfter = nullptr) override;
+  bool addPassesToEmitFile(
+      PassManagerBase &PM, raw_pwrite_stream &Out, CodeGenFileType FileType,
+      bool DisableVerify = true, AnalysisID StartBefore = nullptr,
+      AnalysisID StartAfter = nullptr, AnalysisID StopAfter = nullptr,
+      MachineFunctionInitializer *MFInitializer = nullptr) override;
 
   /// Add passes to the specified pass manager to get machine code emitted with
   /// the MCJIT. This method returns true if machine code is not supported. It
   /// fills the MCContext Ctx pointer which can be used to build custom
   /// MCStreamer.
   bool addPassesToEmitMC(PassManagerBase &PM, MCContext *&Ctx,
-                         raw_ostream &OS, bool DisableVerify = true) override;
+                         raw_pwrite_stream &OS,
+                         bool DisableVerify = true) override;
 };
 
 } // End llvm namespace

@@ -197,10 +197,18 @@ static bool isLargeIntegerTy(bool Is32Bit, Type *Ty) {
 // Determining the address of a TLS variable results in a function call in
 // certain TLS models.
 static bool memAddrUsesCTR(const PPCTargetMachine *TM,
-                           const llvm::Value *MemAddr) {
+                           const Value *MemAddr) {
   const auto *GV = dyn_cast<GlobalValue>(MemAddr);
-  if (!GV)
+  if (!GV) {
+    // Recurse to check for constants that refer to TLS global variables.
+    if (const auto *CV = dyn_cast<Constant>(MemAddr))
+      for (const auto &CO : CV->operands())
+        if (memAddrUsesCTR(TM, CO))
+          return true;
+
     return false;
+  }
+
   if (!GV->isThreadLocal())
     return false;
   if (!TM)
@@ -239,6 +247,11 @@ bool PPCCTRLoops::mightUseCTR(const Triple &TT, BasicBlock *BB) {
         if (F->getIntrinsicID() != Intrinsic::not_intrinsic) {
           switch (F->getIntrinsicID()) {
           default: continue;
+          // If we have a call to ppc_is_decremented_ctr_nonzero, or ppc_mtctr
+          // we're definitely using CTR.
+          case Intrinsic::ppc_is_decremented_ctr_nonzero:
+	  case Intrinsic::ppc_mtctr:
+	    return true;
 
 // VisualStudio defines setjmp as _setjmp
 #if defined(_MSC_VER) && defined(setjmp) && \
@@ -351,8 +364,9 @@ bool PPCCTRLoops::mightUseCTR(const Triple &TT, BasicBlock *BB) {
             Opcode = ISD::FTRUNC; break;
           }
 
-          MVT VTy =
-            TLI->getSimpleValueType(CI->getArgOperand(0)->getType(), true);
+          auto &DL = CI->getModule()->getDataLayout();
+          MVT VTy = TLI->getSimpleValueType(DL, CI->getArgOperand(0)->getType(),
+                                            true);
           if (VTy == MVT::Other)
             return true;
           
@@ -417,14 +431,15 @@ bool PPCCTRLoops::mightUseCTR(const Triple &TT, BasicBlock *BB) {
 bool PPCCTRLoops::convertToCTRLoop(Loop *L) {
   bool MadeChange = false;
 
-  Triple TT = Triple(L->getHeader()->getParent()->getParent()->
-                     getTargetTriple());
+  const Triple TT =
+      Triple(L->getHeader()->getParent()->getParent()->getTargetTriple());
   if (!TT.isArch32Bit() && !TT.isArch64Bit())
     return MadeChange; // Unknown arch. type.
 
   // Process nested loops first.
   for (Loop::iterator I = L->begin(), E = L->end(); I != E; ++I) {
     MadeChange |= convertToCTRLoop(*I);
+    DEBUG(dbgs() << "Nested loop converted\n");
   }
 
   // If a nested loop has been converted, then we can't convert this loop.
@@ -553,7 +568,7 @@ bool PPCCTRLoops::convertToCTRLoop(Loop *L) {
   IRBuilder<> CondBuilder(CountedExitBranch);
   Value *DecFunc =
     Intrinsic::getDeclaration(M, Intrinsic::ppc_is_decremented_ctr_nonzero);
-  Value *NewCond = CondBuilder.CreateCall(DecFunc);
+  Value *NewCond = CondBuilder.CreateCall(DecFunc, {});
   Value *OldCond = CountedExitBranch->getCondition();
   CountedExitBranch->setCondition(NewCond);
 

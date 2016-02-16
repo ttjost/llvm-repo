@@ -50,17 +50,14 @@ extern bool FixGlobalBaseReg;
 // FIXME : Merge with the copy in VEXMCTargetDesc.cpp
 static StringRef selectVEXCPU(Triple TT, StringRef CPU){
     if(CPU.empty() || CPU == "generic"){
-        if (TT.getArch() == Triple::vex || TT.getArch() == Triple::vexnew)
+        if (TT.getArch() == Triple::vex)
             CPU = "rvex-4issue";
     }
     return CPU;
 }
 
-void VEXSubtarget::anchor() {
-}
-
 // VEXSubtarget::VEXSubtarget
-VEXSubtarget::VEXSubtarget(const std::string &TT, const std::string &CPU,
+VEXSubtarget::VEXSubtarget(const Triple &TT, const std::string &CPU,
                            const std::string &FS, bool isNewScheduling,
                            bool EnableVLIWScheduling, Reloc::Model _RM,
                            VEXTargetMachine &_TM):

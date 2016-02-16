@@ -16,7 +16,23 @@
 ;===------------------------------------------------------------------------===;
 
 [common]
-subdirectories = ARM AArch64 BPF CppBackend Hexagon MSP430 NVPTX Mips PowerPC R600 Sparc SystemZ X86 XCore VEX
+subdirectories = 
+ AMDGPU
+ ARM
+ AArch64
+ BPF
+ CppBackend
+ Hexagon
+ MSP430
+ NVPTX
+ Mips
+ PowerPC
+ Sparc
+ SystemZ
+ WebAssembly
+ X86
+ XCore
+ VEX
 
 ; This is a special group whose required libraries are extended (by llvm-build)
 ; with the best execution engine (the native JIT, if available, or the

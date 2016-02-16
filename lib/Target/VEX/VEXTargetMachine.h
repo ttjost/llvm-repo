@@ -35,7 +35,7 @@ private:
     std::unique_ptr<TargetLoweringObjectFile> TLOF;
 
 public:
-    VEXTargetMachine(const Target &T, StringRef TT, StringRef CPU,
+    VEXTargetMachine(const Target &T, const Triple TT, StringRef CPU,
                       StringRef FS, const TargetOptions &Options,
                       Reloc::Model RM, CodeModel::Model CM,
                       CodeGenOpt::Level OL, bool isNewScheduling);
@@ -45,7 +45,7 @@ public:
         return &Subtarget;
     }
     
-    const VEXSubtarget *getSubtargetImpl(const Function &F) const override{
+    const VEXSubtarget *getSubtargetImpl(const Function &) const override {
         return &Subtarget;
     }
     
@@ -68,7 +68,7 @@ public:
 class VEXNormalTargetMachine : public VEXTargetMachine{
     virtual void anchor();
 public:
-    VEXNormalTargetMachine(const Target &T, StringRef TT,
+    VEXNormalTargetMachine(const Target &T, const Triple TT,
                            StringRef CPU, StringRef FS, const TargetOptions &Options,
                            Reloc::Model RM, CodeModel::Model CM,
                            CodeGenOpt::Level OL);
@@ -78,7 +78,7 @@ public:
 class VEXNewTargetMachine : public VEXTargetMachine{
     virtual void anchor();
 public:
-    VEXNewTargetMachine(const Target &T, StringRef TT,
+    VEXNewTargetMachine(const Target &T, const Triple TT,
                         StringRef CPU, StringRef FS, const TargetOptions &Options,
                         Reloc::Model RM, CodeModel::Model CM,
                         CodeGenOpt::Level OL);

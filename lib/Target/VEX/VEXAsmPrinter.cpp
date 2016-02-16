@@ -99,10 +99,10 @@ void VEXAsmPrinter::EmitInstruction(const MachineInstr *MI){
                 const MCInst *inst = TmpInst0.getOperand(i).getInst();
                 DEBUG(dbgs() << inst->getOpcode() << " \n");
         }
-        OutStreamer.EmitInstruction(TmpInst0, getSubtargetInfo());
+        OutStreamer->EmitInstruction(TmpInst0, getSubtargetInfo());
     } else {
         MCInstLowering.Lower(MI, TmpInst0, TmpInst0, false);
-        OutStreamer.EmitInstruction(TmpInst0, getSubtargetInfo());
+        OutStreamer->EmitInstruction(TmpInst0, getSubtargetInfo());
     }
 
 //    do{
@@ -180,10 +180,10 @@ const char *VEXAsmPrinter::getCurrentABIString() const {
 void VEXAsmPrinter::EmitFunctionEntryLabel() {
 //    if(OutStreamer.hasRawTextSupport())
     unsigned StackSize = MF->getFrameInfo()->getStackSize() == 0 ? 0 : RoundUpToAlignment(MF->getFrameInfo()->getStackSize(), 32);
-    OutStreamer.EmitRawText(".section .text \n.proc \n.entry caller, sp=$r0.1, rl=$l0.0, asize=-" +
+    OutStreamer->EmitRawText(".section .text \n.proc \n.entry caller, sp=$r0.1, rl=$l0.0, asize=-" +
                             Twine(StackSize) +
                             ", arg()");
-    OutStreamer.EmitRawText(Twine(CurrentFnSym->getName())+"::");
+    OutStreamer->EmitRawText(Twine(CurrentFnSym->getName())+"::");
 }
 
 // FIXME : Should this be implemented
@@ -219,7 +219,7 @@ void VEXAsmPrinter::EmitFunctionBodyEnd() {
     // There are instruction for this macros, but they must
     // always be at the function end, and we can't emit and
     // break with BB logic.
-    OutStreamer.EmitRawText(".endp\n");
+    OutStreamer->EmitRawText(".endp\n");
 }
 
 // FIXME : Is this correct?

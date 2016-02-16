@@ -11,13 +11,14 @@
 #include "llvm/ExecutionEngine/Orc/OrcTargetSupport.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/DynamicLibrary.h"
+#include <cstdio>
 #include <system_error>
 
 using namespace llvm;
 
 namespace {
 
-  enum class DumpKind { NoDump, DumpFuncsToStdErr, DumpModsToStdErr,
+  enum class DumpKind { NoDump, DumpFuncsToStdOut, DumpModsToStdErr,
                         DumpModsToDisk };
 
   cl::opt<DumpKind> OrcDumpKind("orc-lazy-debug",
@@ -26,9 +27,9 @@ namespace {
                                 cl::values(
                                   clEnumValN(DumpKind::NoDump, "no-dump",
                                              "Don't dump anything."),
-                                  clEnumValN(DumpKind::DumpFuncsToStdErr,
-                                             "funcs-to-stderr",
-                                             "Dump function names to stderr."),
+                                  clEnumValN(DumpKind::DumpFuncsToStdOut,
+                                             "funcs-to-stdout",
+                                             "Dump function names to stdout."),
                                   clEnumValN(DumpKind::DumpModsToStdErr,
                                              "mods-to-stderr",
                                              "Dump modules to stderr."),
@@ -61,24 +62,25 @@ OrcLazyJIT::TransformFtor OrcLazyJIT::createDebugDumper() {
 
   switch (OrcDumpKind) {
   case DumpKind::NoDump:
-    return [](std::unique_ptr<Module> M) { return std::move(M); };
+    return [](std::unique_ptr<Module> M) { return M; };
 
-  case DumpKind::DumpFuncsToStdErr:
+  case DumpKind::DumpFuncsToStdOut:
     return [](std::unique_ptr<Module> M) {
-      dbgs() << "[ ";
+      printf("[ ");
 
       for (const auto &F : *M) {
         if (F.isDeclaration())
           continue;
 
-        if (F.hasName())
-          dbgs() << F.getName() << " ";
-        else
-          dbgs() << "<anon> ";
+        if (F.hasName()) {
+          std::string Name(F.getName());
+          printf("%s ", Name.c_str());
+        } else
+          printf("<anon> ");
       }
 
-      dbgs() << "]\n";
-      return std::move(M);
+      printf("]\n");
+      return M;
     };
 
   case DumpKind::DumpModsToStdErr:
@@ -86,7 +88,7 @@ OrcLazyJIT::TransformFtor OrcLazyJIT::createDebugDumper() {
              dbgs() << "----- Module Start -----\n" << *M
                     << "----- Module End -----\n";
 
-             return std::move(M);
+             return M;
            };
 
   case DumpKind::DumpModsToDisk:
@@ -100,11 +102,14 @@ OrcLazyJIT::TransformFtor OrcLazyJIT::createDebugDumper() {
                exit(1);
              }
              Out << *M;
-             return std::move(M);
+             return M;
            };
   }
   llvm_unreachable("Unknown DumpKind");
 }
+
+// Defined in lli.cpp.
+CodeGenOpt::Level getOptLevel();
 
 int llvm::runOrcLazyJIT(std::unique_ptr<Module> M, int ArgC, char* ArgV[]) {
   // Add the program's symbols into the JIT's search space.
@@ -115,7 +120,9 @@ int llvm::runOrcLazyJIT(std::unique_ptr<Module> M, int ArgC, char* ArgV[]) {
 
   // Grab a target machine and try to build a factory function for the
   // target-specific Orc callback manager.
-  auto TM = std::unique_ptr<TargetMachine>(EngineBuilder().selectTarget());
+  EngineBuilder EB;
+  EB.setOptLevel(getOptLevel());
+  auto TM = std::unique_ptr<TargetMachine>(EB.selectTarget());
   auto &Context = getGlobalContext();
   auto CallbackMgrBuilder =
     OrcLazyJIT::createCallbackManagerBuilder(Triple(TM->getTargetTriple()));
@@ -124,7 +131,7 @@ int llvm::runOrcLazyJIT(std::unique_ptr<Module> M, int ArgC, char* ArgV[]) {
   // manager for this target. Bail out.
   if (!CallbackMgrBuilder) {
     errs() << "No callback manager available for target '"
-           << TM->getTargetTriple() << "'.\n";
+           << TM->getTargetTriple().str() << "'.\n";
     return 1;
   }
 

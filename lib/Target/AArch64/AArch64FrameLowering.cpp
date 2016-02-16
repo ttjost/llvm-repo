@@ -161,7 +161,7 @@ void AArch64FrameLowering::eliminateCallFramePseudoInstr(
   const AArch64InstrInfo *TII =
       static_cast<const AArch64InstrInfo *>(MF.getSubtarget().getInstrInfo());
   DebugLoc DL = I->getDebugLoc();
-  int Opc = I->getOpcode();
+  unsigned Opc = I->getOpcode();
   bool IsDestroy = Opc == TII->getCallFrameDestroyOpcode();
   uint64_t CalleePopAmount = IsDestroy ? I->getOperand(1).getImm() : 0;
 
@@ -250,8 +250,33 @@ void AArch64FrameLowering::emitCalleeSavedFrameMoves(
   }
 }
 
-void AArch64FrameLowering::emitPrologue(MachineFunction &MF) const {
-  MachineBasicBlock &MBB = MF.front(); // Prologue goes in entry BB.
+/// Get FPOffset by analyzing the first instruction.
+static int getFPOffsetInPrologue(MachineInstr *MBBI) {
+  // First instruction must a) allocate the stack  and b) have an immediate
+  // that is a multiple of -2.
+  assert(((MBBI->getOpcode() == AArch64::STPXpre ||
+           MBBI->getOpcode() == AArch64::STPDpre) &&
+          MBBI->getOperand(3).getReg() == AArch64::SP &&
+          MBBI->getOperand(4).getImm() < 0 &&
+          (MBBI->getOperand(4).getImm() & 1) == 0));
+
+  // Frame pointer is fp = sp - 16. Since the  STPXpre subtracts the space
+  // required for the callee saved register area we get the frame pointer
+  // by addding that offset - 16 = -getImm()*8 - 2*8 = -(getImm() + 2) * 8.
+  int FPOffset = -(MBBI->getOperand(4).getImm() + 2) * 8;
+  assert(FPOffset >= 0 && "Bad Framepointer Offset");
+  return FPOffset;
+}
+
+static bool isCSSave(MachineInstr *MBBI) {
+  return MBBI->getOpcode() == AArch64::STPXi ||
+         MBBI->getOpcode() == AArch64::STPDi ||
+         MBBI->getOpcode() == AArch64::STPXpre ||
+         MBBI->getOpcode() == AArch64::STPDpre;
+}
+
+void AArch64FrameLowering::emitPrologue(MachineFunction &MF,
+                                        MachineBasicBlock &MBB) const {
   MachineBasicBlock::iterator MBBI = MBB.begin();
   const MachineFrameInfo *MFI = MF.getFrameInfo();
   const Function *Fn = MF.getFunction();
@@ -277,7 +302,7 @@ void AArch64FrameLowering::emitPrologue(MachineFunction &MF) const {
     AFI->setLocalStackSize(NumBytes);
 
     // Label used to tie together the PROLOG_LABEL and the MachineMoves.
-    MCSymbol *FrameLabel = MMI.getContext().CreateTempSymbol();
+    MCSymbol *FrameLabel = MMI.getContext().createTempSymbol();
 
     // REDZONE: If the stack size is less than 128 bytes, we don't need
     // to actually allocate.
@@ -300,27 +325,11 @@ void AArch64FrameLowering::emitPrologue(MachineFunction &MF) const {
 
   // Only set up FP if we actually need to.
   int FPOffset = 0;
-  if (HasFP) {
-    // First instruction must a) allocate the stack  and b) have an immediate
-    // that is a multiple of -2.
-    assert((MBBI->getOpcode() == AArch64::STPXpre ||
-            MBBI->getOpcode() == AArch64::STPDpre) &&
-           MBBI->getOperand(3).getReg() == AArch64::SP &&
-           MBBI->getOperand(4).getImm() < 0 &&
-           (MBBI->getOperand(4).getImm() & 1) == 0);
-
-    // Frame pointer is fp = sp - 16. Since the  STPXpre subtracts the space
-    // required for the callee saved register area we get the frame pointer
-    // by addding that offset - 16 = -getImm()*8 - 2*8 = -(getImm() + 2) * 8.
-    FPOffset = -(MBBI->getOperand(4).getImm() + 2) * 8;
-    assert(FPOffset >= 0 && "Bad Framepointer Offset");
-  }
+  if (HasFP)
+    FPOffset = getFPOffsetInPrologue(MBBI);
 
   // Move past the saves of the callee-saved registers.
-  while (MBBI->getOpcode() == AArch64::STPXi ||
-         MBBI->getOpcode() == AArch64::STPDi ||
-         MBBI->getOpcode() == AArch64::STPXpre ||
-         MBBI->getOpcode() == AArch64::STPDpre) {
+  while (isCSSave(MBBI)) {
     ++MBBI;
     NumBytes -= 16;
   }
@@ -340,13 +349,12 @@ void AArch64FrameLowering::emitPrologue(MachineFunction &MF) const {
   // Allocate space for the rest of the frame.
 
   const unsigned Alignment = MFI->getMaxAlignment();
-  const bool NeedsRealignment = (Alignment > 16);
+  const bool NeedsRealignment = RegInfo->needsStackRealignment(MF);
   unsigned scratchSPReg = AArch64::SP;
-  if (NeedsRealignment) {
-    // Use the first callee-saved register as a scratch register
-    assert(MF.getRegInfo().isPhysRegUsed(AArch64::X9) &&
-           "No scratch register to align SP!");
+  if (NumBytes && NeedsRealignment) {
+    // Use the first callee-saved register as a scratch register.
     scratchSPReg = AArch64::X9;
+    MF.getRegInfo().setPhysRegUsed(scratchSPReg);
   }
 
   // If we're a leaf function, try using the red zone.
@@ -356,9 +364,6 @@ void AArch64FrameLowering::emitPrologue(MachineFunction &MF) const {
     // which shouldn't be counted here.
     emitFrameOffset(MBB, MBBI, DL, scratchSPReg, AArch64::SP, -NumBytes, TII,
                     MachineInstr::FrameSetup);
-
-  assert(!(NeedsRealignment && NumBytes==0) &&
-         "NumBytes should never be 0 when realignment is needed");
 
   if (NumBytes && NeedsRealignment) {
     const unsigned NrBitsToZero = countTrailingZeros(Alignment);
@@ -530,15 +535,19 @@ static bool isCSRestore(MachineInstr *MI, const MCPhysReg *CSRegs) {
 void AArch64FrameLowering::emitEpilogue(MachineFunction &MF,
                                         MachineBasicBlock &MBB) const {
   MachineBasicBlock::iterator MBBI = MBB.getLastNonDebugInstr();
-  assert(MBBI->isReturn() && "Can only insert epilog into returning blocks");
   MachineFrameInfo *MFI = MF.getFrameInfo();
   const AArch64InstrInfo *TII =
       static_cast<const AArch64InstrInfo *>(MF.getSubtarget().getInstrInfo());
   const AArch64RegisterInfo *RegInfo = static_cast<const AArch64RegisterInfo *>(
       MF.getSubtarget().getRegisterInfo());
-  DebugLoc DL = MBBI->getDebugLoc();
-  unsigned RetOpcode = MBBI->getOpcode();
-
+  DebugLoc DL;
+  bool IsTailCallReturn = false;
+  if (MBB.end() != MBBI) {
+    DL = MBBI->getDebugLoc();
+    unsigned RetOpcode = MBBI->getOpcode();
+    IsTailCallReturn = RetOpcode == AArch64::TCRETURNdi ||
+      RetOpcode == AArch64::TCRETURNri;
+  }
   int NumBytes = MFI->getStackSize();
   const AArch64FunctionInfo *AFI = MF.getInfo<AArch64FunctionInfo>();
 
@@ -550,7 +559,7 @@ void AArch64FrameLowering::emitEpilogue(MachineFunction &MF,
   // Initial and residual are named for consistency with the prologue. Note that
   // in the epilogue, the residual adjustment is executed first.
   uint64_t ArgumentPopSize = 0;
-  if (RetOpcode == AArch64::TCRETURNdi || RetOpcode == AArch64::TCRETURNri) {
+  if (IsTailCallReturn) {
     MachineOperand &StackAdjust = MBBI->getOperand(1);
 
     // For a tail-call in a callee-pops-arguments environment, some or all of
@@ -595,7 +604,7 @@ void AArch64FrameLowering::emitEpilogue(MachineFunction &MF,
 
   unsigned NumRestores = 0;
   // Move past the restores of the callee-saved registers.
-  MachineBasicBlock::iterator LastPopI = MBBI;
+  MachineBasicBlock::iterator LastPopI = MBB.getFirstTerminator();
   const MCPhysReg *CSRegs = RegInfo->getCalleeSavedRegs(&MF);
   if (LastPopI != MBB.begin()) {
     do {
@@ -868,28 +877,34 @@ bool AArch64FrameLowering::restoreCalleeSavedRegisters(
   return true;
 }
 
-void AArch64FrameLowering::processFunctionBeforeCalleeSavedScan(
-    MachineFunction &MF, RegScavenger *RS) const {
+void AArch64FrameLowering::determineCalleeSaves(MachineFunction &MF,
+                                                BitVector &SavedRegs,
+                                                RegScavenger *RS) const {
+  // All calls are tail calls in GHC calling conv, and functions have no
+  // prologue/epilogue.
+  if (MF.getFunction()->getCallingConv() == CallingConv::GHC)
+    return;
+
+  TargetFrameLowering::determineCalleeSaves(MF, SavedRegs, RS);
   const AArch64RegisterInfo *RegInfo = static_cast<const AArch64RegisterInfo *>(
       MF.getSubtarget().getRegisterInfo());
   AArch64FunctionInfo *AFI = MF.getInfo<AArch64FunctionInfo>();
-  MachineRegisterInfo *MRI = &MF.getRegInfo();
   SmallVector<unsigned, 4> UnspilledCSGPRs;
   SmallVector<unsigned, 4> UnspilledCSFPRs;
 
   // The frame record needs to be created by saving the appropriate registers
   if (hasFP(MF)) {
-    MRI->setPhysRegUsed(AArch64::FP);
-    MRI->setPhysRegUsed(AArch64::LR);
+    SavedRegs.set(AArch64::FP);
+    SavedRegs.set(AArch64::LR);
   }
 
   // Spill the BasePtr if it's used. Do this first thing so that the
   // getCalleeSavedRegs() below will get the right answer.
   if (RegInfo->hasBasePointer(MF))
-    MRI->setPhysRegUsed(RegInfo->getBaseRegister());
+    SavedRegs.set(RegInfo->getBaseRegister());
 
   if (RegInfo->needsStackRealignment(MF) && !RegInfo->hasBasePointer(MF))
-    MRI->setPhysRegUsed(AArch64::X9);
+    SavedRegs.set(AArch64::X9);
 
   // If any callee-saved registers are used, the frame cannot be eliminated.
   unsigned NumGPRSpilled = 0;
@@ -911,8 +926,8 @@ void AArch64FrameLowering::processFunctionBeforeCalleeSavedScan(
                 AArch64::FPR64RegClass.contains(EvenReg)) &&
            "Register class mismatch!");
 
-    const bool OddRegUsed = MRI->isPhysRegUsed(OddReg);
-    const bool EvenRegUsed = MRI->isPhysRegUsed(EvenReg);
+    const bool OddRegUsed = SavedRegs.test(OddReg);
+    const bool EvenRegUsed = SavedRegs.test(EvenReg);
 
     // Early exit if none of the registers in the register pair is actually
     // used.
@@ -933,7 +948,7 @@ void AArch64FrameLowering::processFunctionBeforeCalleeSavedScan(
     if (OddRegUsed ^ EvenRegUsed) {
       // Find out which register is the additional spill.
       Reg = OddRegUsed ? EvenReg : OddReg;
-      MRI->setPhysRegUsed(Reg);
+      SavedRegs.set(Reg);
     }
 
     DEBUG(dbgs() << ' ' << PrintReg(OddReg, RegInfo));
@@ -988,7 +1003,7 @@ void AArch64FrameLowering::processFunctionBeforeCalleeSavedScan(
       UnspilledCSGPRs.pop_back();
       DEBUG(dbgs() << "Spilling " << PrintReg(Reg, RegInfo)
                    << " to get a scratch register.\n");
-      MRI->setPhysRegUsed(Reg);
+      SavedRegs.set(Reg);
       ExtraCSSpill = true;
       ++Count;
     }

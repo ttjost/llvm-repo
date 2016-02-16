@@ -32,7 +32,6 @@
 #include "llvm/MC/MCSymbol.h"
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Support/raw_ostream.h"
-#include <iostream>
 using namespace llvm;
 
 #define DEBUG_TYPE "asm-printer"
@@ -76,7 +75,7 @@ void MSP430AsmPrinter::printOperand(const MachineInstr *MI, int OpNum,
     O << MO.getImm();
     return;
   case MachineOperand::MO_MachineBasicBlock:
-    O << *MO.getMBB()->getSymbol();
+    MO.getMBB()->getSymbol()->print(O, MAI);
     return;
   case MachineOperand::MO_GlobalAddress: {
     bool isMemOp  = Modifier && !strcmp(Modifier, "mem");
@@ -93,7 +92,7 @@ void MSP430AsmPrinter::printOperand(const MachineInstr *MI, int OpNum,
     if (Offset)
       O << '(' << Offset << '+';
 
-    O << *getSymbol(MO.getGlobal());
+    getSymbol(MO.getGlobal())->print(O, MAI);
 
     if (Offset)
       O << ')';
@@ -153,7 +152,7 @@ void MSP430AsmPrinter::EmitInstruction(const MachineInstr *MI) {
 
   MCInst TmpInst;
   MCInstLowering.Lower(MI, TmpInst);
-  EmitToStreamer(OutStreamer, TmpInst);
+  EmitToStreamer(*OutStreamer, TmpInst);
 }
 
 // Force static initialization.
