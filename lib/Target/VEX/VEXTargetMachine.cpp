@@ -24,6 +24,7 @@
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/CodeGen/TargetLoweringObjectFileImpl.h"
 #include "llvm/Support/CommandLine.h"
+#include "VEXDataReuseTracking.cpp"
 
 using namespace llvm;
 
@@ -32,6 +33,10 @@ using namespace llvm;
 static cl::opt<bool> EnableVLIWScheduling("enable-vliw-scheduling",
                                           cl::Hidden, cl::init(true),
                                           cl::desc("Enable VLIW Scheduling"));
+
+static cl::opt<bool> EnableSPMs("enable-spms",
+                                cl::Hidden, cl::init(false),
+                                cl::desc("Enable Code Generation for ScratchPad Memories"));
 
 extern "C" void LLVMInitializeVEXTarget() {
     
@@ -145,12 +150,20 @@ namespace {
             return createVLIWMachineSched(C);
         }
     
+        bool addPreISel() override;
         bool addInstSelector() override;
         void addPreEmitPass() override;
         void addPreRegAlloc() override;
         void addMachineSSAOptimization() override;
         
     };
+}
+
+bool VEXPassConfig::addPreISel() {
+    if (EnableSPMs)
+        addPass(createVEXDataReuseTrackingPass());
+    
+    return false;
 }
 
 bool VEXPassConfig::addInstSelector() {

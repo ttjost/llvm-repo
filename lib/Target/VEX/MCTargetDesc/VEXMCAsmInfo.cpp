@@ -29,7 +29,7 @@ VEXMCAsmInfo::VEXMCAsmInfo(const Triple &TT) {
     LabelSuffix                 = ":";
     
     ZeroDirective               = "\t.skip\t";
-    AscizDirective              = nullptr;
+    //AscizDirective              = nullptr;
     
     IsLittleEndian              = false;
     
@@ -39,7 +39,7 @@ VEXMCAsmInfo::VEXMCAsmInfo(const Triple &TT) {
     // we check if this string is null.
     // If that is the case, we generate code for VEX.
     // Otherwise, it will generate correct code for other architecture.
-    AsciiDirective              = nullptr;
+    //AsciiDirective              = nullptr;
     
     Data8bitsDirective          = "\t.data1\t";
     Data16bitsDirective         = "\t.data2\t";
@@ -60,6 +60,6 @@ VEXMCAsmInfo::VEXMCAsmInfo(const Triple &TT) {
     // A Modification in MCAsmStreamer::EmitSymbolAttribute Function was also done.
     // See "case MCSA_Global:". I added a verification if GlobalDirective is nullptr.
     // This maybe a problem in the future, so we need to be aware of that.
-    GlobalDirective             = nullptr;
+    GlobalDirective             = ".globl";
 
 }
