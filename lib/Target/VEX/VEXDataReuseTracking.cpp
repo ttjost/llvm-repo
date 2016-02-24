@@ -59,13 +59,15 @@ void VEXDataReuseTrackingPass::getAnalysisUsage(AnalysisUsage &AU) const {
 
 bool VEXDataReuseTrackingPass::runOnFunction(Function &F) {
     
+    errs() << F.getName() << "\n";
     
     for (auto MBB = F.begin(), MBBE = F.end(); MBBE != MBB; ++MBB) {
-        
-        MBB->front().dump();
-        
+        if (LoadInst *Inst = dyn_cast<LoadInst>(&MBB->front())) {
+            for (unsigned i = 0, e = Inst->getNumOperands(); i != e; ++i)
+                Inst->getOperand(i)->dump();
+            Inst->dump();
+        }
     }
-    
     return false;
 }
 
