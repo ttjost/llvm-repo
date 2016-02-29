@@ -127,7 +127,7 @@ bool VEXDataReuseTrackingPreRegAllocPass::runOnMachineFunction(MachineFunction &
         for (auto Inst = MBB->begin(), InstE = MBB->end(); Inst != InstE; ++Inst) {
 
             if (Inst->mayLoad() || Inst->mayStore()) {
-                Inst->dump();
+//                Inst->dump();
                 for (unsigned i = 0, e = Inst->getNumOperands();
                      i != e; ++i) {
                     if (Inst->getOperand(i).isGlobal())
@@ -136,8 +136,10 @@ bool VEXDataReuseTrackingPreRegAllocPass::runOnMachineFunction(MachineFunction &
                 MachineMemOperand *MMO;
                 MMO = *Inst->memoperands_begin();
                 const Value *V = MMO->getValue();
-                if (V->getName().startswith("spm_"))
-                    dbgs() << "Should be in the SPMs";
+                if (V->getName().startswith("spm_")){
+                    Inst->dump();
+                    dbgs() << "Should be in the SPMs\n";
+                }
             }
 //        if (LoadInst *Inst = dyn_cast<LoadInst>(&MBB->front())) {
 //            for (unsigned i = 0, e = Inst->getNumOperands(); i != e; ++i)

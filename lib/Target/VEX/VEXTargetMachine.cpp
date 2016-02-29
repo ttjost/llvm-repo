@@ -38,9 +38,11 @@ static cl::opt<bool> EnableSPMs("enable-spms",
                                 cl::Hidden, cl::init(false),
                                 cl::desc("Enable Code Generation for ScratchPad Memories"));
 
-static cl::opt<bool> PreRegAlloc("pre-regalloc",
+// This might never be used
+// We will probably generate code for SPM right before Register Allocation
+static cl::opt<bool> PreIsel("pre-isel",
                                 cl::Hidden, cl::init(false),
-                                cl::desc("Enable Code Generation for ScratchPad Memories before PreRegAlloc"));
+                                cl::desc("Enable Code Generation for ScratchPad Memories before Instruction Selection"));
 
 extern "C" void LLVMInitializeVEXTarget() {
     
@@ -165,7 +167,7 @@ namespace {
 
 bool VEXPassConfig::addPreISel() {
 
-    if (EnableSPMs && !PreRegAlloc)
+    if (EnableSPMs && PreIsel)
         addPass(createVEXDataReuseTrackingPass());
     
     return false;
@@ -182,7 +184,7 @@ void VEXPassConfig::addMachineSSAOptimization() {
 }
 
 void VEXPassConfig::addPreRegAlloc() {
-    if (EnableSPMs && PreRegAlloc)
+    if (EnableSPMs && !PreIsel)
         addPass(createVEXDataReuseTrackingPreRegAllocPass());
 }
 

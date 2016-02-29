@@ -31,7 +31,7 @@ add_llvm_target(VEXCodeGen
   VEXRegisterInfo.cpp
   VEXSubtarget.cpp
   VEXSubtargetInfo.cpp
-  VEXDFAPacketizer.cpp
+//  VEXDFAPacketizer.cpp
   VEXMachineScheduler.cpp
   VEXSelectionDAGInfo.cpp
   VEXAsmPrinter.cpp
@@ -40,6 +40,8 @@ add_llvm_target(VEXCodeGen
   VEXVLIWPacketizer.cpp
   VEXModifyBranches.cpp
   VEXDataReuseTracking.cpp
+  SPMVariable.cpp
+  DataReuseInfo.cpp
   )
 
 # Should match with "subdirectories = MCTargetDesc TargetInfo" in LLVMBuild.txt

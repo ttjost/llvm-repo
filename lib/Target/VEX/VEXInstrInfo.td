@@ -262,6 +262,17 @@ class LoadInstrLr<string OpcStr, bits<8> OpVal, PatFrag OpNode, InstrItinClass I
     let mayLoad = 1;
 }
 
+// ScratchPad Instructions.
+// We do not need to match these instructions with the DAG,
+// because we will insert them manually, whenever is needed.
+class LoadInstrSpm<string OpcStr, bits<8> OpVal, InstrItinClass Itin>
+    : InstVEX<(outs GPRegs:$dst), (ins MEM:$addr),
+                !strconcat(OpcStr, " $dst = $addr"),
+                [], Itin>{
+//    let DecoderMethod = "DecodeMem";
+    let mayLoad = 1;
+}
+
 class StoreInstr<string OpcStr, bits<8> OpVal, PatFrag OpNode, InstrItinClass Itin>
     : InstVEX<(outs), (ins GPRegs:$s1, MEM:$addr),
                 !strconcat(OpcStr, " $addr = $s1"),
@@ -274,6 +285,17 @@ class StoreInstrLr<string OpcStr, bits<8> OpVal, PatFrag OpNode, InstrItinClass 
     : InstVEX<(outs), (ins LrReg:$s1, MEM:$addr),
                 !strconcat(OpcStr, " $addr = $s1"),
                 [(OpNode LrReg:$s1, ADDR:$addr)], Itin>{
+    //    let DecoderMethod = "DecodeMem";
+    let mayStore = 1;
+}
+
+// ScratchPad Instructions.
+// We do not need to match these instructions with the DAG,
+// because we will insert them manually, whenever is needed.
+class StoreInstrSpm<string OpcStr, bits<8> OpVal, InstrItinClass Itin>
+    : InstVEX<(outs), (ins GPRegs:$s1, MEM:$addr),
+                !strconcat(OpcStr, " $addr = $s1"),
+                [], Itin>{
     //    let DecoderMethod = "DecodeMem";
     let mayStore = 1;
 }
@@ -670,6 +692,15 @@ def LDB       : LoadInstr<"ldb", 0b00010000, sextloadi8, IILoad>;
 def LDBU      : LoadInstr<"ldbu", 0b00010000, zextloadi8, IILoad>;
 def STB       : StoreInstr<"stb", 0b00010101, truncstorei8, IIStore>;
 
+// Scratchpad Load/Store Instructions
+def LDWSpm       : LoadInstrSpm<"ldwSpm", 0b00010000, IIAll>;
+def STWSpm       : StoreInstrSpm<"stwSpm", 0b00010101, IIAll>;
+def LDHSpm       : LoadInstrSpm<"ldhSpm", 0b00010000, IIAll>;
+def LDHUSpm      : LoadInstrSpm<"ldhuSpm", 0b00010000, IIAll>;
+def STHSpm       : StoreInstrSpm<"sthSpm", 0b00010101, IIAll>;
+def LDBSpm       : LoadInstrSpm<"ldbSpm", 0b00010000, IIAll>;
+def LDBUSpm      : LoadInstrSpm<"ldbuSpm", 0b00010000, IIAll>;
+def STBSpm       : StoreInstrSpm<"stwSpm", 0b00010101, IIAll>;
 
 //===----------------------------------------------------------------------===//
 //                      Return/Call instructions
