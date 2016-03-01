@@ -39,18 +39,20 @@ namespace llvm {
 class DataReuseInfo {
 
     std::vector<SPMVariable> Variables;
-
     unsigned NumSPMs;
 
 public:
     DataReuseInfo() { Variables.resize(0); }
 
     unsigned getNumSPMs() { return NumSPMs; }
+    std::vector<SPMVariable> const getVariables() { return Variables; }
 
     bool AddVariable(SPMVariable Var);
     bool RemoveVariable(SPMVariable Var);
     bool RemoveVariable(StringRef Name);
     bool UpdateVariable(SPMVariable& Var);
+
+    bool FindVariable(StringRef Name);
 
 };
     

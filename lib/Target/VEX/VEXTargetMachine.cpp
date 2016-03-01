@@ -92,6 +92,7 @@ VEXTargetMachine(const Target &T, const Triple TT,
     : LLVMTargetMachine(T, computeDataLayout(), TT, CPU, FS, Options, RM, CM, OL),
         isNewScheduling(isNewScheduling),
         TLOF(make_unique<TargetLoweringObjectFileELF>()),
+        DataInfo(make_unique<DataReuseInfo>()),
         Subtarget(TT, CPU, FS, isNewScheduling, EnableVLIWScheduling, RM, *this){
     initAsmInfo();
 }
@@ -168,7 +169,7 @@ namespace {
 bool VEXPassConfig::addPreISel() {
 
     if (EnableSPMs && PreIsel)
-        addPass(createVEXDataReuseTrackingPass());
+        addPass(createVEXDataReuseTrackingPass(getVEXTargetMachine()));
     
     return false;
 }
@@ -185,7 +186,7 @@ void VEXPassConfig::addMachineSSAOptimization() {
 
 void VEXPassConfig::addPreRegAlloc() {
     if (EnableSPMs && !PreIsel)
-        addPass(createVEXDataReuseTrackingPreRegAllocPass());
+        addPass(createVEXDataReuseTrackingPreRegAllocPass(getVEXTargetMachine()));
 }
 
 void VEXPassConfig::addPreEmitPass() {

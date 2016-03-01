@@ -89,6 +89,10 @@ public:
     bool isNonTemporal() const { return Flags & MONonTemporal; }
     bool isInvariant() const { return Flags & MOInvariant; }
 
+    void setFlags(unsigned flags) { Flags = flags; }
+    void setLoad() { Flags |= MOLoad; }
+    void setStore() { Flags |= MOStore; }
+
     bool isMultipleStorage() const { return MultipleStorage; }
     bool isDinamicallyAllocated() const  { return DynamicAllocation; }
     

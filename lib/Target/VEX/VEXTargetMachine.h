@@ -17,6 +17,7 @@
 #include "llvm/Target/TargetFrameLowering.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/CodeGen/TargetLoweringObjectFileImpl.h"
+#include "DataReuseInfo.h"
 
 namespace llvm {
     
@@ -34,6 +35,8 @@ private:
 
     std::unique_ptr<TargetLoweringObjectFile> TLOF;
 
+    std::unique_ptr<DataReuseInfo> DataInfo;
+
 public:
     VEXTargetMachine(const Target &T, const Triple TT, StringRef CPU,
                       StringRef FS, const TargetOptions &Options,
@@ -48,7 +51,7 @@ public:
     const VEXSubtarget *getSubtargetImpl(const Function &) const override {
         return &Subtarget;
     }
-    
+
     // \brief Reset the subtarget for the VEX target.
     void resetSubtarget(MachineFunction *MF);
     
@@ -62,7 +65,11 @@ public:
     TargetLoweringObjectFile *getObjFileLowering() const override {
       return TLOF.get();
     }
-};   
+
+    DataReuseInfo *getDataReuseInfo() const {
+      return DataInfo.get();
+    }
+};
  
 // VEXRegTargetMachine - VEX (Normal Scheduling) Target Machine
 class VEXNormalTargetMachine : public VEXTargetMachine{

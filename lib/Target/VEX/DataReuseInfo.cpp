@@ -63,4 +63,14 @@ bool DataReuseInfo::UpdateVariable(SPMVariable& Var) {
     return false;
 }
 
+bool DataReuseInfo::FindVariable(StringRef Name) {
+
+    for(std::vector<SPMVariable>::iterator i = Variables.begin(),
+        e = Variables.end(); i != e; ++i) {
+        if ((*i).getName() == Name)
+            return true;
+    }
+    return false;
+}
+
 

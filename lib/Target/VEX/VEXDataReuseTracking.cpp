@@ -30,12 +30,13 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/raw_ostream.h"
+#include "VEXTargetMachine.h"
 
 using namespace llvm;
 
 namespace llvm {
-    FunctionPass *createVEXDataReuseTrackingPass();
-    MachineFunctionPass *createVEXDataReuseTrackingPreRegAllocPass();
+    FunctionPass *createVEXDataReuseTrackingPass(VEXTargetMachine &TM);
+    MachineFunctionPass *createVEXDataReuseTrackingPreRegAllocPass(VEXTargetMachine &TM);
 }
 
 namespace {
@@ -44,10 +45,12 @@ class VEXDataReuseTrackingPass: public FunctionPass {
     
     void getAnalysisUsage(AnalysisUsage &AU) const override;
     AliasAnalysis *AA;
+    TargetMachine &TM;
+
 public:
     static char ID;
-    VEXDataReuseTrackingPass()
-    : FunctionPass(ID) {
+    VEXDataReuseTrackingPass(TargetMachine &TM)
+    : FunctionPass(ID), TM(TM) {
         
     }
     
@@ -81,10 +84,10 @@ bool VEXDataReuseTrackingPass::runOnFunction(Function &F) {
 }
 
 char VEXDataReuseTrackingPass::ID = 0;
-static RegisterPass<VEXDataReuseTrackingPass> X("VEXDataReuseTracking", "Data Reuse Tracking Pass", false, false);
+//static RegisterPass<VEXDataReuseTrackingPass> X("VEXDataReuseTracking", "Data Reuse Tracking Pass", false, false);
 
-FunctionPass *llvm::createVEXDataReuseTrackingPass() {
-    return new VEXDataReuseTrackingPass();
+FunctionPass *llvm::createVEXDataReuseTrackingPass(VEXTargetMachine &TM) {
+    return new VEXDataReuseTrackingPass(TM);
 }
 
 //===----------------------------------------------------------------------===//
@@ -98,10 +101,12 @@ class VEXDataReuseTrackingPreRegAllocPass: public MachineFunctionPass {
 
 //    void getAnalysisUsage(AnalysisUsage &AU) const override;
 //    AliasAnalysis *AA;
+    TargetMachine &TM;
+
 public:
     static char ID;
-    VEXDataReuseTrackingPreRegAllocPass()
-    : MachineFunctionPass(ID) {
+    VEXDataReuseTrackingPreRegAllocPass(TargetMachine &TM)
+        : MachineFunctionPass(ID), TM(TM) {
 
     }
 
@@ -123,20 +128,29 @@ bool VEXDataReuseTrackingPreRegAllocPass::runOnMachineFunction(MachineFunction &
 //    AA = &getAnalysis<AliasAnalysis>();
     errs() << MF.getName() << "\n";
 
+    DataReuseInfo* DataInfo = static_cast<const VEXTargetMachine &>(TM).getDataReuseInfo();
+
     for (auto MBB = MF.begin(), MBBE = MF.end(); MBBE != MBB; ++MBB) {
         for (auto Inst = MBB->begin(), InstE = MBB->end(); Inst != InstE; ++Inst) {
 
+            Inst->dump();
             if (Inst->mayLoad() || Inst->mayStore()) {
-//                Inst->dump();
-                for (unsigned i = 0, e = Inst->getNumOperands();
-                     i != e; ++i) {
-                    if (Inst->getOperand(i).isGlobal())
-                        errs() << "Is Global\n";
-                }
+//                for (unsigned i = 0, e = Inst->getNumOperands();
+//                     i != e; ++i) {
+//                    if (Inst->getOperand(i).isGlobal())
+//                        errs() << "Is Global\n";
+//                }
+
                 MachineMemOperand *MMO;
                 MMO = *Inst->memoperands_begin();
                 const Value *V = MMO->getValue();
                 if (V->getName().startswith("spm_")){
+                    SPMVariable var(V->getName());
+                    if(Inst->mayLoad())
+                        var.setLoad();
+                    if(Inst->mayStore())
+                        var.setStore();
+                    DataInfo->AddVariable(var);
                     Inst->dump();
                     dbgs() << "Should be in the SPMs\n";
                 }
@@ -148,12 +162,15 @@ bool VEXDataReuseTrackingPreRegAllocPass::runOnMachineFunction(MachineFunction &
 //        }
         }
     }
+    std::vector<SPMVariable> Variables = DataInfo->getVariables();
+    for (auto Var : Variables)
+        dbgs() << "Name:" << Var.getName();
     return false;
 }
 
 char VEXDataReuseTrackingPreRegAllocPass::ID = 0;
-static RegisterPass<VEXDataReuseTrackingPreRegAllocPass> Y("VEXDataReuseTrackingPreRegAlloc", "Data Reuse Tracking PreRegAlloc Pass", false, false);
+//static RegisterPass<VEXDataReuseTrackingPreRegAllocPass> Y("VEXDataReuseTrackingPreRegAlloc", "Data Reuse Tracking PreRegAlloc Pass", false, false);
 
-MachineFunctionPass *llvm::createVEXDataReuseTrackingPreRegAllocPass() {
-    return new VEXDataReuseTrackingPreRegAllocPass();
+MachineFunctionPass *llvm::createVEXDataReuseTrackingPreRegAllocPass(VEXTargetMachine &TM) {
+    return new VEXDataReuseTrackingPreRegAllocPass(TM);
 }
