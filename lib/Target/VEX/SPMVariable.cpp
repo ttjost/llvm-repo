@@ -17,17 +17,17 @@
 using namespace llvm;
 
 
-bool operator==(const SPMVariable& lhs, const SPMVariable& rhs) {
+bool SPMVariable::operator==(const SPMVariable& rhs) {
 
-    if (lhs.getName() == rhs.getName() &&
-        lhs.getFlags() == rhs.getFlags() &&
-        lhs.isMultipleStorage() == rhs.isMultipleStorage() &&
-        lhs.isDinamicallyAllocated() == rhs.isDinamicallyAllocated() &&
-        lhs.getStorageUnits() == rhs.getStorageUnits() &&
-        lhs.getNumUnits() == rhs.getNumUnits() &&
-        lhs.getInitialAddress() == rhs.getInitialAddress() &&
-        lhs.getSize() == rhs.getSize() &&
-        lhs.getNumElements() == rhs.getNumElements())
+    if (this->getName() == rhs.getName() &&
+        this->getFlags() == rhs.getFlags() &&
+        this->isMultipleStorage() == rhs.isMultipleStorage() &&
+        this->isDinamicallyAllocated() == rhs.isDinamicallyAllocated() &&
+        this->getStorageUnits() == rhs.getStorageUnits() &&
+        this->getNumUnits() == rhs.getNumUnits() &&
+        this->getInitialAddress() == rhs.getInitialAddress() &&
+        this->getSize() == rhs.getSize() &&
+        this->getNumElements() == rhs.getNumElements())
         return true;
     else
         return false;

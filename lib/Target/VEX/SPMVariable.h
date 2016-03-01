@@ -98,7 +98,7 @@ public:
     unsigned getSize() const { return Size; }
     unsigned getNumElements() const { return NumElements; }
     
-    //bool operator==(const SPMVariable& lhs, const SPMVariable& rhs);
+    bool operator==(const SPMVariable& rhs);
 
 };
     
