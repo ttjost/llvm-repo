@@ -29,9 +29,9 @@ bool DataReuseInfo::AddVariable(SPMVariable Var) {
 
 bool DataReuseInfo::RemoveVariable(SPMVariable Var) {
 
-    for (unsigned i = 0, e = Variables.size();
+    for (std::vector<SPMVariable>::iterator i = Variables.begin(), e = Variables.end();
          i != e; ++i) {
-        if (Variables[i] == Var) {
+        if (*i == Var) {
             Variables.erase(i);
             return true;
         }
@@ -41,9 +41,9 @@ bool DataReuseInfo::RemoveVariable(SPMVariable Var) {
 
 bool DataReuseInfo::RemoveVariable(StringRef Name) {
 
-    for (unsigned i = 0, e = Variables.size();
+    for (std::vector<SPMVariable>::iterator i = Variables.begin(), e = Variables.end();
          i != e; ++i) {
-        if (Variables[i].getName() == Name) {
+        if ((*i).getName() == Name) {
             Variables.erase(i);
             return true;
         }
@@ -51,7 +51,7 @@ bool DataReuseInfo::RemoveVariable(StringRef Name) {
     return false;
 }
 
-bool DataReuseInfo::UpdateVariable(SPMVariable Var) {
+bool DataReuseInfo::UpdateVariable(SPMVariable& Var) {
 
     for (unsigned i = 0, e = Variables.size();
          i != e; ++i) {

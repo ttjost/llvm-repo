@@ -50,7 +50,7 @@ public:
     bool AddVariable(SPMVariable Var);
     bool RemoveVariable(SPMVariable Var);
     bool RemoveVariable(StringRef Name);
-    bool UpdateVariable(SPMVariable Var);
+    bool UpdateVariable(SPMVariable& Var);
 
 };
     

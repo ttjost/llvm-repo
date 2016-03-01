@@ -17,5 +17,19 @@
 using namespace llvm;
 
 
+bool operator==(const SPMVariable& lhs, const SPMVariable& rhs) {
 
+    if (lhs.getName() == rhs.getName() &&
+        lhs.getFlags() == rhs.getFlags() &&
+        lhs.isMultipleStorage() == rhs.isMultipleStorage() &&
+        lhs.isDinamicallyAllocated() == rhs.isDinamicallyAllocated() &&
+        lhs.getStorageUnits() == rhs.getStorageUnits() &&
+        lhs.getNumUnits() == rhs.getNumUnits() &&
+        lhs.getInitialAddress() == rhs.getInitialAddress() &&
+        lhs.getSize() == rhs.getSize() &&
+        lhs.getNumElements() == rhs.getNumElements())
+        return true;
+    else
+        return false;
+}
 

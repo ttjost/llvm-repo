@@ -81,6 +81,8 @@ public:
     SPMVariable(StringRef Name) : Name(Name), Flags(0), MultipleStorage(false) {}
     SPMVariable(StringRef Name, unsigned Flags): Name(Name), Flags(Flags), MultipleStorage(false) {}
 
+    StringRef getName() const { return Name; }
+    unsigned getFlags() const  { return Flags; } 
     bool isLoad() const { return Flags & MOLoad; }
     bool isStore() const { return Flags & MOStore; }
     bool isVolatile() const { return Flags & MOVolatile; }
@@ -88,12 +90,15 @@ public:
     bool isInvariant() const { return Flags & MOInvariant; }
 
     bool isMultipleStorage() const { return MultipleStorage; }
-
-    unsigned getStorageUnits() { return StorageUnits; }
-    unsigned getNumUnits() { return NumUnits; }
-    unsigned getInitialAddress() { return InitialAddress; }
-    unsigned getSize() { return Size; }
-    unsigned getNumElements() { return NumElements; }
+    bool isDinamicallyAllocated() const  { return DynamicAllocation; }
+    
+    unsigned getStorageUnits() const { return StorageUnits; }
+    unsigned getNumUnits() const { return NumUnits; }
+    unsigned getInitialAddress() const { return InitialAddress; }
+    unsigned getSize() const { return Size; }
+    unsigned getNumElements() const { return NumElements; }
+    
+    //bool operator==(const SPMVariable& lhs, const SPMVariable& rhs);
 
 };
     
