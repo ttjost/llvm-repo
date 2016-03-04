@@ -260,9 +260,27 @@ bool VEXDataReuseTrackingPreRegAllocPass::runOnMachineFunction(MachineFunction &
 
             if (SPMFound) {
                 unsigned MemOpcode = 0;
-                if (Inst->mayLoad())
-                    MemOpcode = VEX::STWSpm;
+                if (Inst->mayLoad()) {
+                    if (Inst->getOpcode() == VEX::STW)
+                        MemOpcode = VEX::STWSpm;
+                    else if (Inst->getOpcode() == VEX::STH)
+                        MemOpcode = VEX::STHSpm;
+                    else if (Inst->getOpcode() == VEX::STB)
+                        MemOpcode = VEX::STBSpm;
+                    else
+                        assert(false && " Wrong Opcode for Instruction.")
+                                if (Inst->mayLoad()) {
+                                    if (Inst->getOpcode() == VEX::STW)
+                                        MemOpcode = VEX::STWSpm;
+                                    else if (Inst->getOpcode() == VEX::STH)
+                                        MemOpcode = VEX::STHSpm;
+                                    else if (Inst->getOpcode() == VEX::STB)
+                                        MemOpcode = VEX::STBSpm;
+                                    else
+                                        assert(false && " Wrong Opcode for Instruction.")
 
+
+                } else if (Inst->may)
             }
 
 
