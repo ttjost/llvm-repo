@@ -20,7 +20,7 @@ using namespace llvm;
 bool SPMVariable::operator==(const SPMVariable& rhs) {
 
     if (this->getName() == rhs.getName() &&
-        this->getFlags() == rhs.getFlags() &&
+//        this->getFlags() == rhs.getFlags() &&
         this->isMultipleStorage() == rhs.isMultipleStorage() &&
         this->isDinamicallyAllocated() == rhs.isDinamicallyAllocated() &&
         this->getStorageUnits() == rhs.getStorageUnits() &&

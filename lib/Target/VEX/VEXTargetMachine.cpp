@@ -168,9 +168,8 @@ namespace {
 
 bool VEXPassConfig::addPreISel() {
 
-    if (EnableSPMs && PreIsel)
-        addPass(createVEXDataReuseTrackingPass(getVEXTargetMachine()));
-    
+//    if (EnableSPMs && PreIsel)
+//        addPass(createVEXLoopInfoPass(getVEXTargetMachine()));
     return false;
 }
 
