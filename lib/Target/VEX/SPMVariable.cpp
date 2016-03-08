@@ -33,3 +33,41 @@ bool SPMVariable::operator==(const SPMVariable& rhs) {
         return false;
 }
 
+void SPMVariable::AddPropagationRegister(unsigned Register) {
+
+    for (unsigned i = 0, e = PropagationRegisters.size(); i != e; ++i) {
+        if (PropagationRegisters[i] == Register)
+            return;
+    }
+    std::vector<unsigned>::iterator it = PropagationRegisters.begin();
+    PropagationRegisters.insert(it, Register);
+}
+
+void SPMVariable::AddOffset(unsigned Register, unsigned Offset) {
+
+    int RegisterPosition = -1;
+    for (unsigned i = 0, e = RegistersAndOffsets.size(); i != e; ++i) {
+        if (RegistersAndOffsets[i].Register == Register) {
+            RegisterPosition = i;
+            for (unsigned j = 0, e = RegistersAndOffsets.size(); j != e; ++j)
+                if (RegistersAndOffsets[i].Offsets[j] == Offset)
+                    return;
+        }
+    }
+
+    if (RegisterPosition != -1) {
+        RegistersAndOffsets[RegisterPosition].Offsets.push_back(Offset);
+    }else {
+        RegistersAndOffsets.push_back({Register, {Offset} } );
+    }
+}
+
+void SPMVariable::UpdateOffsetInfo() {
+
+    for (unsigned i = 0, e = RegistersAndOffsets.size(); i != e; ++i) {
+        if (RegistersAndOffsets[i].Offsets.size() > OffsetsPerBB)
+            OffsetsPerBB = RegistersAndOffsets[i].Offsets.size();
+    }
+    dbgs() << "Offsets size: " << OffsetsPerBB << "\n";
+    RegistersAndOffsets.resize(0);
+}

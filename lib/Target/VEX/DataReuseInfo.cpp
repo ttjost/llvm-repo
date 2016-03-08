@@ -67,10 +67,19 @@ bool DataReuseInfo::FindVariable(StringRef Name) {
 
     for(std::vector<SPMVariable>::iterator i = Variables.begin(),
         e = Variables.end(); i != e; ++i) {
-        if ((*i).getName() == Name)
+        if ((*i).getName() == Name) {
             return true;
+        }
     }
     return false;
 }
 
+void DataReuseInfo::AddOffset(StringRef Name, unsigned Register, unsigned Offset) {
+    for(std::vector<SPMVariable>::iterator i = Variables.begin(),
+        e = Variables.end(); i != e; ++i) {
+        if ((*i).getName() == Name) {
+            i->AddOffset(Register, Offset);
+        }
+    }
+}
 

@@ -45,14 +45,33 @@ public:
     DataReuseInfo() { Variables.resize(0); }
 
     unsigned getNumSPMs() { return NumSPMs; }
-    std::vector<SPMVariable> const getVariables() { return Variables; }
+    std::vector<SPMVariable> getVariables() const { return Variables; }
 
     bool AddVariable(SPMVariable Var);
     bool RemoveVariable(SPMVariable Var);
     bool RemoveVariable(StringRef Name);
     bool UpdateVariable(SPMVariable& Var);
-
     bool FindVariable(StringRef Name);
+
+    void AddOffset(StringRef Name, unsigned Register, unsigned Offset);
+
+    typedef std::vector<SPMVariable>::iterator iterator;
+    typedef std::vector<SPMVariable>::const_iterator const_iterator;
+
+    SPMVariable             &front() { return Variables.front(); }
+    const SPMVariable       &front() const { return Variables.front(); }
+    SPMVariable             &back() { return *--end(); }
+    const SPMVariable       &back() const { return *--end(); }
+
+    iterator            var_begin() { return Variables.begin(); }
+    const_iterator      var_begin() const { return Variables.begin(); }
+    iterator            var_end() { return Variables.end(); }
+    const_iterator      var_end() const { return Variables.end(); }
+
+    iterator            begin() { return var_begin(); }
+    const_iterator      begin() const { return var_begin(); }
+    iterator            end() { return var_end(); }
+    const_iterator      end() const { return var_end(); }
 
 };
     

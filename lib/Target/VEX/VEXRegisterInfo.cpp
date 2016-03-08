@@ -115,6 +115,7 @@ eliminateFrameIndex(MachineBasicBlock::iterator II, int SPAdj,
     MachineFunction &MF = *MBB.getParent();
     const TargetFrameLowering *TFI = MF.getSubtarget().getFrameLowering();
     DebugLoc dl = MI.getDebugLoc();
+
     int FrameIndex = MI.getOperand(FIOperandNum).getIndex();
 
     unsigned BasePtr = VEX::Reg1;

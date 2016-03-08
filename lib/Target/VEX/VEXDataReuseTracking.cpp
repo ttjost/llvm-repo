@@ -29,6 +29,7 @@
 #include "llvm/CodeGen/MachineInstr.h"
 #include "llvm/CodeGen/MachineMemOperand.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
+#include "llvm/CodeGen/MachineLoopInfo.h"
 #include "llvm/Analysis/LoopPass.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/AliasAnalysis.h"
@@ -38,21 +39,24 @@
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/raw_ostream.h"
 #include "VEXTargetMachine.h"
-#define GET_INSTRINFO_HEADER
-#include "VEXGenInstrInfo.inc"
+
+//#define GET_INSTRINFO_HEADER
+//#include "VEXGenInstrInfo.inc"
+
+#define DEBUG_TYPE "vex-datareuse"
 
 using namespace llvm;
 
 namespace llvm {
     LoopPass *createVEXLoopInfoPass(VEXTargetMachine &TM);
-    MachineFunctionPass *createVEXDataReuseTrackingPreRegAllocPass(VEXTargetMachine &TM);
+    MachineFunctionPass *createVEXDataReuseTracking(VEXTargetMachine &TM);
 }
 
 namespace {
     
 class VEXLoopInfoPass: public LoopPass {
     
-    void getAnalysisUsage(AnalysisUsage &AU) const override;
+//    void getAnalysisUsage(AnalysisUsage &AU) const override;
     AliasAnalysis *AA;
     ScalarEvolution *SE;
 
@@ -70,39 +74,38 @@ public:
     bool runOnLoop(Loop *L, LPPassManager &LPM) override;
     
 };
-
 }
 
-void VEXLoopInfoPass::getAnalysisUsage(AnalysisUsage &AU) const {
-    AU.addRequired<AliasAnalysis>();
-    AU.addRequired<ScalarEvolution>();
-    AU.addPreserved<ScalarEvolution>();
-}
+//void VEXLoopInfoPass::getAnalysisUsage(AnalysisUsage &AU) const {
+//    AU.addRequired<AliasAnalysis>();
+//    AU.addRequired<ScalarEvolution>();
+//    AU.addPreserved<ScalarEvolution>();
+//}
 
 bool VEXLoopInfoPass::runOnLoop(Loop *L, LPPassManager &LPM) {
-    AA = &getAnalysis<AliasAnalysis>();
-    SE = &getAnalysis<ScalarEvolution>();
+//    AA = &getAnalysis<AliasAnalysis>();
+//    SE = &getAnalysis<ScalarEvolution>();
 
-    unsigned TripCount;
+//    unsigned TripCount;
 
-    BasicBlock *ExitingBlock = L->getLoopLatch();
-    if (!ExitingBlock || !L->isLoopExiting(ExitingBlock))
-      ExitingBlock = L->getExitingBlock();
+//    BasicBlock *ExitingBlock = L->getLoopLatch();
+//    if (!ExitingBlock || !L->isLoopExiting(ExitingBlock))
+//      ExitingBlock = L->getExitingBlock();
 
-    if (ExitingBlock)
-        TripCount = SE->getSmallConstantTripCount(L, ExitingBlock);
+//    if (ExitingBlock)
+//        TripCount = SE->getSmallConstantTripCount(L, ExitingBlock);
 
-    dbgs() << "TripCount is: " << TripCount;
+//    dbgs() << "TripCount is: " << TripCount;
 
-//    errs() << F.getName() << "\n";
+////    errs() << F.getName() << "\n";
     
-//    for (auto MBB = F.begin(), MBBE = F.end(); MBBE != MBB; ++MBB) {
+//    for (auto MBB : L->getBlocks()) {
 //        for (auto Inst = MBB->begin(), InstE = MBB->end(); Inst != InstE; ++Inst)
-//        if (LoadInst *Inst = dyn_cast<LoadInst>(&MBB->front())) {
-//            for (unsigned i = 0, e = Inst->getNumOperands(); i != e; ++i)
-//                Inst->getOperand(i)->dump();
+////        if (LoadInst *Inst = dyn_cast<LoadInst>(&MBB->front())) {
+////            for (unsigned i = 0, e = Inst->getNumOperands(); i != e; ++i)
+////                Inst->getOperand(i)->dump();
 //            Inst->dump();
-//        }
+////        }
 //    }
     return false;
 }
@@ -121,11 +124,12 @@ LoopPass *llvm::createVEXLoopInfoPass(VEXTargetMachine &TM) {
 //===----------------------------------------------------------------------===//
 
 namespace {
-class VEXDataReuseTrackingPreRegAllocPass: public MachineFunctionPass {
+class VEXDataReuseTracking: public MachineFunctionPass {
 
 //    void getAnalysisUsage(AnalysisUsage &AU) const override;
 //    AliasAnalysis *AA;
     TargetMachine &TM;
+    DataReuseInfo* DataInfo;
 
     // This implements a trace that is need for each global variable
     // that should be replaced with SPM code.
@@ -135,22 +139,33 @@ class VEXDataReuseTrackingPreRegAllocPass: public MachineFunctionPass {
     // Such information will help retain information to construct the
     // SPMVariable object for that variable.
 //    typedef std::deque<std::vector<MachineBasicBlock::iterator> > VariablesTraces;
-    typedef std::deque<std::vector<unsigned> > VariableTraces;
-    VariableTraces VarTraces;
+//    typedef std::deque<std::vector<unsigned> > VariableTraces;
+//    VariableTraces VarTraces;
 
     std::vector<unsigned> RegisterTrack;
 
-    bool IsSPMVariable(MachineBasicBlock::iterator Inst,
-                       unsigned &OperandIdx,
-                       unsigned VirtualRegister);
+    bool IsSPMVariable (MachineBasicBlock::iterator Inst,
+                        StringRef& VariableName,
+                        unsigned& DefinedRegister);
 
-    bool PropagatesSPMVariable(MachineBasicBlock::iterator Inst,
-                               unsigned VirtualRegister);
+    bool PropagatesSPMVariable (MachineBasicBlock::iterator Inst,
+                                StringRef &VariableName);
+
+    void ReplaceMemoryInstruction (MachineFunction::iterator& MBB,
+                                   MachineBasicBlock::iterator& Inst);
+
+   void  EvaluateVariableAccess(MachineBasicBlock::iterator Inst,
+                                StringRef VariableName);
 
 public:
     static char ID;
-    VEXDataReuseTrackingPreRegAllocPass(TargetMachine &TM)
+    VEXDataReuseTracking(TargetMachine &TM)
         : MachineFunctionPass(ID), TM(TM) {
+        const VEXSubtarget &Subtarget = *static_cast<const VEXTargetMachine &>(TM).getSubtargetImpl();
+        const VEXInstrInfo *TII = static_cast<const VEXInstrInfo *>(Subtarget.getInstrInfo());
+
+        DataInfo = static_cast<const VEXTargetMachine &>(TM).getDataReuseInfo();
+
         RegisterTrack.resize(0);
 //        VarTraces.resize()
     }
@@ -159,24 +174,29 @@ public:
         return "VEX Data Reuse Tracking Pass";
     }
 
+    void getAnalysisUsage(AnalysisUsage &AU) const;
+
     bool runOnMachineFunction(MachineFunction &MF) override;
 
 };
 
 }
 
-//void VEXDataReuseTrackingPreRegAllocPass::getAnalysisUsage(AnalysisUsage &AU) const {
-////    AU.addRequired<AliasAnalysis>();
-//}
+void VEXDataReuseTracking::getAnalysisUsage(AnalysisUsage &AU) const {
+    AU.addRequired<AliasAnalysis>();
+    AU.addRequired<MachineLoopInfo>();
+    AU.addPreserved<MachineLoopInfo>();
+    MachineFunctionPass::getAnalysisUsage(AU);
+}
 
 // This method checks if there is a Scratchpad Variable within the instruction.
-// OperandIdx where the SPMVariable Operand is and
+// OperandIdx is where the SPMVariable Operand is and
 // Virtual Register stores info about to which Virtual Register it will propagate the Variable.
 // This is important because we may have multiple Loads and Stores that use the same Virtual Register
 // at this point, therefore, we need to update information on lots of instructions.
-bool VEXDataReuseTrackingPreRegAllocPass::IsSPMVariable(MachineBasicBlock::iterator Inst,
-                                                        unsigned &OperandIdx,
-                                                        unsigned VirtualRegister) {
+bool VEXDataReuseTracking::IsSPMVariable(MachineBasicBlock::iterator Inst,
+                                                        StringRef& VariableName,
+                                                        unsigned& DefinedRegister) {
 
     for (unsigned i = 0, e = Inst->getNumOperands();
          i != e; ++i) {
@@ -186,53 +206,161 @@ bool VEXDataReuseTrackingPreRegAllocPass::IsSPMVariable(MachineBasicBlock::itera
 
             DEBUG(errs() << GV->getName() << " is a Global Variable");
             if (GV->getName().startswith("spm_")) {
-
-                DEBUG(errs() << " And should be stored in the SPM\n");
-                OperandIdx = i;
-
-                if (Inst->getOperand(0).isDef())
-                    VirtualRegister = Inst->getOperand(0).getReg();
+                DEBUG(errs() << " and should be stored in the SPM\n");
+                assert(Inst->getOperand(0).isDef() && " It should be a register definition");
+                VariableName = GV->getName();
+                DefinedRegister = Inst->getOperand(0).getReg();
                 return true;
             }
          }
     }
     return false;
-
 }
 
-bool VEXDataReuseTrackingPreRegAllocPass::PropagatesSPMVariable(MachineBasicBlock::iterator Inst,
-                                                                unsigned VirtualRegister) {
+bool VEXDataReuseTracking::PropagatesSPMVariable(MachineBasicBlock::iterator Inst,
+                                                                StringRef &VariableName) {
+
+    bool AnyPropagationFound = false;
     for (unsigned i = 0, e = Inst->getNumOperands();
          i != e; ++i) {
 
         // Fast Iteration
-        if (Inst->getOperand(i).isDef() || !Inst->getOperand(i).isReg())
+        if (!Inst->getOperand(i).isReg())
+            continue;
+
+        if (Inst->getOperand(i).isDef())
             continue;
 
         unsigned Operand = Inst->getOperand(i).getReg();
-        bool found = false;
+        bool inInstructionPropagationFound = false;
 
-        for (std::deque<std::vector<unsigned> >::iterator VarTraceVec = VarTraces.begin(),
-             VarTraceVecEnd = VarTraces.end();
-             VarTraceVec != VarTraceVecEnd && !found;
-             ++VarTraceVec) {
-            for (unsigned i = 0, e = VarTraceVec->size();
-                 i != e && !found; ++i) {
-                if ((*VarTraceVec).at(i) == Operand && Inst->getOperand(0).isDef()) {
-                    (*VarTraceVec).at(e) = Inst->getOperand(0).getReg();
-                    VirtualRegister = Inst->getOperand(0).getReg();
-                    found  = true;
+        for (DataReuseInfo::iterator VarIdx = DataInfo->begin(),
+             VarEnd = DataInfo->end(); VarIdx != VarEnd; ++VarIdx) {
+
+            std::vector<unsigned> Vector = VarIdx->getPropagationRegisters();
+
+            for (unsigned i = 0, e = Vector.size();
+                 i != e && !inInstructionPropagationFound; ++i) {
+
+                if (Vector[i] == Operand) {
+                    if (Inst->getOperand(0).isReg() &&
+                        Inst->getOperand(0).isDef() &&
+                        !Inst->mayLoad()) {
+                        DEBUG(dbgs() << " Variable is Propagated through register " << Inst->getOperand(0).getReg() << "\n");
+                        VarIdx->AddPropagationRegister(Inst->getOperand(0).getReg());
+                    }
+                    inInstructionPropagationFound  = true;
+                    VariableName = VarIdx->getName();
                 }
             }
         }
+        AnyPropagationFound |= inInstructionPropagationFound;
+    }
+    if (AnyPropagationFound)
+        return true;
+    return false;
+}
+
+void VEXDataReuseTracking::
+            ReplaceMemoryInstruction (MachineFunction::iterator& MBB,
+                                      MachineBasicBlock::iterator& Inst) {
+
+    const VEXSubtarget &Subtarget = *static_cast<const VEXTargetMachine &>(TM).getSubtargetImpl();
+    const VEXInstrInfo *TII = static_cast<const VEXInstrInfo *>(Subtarget.getInstrInfo());
+
+    DEBUG(dbgs() << "Initialize Instruction Replacement \n");
+
+    unsigned MemOpcode = 0;
+
+    if (Inst->mayLoad()) {
+        if (Inst->getOpcode() == VEX::LDW)
+            MemOpcode = VEX::LDWSpm;
+        else if (Inst->getOpcode() == VEX::LDH)
+            MemOpcode = VEX::LDHSpm;
+        else if (Inst->getOpcode() == VEX::LDB)
+            MemOpcode = VEX::LDBSpm;
+        else
+            assert(false && " Wrong Opcode for Load Instruction.");
+
+        MachineOperand DstReg = Inst->getOperand(0);
+        MachineOperand FrameIndex = Inst->getOperand(1);
+        MachineOperand MemOperand = Inst->getOperand(2);
+        assert(DstReg.isReg() && "Operand must be Register");
+
+        MachineBasicBlock::iterator newInstr = BuildMI(*MBB, Inst, Inst->getDebugLoc(),
+                                                       TII->get(MemOpcode),
+                                                       DstReg.getReg()).addOperand(FrameIndex)
+                                                                       .addOperand(MemOperand)
+                                                                       .addMemOperand(*Inst->memoperands_begin());
+        newInstr->dump();
+
+        Inst->eraseFromParent();
+        Inst = newInstr;
+    } else
+        if (Inst->mayStore()) {
+            if (Inst->getOpcode() == VEX::STW)
+                MemOpcode = VEX::STWSpm;
+            else if (Inst->getOpcode() == VEX::STH)
+                MemOpcode = VEX::STHSpm;
+            else if (Inst->getOpcode() == VEX::STB)
+                MemOpcode = VEX::STBSpm;
+            else
+                assert(false && " Wrong Opcode for Store Instruction.");
+
+            MachineOperand BaseReg = Inst->getOperand(0);
+            MachineOperand FrameIndex = Inst->getOperand(1);
+            MachineOperand MemOperand = Inst->getOperand(2);
+            assert(BaseReg.isReg() && "Operand must be Register");
+
+            MachineBasicBlock::iterator newInstr =
+                    BuildMI(*MBB, Inst, Inst->getDebugLoc(),
+                            TII->get(MemOpcode)).addOperand(BaseReg)
+                                                 .addOperand(FrameIndex)
+                                                 .addOperand(MemOperand)
+                                                 .addMemOperand(*Inst->memoperands_begin());
+            newInstr->dump();
+            Inst->eraseFromParent();
+            Inst = newInstr;
+        }
+
+    DEBUG(dbgs() << "Finished Instruction Replacement \n");
+
+}
+
+void VEXDataReuseTracking::EvaluateVariableAccess(MachineBasicBlock::iterator Inst,
+                                                                 StringRef VariableName) {
+
+    MachineLoopInfo &MLI = getAnalysis<MachineLoopInfo>();
+
+    // If the BB belongs to a Loop
+    // We should check if different addresses are
+    // accessed in the same basic block.
+    // Record this info in order to know how many SPMs will
+    // be used to store the data structure for the variable
+    MachineLoop* loop = MLI.getLoopFor(Inst->getParent());
+    if (loop) {
+        DEBUG(dbgs() << "\n\nInstruction is Inside Loop\n\n");
+
+        assert(DataInfo->FindVariable(VariableName) && " Variable not found.");
+        MachineOperand MOReg = Inst->getOperand(1);
+        MachineOperand MOImm = Inst->getOperand(2);
+
+
+        assert (MOReg.isReg() && " MachineOperand should be Register");
+        assert (MOImm.isImm() && " MachineOperand should be Immediate");
+
+        DEBUG(dbgs() << "\tRegister: " << MOReg.getReg() << "\n");
+        DEBUG(dbgs() << "\tOffset: " << MOImm.getImm() << "\n");
+        DataInfo->AddOffset(VariableName, MOReg.getReg(), MOImm.getImm());
     }
 }
 
-bool VEXDataReuseTrackingPreRegAllocPass::runOnMachineFunction(MachineFunction &MF) {
+bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
 //    AA = &getAnalysis<AliasAnalysis>();
     errs() << MF.getName() << "\n";
 
-    DataReuseInfo* DataInfo = static_cast<const VEXTargetMachine &>(TM).getDataReuseInfo();
+    const VEXSubtarget &Subtarget = *static_cast<const VEXTargetMachine &>(TM).getSubtargetImpl();
+    const VEXInstrInfo *TII = static_cast<const VEXInstrInfo *>(Subtarget.getInstrInfo());
 
     for (MachineFunction::iterator MBB = MF.begin(),
          MBBE = MF.end(); MBBE != MBB; ++MBB) {
@@ -240,91 +368,52 @@ bool VEXDataReuseTrackingPreRegAllocPass::runOnMachineFunction(MachineFunction &
         for (MachineBasicBlock::iterator Inst = MBB->begin(),
              InstE = MBB->end(); Inst != InstE; ++Inst) {
 
-            unsigned OperandIdx, VirtualReg;
-            bool SPMFound = false;
-            if (IsSPMVariable(Inst, OperandIdx, VirtualReg)) {
-                // A SPM Variable was found
-                // Initiate a new node
-                DEBUG(dbgs() << "New Variable found in Virtual Register " << VirtualReg);
-                std::vector<unsigned> vec;
-                vec.push_back(VirtualReg);
-                VarTraces.push_back(vec);
-                SPMFound = true;
-            }
+            unsigned DefinedRegister;
 
-            if(PropagatesSPMVariable(Inst, VirtualReg)) {
-                // It propagates another SPMVariable
-                DEBUG(dbgs() << "Variable Propagation " << VirtualReg);
-                SPMFound = true;
-            }
-
-            if (SPMFound) {
-                unsigned MemOpcode = 0;
-                if (Inst->mayLoad()) {
-                    if (Inst->getOpcode() == VEX::STW)
-                        MemOpcode = VEX::STWSpm;
-                    else if (Inst->getOpcode() == VEX::STH)
-                        MemOpcode = VEX::STHSpm;
-                    else if (Inst->getOpcode() == VEX::STB)
-                        MemOpcode = VEX::STBSpm;
-                    else
-                        assert(false && " Wrong Opcode for Instruction.")
-                                if (Inst->mayLoad()) {
-                                    if (Inst->getOpcode() == VEX::STW)
-                                        MemOpcode = VEX::STWSpm;
-                                    else if (Inst->getOpcode() == VEX::STH)
-                                        MemOpcode = VEX::STHSpm;
-                                    else if (Inst->getOpcode() == VEX::STB)
-                                        MemOpcode = VEX::STBSpm;
-                                    else
-                                        assert(false && " Wrong Opcode for Instruction.")
-
-
-                } else if (Inst->may)
-            }
-
-
+            if (Inst->isBranch() || Inst->isCall())
+                continue;
+            DEBUG(dbgs() << "\n");
             Inst->dump();
 
-//            if (!Inst->memoperands_empty()) {
-//                MachineMemOperand *MMO;
-//                MMO = *Inst->memoperands_begin();
-//                const Value *V = MMO->getValue();
-//                if (V->getName().startswith("spm_")) {
-//                    SPMVariable var(V->getName());
-//                    if(Inst->mayLoad())
-//                        var.setLoad();
-//                    if(Inst->mayStore())
-//                        var.setStore();
-//                    DataInfo->AddVariable(var);
-//                    Inst->dump();
-//                    dbgs() << "Should be in the SPMs\n";
-//                }
-//            }
+            bool SPMFound = false;
+            StringRef VariableName;
+            if (IsSPMVariable(Inst, VariableName, DefinedRegister)) {
+                // A SPM Variable was found
+                // Initiate a new node
+                SPMVariable Variable(VariableName, DefinedRegister);
+                DataInfo->AddVariable(Variable);
+                DEBUG(dbgs() << "New Variable found in Register " << DefinedRegister << "\n");
+                SPMFound = true;
+            } else {
+                DEBUG(dbgs() << " Variable not found \n");
+            }
 
-//            if (Inst->mayLoad() || Inst->mayStore()) {
-//                for (unsigned i = 0, e = Inst->getNumOperands();
-//                     i != e; ++i) {
-//                    if (Inst->getOperand(i).isGlobal())
-//                        errs() << "Is Global\n";
-//                }
-//            }
-//        if (LoadInst *Inst = dyn_cast<LoadInst>(&MBB->front())) {
-//            for (unsigned i = 0, e = Inst->getNumOperands(); i != e; ++i)
-//                Inst->getOperand(i)->dump();
-//            Inst->dump();
-//        }
+
+            // Checks whether the instruction propagates SPMVariable
+            if(PropagatesSPMVariable(Inst, VariableName)) {
+                // Replaces memory Instruction to SPM Instruction
+                // when necessary
+                if (Inst->mayLoadOrStore()) {
+                    EvaluateVariableAccess(Inst, VariableName);
+                    ReplaceMemoryInstruction (MBB, Inst);
+                }
+            }
+        }
+        for (DataReuseInfo::iterator VarIdx = DataInfo->begin(),
+             VarEnd = DataInfo->end(); VarIdx != VarEnd; ++VarIdx) {
+            VarIdx->UpdateOffsetInfo();
         }
     }
+
     std::vector<SPMVariable> Variables = DataInfo->getVariables();
     for (auto Var : Variables)
-        dbgs() << "Name:" << Var.getName();
+        DEBUG(dbgs() << "Name:" << Var.getName() << "\tOffset: " << Var.getMaxOffsetPerBB() << "\n");
     return false;
 }
 
-char VEXDataReuseTrackingPreRegAllocPass::ID = 0;
-//static RegisterPass<VEXDataReuseTrackingPreRegAllocPass> Y("VEXDataReuseTrackingPreRegAlloc", "Data Reuse Tracking PreRegAlloc Pass", false, false);
+char VEXDataReuseTracking::ID = 0;
+//static RegisterPass<VEXDataReuseTracking> Y("VEXDataReuseTrackingPreRegAlloc", "Data Reuse Tracking PreRegAlloc Pass", false, false);
 
-MachineFunctionPass *llvm::createVEXDataReuseTrackingPreRegAllocPass(VEXTargetMachine &TM) {
-    return new VEXDataReuseTrackingPreRegAllocPass(TM);
+MachineFunctionPass *llvm::createVEXDataReuseTracking(VEXTargetMachine &TM) {
+    return new VEXDataReuseTracking(TM);
 }

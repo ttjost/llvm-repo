@@ -185,7 +185,7 @@ void VEXPassConfig::addMachineSSAOptimization() {
 
 void VEXPassConfig::addPreRegAlloc() {
     if (EnableSPMs && !PreIsel)
-        addPass(createVEXDataReuseTrackingPreRegAllocPass(getVEXTargetMachine()));
+        addPass(createVEXDataReuseTracking(getVEXTargetMachine()));
 }
 
 void VEXPassConfig::addPreEmitPass() {

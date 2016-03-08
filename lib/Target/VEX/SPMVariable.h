@@ -40,8 +40,16 @@ namespace llvm {
 // is always given to vectors, since ILP can be better explored with them.
 class SPMVariable {
 
+    typedef struct RegisterOffsetPair {
+        unsigned Register;
+        std::vector<unsigned> Offsets;
+    } RegisterOffsetPair;
+
     StringRef Name;
     unsigned Flags;         // See MemOperandFlags in MachineMemOperand.h
+
+    std::vector<unsigned> PropagationRegisters;      // Used for knowing which registers propagate the variable information
+    std::vector<RegisterOffsetPair> RegistersAndOffsets;
 
     // Define whether this variable will be stored in multiple SPMs
     // Default: false
@@ -51,6 +59,7 @@ class SPMVariable {
     // FIR application is a good example on how this can be achieved.
     bool DynamicAllocation;
 
+    unsigned OffsetsPerBB;
     unsigned StorageUnits;
     unsigned NumUnits;
     unsigned InitialAddress;
@@ -77,9 +86,24 @@ class SPMVariable {
     };
 
 public:
-    SPMVariable() : Name(""), Flags(0), MultipleStorage(false) {}
-    SPMVariable(StringRef Name) : Name(Name), Flags(0), MultipleStorage(false) {}
-    SPMVariable(StringRef Name, unsigned Flags): Name(Name), Flags(Flags), MultipleStorage(false) {}
+    SPMVariable() : Name(""), Flags(0), MultipleStorage(false) {
+        PropagationRegisters.resize(0);
+    }
+    SPMVariable(StringRef Name) : Name(Name), Flags(0), MultipleStorage(false) {
+        PropagationRegisters.resize(0);
+    }
+//    SPMVariable(StringRef Name, unsigned Flags): Name(Name), Flags(Flags), MultipleStorage(false) {
+//        PropagationRegisters.resize(0);
+//    }
+    SPMVariable(StringRef Name, unsigned Register) : Name(Name),
+                                                    Flags(0),
+                                                    OffsetsPerBB(0),
+                                                    MultipleStorage(false) {
+        PropagationRegisters.push_back(Register);
+        RegistersAndOffsets.resize(0);
+    }
+
+    std::vector<unsigned> getPropagationRegisters() const { return PropagationRegisters; }
 
     StringRef getName() const { return Name; }
     unsigned getFlags() const  { return Flags; } 
@@ -101,6 +125,12 @@ public:
     unsigned getInitialAddress() const { return InitialAddress; }
     unsigned getSize() const { return Size; }
     unsigned getNumElements() const { return NumElements; }
+    unsigned getMaxOffsetPerBB() const { return OffsetsPerBB; }
+
+    void AddPropagationRegister(unsigned Register);
+
+    void AddOffset(unsigned Register, unsigned Offset);
+    void UpdateOffsetInfo();
     
     bool operator==(const SPMVariable& rhs);
 
