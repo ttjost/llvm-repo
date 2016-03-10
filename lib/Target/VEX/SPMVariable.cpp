@@ -43,6 +43,10 @@ void SPMVariable::AddPropagationRegister(unsigned Register) {
     PropagationRegisters.insert(it, Register);
 }
 
+void SPMVariable::AddMemoryInstruction(MachineBasicBlock::iterator MI) {
+    MemoryInstructions.push_back(MI);
+}
+
 void SPMVariable::AddOffset(unsigned Register, unsigned Offset) {
 
     int RegisterPosition = -1;

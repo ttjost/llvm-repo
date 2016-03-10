@@ -30,7 +30,7 @@
 #include "llvm/CodeGen/MachineMemOperand.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/MachineLoopInfo.h"
-#include "llvm/Analysis/LoopPass.h"
+//#include "llvm/Analysis/LoopPass.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Analysis/ScalarEvolution.h"
@@ -48,73 +48,67 @@
 using namespace llvm;
 
 namespace llvm {
-    LoopPass *createVEXLoopInfoPass(VEXTargetMachine &TM);
+    MachineFunctionPass *createVEXDataReuseTrackingPostRegAlloc(VEXTargetMachine &TM);
     MachineFunctionPass *createVEXDataReuseTracking(VEXTargetMachine &TM);
 }
 
 namespace {
     
-class VEXLoopInfoPass: public LoopPass {
+class VEXDataReuseTrackingPostRegAlloc: public MachineFunctionPass {
     
 //    void getAnalysisUsage(AnalysisUsage &AU) const override;
-    AliasAnalysis *AA;
-    ScalarEvolution *SE;
+//    AliasAnalysis *AA;
+//    ScalarEvolution *SE;
+
+    TargetMachine &TM;
+    DataReuseInfo* DataInfo;
 
 public:
     static char ID;
-    VEXLoopInfoPass()
-    : LoopPass(ID) {
-        
+    VEXDataReuseTrackingPostRegAlloc(TargetMachine &TM)
+    : MachineFunctionPass(ID), TM(TM) {
+        const VEXSubtarget &Subtarget = *static_cast<const VEXTargetMachine &>(TM).getSubtargetImpl();
+        const VEXInstrInfo *TII = static_cast<const VEXInstrInfo *>(Subtarget.getInstrInfo());
+
+        DataInfo = static_cast<const VEXTargetMachine &>(TM).getDataReuseInfo();
     }
     
     const char *getPassName() const override {
-        return "VEX Loop Info Pass";
+        return "VEX Data Reuse Tracking Pos RegAlloc";
     }
     
-    bool runOnLoop(Loop *L, LPPassManager &LPM) override;
+    bool runOnMachineFunction(MachineFunction &MF) override;
     
 };
 }
 
-//void VEXLoopInfoPass::getAnalysisUsage(AnalysisUsage &AU) const {
+//void VEXDataReuseTrackingPostRegAlloc::getAnalysisUsage(AnalysisUsage &AU) const {
 //    AU.addRequired<AliasAnalysis>();
 //    AU.addRequired<ScalarEvolution>();
 //    AU.addPreserved<ScalarEvolution>();
 //}
 
-bool VEXLoopInfoPass::runOnLoop(Loop *L, LPPassManager &LPM) {
-//    AA = &getAnalysis<AliasAnalysis>();
-//    SE = &getAnalysis<ScalarEvolution>();
+bool VEXDataReuseTrackingPostRegAlloc::runOnMachineFunction(MachineFunction &MF) {
 
-//    unsigned TripCount;
+    DEBUG(dbgs() << " Initiating VEXDataReuseTrackingPostRegAlloc Pass");
 
-//    BasicBlock *ExitingBlock = L->getLoopLatch();
-//    if (!ExitingBlock || !L->isLoopExiting(ExitingBlock))
-//      ExitingBlock = L->getExitingBlock();
+    DEBUG(dbgs() << "Size: " << DataInfo->getVariables().size() << "\n");
+    for (DataReuseInfo::iterator VarIdx = DataInfo->begin(),
+         VarEnd = DataInfo->end(); VarIdx != VarEnd; ++VarIdx) {
+        std::vector<MachineBasicBlock::iterator> MIs = VarIdx->getMemoryInstructions();
+        for(MachineBasicBlock::iterator MI : MIs)
+            MI->dump();
+    }
 
-//    if (ExitingBlock)
-//        TripCount = SE->getSmallConstantTripCount(L, ExitingBlock);
-
-//    dbgs() << "TripCount is: " << TripCount;
-
-////    errs() << F.getName() << "\n";
-    
-//    for (auto MBB : L->getBlocks()) {
-//        for (auto Inst = MBB->begin(), InstE = MBB->end(); Inst != InstE; ++Inst)
-////        if (LoadInst *Inst = dyn_cast<LoadInst>(&MBB->front())) {
-////            for (unsigned i = 0, e = Inst->getNumOperands(); i != e; ++i)
-////                Inst->getOperand(i)->dump();
-//            Inst->dump();
-////        }
-//    }
+    DEBUG(dbgs() << " Finalizing VEXDataReuseTrackingPostRegAlloc Pass");
     return false;
 }
 
-char VEXLoopInfoPass::ID = 0;
+char VEXDataReuseTrackingPostRegAlloc::ID = 0;
 //static RegisterPass<VEXDataReuseTrackingPass> X("VEXDataReuseTracking", "Data Reuse Tracking Pass", false, false);
 
-LoopPass *llvm::createVEXLoopInfoPass(VEXTargetMachine &TM) {
-    return new VEXLoopInfoPass();
+MachineFunctionPass *llvm::createVEXDataReuseTrackingPostRegAlloc(VEXTargetMachine &TM) {
+    return new VEXDataReuseTrackingPostRegAlloc(TM);
 }
 
 //===----------------------------------------------------------------------===//
@@ -151,10 +145,11 @@ class VEXDataReuseTracking: public MachineFunctionPass {
     bool PropagatesSPMVariable (MachineBasicBlock::iterator Inst,
                                 StringRef &VariableName);
 
-    void ReplaceMemoryInstruction (MachineFunction::iterator& MBB,
+    void ReplaceMemoryInstruction (StringRef VariableName,
+                                   MachineFunction::iterator& MBB,
                                    MachineBasicBlock::iterator& Inst);
 
-   void  EvaluateVariableAccess(MachineBasicBlock::iterator Inst,
+   void  EvaluateVariableOffset(MachineBasicBlock::iterator Inst,
                                 StringRef VariableName);
 
 public:
@@ -195,8 +190,8 @@ void VEXDataReuseTracking::getAnalysisUsage(AnalysisUsage &AU) const {
 // This is important because we may have multiple Loads and Stores that use the same Virtual Register
 // at this point, therefore, we need to update information on lots of instructions.
 bool VEXDataReuseTracking::IsSPMVariable(MachineBasicBlock::iterator Inst,
-                                                        StringRef& VariableName,
-                                                        unsigned& DefinedRegister) {
+                                         StringRef& VariableName,
+                                         unsigned& DefinedRegister) {
 
     for (unsigned i = 0, e = Inst->getNumOperands();
          i != e; ++i) {
@@ -218,7 +213,7 @@ bool VEXDataReuseTracking::IsSPMVariable(MachineBasicBlock::iterator Inst,
 }
 
 bool VEXDataReuseTracking::PropagatesSPMVariable(MachineBasicBlock::iterator Inst,
-                                                                StringRef &VariableName) {
+                                                 StringRef &VariableName) {
 
     bool AnyPropagationFound = false;
     for (unsigned i = 0, e = Inst->getNumOperands();
@@ -262,7 +257,8 @@ bool VEXDataReuseTracking::PropagatesSPMVariable(MachineBasicBlock::iterator Ins
 }
 
 void VEXDataReuseTracking::
-            ReplaceMemoryInstruction (MachineFunction::iterator& MBB,
+            ReplaceMemoryInstruction (StringRef VariableName,
+                                      MachineFunction::iterator& MBB,
                                       MachineBasicBlock::iterator& Inst) {
 
     const VEXSubtarget &Subtarget = *static_cast<const VEXTargetMachine &>(TM).getSubtargetImpl();
@@ -271,6 +267,8 @@ void VEXDataReuseTracking::
     DEBUG(dbgs() << "Initialize Instruction Replacement \n");
 
     unsigned MemOpcode = 0;
+
+    MachineBasicBlock::iterator newInstr;
 
     if (Inst->mayLoad()) {
         if (Inst->getOpcode() == VEX::LDW)
@@ -287,7 +285,7 @@ void VEXDataReuseTracking::
         MachineOperand MemOperand = Inst->getOperand(2);
         assert(DstReg.isReg() && "Operand must be Register");
 
-        MachineBasicBlock::iterator newInstr = BuildMI(*MBB, Inst, Inst->getDebugLoc(),
+        newInstr = BuildMI(*MBB, Inst, Inst->getDebugLoc(),
                                                        TII->get(MemOpcode),
                                                        DstReg.getReg()).addOperand(FrameIndex)
                                                                        .addOperand(MemOperand)
@@ -296,7 +294,7 @@ void VEXDataReuseTracking::
 
         Inst->eraseFromParent();
         Inst = newInstr;
-    } else
+    } else {
         if (Inst->mayStore()) {
             if (Inst->getOpcode() == VEX::STW)
                 MemOpcode = VEX::STWSpm;
@@ -312,7 +310,7 @@ void VEXDataReuseTracking::
             MachineOperand MemOperand = Inst->getOperand(2);
             assert(BaseReg.isReg() && "Operand must be Register");
 
-            MachineBasicBlock::iterator newInstr =
+            newInstr =
                     BuildMI(*MBB, Inst, Inst->getDebugLoc(),
                             TII->get(MemOpcode)).addOperand(BaseReg)
                                                  .addOperand(FrameIndex)
@@ -321,14 +319,19 @@ void VEXDataReuseTracking::
             newInstr->dump();
             Inst->eraseFromParent();
             Inst = newInstr;
+        } else {
+            assert(false && "Instruction should be a load or store.");
         }
+    }
+
+    DataInfo->AddMemInstRef(VariableName, newInstr);
 
     DEBUG(dbgs() << "Finished Instruction Replacement \n");
 
 }
 
-void VEXDataReuseTracking::EvaluateVariableAccess(MachineBasicBlock::iterator Inst,
-                                                                 StringRef VariableName) {
+void VEXDataReuseTracking::EvaluateVariableOffset(MachineBasicBlock::iterator Inst,
+                                                  StringRef VariableName) {
 
     MachineLoopInfo &MLI = getAnalysis<MachineLoopInfo>();
 
@@ -344,7 +347,6 @@ void VEXDataReuseTracking::EvaluateVariableAccess(MachineBasicBlock::iterator In
         assert(DataInfo->FindVariable(VariableName) && " Variable not found.");
         MachineOperand MOReg = Inst->getOperand(1);
         MachineOperand MOImm = Inst->getOperand(2);
-
 
         assert (MOReg.isReg() && " MachineOperand should be Register");
         assert (MOImm.isImm() && " MachineOperand should be Immediate");
@@ -394,8 +396,8 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                 // Replaces memory Instruction to SPM Instruction
                 // when necessary
                 if (Inst->mayLoadOrStore()) {
-                    EvaluateVariableAccess(Inst, VariableName);
-                    ReplaceMemoryInstruction (MBB, Inst);
+                    EvaluateVariableOffset(Inst, VariableName);
+                    ReplaceMemoryInstruction(VariableName, MBB, Inst);
                 }
             }
         }

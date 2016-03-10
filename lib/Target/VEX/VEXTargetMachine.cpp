@@ -161,6 +161,7 @@ namespace {
         bool addInstSelector() override;
         void addPreEmitPass() override;
         void addPreRegAlloc() override;
+        void addPostRegAlloc() override;
         void addMachineSSAOptimization() override;
         
     };
@@ -188,13 +189,18 @@ void VEXPassConfig::addPreRegAlloc() {
         addPass(createVEXDataReuseTracking(getVEXTargetMachine()));
 }
 
+void VEXPassConfig::addPostRegAlloc() {
+    if (EnableSPMs)
+        addPass(createVEXDataReuseTrackingPostRegAlloc(getVEXTargetMachine()));
+}
+
 void VEXPassConfig::addPreEmitPass() {
     DEBUG(errs() << "addPreEmitPass " << EnableVLIWScheduling << "\n");
     //addPass(createVEXPostRAScheduler());
     
     addPass(createVEXModifyBranchesPass(getVEXTargetMachine()));
     //if (EnableVLIWScheduling)
-        addPass(createVEXPacketizer(EnableVLIWScheduling), false);
+        addPass(createVEXPacketizer(EnableVLIWScheduling, getVEXTargetMachine()), false);
 }
 
 TargetPassConfig *VEXTargetMachine::createPassConfig(PassManagerBase &PM){

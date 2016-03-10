@@ -71,6 +71,8 @@ class VEXTargetMachine;
         VEXInstrInfo InstrInfo;
         VEXFrameLowering FrameLowering;
         VEXTargetLowering TLInfo;
+
+//        VEXTargetMachine &TM;
         
     public:
         unsigned getTargetABI() const { return VEXABI; }
@@ -80,6 +82,7 @@ class VEXTargetMachine;
         VEXSubtarget(const Triple &TT, const std::string &CPU,
                      const std::string &FS, bool little, bool EnableVLIWScheduling,
                      Reloc::Model _RM, VEXTargetMachine &_TM);
+
         
         //- Virtual function, must have
         // ParseSubtargetFeatures - Parses features string settin specified

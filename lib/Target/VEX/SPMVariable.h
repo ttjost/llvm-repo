@@ -18,6 +18,7 @@
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineMemOperand.h"
+#include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/CodeGen/PseudoSourceValue.h"
 #include "llvm/IR/GlobalValue.h"
 #include "llvm/IR/ValueMap.h"
@@ -50,6 +51,8 @@ class SPMVariable {
 
     std::vector<unsigned> PropagationRegisters;      // Used for knowing which registers propagate the variable information
     std::vector<RegisterOffsetPair> RegistersAndOffsets;
+
+    std::vector<MachineBasicBlock::iterator> MemoryInstructions;
 
     // Define whether this variable will be stored in multiple SPMs
     // Default: false
@@ -101,9 +104,8 @@ public:
                                                     MultipleStorage(false) {
         PropagationRegisters.push_back(Register);
         RegistersAndOffsets.resize(0);
+        MemoryInstructions.resize(0);
     }
-
-    std::vector<unsigned> getPropagationRegisters() const { return PropagationRegisters; }
 
     StringRef getName() const { return Name; }
     unsigned getFlags() const  { return Flags; } 
@@ -128,6 +130,10 @@ public:
     unsigned getMaxOffsetPerBB() const { return OffsetsPerBB; }
 
     void AddPropagationRegister(unsigned Register);
+    void AddMemoryInstruction(MachineBasicBlock::iterator MI);
+
+    std::vector<unsigned> getPropagationRegisters() const { return PropagationRegisters; }
+    std::vector<MachineBasicBlock::iterator> getMemoryInstructions() const { return MemoryInstructions; }
 
     void AddOffset(unsigned Register, unsigned Offset);
     void UpdateOffsetInfo();

@@ -83,3 +83,12 @@ void DataReuseInfo::AddOffset(StringRef Name, unsigned Register, unsigned Offset
     }
 }
 
+void DataReuseInfo::AddMemInstRef(StringRef Name, MachineBasicBlock::iterator newInst) {
+    for(std::vector<SPMVariable>::iterator i = Variables.begin(),
+        e = Variables.end(); i != e; ++i) {
+        if ((*i).getName() == Name) {
+            i->AddMemoryInstruction(newInst);
+        }
+    }
+}
+

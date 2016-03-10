@@ -54,6 +54,7 @@ public:
     bool FindVariable(StringRef Name);
 
     void AddOffset(StringRef Name, unsigned Register, unsigned Offset);
+    void AddMemInstRef(StringRef Name, MachineBasicBlock::iterator newInst);
 
     typedef std::vector<SPMVariable>::iterator iterator;
     typedef std::vector<SPMVariable>::const_iterator const_iterator;

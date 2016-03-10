@@ -14,6 +14,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "VEXSubtarget.h"
+#include "VEXTargetMachine.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/DFAPacketizer.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
@@ -24,6 +25,7 @@
 #include "llvm/Support/CommandLine.h"
 #include "llvm/CodeGen/Passes.h"
 #include "llvm/Support/TargetRegistry.h"
+#include "DataReuseInfo.h"
 
 #define DEBUG_TYPE "vex-vliw-scheduling"
 
@@ -34,21 +36,24 @@ cl::opt<bool> GenericBinary("generic-binary",
 
 
 namespace llvm {
-    FunctionPass *createVEXPacketizer(bool EnableVLIWScheduling);
+    FunctionPass *createVEXPacketizer(bool EnableVLIWScheduling, VEXTargetMachine &TM);
 }
 
 namespace {
 class VEXPacketizer : public MachineFunctionPass {
     
     bool EnableVLIWScheduling;
-    //MachineFunction::iterator currentMBB;
     
     bool canResourceResourcesForLongImmediate(MachineInstr *MI);
+
+    TargetMachine &TM;
 
 public:
     static char ID;
 
-    VEXPacketizer(bool EnableVLIWScheduling) : MachineFunctionPass(ID),
+    VEXPacketizer(TargetMachine &TM,
+                  bool EnableVLIWScheduling) : MachineFunctionPass(ID),
+                                               TM(TM),
                                                EnableVLIWScheduling(EnableVLIWScheduling)
                                                {}
 
@@ -78,15 +83,31 @@ class VEXPacketizerList : public VLIWPacketizerList {
     const VEXInstrInfo *VEXII;
     const VEXSubtarget* Subtarget;
     const InstrItineraryData *II;
-    
+    TargetMachine &TM;
+    DataReuseInfo* DataInfo;
+
 public:
-    VEXPacketizerList(MachineFunction &MF,
+    VEXPacketizerList(TargetMachine &TM,
+                      MachineFunction &MF,
                       MachineLoopInfo &MLI)
-                      : VLIWPacketizerList(MF, MLI, true) {
+                      : TM(TM), VLIWPacketizerList(MF, MLI, true) {
         VEXII = (const VEXInstrInfo *) TII;
         Subtarget = &MF.getSubtarget<VEXSubtarget>();
         II = static_cast<const VEXSubtarget *>(Subtarget)->getInstrItineraryData();
         DataHazards.clear();
+        DataInfo = static_cast<VEXTargetMachine &>(TM).getDataReuseInfo();
+
+        DEBUG(dbgs() << " Initiating VLIWPacketizer Pass");
+
+        DEBUG(dbgs() << "Size: " << DataInfo->getVariables().size() << "\n");
+        for (DataReuseInfo::iterator VarIdx = DataInfo->begin(),
+             VarEnd = DataInfo->end(); VarIdx != VarEnd; ++VarIdx) {
+            std::vector<MachineBasicBlock::iterator> MIs = VarIdx->getMemoryInstructions();
+            for(MachineBasicBlock::iterator MI : MIs)
+                MI->dump();
+        }
+
+        DEBUG(dbgs() << " Finalizing VLIWPacketizer Pass");
     }
 
     bool isSoloInstruction(MachineInstr *MI) override;
@@ -154,8 +175,8 @@ void VEXPacketizerList::reserveResourcesForLongImmediate (MachineBasicBlock::ite
 // First, we need to check if we should insert Bubbles (NoOps Instructions)
 // Multiple Noops might be necessary, in case we have high-latency instructions
 // and No other instruction can be issued in that cycle.
-// Also, here we check if we can packetize instructions if long immediates
-// in the Current Bundle. If not, ends packet and starts a new one.
+// Also, here we check if we can packetize instructions with long immediates
+// in the Current Bundle. If not, end packet and start a new one.
 MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
     
     // Get MBB from Instruction
@@ -348,7 +369,7 @@ bool VEXPacketizer::runOnMachineFunction(MachineFunction &MF) {
     const TargetInstrInfo *TII = MF.getSubtarget().getInstrInfo();
     MachineLoopInfo &MLI = getAnalysis<MachineLoopInfo>();
     
-    VEXPacketizerList Packetizer(MF, MLI);
+    VEXPacketizerList Packetizer(TM, MF, MLI);
 
     //
     // Loop over all basic blocks and remove KILL pseudo-instructions
@@ -415,7 +436,6 @@ bool VEXPacketizer::runOnMachineFunction(MachineFunction &MF) {
             RegionEnd = I;
         }
     }
-    
     return true;
     
 }
@@ -424,8 +444,8 @@ bool VEXPacketizer::runOnMachineFunction(MachineFunction &MF) {
 //===----------------------------------------------------------------------===//
 //                         Public Constructor Functions
 //===----------------------------------------------------------------------===//
-FunctionPass *llvm::createVEXPacketizer(bool EnableVLIWScheduling) {
-    return new VEXPacketizer(EnableVLIWScheduling);
+FunctionPass *llvm::createVEXPacketizer(bool EnableVLIWScheduling, VEXTargetMachine &TM) {
+    return new VEXPacketizer(TM, EnableVLIWScheduling);
 }
 
 char VEXPacketizer::ID = 0;
