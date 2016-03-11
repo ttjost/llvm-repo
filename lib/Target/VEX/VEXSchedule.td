@@ -97,6 +97,15 @@ def IICpLrGr    : InstrItinClass;
 def IICpGrLr    : InstrItinClass;
 def IIBranch    : InstrItinClass;
 
+def IILane0     : InstrItinClass;
+def IILane1     : InstrItinClass;
+def IILane2     : InstrItinClass;
+def IILane3     : InstrItinClass;
+def IILane4     : InstrItinClass;
+def IILane5     : InstrItinClass;
+def IILane6     : InstrItinClass;
+def IILane7     : InstrItinClass;
+
 //===----------------------------------------------------------------------===//
 // VEX Generic instruction itineraries.
 //===----------------------------------------------------------------------===//
@@ -131,7 +140,16 @@ InstrItinData<IICpGrBr      , [InstrStage<2,  [IUnit0, IUnit1]>]>,
 InstrItinData<IICpBrGr      , [InstrStage<1,  [IUnit0, IUnit1]>]>,
 InstrItinData<IICpLrGr      , [InstrStage<1,  [IUnit0, IUnit1]>]>,
 InstrItinData<IICpGrLr      , [InstrStage<2,  [IUnit0, IUnit1]>]>,
-InstrItinData<IIBranch      , [InstrStage<1,  [IUnit1]>]>
+InstrItinData<IIBranch      , [InstrStage<1,  [IUnit1]>]>,
+
+// ScratchPad Memory Instructions
+// We separate them according to the their position.
+// Each lane has its own Itinerary, therefore,
+// we should define a diferent itinerary for each one of them.
+InstrItinData<IILane0       , [InstrStage<1,  [IUnit0]>]>,
+InstrItinData<IILane1       , [InstrStage<1,  [IUnit1]>]>,
+InstrItinData<IILane2       , [InstrStage<1,  [IUnit2]>]>,
+InstrItinData<IILane3       , [InstrStage<1,  [IUnit3]>]>
 ]>;
 
 def rVEX4IssueItineraries : ProcessorItineraries<[IUnit0, IUnit1, IUnit2, IUnit3], [], [
@@ -149,7 +167,16 @@ InstrItinData<IICpGrBr      , [InstrStage<2,  [IUnit0, IUnit1, IUnit2, IUnit3]>]
 InstrItinData<IICpBrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
 InstrItinData<IICpLrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
 InstrItinData<IICpGrLr      , [InstrStage<2,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
-InstrItinData<IIBranch      , [InstrStage<1,  [IUnit3]>]>
+InstrItinData<IIBranch      , [InstrStage<1,  [IUnit3]>]>,
+
+// ScratchPad Memory Instructions
+// We separate them according to the their position.
+// Each lane has its own Itinerary, therefore,
+// we should define a diferent itinerary for each one of them.
+InstrItinData<IILane0       , [InstrStage<1,  [IUnit0]>]>,
+InstrItinData<IILane1       , [InstrStage<1,  [IUnit1]>]>,
+InstrItinData<IILane2       , [InstrStage<1,  [IUnit2]>]>,
+InstrItinData<IILane3       , [InstrStage<1,  [IUnit3]>]>
 ]>;
 
 def rVEX8IssueItineraries : ProcessorItineraries<[IUnit0, IUnit1, IUnit2, IUnit3,
@@ -178,7 +205,20 @@ InstrItinData<IICpLrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
                                                IUnit4, IUnit5, IUnit6, IUnit7]>]>,
 InstrItinData<IICpGrLr      , [InstrStage<2,  [IUnit0, IUnit1, IUnit2, IUnit3,
                                                IUnit4, IUnit5, IUnit6, IUnit7]>]>,
-InstrItinData<IIBranch      , [InstrStage<1,  [IUnit7]>]>
+InstrItinData<IIBranch      , [InstrStage<1,  [IUnit7]>]>,
+
+// ScratchPad Memory Instructions
+// We separate them according to the their position.
+// Each lane has its own Itinerary, therefore,
+// we should define a diferent itinerary for each one of them.
+InstrItinData<IILane0       , [InstrStage<1,  [IUnit0]>]>,
+InstrItinData<IILane1       , [InstrStage<1,  [IUnit1]>]>,
+InstrItinData<IILane2       , [InstrStage<1,  [IUnit2]>]>,
+InstrItinData<IILane3       , [InstrStage<1,  [IUnit3]>]>,
+InstrItinData<IILane4       , [InstrStage<1,  [IUnit4]>]>,
+InstrItinData<IILane5       , [InstrStage<1,  [IUnit5]>]>,
+InstrItinData<IILane6       , [InstrStage<1,  [IUnit6]>]>,
+InstrItinData<IILane7       , [InstrStage<1,  [IUnit7]>]>
 ]>;
 
 def rVEX8IssueGenericItineraries : ProcessorItineraries<[IUnit0, IUnit1, IUnit2, IUnit3,
@@ -206,7 +246,20 @@ InstrItinData<IICpLrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
                                 IUnit4, IUnit5, IUnit6, IUnit7]>]>,
 InstrItinData<IICpGrLr      , [InstrStage<2,  [IUnit0, IUnit1, IUnit2, IUnit3,
                                 IUnit4, IUnit5, IUnit6, IUnit7]>]>,
-InstrItinData<IIBranch      , [InstrStage<1,  [IUnit7]>]>
+InstrItinData<IIBranch      , [InstrStage<1,  [IUnit7]>]>,
+
+// ScratchPad Memory Instructions
+// We separate them according to the their position.
+// Each lane has its own Itinerary, therefore,
+// we should define a diferent itinerary for each one of them.
+InstrItinData<IILane0       , [InstrStage<1,  [IUnit0]>]>,
+InstrItinData<IILane1       , [InstrStage<1,  [IUnit1]>]>,
+InstrItinData<IILane2       , [InstrStage<1,  [IUnit2]>]>,
+InstrItinData<IILane3       , [InstrStage<1,  [IUnit3]>]>,
+InstrItinData<IILane4       , [InstrStage<1,  [IUnit4]>]>,
+InstrItinData<IILane5       , [InstrStage<1,  [IUnit5]>]>,
+InstrItinData<IILane6       , [InstrStage<1,  [IUnit6]>]>,
+InstrItinData<IILane7       , [InstrStage<1,  [IUnit7]>]>
 ]>;
 
 def Simple2IssueItineraries : ProcessorItineraries<[IUnit0, IUnit1], [], [
@@ -224,7 +277,14 @@ InstrItinData<IICpGrBr      , [InstrStage<1,  [IUnit0, IUnit1]>]>,
 InstrItinData<IICpBrGr      , [InstrStage<1,  [IUnit0, IUnit1]>]>,
 InstrItinData<IICpLrGr      , [InstrStage<1,  [IUnit0, IUnit1]>]>,
 InstrItinData<IICpGrLr      , [InstrStage<1,  [IUnit0, IUnit1]>]>,
-InstrItinData<IIBranch      , [InstrStage<1,  [IUnit1]>]>
+InstrItinData<IIBranch      , [InstrStage<1,  [IUnit1]>]>,
+
+// ScratchPad Memory Instructions
+// We separate them according to the their position.
+// Each lane has its own Itinerary, therefore,
+// we should define a diferent itinerary for each one of them.
+InstrItinData<IILane0       , [InstrStage<1,  [IUnit0]>]>,
+InstrItinData<IILane1       , [InstrStage<1,  [IUnit1]>]>
 ]>;
 
 def Simple4IssueItineraries : ProcessorItineraries<[IUnit0, IUnit1, IUnit2, IUnit3], [], [
@@ -242,7 +302,16 @@ InstrItinData<IICpGrBr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]
 InstrItinData<IICpBrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
 InstrItinData<IICpLrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
 InstrItinData<IICpGrLr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
-InstrItinData<IIBranch      , [InstrStage<1,  [IUnit3]>]>
+InstrItinData<IIBranch      , [InstrStage<1,  [IUnit3]>]>,
+
+// ScratchPad Memory Instructions
+// We separate them according to the their position.
+// Each lane has its own Itinerary, therefore,
+// we should define a diferent itinerary for each one of them.
+InstrItinData<IILane0       , [InstrStage<1,  [IUnit0]>]>,
+InstrItinData<IILane1       , [InstrStage<1,  [IUnit1]>]>,
+InstrItinData<IILane2       , [InstrStage<1,  [IUnit2]>]>,
+InstrItinData<IILane3       , [InstrStage<1,  [IUnit3]>]>
 ]>;
 
 def Simple4Issue4MemItineraries : ProcessorItineraries<[IUnit0, IUnit1, IUnit2, IUnit3], [], [
@@ -260,7 +329,16 @@ InstrItinData<IICpGrBr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]
 InstrItinData<IICpBrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
 InstrItinData<IICpLrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
 InstrItinData<IICpGrLr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
-InstrItinData<IIBranch      , [InstrStage<1,  [IUnit3]>]>
+InstrItinData<IIBranch      , [InstrStage<1,  [IUnit3]>]>,
+
+// ScratchPad Memory Instructions
+// We separate them according to the their position.
+// Each lane has its own Itinerary, therefore,
+// we should define a diferent itinerary for each one of them.
+InstrItinData<IILane0       , [InstrStage<1,  [IUnit0]>]>,
+InstrItinData<IILane1       , [InstrStage<1,  [IUnit1]>]>,
+InstrItinData<IILane2       , [InstrStage<1,  [IUnit2]>]>,
+InstrItinData<IILane3       , [InstrStage<1,  [IUnit3]>]>
 ]>;
 
 
@@ -290,7 +368,20 @@ InstrItinData<IICpLrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
                                                IUnit4, IUnit5, IUnit6, IUnit7]>]>,
 InstrItinData<IICpGrLr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
                                                IUnit4, IUnit5, IUnit6, IUnit7]>]>,
-InstrItinData<IIBranch      , [InstrStage<1,  [IUnit7]>]>
+InstrItinData<IIBranch      , [InstrStage<1,  [IUnit7]>]>,
+
+// ScratchPad Memory Instructions
+// We separate them according to the their position.
+// Each lane has its own Itinerary, therefore,
+// we should define a diferent itinerary for each one of them.
+InstrItinData<IILane0       , [InstrStage<1,  [IUnit0]>]>,
+InstrItinData<IILane1       , [InstrStage<1,  [IUnit1]>]>,
+InstrItinData<IILane2       , [InstrStage<1,  [IUnit2]>]>,
+InstrItinData<IILane3       , [InstrStage<1,  [IUnit3]>]>,
+InstrItinData<IILane4       , [InstrStage<1,  [IUnit4]>]>,
+InstrItinData<IILane5       , [InstrStage<1,  [IUnit5]>]>,
+InstrItinData<IILane6       , [InstrStage<1,  [IUnit6]>]>,
+InstrItinData<IILane7       , [InstrStage<1,  [IUnit7]>]>
 ]>;
 
 def Simple8Issue4MemItineraries : ProcessorItineraries<[IUnit0, IUnit1, IUnit2, IUnit3,
@@ -319,7 +410,20 @@ InstrItinData<IICpLrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
 IUnit4, IUnit5, IUnit6, IUnit7]>]>,
 InstrItinData<IICpGrLr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
 IUnit4, IUnit5, IUnit6, IUnit7]>]>,
-InstrItinData<IIBranch      , [InstrStage<1,  [IUnit7]>]>
+InstrItinData<IIBranch      , [InstrStage<1,  [IUnit7]>]>,
+
+// ScratchPad Memory Instructions
+// We separate them according to the their position.
+// Each lane has its own Itinerary, therefore,
+// we should define a diferent itinerary for each one of them.
+InstrItinData<IILane0       , [InstrStage<1,  [IUnit0]>]>,
+InstrItinData<IILane1       , [InstrStage<1,  [IUnit1]>]>,
+InstrItinData<IILane2       , [InstrStage<1,  [IUnit2]>]>,
+InstrItinData<IILane3       , [InstrStage<1,  [IUnit3]>]>,
+InstrItinData<IILane4       , [InstrStage<1,  [IUnit4]>]>,
+InstrItinData<IILane5       , [InstrStage<1,  [IUnit5]>]>,
+InstrItinData<IILane6       , [InstrStage<1,  [IUnit6]>]>,
+InstrItinData<IILane7       , [InstrStage<1,  [IUnit7]>]>
 ]>;
 
 def Simple8Issue8MemItineraries : ProcessorItineraries<[IUnit0, IUnit1, IUnit2, IUnit3,
@@ -349,7 +453,20 @@ InstrItinData<IICpLrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
 IUnit4, IUnit5, IUnit6, IUnit7]>]>,
 InstrItinData<IICpGrLr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
 IUnit4, IUnit5, IUnit6, IUnit7]>]>,
-InstrItinData<IIBranch      , [InstrStage<1,  [IUnit7]>]>
+InstrItinData<IIBranch      , [InstrStage<1,  [IUnit7]>]>,
+
+// ScratchPad Memory Instructions
+// We separate them according to the their position.
+// Each lane has its own Itinerary, therefore,
+// we should define a diferent itinerary for each one of them.
+InstrItinData<IILane0       , [InstrStage<1,  [IUnit0]>]>,
+InstrItinData<IILane1       , [InstrStage<1,  [IUnit1]>]>,
+InstrItinData<IILane2       , [InstrStage<1,  [IUnit2]>]>,
+InstrItinData<IILane3       , [InstrStage<1,  [IUnit3]>]>,
+InstrItinData<IILane4       , [InstrStage<1,  [IUnit4]>]>,
+InstrItinData<IILane5       , [InstrStage<1,  [IUnit5]>]>,
+InstrItinData<IILane6       , [InstrStage<1,  [IUnit6]>]>,
+InstrItinData<IILane7       , [InstrStage<1,  [IUnit7]>]>
 ]>;
 
 

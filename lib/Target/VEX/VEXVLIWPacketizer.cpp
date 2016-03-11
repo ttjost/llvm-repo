@@ -84,18 +84,37 @@ class VEXPacketizerList : public VLIWPacketizerList {
     const VEXSubtarget* Subtarget;
     const InstrItineraryData *II;
     TargetMachine &TM;
+
+    // Circular buffer for the allocation of SPMs,
+    // such that we can store data more uniformly.
+    unsigned AllocationIndex;
+
+//    std::map<unsigned, unsigned>
+
+    // Methods to handle ScratchPads
     DataReuseInfo* DataInfo;
+    std::vector<SPMVariable> Variables;
+
+    std::vector<unsigned> getAllocationPriorityForSPMs(unsigned NumSPMs);
+    bool isStoreSPM(MachineBasicBlock::iterator Inst);
+    bool isLoadSPM(MachineBasicBlock::iterator Inst);
+    bool isLoadSPM(unsigned Opcode);
+    void analyzeSPMInstruction(MachineInstr *MI);
+    unsigned FindVariable(MachineBasicBlock::iterator MI);
+    unsigned getSPMOpcode(unsigned Opcode, unsigned Lane);
 
 public:
     VEXPacketizerList(TargetMachine &TM,
                       MachineFunction &MF,
                       MachineLoopInfo &MLI)
-                      : TM(TM), VLIWPacketizerList(MF, MLI, true) {
+                      : TM(TM), AllocationIndex(0),
+                        VLIWPacketizerList(MF, MLI, true) {
         VEXII = (const VEXInstrInfo *) TII;
         Subtarget = &MF.getSubtarget<VEXSubtarget>();
         II = static_cast<const VEXSubtarget *>(Subtarget)->getInstrItineraryData();
         DataHazards.clear();
         DataInfo = static_cast<VEXTargetMachine &>(TM).getDataReuseInfo();
+        Variables = DataInfo->getVariables();
 
         DEBUG(dbgs() << " Initiating VLIWPacketizer Pass");
 
@@ -123,6 +142,248 @@ public:
     void clearHazardTable();
 };
 
+}
+
+// Returns true if this is a StoreSPM instruction
+bool VEXPacketizerList::isStoreSPM(MachineBasicBlock::iterator Inst) {
+
+    if (Inst->getOpcode() == VEX::STWSpm ||
+        Inst->getOpcode() == VEX::STHSpm ||
+        Inst->getOpcode() == VEX::STBSpm)
+        return true;
+    else
+        return false;
+}
+
+// Returns true if this is a LoadSPM instruction
+bool VEXPacketizerList::isLoadSPM(MachineBasicBlock::iterator Inst) {
+
+    if (Inst->getOpcode() == VEX::LDWSpm ||
+        Inst->getOpcode() == VEX::LDHSpm ||
+        Inst->getOpcode() == VEX::LDHUSpm ||
+        Inst->getOpcode() == VEX::LDBSpm ||
+        Inst->getOpcode() == VEX::LDBUSpm)
+        return true;
+    else
+        return false;
+}
+
+// Returns true if this is a LoadSPM instruction (Another Version)
+bool VEXPacketizerList::isLoadSPM(unsigned Opcode) {
+
+    if (Opcode == VEX::LDWSpm ||
+        Opcode == VEX::LDHSpm ||
+        Opcode == VEX::LDHUSpm ||
+        Opcode == VEX::LDBSpm ||
+        Opcode == VEX::LDBUSpm)
+        return true;
+    else
+        return false;
+}
+
+// Replaces Not-laned Opcode with a reference to the proper lane scheduled to.
+unsigned VEXPacketizerList::getSPMOpcode(unsigned Opcode, unsigned Lane) {
+
+    unsigned NewOpcode;
+    bool isLoad = isLoadSPM(Opcode);
+    switch(Lane) {
+        case 0:
+            if (isLoad) {
+                if (Opcode == VEX::LDWSpm)
+                    NewOpcode = VEX::LDW0;
+                else if (Opcode == VEX::LDHSpm)
+                    NewOpcode = VEX::LDH0;
+                else if (Opcode == VEX::LDHUSpm)
+                    NewOpcode = VEX::LDHU0;
+                else if (Opcode == VEX::LDBSpm)
+                    NewOpcode = VEX::LDB0;
+                else
+                    NewOpcode = VEX::LDBU0;
+            } else {
+                if (Opcode == VEX::STWSpm)
+                    NewOpcode = VEX::STW0;
+                else if (Opcode == VEX::STHSpm)
+                    NewOpcode = VEX::STH0;
+                else
+                    NewOpcode = VEX::STB0;
+            }
+            break;
+        case 1:
+            if (isLoad) {
+                if (Opcode == VEX::LDWSpm)
+                    NewOpcode = VEX::LDW1;
+                else if (Opcode == VEX::LDHSpm)
+                    NewOpcode = VEX::LDH1;
+                else if (Opcode == VEX::LDHUSpm)
+                    NewOpcode = VEX::LDHU1;
+                else if (Opcode == VEX::LDBSpm)
+                    NewOpcode = VEX::LDB1;
+                else
+                    NewOpcode = VEX::LDBU1;
+            } else {
+                if (Opcode == VEX::STWSpm)
+                    NewOpcode = VEX::STW1;
+                else if (Opcode == VEX::STHSpm)
+                    NewOpcode = VEX::STH1;
+                else
+                    NewOpcode = VEX::STB1;
+            }
+            break;
+        case 2:
+            if (isLoad) {
+                if (Opcode == VEX::LDWSpm)
+                    NewOpcode = VEX::LDW2;
+                else if (Opcode == VEX::LDHSpm)
+                    NewOpcode = VEX::LDH2;
+                else if (Opcode == VEX::LDHUSpm)
+                    NewOpcode = VEX::LDHU2;
+                else if (Opcode == VEX::LDBSpm)
+                    NewOpcode = VEX::LDB2;
+                else
+                    NewOpcode = VEX::LDBU2;
+            } else {
+                if (Opcode == VEX::STWSpm)
+                    NewOpcode = VEX::STW2;
+                else if (Opcode == VEX::STHSpm)
+                    NewOpcode = VEX::STH2;
+                else
+                    NewOpcode = VEX::STB2;
+            }
+            break;
+        case 3:
+            if (isLoad) {
+                if (Opcode == VEX::LDWSpm)
+                    NewOpcode = VEX::LDW3;
+                else if (Opcode == VEX::LDHSpm)
+                    NewOpcode = VEX::LDH3;
+                else if (Opcode == VEX::LDHUSpm)
+                    NewOpcode = VEX::LDHU3;
+                else if (Opcode == VEX::LDBSpm)
+                    NewOpcode = VEX::LDB3;
+                else
+                    NewOpcode = VEX::LDBU3;
+            } else {
+                if (Opcode == VEX::STWSpm)
+                    NewOpcode = VEX::STW3;
+                else if (Opcode == VEX::STHSpm)
+                    NewOpcode = VEX::STH3;
+                else
+                    NewOpcode = VEX::STB3;
+            }
+            break;
+        case 4:
+            if (isLoad) {
+                if (Opcode == VEX::LDWSpm)
+                    NewOpcode = VEX::LDW4;
+                else if (Opcode == VEX::LDHSpm)
+                    NewOpcode = VEX::LDH4;
+                else if (Opcode == VEX::LDHUSpm)
+                    NewOpcode = VEX::LDHU4;
+                else if (Opcode == VEX::LDBSpm)
+                    NewOpcode = VEX::LDB4;
+                else
+                    NewOpcode = VEX::LDBU4;
+            } else {
+                if (Opcode == VEX::STWSpm)
+                    NewOpcode = VEX::STW4;
+                else if (Opcode == VEX::STHSpm)
+                    NewOpcode = VEX::STH4;
+                else
+                    NewOpcode = VEX::STB4;
+            }
+            break;
+        case 5:
+            if (isLoad) {
+                if (Opcode == VEX::LDWSpm)
+                    NewOpcode = VEX::LDW5;
+                else if (Opcode == VEX::LDHSpm)
+                    NewOpcode = VEX::LDH5;
+                else if (Opcode == VEX::LDHUSpm)
+                    NewOpcode = VEX::LDHU5;
+                else if (Opcode == VEX::LDBSpm)
+                    NewOpcode = VEX::LDB5;
+                else
+                    NewOpcode = VEX::LDBU5;
+            } else {
+                if (Opcode == VEX::STWSpm)
+                    NewOpcode = VEX::STW5;
+                else if (Opcode == VEX::STHSpm)
+                    NewOpcode = VEX::STH5;
+                else
+                    NewOpcode = VEX::STB5;
+            }
+            break;
+        case 6:
+            if (isLoad) {
+                if (Opcode == VEX::LDWSpm)
+                    NewOpcode = VEX::LDW6;
+                else if (Opcode == VEX::LDHSpm)
+                    NewOpcode = VEX::LDH6;
+                else if (Opcode == VEX::LDHUSpm)
+                    NewOpcode = VEX::LDHU6;
+                else if (Opcode == VEX::LDBSpm)
+                    NewOpcode = VEX::LDB6;
+                else
+                    NewOpcode = VEX::LDBU6;
+            } else {
+                if (Opcode == VEX::STWSpm)
+                    NewOpcode = VEX::STW6;
+                else if (Opcode == VEX::STHSpm)
+                    NewOpcode = VEX::STH6;
+                else
+                    NewOpcode = VEX::STB6;
+            }
+            break;
+        case 7:
+            if (isLoad) {
+                if (Opcode == VEX::LDWSpm)
+                    NewOpcode = VEX::LDW7;
+                else if (Opcode == VEX::LDHSpm)
+                    NewOpcode = VEX::LDH7;
+                else if (Opcode == VEX::LDHUSpm)
+                    NewOpcode = VEX::LDHU7;
+                else if (Opcode == VEX::LDBSpm)
+                    NewOpcode = VEX::LDB7;
+                else
+                    NewOpcode = VEX::LDBU7;
+            } else {
+                if (Opcode == VEX::STWSpm)
+                    NewOpcode = VEX::STW7;
+                else if (Opcode == VEX::STHSpm)
+                    NewOpcode = VEX::STH7;
+                else
+                    NewOpcode = VEX::STB7;
+            }
+            break;
+        default:
+            llvm_unreachable("Wrong Lane!");
+            break;
+    }
+    return NewOpcode;
+}
+
+// Returns the ordering for the SPMs allocation
+// Ordering allocation is: Lane1, Lane2, Lane3, Lane4 ... Lane0
+// Lane 0 is the last one because regular memory instructions
+// use this lane for execution.
+std::vector<unsigned> VEXPacketizerList::getAllocationPriorityForSPMs(unsigned NumSPMs) {
+
+    unsigned IssueWidth = II->SchedModel.IssueWidth;
+    if (IssueWidth == 2) {
+        assert(NumSPMs < 2 && "Number of SPMs should be less or equal to 2.");
+    } else if (IssueWidth == 4) {
+        assert(NumSPMs < 4 && "Number of SPMs should be less or equal to 4.");
+    } else if (IssueWidth == 8) {
+        assert(NumSPMs < 8 && "Number of SPMs should be less or equal to 8.");
+    } else
+        llvm_unreachable("There is no support for a different Issue Width yet. Choose between 2, 4 and 8.");
+
+    // Here we due a Circular buffer, that will make Lane0 the last lane.
+    std::vector<unsigned> SPMs(0);
+    for (unsigned i = 0; i < NumSPMs; ++i) {
+        SPMs.push_back((++AllocationIndex)%IssueWidth);
+    }
+    return SPMs;
 }
 
 bool VEXPacketizerList::isLongImmediate(int64_t Immediate) {
@@ -170,8 +431,45 @@ void VEXPacketizerList::reserveResourcesForLongImmediate (MachineBasicBlock::ite
     }
 }
 
+unsigned VEXPacketizerList::FindVariable(MachineBasicBlock::iterator MI) {
 
-// This function is extremely important on Packetizing Instruction to VEX
+    for (SPMVariable Var : Variables) {
+        std::vector<MachineBasicBlock::iterator> Insts = Var.getMemoryInstructions();
+
+        for (unsigned i = 0, e = Insts.size(); i != e; ++i) {
+            if (Insts[i] == MI) {
+                return i;
+            }
+        }
+    }
+}
+
+void VEXPacketizerList::analyzeSPMInstruction(MachineInstr *MI) {
+
+    unsigned VariablePosition;
+    if ((VariablePosition = FindVariable(MI)) < 0)
+        llvm_unreachable("Error finding variable.");
+
+    SPMVariable Var = Variables[VariablePosition];
+
+    DEBUG(dbgs() << "Variable Name is: " <<  Var.getName() << "\n");
+
+    unsigned IssueWidth = II->SchedModel.IssueWidth;
+
+    std::vector<unsigned> SPMs;
+    if (Var.isNotAllocated()) {
+        SPMs = getAllocationPriorityForSPMs(Var.getMaximumSPMs(IssueWidth));
+        Var.setMemoryUnits(SPMs);
+    }
+
+    DEBUG(dbgs() << " We may use: ");
+    for (unsigned i : SPMs)
+      DEBUG(dbgs() << "SPM " << i << "\n");
+
+}
+
+
+// This function is extremely important when Packetizing Instructions
 // First, we need to check if we should insert Bubbles (NoOps Instructions)
 // Multiple Noops might be necessary, in case we have high-latency instructions
 // and No other instruction can be issued in that cycle.
@@ -190,6 +488,7 @@ MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
     
     if (Latency > 1) {
         DEBUG(errs() <<  "Latency is: " << Latency <<  "\n");
+        assert(!(isStoreSPM(MI) || isLoadSPM(MI)) && "Cannot handle latencies greater than 1 for SPM Instructions just yet.");
         AddToHazardTable = true;
     }
     
@@ -203,7 +502,7 @@ MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
     bool Dependence;
     do {
         Dependence = false;
-            
+
         SUnit* SUI = MIToSUnit[MI];
         for (std::map<SUnit *, unsigned>::iterator Inst = DataHazards.begin(),
              E = DataHazards.end(); Inst != E; ++Inst) {
@@ -240,6 +539,12 @@ MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
             else
                 continue;
         }
+
+
+    // Handles SPM Instructions
+    if (isStoreSPM(MI) || isLoadSPM(MI)) {
+        analyzeSPMInstruction(MI);
+    }
 
     // Allocate Resource
     VLIWPacketizerList::addToPacket(MI);

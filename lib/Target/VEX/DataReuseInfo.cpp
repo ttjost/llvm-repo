@@ -92,3 +92,18 @@ void DataReuseInfo::AddMemInstRef(StringRef Name, MachineBasicBlock::iterator ne
     }
 }
 
+SPMVariable DataReuseInfo::getVariable(MachineBasicBlock::iterator MI) {
+
+    for(std::vector<SPMVariable>::iterator i = Variables.begin(),
+        e = Variables.end(); i != e; ++i) {
+
+        std::vector<MachineBasicBlock::iterator> MemInsts = i->getMemoryInstructions();
+        for (MachineBasicBlock::iterator Inst : MemInsts) {
+
+            if (Inst == MI) {
+                return (*i);
+            }
+        }
+    }
+}
+

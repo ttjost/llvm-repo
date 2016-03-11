@@ -58,9 +58,14 @@ class SPMVariable {
     // Default: false
     bool MultipleStorage;
 
+    std::vector<unsigned> Memories;
+    int AllocationPriority;
+
     // Define whether these variable(vector) will dynamically change stored data
     // FIR application is a good example on how this can be achieved.
     bool DynamicAllocation;
+
+    bool FirstStore;
 
     unsigned OffsetsPerBB;
     unsigned StorageUnits;
@@ -89,19 +94,25 @@ class SPMVariable {
     };
 
 public:
-    SPMVariable() : Name(""), Flags(0), MultipleStorage(false) {
+    SPMVariable() : Name(""), Flags(0), MultipleStorage(false), FirstStore(false), AllocationPriority(-1)  {
         PropagationRegisters.resize(0);
     }
-    SPMVariable(StringRef Name) : Name(Name), Flags(0), MultipleStorage(false) {
+    SPMVariable(StringRef Name) : Name(Name),
+                                  Flags(0),
+                                  MultipleStorage(false),
+                                  FirstStore(false),
+                                    AllocationPriority(-1) {
         PropagationRegisters.resize(0);
     }
 //    SPMVariable(StringRef Name, unsigned Flags): Name(Name), Flags(Flags), MultipleStorage(false) {
 //        PropagationRegisters.resize(0);
 //    }
-    SPMVariable(StringRef Name, unsigned Register) : Name(Name),
+    SPMVariable(StringRef Name, unsigned Register, bool FirstStore) : Name(Name),
                                                     Flags(0),
                                                     OffsetsPerBB(0),
-                                                    MultipleStorage(false) {
+                                                    MultipleStorage(false),
+                                                    FirstStore(FirstStore),
+                                                    AllocationPriority(-1) {
         PropagationRegisters.push_back(Register);
         RegistersAndOffsets.resize(0);
         MemoryInstructions.resize(0);
@@ -121,6 +132,23 @@ public:
 
     bool isMultipleStorage() const { return MultipleStorage; }
     bool isDinamicallyAllocated() const  { return DynamicAllocation; }
+
+    unsigned getMemoryUnit() {
+        assert(AllocationPriority > 0 && "Allocation was not performed.");
+        if (MultipleStorage)
+            return Memories[(AllocationPriority++)%Memories.size()];
+        else
+            Memories[0];
+    }
+
+    void setMemoryUnits(std::vector<unsigned> Units) {
+        if (AllocationPriority > 0)
+            return;
+        AllocationPriority++;
+        Memories = Units;
+    }
+
+    bool isNotAllocated() const { return AllocationPriority < 0; }
     
     unsigned getStorageUnits() const { return StorageUnits; }
     unsigned getNumUnits() const { return NumUnits; }
@@ -128,6 +156,9 @@ public:
     unsigned getSize() const { return Size; }
     unsigned getNumElements() const { return NumElements; }
     unsigned getMaxOffsetPerBB() const { return OffsetsPerBB; }
+
+    unsigned getMaximumSPMs(unsigned IssueWidth) const { return OffsetsPerBB%IssueWidth; }
+
 
     void AddPropagationRegister(unsigned Register);
     void AddMemoryInstruction(MachineBasicBlock::iterator MI);

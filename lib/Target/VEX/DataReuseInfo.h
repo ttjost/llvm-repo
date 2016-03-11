@@ -53,6 +53,8 @@ public:
     bool UpdateVariable(SPMVariable& Var);
     bool FindVariable(StringRef Name);
 
+    SPMVariable getVariable(MachineBasicBlock::iterator MI);
+
     void AddOffset(StringRef Name, unsigned Register, unsigned Offset);
     void AddMemInstRef(StringRef Name, MachineBasicBlock::iterator newInst);
 

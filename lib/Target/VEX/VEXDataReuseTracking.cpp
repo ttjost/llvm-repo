@@ -382,7 +382,8 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
             if (IsSPMVariable(Inst, VariableName, DefinedRegister)) {
                 // A SPM Variable was found
                 // Initiate a new node
-                SPMVariable Variable(VariableName, DefinedRegister);
+                // and sets Variable as first store when necessary
+                SPMVariable Variable(VariableName, DefinedRegister, Inst->mayStore());
                 DataInfo->AddVariable(Variable);
                 DEBUG(dbgs() << "New Variable found in Register " << DefinedRegister << "\n");
                 SPMFound = true;
