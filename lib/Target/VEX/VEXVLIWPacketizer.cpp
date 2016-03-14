@@ -27,7 +27,7 @@
 #include "llvm/Support/TargetRegistry.h"
 #include "DataReuseInfo.h"
 
-#define DEBUG_TYPE "vex-vliw-scheduling"
+#define DEBUG_TYPE "vex-vliw-packetizer"
 
 using namespace llvm;
 
@@ -87,7 +87,7 @@ class VEXPacketizerList : public VLIWPacketizerList {
 
     // Circular buffer for the allocation of SPMs,
     // such that we can store data more uniformly.
-    unsigned AllocationIndex;
+//    unsigned AllocationIndex;
 
 //    std::map<unsigned, unsigned>
 
@@ -95,25 +95,31 @@ class VEXPacketizerList : public VLIWPacketizerList {
     DataReuseInfo* DataInfo;
     std::vector<SPMVariable> Variables;
 
-    std::vector<unsigned> getAllocationPriorityForSPMs(unsigned NumSPMs);
     bool isStoreSPM(MachineBasicBlock::iterator Inst);
     bool isLoadSPM(MachineBasicBlock::iterator Inst);
     bool isLoadSPM(unsigned Opcode);
     void analyzeSPMInstruction(MachineInstr *MI);
+    void analyzeVariableConditions(MachineInstr *MI);
+
     unsigned FindVariable(MachineBasicBlock::iterator MI);
+    unsigned FindVariableThroughDefinition(MachineBasicBlock::iterator MI);
     unsigned getSPMOpcode(unsigned Opcode, unsigned Lane);
+    void ReplaceSPMInstruction(MachineInstr *MI);
 
 public:
     VEXPacketizerList(TargetMachine &TM,
                       MachineFunction &MF,
                       MachineLoopInfo &MLI)
-                      : TM(TM), AllocationIndex(0),
+                      : TM(TM),
                         VLIWPacketizerList(MF, MLI, true) {
         VEXII = (const VEXInstrInfo *) TII;
         Subtarget = &MF.getSubtarget<VEXSubtarget>();
         II = static_cast<const VEXSubtarget *>(Subtarget)->getInstrItineraryData();
         DataHazards.clear();
+
+        // Get Data Reuse Information used for Scratchpads
         DataInfo = static_cast<VEXTargetMachine &>(TM).getDataReuseInfo();
+        DataInfo->setNumSPMs(II->SchedModel.IssueWidth);
         Variables = DataInfo->getVariables();
 
         DEBUG(dbgs() << " Initiating VLIWPacketizer Pass");
@@ -219,6 +225,7 @@ unsigned VEXPacketizerList::getSPMOpcode(unsigned Opcode, unsigned Lane) {
                 else if (Opcode == VEX::LDBSpm)
                     NewOpcode = VEX::LDB1;
                 else
+                    //    bool isDefinitionSPMVariable(MachineBasicBlock::iterator Inst);
                     NewOpcode = VEX::LDBU1;
             } else {
                 if (Opcode == VEX::STWSpm)
@@ -362,30 +369,6 @@ unsigned VEXPacketizerList::getSPMOpcode(unsigned Opcode, unsigned Lane) {
     return NewOpcode;
 }
 
-// Returns the ordering for the SPMs allocation
-// Ordering allocation is: Lane1, Lane2, Lane3, Lane4 ... Lane0
-// Lane 0 is the last one because regular memory instructions
-// use this lane for execution.
-std::vector<unsigned> VEXPacketizerList::getAllocationPriorityForSPMs(unsigned NumSPMs) {
-
-    unsigned IssueWidth = II->SchedModel.IssueWidth;
-    if (IssueWidth == 2) {
-        assert(NumSPMs < 2 && "Number of SPMs should be less or equal to 2.");
-    } else if (IssueWidth == 4) {
-        assert(NumSPMs < 4 && "Number of SPMs should be less or equal to 4.");
-    } else if (IssueWidth == 8) {
-        assert(NumSPMs < 8 && "Number of SPMs should be less or equal to 8.");
-    } else
-        llvm_unreachable("There is no support for a different Issue Width yet. Choose between 2, 4 and 8.");
-
-    // Here we due a Circular buffer, that will make Lane0 the last lane.
-    std::vector<unsigned> SPMs(0);
-    for (unsigned i = 0; i < NumSPMs; ++i) {
-        SPMs.push_back((++AllocationIndex)%IssueWidth);
-    }
-    return SPMs;
-}
-
 bool VEXPacketizerList::isLongImmediate(int64_t Immediate) {
     
     const int MAXIMUM_SHORTIMM = (1 << 8) - 1;
@@ -433,15 +416,39 @@ void VEXPacketizerList::reserveResourcesForLongImmediate (MachineBasicBlock::ite
 
 unsigned VEXPacketizerList::FindVariable(MachineBasicBlock::iterator MI) {
 
-    for (SPMVariable Var : Variables) {
-        std::vector<MachineBasicBlock::iterator> Insts = Var.getMemoryInstructions();
+    for (unsigned i = 0, e = Variables.size(); i != e; ++i) {
+        std::vector<MachineBasicBlock::iterator> Insts = Variables[i].getMemoryInstructions();
 
-        for (unsigned i = 0, e = Insts.size(); i != e; ++i) {
-            if (Insts[i] == MI) {
+        for (unsigned j = 0, endj = Insts.size(); j != endj; ++j) {
+            if (Insts[j] == MI) {
                 return i;
             }
         }
     }
+    return -1;
+}
+
+unsigned VEXPacketizerList::FindVariableThroughDefinition(MachineBasicBlock::iterator MI) {
+
+    for (unsigned i = 0, e = Variables.size(); i != e; ++i) {
+        Variables[i].isDefinitionInstruction(MI);
+                return i;
+    }
+    return -1;
+}
+
+
+void VEXPacketizerList::analyzeVariableConditions(MachineInstr *MI) {
+
+    unsigned VariablePosition;
+    if ((VariablePosition = FindVariableThroughDefinition(MI)) < 0)
+        llvm_unreachable("Error finding variable.");
+
+    SPMVariable &Var = Variables[VariablePosition];
+
+
+
+
 }
 
 void VEXPacketizerList::analyzeSPMInstruction(MachineInstr *MI) {
@@ -450,21 +457,40 @@ void VEXPacketizerList::analyzeSPMInstruction(MachineInstr *MI) {
     if ((VariablePosition = FindVariable(MI)) < 0)
         llvm_unreachable("Error finding variable.");
 
-    SPMVariable Var = Variables[VariablePosition];
+    SPMVariable &Var = Variables[VariablePosition];
 
     DEBUG(dbgs() << "Variable Name is: " <<  Var.getName() << "\n");
 
     unsigned IssueWidth = II->SchedModel.IssueWidth;
 
+    DEBUG(dbgs() << " We may use: ");
+
     std::vector<unsigned> SPMs;
     if (Var.isNotAllocated()) {
-        SPMs = getAllocationPriorityForSPMs(Var.getMaximumSPMs(IssueWidth));
+//        SPMs = getAllocationPriorityForSPMs(Var.getMaximumSPMs(IssueWidth));
         Var.setMemoryUnits(SPMs);
-    }
+        for (unsigned i : SPMs)
+          DEBUG(dbgs() << "SPM " << i << "\n");
+    } /*else {
+        unsigned MemUnit = Var.getMemoryUnit();
+        DEBUG(dbgs() << MemUnit << "\n");
+        DEBUG(dbgs() << "SPM was already allocated " << Var.getMemoryUnit() << "\n");
+    }*/
 
-    DEBUG(dbgs() << " We may use: ");
-    for (unsigned i : SPMs)
-      DEBUG(dbgs() << "SPM " << i << "\n");
+    unsigned MemUnit = Var.getMemoryUnit();
+    DEBUG(dbgs() << MemUnit << "\n");
+
+}
+
+void VEXPacketizerList::ReplaceSPMInstruction(MachineInstr *MI) {
+
+    unsigned VariablePosition;
+    if ((VariablePosition = FindVariable(MI)) < 0)
+        llvm_unreachable("Error finding variable.");
+
+    SPMVariable &Var = Variables[VariablePosition];
+
+
 
 }
 
@@ -540,6 +566,11 @@ MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
                 continue;
         }
 
+
+    // TODO: Will Variable Definition always be like this?
+    // Probably not when we have function calls.
+    if (MI->getOpcode() != VEX::MOVi)
+        analyzeVariableConditions(MI);
 
     // Handles SPM Instructions
     if (isStoreSPM(MI) || isLoadSPM(MI)) {

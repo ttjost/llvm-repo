@@ -152,6 +152,8 @@ class VEXDataReuseTracking: public MachineFunctionPass {
    void  EvaluateVariableOffset(MachineBasicBlock::iterator Inst,
                                 StringRef VariableName);
 
+   bool getInstructionDataType(MachineBasicBlock::iterator Inst);
+
 public:
     static char ID;
     VEXDataReuseTracking(TargetMachine &TM)
@@ -182,6 +184,25 @@ void VEXDataReuseTracking::getAnalysisUsage(AnalysisUsage &AU) const {
     AU.addRequired<MachineLoopInfo>();
     AU.addPreserved<MachineLoopInfo>();
     MachineFunctionPass::getAnalysisUsage(AU);
+}
+
+bool VEXDataReuseTracking::getInstructionDataType(MachineBasicBlock::iterator Inst) {
+
+    assert(Inst->mayLoadOrStore() && "Instruction should be a load or store");
+
+    if (Inst->getOpcode() == VEX::LDW ||
+        Inst->getOpcode() == VEX::STW)
+        return SPMVariable::MDFull;
+    else if (Inst->getOpcode() == VEX::LDB ||
+             Inst->getOpcode() == VEX::LDBU ||
+             Inst->getOpcode() == VEX::STB)
+        return SPMVariable::MDByte;
+    else if (Inst->getOpcode() == VEX::LDH ||
+             Inst->getOpcode() == VEX::LDHU ||
+             Inst->getOpcode() == VEX::STW)
+        return SPMVariable::MDHalf;
+
+    llvm_unreachable("Wrong instruction for Load or Store");
 }
 
 // This method checks if there is a Scratchpad Variable within the instruction.
@@ -383,7 +404,8 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                 // A SPM Variable was found
                 // Initiate a new node
                 // and sets Variable as first store when necessary
-                SPMVariable Variable(VariableName, DefinedRegister, Inst->mayStore());
+                unsigned flag = getInstructionDataType(Inst);
+                SPMVariable Variable(VariableName, DefinedRegister, Inst->mayStore(), flag, Inst);
                 DataInfo->AddVariable(Variable);
                 DEBUG(dbgs() << "New Variable found in Register " << DefinedRegister << "\n");
                 SPMFound = true;

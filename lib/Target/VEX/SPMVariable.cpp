@@ -47,6 +47,18 @@ void SPMVariable::AddMemoryInstruction(MachineBasicBlock::iterator MI) {
     MemoryInstructions.push_back(MI);
 }
 
+void SPMVariable::AddDefinitionInstruction(MachineBasicBlock::iterator MI) {
+    DefinitionInstructions.push_back(MI);
+}
+
+bool SPMVariable::isDefinitionInstruction(MachineBasicBlock::iterator Inst) {
+
+    for (auto def : DefinitionInstructions)
+        if (def == Inst)
+            return true;
+    return false;
+}
+
 void SPMVariable::AddOffset(unsigned Register, unsigned Offset) {
 
     int RegisterPosition = -1;

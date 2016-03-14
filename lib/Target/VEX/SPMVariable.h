@@ -54,6 +54,8 @@ class SPMVariable {
 
     std::vector<MachineBasicBlock::iterator> MemoryInstructions;
 
+    std::vector<MachineBasicBlock::iterator> DefinitionInstructions;
+
     // Define whether this variable will be stored in multiple SPMs
     // Default: false
     bool MultipleStorage;
@@ -73,6 +75,8 @@ class SPMVariable {
     unsigned InitialAddress;
     unsigned Size;
     unsigned NumElements;
+
+    unsigned DataType;
 
     /// Flags values. These may be or'd together.
     enum MemOperandFlags {
@@ -94,6 +98,13 @@ class SPMVariable {
     };
 
 public:
+    // Variable Type
+    enum MemDataType {
+        MDByte = 1,
+        MDHalf = 2,
+        MDFull = 4
+    };
+
     SPMVariable() : Name(""), Flags(0), MultipleStorage(false), FirstStore(false), AllocationPriority(-1)  {
         PropagationRegisters.resize(0);
     }
@@ -104,18 +115,24 @@ public:
                                     AllocationPriority(-1) {
         PropagationRegisters.resize(0);
     }
+
 //    SPMVariable(StringRef Name, unsigned Flags): Name(Name), Flags(Flags), MultipleStorage(false) {
 //        PropagationRegisters.resize(0);
 //    }
-    SPMVariable(StringRef Name, unsigned Register, bool FirstStore) : Name(Name),
+    SPMVariable(StringRef Name, unsigned Register, bool FirstStore, unsigned Flag,
+                MachineBasicBlock::iterator Inst) : Name(Name),
                                                     Flags(0),
                                                     OffsetsPerBB(0),
                                                     MultipleStorage(false),
                                                     FirstStore(FirstStore),
-                                                    AllocationPriority(-1) {
+                                                    AllocationPriority(-1),
+                                                    DataType(Flag),
+                                                    Size (1000) {
         PropagationRegisters.push_back(Register);
         RegistersAndOffsets.resize(0);
         MemoryInstructions.resize(0);
+        DefinitionInstructions.resize(0);
+        DefinitionInstructions.push_back(Inst);
     }
 
     StringRef getName() const { return Name; }
@@ -126,23 +143,39 @@ public:
     bool isNonTemporal() const { return Flags & MONonTemporal; }
     bool isInvariant() const { return Flags & MOInvariant; }
 
+    MachineBasicBlock::iterator getFirstDefinition() const { return DefinitionInstructions[0]; }
+
+    bool isDefinitionInstruction(MachineBasicBlock::iterator Inst);
+
+    bool isChar() const { return DataType & MDByte; }
+    bool isShort() const { return DataType & MDHalf; }
+    bool isInt() const { return DataType & MDFull; }
+
+    void setDataType(unsigned flag) { DataType = flag; }
+
     void setFlags(unsigned flags) { Flags = flags; }
     void setLoad() { Flags |= MOLoad; }
     void setStore() { Flags |= MOStore; }
+
+    void setSize(unsigned size) { Size = size; }
 
     bool isMultipleStorage() const { return MultipleStorage; }
     bool isDinamicallyAllocated() const  { return DynamicAllocation; }
 
     unsigned getMemoryUnit() {
-        assert(AllocationPriority > 0 && "Allocation was not performed.");
+        assert(AllocationPriority >= 0 && "Allocation was not performed.");
         if (MultipleStorage)
             return Memories[(AllocationPriority++)%Memories.size()];
         else
-            Memories[0];
+            return Memories[0];
+    }
+
+    unsigned getAdjustedOffset(int Offset) {
+        return Offset%(Memories.size()*DataType);
     }
 
     void setMemoryUnits(std::vector<unsigned> Units) {
-        if (AllocationPriority > 0)
+        if (AllocationPriority >= 0)
             return;
         AllocationPriority++;
         Memories = Units;
@@ -159,9 +192,9 @@ public:
 
     unsigned getMaximumSPMs(unsigned IssueWidth) const { return OffsetsPerBB%IssueWidth; }
 
-
     void AddPropagationRegister(unsigned Register);
     void AddMemoryInstruction(MachineBasicBlock::iterator MI);
+    void AddDefinitionInstruction(MachineBasicBlock::iterator MI);
 
     std::vector<unsigned> getPropagationRegisters() const { return PropagationRegisters; }
     std::vector<MachineBasicBlock::iterator> getMemoryInstructions() const { return MemoryInstructions; }

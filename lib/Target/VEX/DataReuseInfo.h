@@ -40,12 +40,28 @@ class DataReuseInfo {
 
     std::vector<SPMVariable> Variables;
     unsigned NumSPMs;
+    std::vector<unsigned> MemoriesOffsets;
+    unsigned IssueWidth;
 
 public:
-    DataReuseInfo() { Variables.resize(0); }
+    DataReuseInfo() {
+        Variables.resize(0);
+        MemoriesOffsets.resize(0);
+    }
+
+    void setNumSPMs (unsigned SPMs) {
+        MemoriesOffsets.resize(SPMs);
+        NumSPMs = SPMs;
+    }
+
+    void setIssueWidth (unsigned issuewidth) {
+        IssueWidth = issuewidth;
+    }
 
     unsigned getNumSPMs() { return NumSPMs; }
     std::vector<SPMVariable> getVariables() const { return Variables; }
+
+    unsigned getAvailableOffset(unsigned Memory, int Size);
 
     bool AddVariable(SPMVariable Var);
     bool RemoveVariable(SPMVariable Var);
@@ -53,7 +69,11 @@ public:
     bool UpdateVariable(SPMVariable& Var);
     bool FindVariable(StringRef Name);
 
+    unsigned getMemOffsetForVariable(SPMVariable Var);
+
     SPMVariable getVariable(MachineBasicBlock::iterator MI);
+
+    std::vector<unsigned> getAllocationPriorityForSPMs(SPMVariable Var);
 
     void AddOffset(StringRef Name, unsigned Register, unsigned Offset);
     void AddMemInstRef(StringRef Name, MachineBasicBlock::iterator newInst);
