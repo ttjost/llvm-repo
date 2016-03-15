@@ -95,9 +95,9 @@ bool VEXDataReuseTrackingPostRegAlloc::runOnMachineFunction(MachineFunction &MF)
     DEBUG(dbgs() << "Size: " << DataInfo->getVariables().size() << "\n");
     for (DataReuseInfo::iterator VarIdx = DataInfo->begin(),
          VarEnd = DataInfo->end(); VarIdx != VarEnd; ++VarIdx) {
-        std::vector<MachineBasicBlock::iterator> MIs = VarIdx->getMemoryInstructions();
-        for(MachineBasicBlock::iterator MI : MIs)
-            MI->dump();
+//        std::vector<MachineBasicBlock::iterator> MIs = VarIdx->getMemoryInstructions();
+//        for(MachineBasicBlock::iterator MI : MIs)
+//            MI->dump();
     }
 
     DEBUG(dbgs() << " Finalizing VEXDataReuseTrackingPostRegAlloc Pass");
@@ -152,7 +152,7 @@ class VEXDataReuseTracking: public MachineFunctionPass {
    void  EvaluateVariableOffset(MachineBasicBlock::iterator Inst,
                                 StringRef VariableName);
 
-   bool getInstructionDataType(MachineBasicBlock::iterator Inst);
+   unsigned getInstructionDataType(MachineBasicBlock::iterator Inst);
 
 public:
     static char ID;
@@ -186,7 +186,7 @@ void VEXDataReuseTracking::getAnalysisUsage(AnalysisUsage &AU) const {
     MachineFunctionPass::getAnalysisUsage(AU);
 }
 
-bool VEXDataReuseTracking::getInstructionDataType(MachineBasicBlock::iterator Inst) {
+unsigned VEXDataReuseTracking::getInstructionDataType(MachineBasicBlock::iterator Inst) {
 
     assert(Inst->mayLoadOrStore() && "Instruction should be a load or store");
 
@@ -311,7 +311,7 @@ void VEXDataReuseTracking::
                                                        DstReg.getReg()).addOperand(FrameIndex)
                                                                        .addOperand(MemOperand)
                                                                        .addMemOperand(*Inst->memoperands_begin());
-        newInstr->dump();
+//        newInstr->dump();
 
         Inst->eraseFromParent();
         Inst = newInstr;
@@ -337,7 +337,7 @@ void VEXDataReuseTracking::
                                                  .addOperand(FrameIndex)
                                                  .addOperand(MemOperand)
                                                  .addMemOperand(*Inst->memoperands_begin());
-            newInstr->dump();
+//            newInstr->dump();
             Inst->eraseFromParent();
             Inst = newInstr;
         } else {
@@ -396,7 +396,7 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
             if (Inst->isBranch() || Inst->isCall())
                 continue;
             DEBUG(dbgs() << "\n");
-            Inst->dump();
+//            Inst->dump();
 
             bool SPMFound = false;
             StringRef VariableName;
@@ -404,8 +404,7 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                 // A SPM Variable was found
                 // Initiate a new node
                 // and sets Variable as first store when necessary
-                unsigned flag = getInstructionDataType(Inst);
-                SPMVariable Variable(VariableName, DefinedRegister, Inst->mayStore(), flag, Inst);
+                SPMVariable Variable(VariableName, DefinedRegister, Inst->mayStore(), Inst);
                 DataInfo->AddVariable(Variable);
                 DEBUG(dbgs() << "New Variable found in Register " << DefinedRegister << "\n");
                 SPMFound = true;
@@ -419,7 +418,9 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                 // Replaces memory Instruction to SPM Instruction
                 // when necessary
                 if (Inst->mayLoadOrStore()) {
+                    unsigned flag = getInstructionDataType(Inst);
                     EvaluateVariableOffset(Inst, VariableName);
+                    DataInfo->UpdateDataType(VariableName, getInstructionDataType(Inst));
                     ReplaceMemoryInstruction(VariableName, MBB, Inst);
                 }
             }

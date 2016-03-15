@@ -68,12 +68,15 @@ public:
     bool RemoveVariable(StringRef Name);
     bool UpdateVariable(SPMVariable& Var);
     bool FindVariable(StringRef Name);
+    void UpdateDataType(StringRef Name, unsigned DataType);
 
-    unsigned getMemOffsetForVariable(SPMVariable Var);
+    unsigned getMemOffsetForVariable(SPMVariable &Var);
+
+    unsigned getOffsetAndUpdateMemories(SPMVariable &Var, unsigned NumberOfSPMs, unsigned OffsetSize);
 
     SPMVariable getVariable(MachineBasicBlock::iterator MI);
 
-    std::vector<unsigned> getAllocationPriorityForSPMs(SPMVariable Var);
+    unsigned AllocateSPMs(SPMVariable &Var);
 
     void AddOffset(StringRef Name, unsigned Register, unsigned Offset);
     void AddMemInstRef(StringRef Name, MachineBasicBlock::iterator newInst);

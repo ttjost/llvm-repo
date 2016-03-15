@@ -119,14 +119,14 @@ public:
 //    SPMVariable(StringRef Name, unsigned Flags): Name(Name), Flags(Flags), MultipleStorage(false) {
 //        PropagationRegisters.resize(0);
 //    }
-    SPMVariable(StringRef Name, unsigned Register, bool FirstStore, unsigned Flag,
+    SPMVariable(StringRef Name, unsigned Register, bool FirstStore,
                 MachineBasicBlock::iterator Inst) : Name(Name),
                                                     Flags(0),
                                                     OffsetsPerBB(0),
                                                     MultipleStorage(false),
                                                     FirstStore(FirstStore),
                                                     AllocationPriority(-1),
-                                                    DataType(Flag),
+                                                    DataType(0),
                                                     Size (1000) {
         PropagationRegisters.push_back(Register);
         RegistersAndOffsets.resize(0);

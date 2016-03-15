@@ -53,9 +53,15 @@ void SPMVariable::AddDefinitionInstruction(MachineBasicBlock::iterator MI) {
 
 bool SPMVariable::isDefinitionInstruction(MachineBasicBlock::iterator Inst) {
 
-    for (auto def : DefinitionInstructions)
-        if (def == Inst)
+    dbgs() << "isDefinitionInstruction\n\n";
+    for (auto def : DefinitionInstructions) {
+        def->dump();
+        Inst->dump();
+        if (def == Inst) {
+            dbgs() << "Same\n";
             return true;
+        }
+    }
     return false;
 }
 
@@ -84,6 +90,6 @@ void SPMVariable::UpdateOffsetInfo() {
         if (RegistersAndOffsets[i].Offsets.size() > OffsetsPerBB)
             OffsetsPerBB = RegistersAndOffsets[i].Offsets.size();
     }
-    dbgs() << "Offsets size: " << OffsetsPerBB << "\n";
+//    dbgs() << "Offsets size: " << OffsetsPerBB << "\n";
     RegistersAndOffsets.resize(0);
 }

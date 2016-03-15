@@ -41,9 +41,9 @@ namespace llvm {
 
 namespace {
 class VEXPacketizer : public MachineFunctionPass {
-    
+
     bool EnableVLIWScheduling;
-    
+
     bool canResourceResourcesForLongImmediate(MachineInstr *MI);
 
     TargetMachine &TM;
@@ -67,19 +67,19 @@ public:
 
         MachineFunctionPass::getAnalysisUsage(AU);
     }
-    
+
     bool runOnMachineFunction(MachineFunction &MF) override;
-    
+
 };
 
 
 class VEXPacketizerList : public VLIWPacketizerList {
 
     MachineInstr *PseudoMI;
-    
+
     std::map<SUnit *, unsigned> DataHazards;
-    
-    
+
+
     const VEXInstrInfo *VEXII;
     const VEXSubtarget* Subtarget;
     const InstrItineraryData *II;
@@ -102,7 +102,7 @@ class VEXPacketizerList : public VLIWPacketizerList {
     void analyzeVariableConditions(MachineInstr *MI);
 
     unsigned FindVariable(MachineBasicBlock::iterator MI);
-    unsigned FindVariableThroughDefinition(MachineBasicBlock::iterator MI);
+    int FindVariableThroughDefinition(MachineBasicBlock::iterator MI);
     unsigned getSPMOpcode(unsigned Opcode, unsigned Lane);
     void ReplaceSPMInstruction(MachineInstr *MI);
 
@@ -120,19 +120,20 @@ public:
         // Get Data Reuse Information used for Scratchpads
         DataInfo = static_cast<VEXTargetMachine &>(TM).getDataReuseInfo();
         DataInfo->setNumSPMs(II->SchedModel.IssueWidth);
+        DataInfo->setIssueWidth(II->SchedModel.IssueWidth);
         Variables = DataInfo->getVariables();
 
-        DEBUG(dbgs() << " Initiating VLIWPacketizer Pass");
+//        DEBUG(dbgs() << " Initiating VLIWPacketizer Pass");
 
-        DEBUG(dbgs() << "Size: " << DataInfo->getVariables().size() << "\n");
-        for (DataReuseInfo::iterator VarIdx = DataInfo->begin(),
-             VarEnd = DataInfo->end(); VarIdx != VarEnd; ++VarIdx) {
-            std::vector<MachineBasicBlock::iterator> MIs = VarIdx->getMemoryInstructions();
-            for(MachineBasicBlock::iterator MI : MIs)
-                MI->dump();
-        }
+//        DEBUG(dbgs() << "Size: " << DataInfo->getVariables().size() << "\n");
+//        for (DataReuseInfo::iterator VarIdx = DataInfo->begin(),
+//             VarEnd = DataInfo->end(); VarIdx != VarEnd; ++VarIdx) {
+//            std::vector<MachineBasicBlock::iterator> MIs = VarIdx->getMemoryInstructions();
+//            for(MachineBasicBlock::iterator MI : MIs)
+//                MI->dump();
+//        }
 
-        DEBUG(dbgs() << " Finalizing VLIWPacketizer Pass");
+//        DEBUG(dbgs() << " Finalizing VLIWPacketizer Pass");
     }
 
     bool isSoloInstruction(MachineInstr *MI) override;
@@ -140,7 +141,7 @@ public:
     bool isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ) override;
     void AdvanceCycle();
     MachineBasicBlock::iterator addToPacket(MachineInstr *MI) override;
-    
+
     bool canReserveResourcesForLongImmediate (MachineBasicBlock::iterator MI);
     void reserveResourcesForLongImmediate (MachineBasicBlock::iterator MI);
     bool isLongImmediate(int64_t Immediate);
@@ -370,10 +371,10 @@ unsigned VEXPacketizerList::getSPMOpcode(unsigned Opcode, unsigned Lane) {
 }
 
 bool VEXPacketizerList::isLongImmediate(int64_t Immediate) {
-    
+
     const int MAXIMUM_SHORTIMM = (1 << 8) - 1;
     const int MINIMUM_SHORTIMM = -(1 << 8);
-    
+
     if (Immediate >= MINIMUM_SHORTIMM &&
         Immediate <= MAXIMUM_SHORTIMM) {
         return false;
@@ -383,12 +384,12 @@ bool VEXPacketizerList::isLongImmediate(int64_t Immediate) {
 }
 
 bool VEXPacketizerList::canReserveResourcesForLongImmediate (MachineBasicBlock::iterator MI) {
-    
+
     MachineFunction *MF = MI->getParent()->getParent();
-    
+
     PseudoMI = MF->CreateMachineInstr(VEXII->get(VEX::EXTIMM),
                                           MI->getDebugLoc());
-        
+
     if (ResourceTracker->canReserveResources(PseudoMI)) {
         MI->getParent()->getParent()->DeleteMachineInstr(PseudoMI);
         return true;
@@ -401,10 +402,10 @@ bool VEXPacketizerList::canReserveResourcesForLongImmediate (MachineBasicBlock::
 void VEXPacketizerList::reserveResourcesForLongImmediate (MachineBasicBlock::iterator MI) {
 
     MachineFunction *MF = MI->getParent()->getParent();
-    
+
     PseudoMI = MF->CreateMachineInstr(VEXII->get(VEX::EXTIMM),
                                       MI->getDebugLoc());
-    
+
     if (ResourceTracker->canReserveResources(PseudoMI)) {
         DEBUG(errs() << "Reserving Issue to Long Immediate\n");
         ResourceTracker->reserveResources(PseudoMI);
@@ -428,10 +429,10 @@ unsigned VEXPacketizerList::FindVariable(MachineBasicBlock::iterator MI) {
     return -1;
 }
 
-unsigned VEXPacketizerList::FindVariableThroughDefinition(MachineBasicBlock::iterator MI) {
+int VEXPacketizerList::FindVariableThroughDefinition(MachineBasicBlock::iterator MI) {
 
     for (unsigned i = 0, e = Variables.size(); i != e; ++i) {
-        Variables[i].isDefinitionInstruction(MI);
+        if (Variables[i].isDefinitionInstruction(MI))
                 return i;
     }
     return -1;
@@ -440,15 +441,21 @@ unsigned VEXPacketizerList::FindVariableThroughDefinition(MachineBasicBlock::ite
 
 void VEXPacketizerList::analyzeVariableConditions(MachineInstr *MI) {
 
-    unsigned VariablePosition;
+    int VariablePosition;
     if ((VariablePosition = FindVariableThroughDefinition(MI)) < 0)
-        llvm_unreachable("Error finding variable.");
+        return;
 
     SPMVariable &Var = Variables[VariablePosition];
 
+    unsigned Offset = DataInfo->getMemOffsetForVariable(Var);
 
+    DEBUG(dbgs() << "Update offset for Scratchpad Variable\n");
 
-
+    MachineOperand Op = MI->getOperand(1);
+    assert(Op.isGlobal() && "Must be a Global Address");
+    Op.ChangeToImmediate(Offset);
+    MI->RemoveOperand(1);
+    MI->addOperand(Op);
 }
 
 void VEXPacketizerList::analyzeSPMInstruction(MachineInstr *MI) {
@@ -502,27 +509,27 @@ void VEXPacketizerList::ReplaceSPMInstruction(MachineInstr *MI) {
 // Also, here we check if we can packetize instructions with long immediates
 // in the Current Bundle. If not, end packet and start a new one.
 MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
-    
+
     // Get MBB from Instruction
     MachineFunction::iterator MBB = MI->getParent();
     MachineBasicBlock::iterator MII = MI;
-    
+
     unsigned idx = MI->getDesc().getSchedClass();
     unsigned Latency = II->getStageLatency(idx);
-    
+
     bool AddToHazardTable = false;
-    
+
     if (Latency > 1) {
         DEBUG(errs() <<  "Latency is: " << Latency <<  "\n");
         assert(!(isStoreSPM(MI) || isLoadSPM(MI)) && "Cannot handle latencies greater than 1 for SPM Instructions just yet.");
         AddToHazardTable = true;
     }
-    
+
     // We should Advance Cycle only when a new packet is created
     // Note that this only means we should update the Latencies
     if (CurrentPacketMIs.size() == 0)
         AdvanceCycle();
-    
+
     // We need to insert a NOP Here.
     // If we have multiple nops, we will insert them using this loop
     bool Dependence;
@@ -551,7 +558,7 @@ MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
             AdvanceCycle();
         }
     } while (Dependence);
-    
+
     bool longImmediate = false;
     // Early Exit for Branches and Calls
     if(!(MI->isBranch() || MI->isCall()))
@@ -559,7 +566,7 @@ MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
             MachineOperand Op = MI->getOperand(i);
             longImmediate = (Op.isImm() && isLongImmediate(Op.getImm()))
                                 || Op.isGlobal() || Op.isSymbol();
-        
+
             if (longImmediate)
                 break;
             else
@@ -569,13 +576,13 @@ MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
 
     // TODO: Will Variable Definition always be like this?
     // Probably not when we have function calls.
-    if (MI->getOpcode() != VEX::MOVi)
+    if (MI->getOpcode() == VEX::MOVi && MI->getOperand(1).isGlobal())
         analyzeVariableConditions(MI);
 
     // Handles SPM Instructions
-    if (isStoreSPM(MI) || isLoadSPM(MI)) {
-        analyzeSPMInstruction(MI);
-    }
+//    if (isStoreSPM(MI) || isLoadSPM(MI)) {
+//        analyzeSPMInstruction(MI);
+//    }
 
     // Allocate Resource
     VLIWPacketizerList::addToPacket(MI);
@@ -591,10 +598,10 @@ MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
     } else {
         CurrentPacketMIs.push_back(MI);
     }
-    
+
     if (AddToHazardTable)
         DataHazards[MIToSUnit[MI]] = Latency;
-    
+
     return MII;
 }
 
@@ -606,7 +613,7 @@ bool VEXPacketizerList::isSoloInstruction(MachineInstr *MI) {
 
     if (MI->getOpcode() == VEX::NOP)
         return true;
-    
+
     if (MI->isInlineAsm()) {
         return true;
     }
@@ -623,11 +630,11 @@ bool VEXPacketizerList::ignorePseudoInstruction(MachineInstr *MI,
                                                     MachineBasicBlock *MBB) {
     if (MI->isDebugValue())
         return true;
-    
+
     // We must print out inline assembly
     if (MI->isInlineAsm())
         return false;
-    
+
     // We check if MI has any functional units mapped to it.
     // If it doesn't, we ignore the instruction.
     const MCInstrDesc& TID = MI->getDesc();
@@ -639,18 +646,18 @@ bool VEXPacketizerList::ignorePseudoInstruction(MachineInstr *MI,
 }
 
 bool VEXPacketizerList::isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ) {
-    
+
     // Fast escape for Calls.
     // We can always Packetize Calls with the earlier instruction
 //    if (SUI->getInstr()->isCall())
 //        return true;
-    
+
     if (SUJ->isSucc(SUI)) {
         for (SDep dep : SUJ->Succs) {
             if (dep.getSUnit() == SUI) {
                 if (dep.getKind() == SDep::Data) {
                     return false;
-                    
+
                 } else if (dep.getKind() == SDep::Output) {
                     return false;
                 } else if (GenericBinary && dep.getKind() == SDep::Anti) {
@@ -660,10 +667,10 @@ bool VEXPacketizerList::isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ) {
                 continue;
         }
     }
-    
+
     if (SUJ->getInstr()->isCall() || SUJ->getInstr()->isBranch())
         return false;
-    
+
     for (std::map<SUnit *, unsigned>::iterator Inst = DataHazards.begin(),
          E = DataHazards.end(); Inst != E; ++Inst) {
         SUnit* InstWithLatency = Inst->first;
@@ -677,11 +684,11 @@ bool VEXPacketizerList::isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ) {
                     continue;
             }
     }
-    return true;    
+    return true;
 }
 
 void VEXPacketizerList::AdvanceCycle() {
-    
+
     for (std::map<SUnit *, unsigned>::iterator Inst = DataHazards.begin();
          Inst != DataHazards.end(); ) {
         std::map<SUnit *, unsigned>::iterator thisInst = Inst++;
@@ -696,7 +703,7 @@ void VEXPacketizerList::clearHazardTable() {
 }
 
 bool VEXPacketizer::runOnMachineFunction(MachineFunction &MF) {
-    
+
     if (EnableVLIWScheduling)
         DEBUG(dbgs() << "VLIW Scheduling Enabled.\n");
     else
@@ -704,7 +711,7 @@ bool VEXPacketizer::runOnMachineFunction(MachineFunction &MF) {
 
     const TargetInstrInfo *TII = MF.getSubtarget().getInstrInfo();
     MachineLoopInfo &MLI = getAnalysis<MachineLoopInfo>();
-    
+
     VEXPacketizerList Packetizer(TM, MF, MLI);
 
     //
@@ -751,9 +758,9 @@ bool VEXPacketizer::runOnMachineFunction(MachineFunction &MF) {
                 break;
             }
             //currentMBB = MBB;
-            
+
             I = MBB->begin();
-            
+
             // Skip empty scheduling regions.
             if (I == RegionEnd) {
                 RegionEnd = std::prev(RegionEnd);
@@ -765,7 +772,7 @@ bool VEXPacketizer::runOnMachineFunction(MachineFunction &MF) {
                 RegionEnd = std::prev(RegionEnd);
                 continue;
             }
-            
+
             Packetizer.clearHazardTable();
 
             Packetizer.PacketizeMIs(MBB, I, RegionEnd);
@@ -773,7 +780,7 @@ bool VEXPacketizer::runOnMachineFunction(MachineFunction &MF) {
         }
     }
     return true;
-    
+
 }
 
 
