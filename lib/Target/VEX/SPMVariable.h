@@ -61,13 +61,14 @@ class SPMVariable {
     bool MultipleStorage;
 
     std::vector<unsigned> Memories;
+    unsigned NumMemories;
     int AllocationPriority;
 
     // Define whether these variable(vector) will dynamically change stored data
     // FIR application is a good example on how this can be achieved.
     bool DynamicAllocation;
 
-    bool FirstStore;
+    bool LoadsRequired;
 
     unsigned OffsetsPerBB;
     unsigned StorageUnits;
@@ -101,17 +102,19 @@ public:
     // Variable Type
     enum MemDataType {
         MDByte = 1,
-        MDHalf = 2,
-        MDFull = 4
+        MDByteU = 2,
+        MDHalf = 3,
+        MDHalfU = 4,
+        MDFull = 5
     };
 
-    SPMVariable() : Name(""), Flags(0), MultipleStorage(false), FirstStore(false), AllocationPriority(-1)  {
+    SPMVariable() : Name(""), Flags(0), MultipleStorage(false), LoadsRequired(false), AllocationPriority(-1)  {
         PropagationRegisters.resize(0);
     }
     SPMVariable(StringRef Name) : Name(Name),
                                   Flags(0),
                                   MultipleStorage(false),
-                                  FirstStore(false),
+                                  LoadsRequired(false),
                                     AllocationPriority(-1) {
         PropagationRegisters.resize(0);
     }
@@ -119,12 +122,12 @@ public:
 //    SPMVariable(StringRef Name, unsigned Flags): Name(Name), Flags(Flags), MultipleStorage(false) {
 //        PropagationRegisters.resize(0);
 //    }
-    SPMVariable(StringRef Name, unsigned Register, bool FirstStore,
+    SPMVariable(StringRef Name, unsigned Register,
                 MachineBasicBlock::iterator Inst) : Name(Name),
                                                     Flags(0),
                                                     OffsetsPerBB(0),
                                                     MultipleStorage(false),
-                                                    FirstStore(FirstStore),
+                                                    LoadsRequired(false),
                                                     AllocationPriority(-1),
                                                     DataType(0),
                                                     Size (1000) {
@@ -143,8 +146,6 @@ public:
     bool isNonTemporal() const { return Flags & MONonTemporal; }
     bool isInvariant() const { return Flags & MOInvariant; }
 
-    MachineBasicBlock::iterator getFirstDefinition() const { return DefinitionInstructions[0]; }
-
     bool isDefinitionInstruction(MachineBasicBlock::iterator Inst);
 
     bool isChar() const { return DataType & MDByte; }
@@ -159,6 +160,8 @@ public:
 
     void setSize(unsigned size) { Size = size; }
 
+    void setInitialAddress(unsigned Addr) { InitialAddress = Addr; }
+
     bool isMultipleStorage() const { return MultipleStorage; }
     bool isDinamicallyAllocated() const  { return DynamicAllocation; }
 
@@ -170,8 +173,13 @@ public:
             return Memories[0];
     }
 
-    unsigned getAdjustedOffset(int Offset) {
-        return Offset%(Memories.size()*DataType);
+    void CalculateLaneAndOffset(unsigned &Lane, unsigned &Offset) {
+
+//        assert(Offset > 0 && "Only positive offset for now.");
+
+        Lane = (Offset%(NumMemories*DataType))/DataType;
+        Lane = (Lane + Memories[0])/NumMemories;
+        Offset = Offset/(NumMemories*DataType)*DataType;
     }
 
     void setMemoryUnits(std::vector<unsigned> Units) {
@@ -179,6 +187,7 @@ public:
             return;
         AllocationPriority++;
         Memories = Units;
+        NumMemories = Memories.size();
     }
 
     bool isNotAllocated() const { return AllocationPriority < 0; }
@@ -190,6 +199,8 @@ public:
     unsigned getNumElements() const { return NumElements; }
     unsigned getMaxOffsetPerBB() const { return OffsetsPerBB; }
 
+    bool areLoadsRequired() const { return LoadsRequired; }
+
     unsigned getMaximumSPMs(unsigned IssueWidth) const { return OffsetsPerBB%IssueWidth; }
 
     void AddPropagationRegister(unsigned Register);
@@ -199,11 +210,13 @@ public:
     std::vector<unsigned> getPropagationRegisters() const { return PropagationRegisters; }
     std::vector<MachineBasicBlock::iterator> getMemoryInstructions() const { return MemoryInstructions; }
 
+    MachineBasicBlock::iterator getFirstDefinition() const { return DefinitionInstructions[0]; }
+    std::vector<MachineBasicBlock::iterator> getDefinitionInstructions() const { return DefinitionInstructions; }
+
     void AddOffset(unsigned Register, unsigned Offset);
     void UpdateOffsetInfo();
     
     bool operator==(const SPMVariable& rhs);
-
 };
     
 }

@@ -44,6 +44,8 @@ void SPMVariable::AddPropagationRegister(unsigned Register) {
 }
 
 void SPMVariable::AddMemoryInstruction(MachineBasicBlock::iterator MI) {
+    if (MemoryInstructions.empty() && MI->mayLoad())
+        LoadsRequired = true;
     MemoryInstructions.push_back(MI);
 }
 

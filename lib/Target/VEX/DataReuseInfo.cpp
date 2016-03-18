@@ -133,7 +133,7 @@ unsigned DataReuseInfo::getOffsetAndUpdateMemories(SPMVariable &Var, unsigned Nu
     Mem.resize(0);
     // We should give priority to Memory 1, so we iterate from 1 to 0 (as in a circular buffer).
     unsigned FirstMem = 1;
-    unsigned MinimumOffset = 0;
+    unsigned MinimumOffset = MemoriesOffsets[1];
     for (unsigned i = 1, e = MemoriesOffsets.size(); i != 0 ; i=(i+1)%e) {
         if (MemoriesOffsets[i] < MinimumOffset)
             FirstMem = i;
@@ -145,7 +145,11 @@ unsigned DataReuseInfo::getOffsetAndUpdateMemories(SPMVariable &Var, unsigned Nu
         Temp%=e;
         Mem.push_back(Temp++);
     }
+    unsigned InitialAddress = MemoriesOffsets[FirstMem] - OffsetSize;
+
+    Var.setInitialAddress(InitialAddress);
     Var.setMemoryUnits(Mem);
+
     return MemoriesOffsets[FirstMem] - OffsetSize;
 }
 
@@ -171,15 +175,13 @@ unsigned DataReuseInfo::AllocateSPMs(SPMVariable &Var) {
     return getOffsetAndUpdateMemories(Var, NumberOfSPMs, OffsetsPerSPMs);
 }
 
-unsigned DataReuseInfo::getMemOffsetForVariable(SPMVariable& Var) {
+unsigned DataReuseInfo::getVarOffsetInSPM(SPMVariable& Var) {
 
     if (Var.isNotAllocated()) {
         return AllocateSPMs(Var);
     } else {
-        return 0;
-
+        return Var.getInitialAddress();
     }
-//    return Offset;
 }
 
 // This function gets the next avaiable offset to be used by the new SPM Variable.

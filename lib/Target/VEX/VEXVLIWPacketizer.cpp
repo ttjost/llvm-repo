@@ -98,13 +98,14 @@ class VEXPacketizerList : public VLIWPacketizerList {
     bool isStoreSPM(MachineBasicBlock::iterator Inst);
     bool isLoadSPM(MachineBasicBlock::iterator Inst);
     bool isLoadSPM(unsigned Opcode);
-    void analyzeSPMInstruction(MachineInstr *MI);
-    void analyzeVariableConditions(MachineInstr *MI);
+//    void analyzeSPMInstruction(MachineInstr *MI);
+//    void analyzeVariableConditions(MachineInstr *MI);
 
-    unsigned FindVariable(MachineBasicBlock::iterator MI);
-    int FindVariableThroughDefinition(MachineBasicBlock::iterator MI);
+//    unsigned FindVariable(MachineBasicBlock::iterator MI);
+//    int FindVariableThroughDefinition(MachineBasicBlock::iterator MI);
+
     unsigned getSPMOpcode(unsigned Opcode, unsigned Lane);
-    void ReplaceSPMInstruction(MachineInstr *MI);
+//    void ReplaceSPMInstruction(MachineInstr *MI);
 
 public:
     VEXPacketizerList(TargetMachine &TM,
@@ -188,188 +189,6 @@ bool VEXPacketizerList::isLoadSPM(unsigned Opcode) {
         return false;
 }
 
-// Replaces Not-laned Opcode with a reference to the proper lane scheduled to.
-unsigned VEXPacketizerList::getSPMOpcode(unsigned Opcode, unsigned Lane) {
-
-    unsigned NewOpcode;
-    bool isLoad = isLoadSPM(Opcode);
-    switch(Lane) {
-        case 0:
-            if (isLoad) {
-                if (Opcode == VEX::LDWSpm)
-                    NewOpcode = VEX::LDW0;
-                else if (Opcode == VEX::LDHSpm)
-                    NewOpcode = VEX::LDH0;
-                else if (Opcode == VEX::LDHUSpm)
-                    NewOpcode = VEX::LDHU0;
-                else if (Opcode == VEX::LDBSpm)
-                    NewOpcode = VEX::LDB0;
-                else
-                    NewOpcode = VEX::LDBU0;
-            } else {
-                if (Opcode == VEX::STWSpm)
-                    NewOpcode = VEX::STW0;
-                else if (Opcode == VEX::STHSpm)
-                    NewOpcode = VEX::STH0;
-                else
-                    NewOpcode = VEX::STB0;
-            }
-            break;
-        case 1:
-            if (isLoad) {
-                if (Opcode == VEX::LDWSpm)
-                    NewOpcode = VEX::LDW1;
-                else if (Opcode == VEX::LDHSpm)
-                    NewOpcode = VEX::LDH1;
-                else if (Opcode == VEX::LDHUSpm)
-                    NewOpcode = VEX::LDHU1;
-                else if (Opcode == VEX::LDBSpm)
-                    NewOpcode = VEX::LDB1;
-                else
-                    //    bool isDefinitionSPMVariable(MachineBasicBlock::iterator Inst);
-                    NewOpcode = VEX::LDBU1;
-            } else {
-                if (Opcode == VEX::STWSpm)
-                    NewOpcode = VEX::STW1;
-                else if (Opcode == VEX::STHSpm)
-                    NewOpcode = VEX::STH1;
-                else
-                    NewOpcode = VEX::STB1;
-            }
-            break;
-        case 2:
-            if (isLoad) {
-                if (Opcode == VEX::LDWSpm)
-                    NewOpcode = VEX::LDW2;
-                else if (Opcode == VEX::LDHSpm)
-                    NewOpcode = VEX::LDH2;
-                else if (Opcode == VEX::LDHUSpm)
-                    NewOpcode = VEX::LDHU2;
-                else if (Opcode == VEX::LDBSpm)
-                    NewOpcode = VEX::LDB2;
-                else
-                    NewOpcode = VEX::LDBU2;
-            } else {
-                if (Opcode == VEX::STWSpm)
-                    NewOpcode = VEX::STW2;
-                else if (Opcode == VEX::STHSpm)
-                    NewOpcode = VEX::STH2;
-                else
-                    NewOpcode = VEX::STB2;
-            }
-            break;
-        case 3:
-            if (isLoad) {
-                if (Opcode == VEX::LDWSpm)
-                    NewOpcode = VEX::LDW3;
-                else if (Opcode == VEX::LDHSpm)
-                    NewOpcode = VEX::LDH3;
-                else if (Opcode == VEX::LDHUSpm)
-                    NewOpcode = VEX::LDHU3;
-                else if (Opcode == VEX::LDBSpm)
-                    NewOpcode = VEX::LDB3;
-                else
-                    NewOpcode = VEX::LDBU3;
-            } else {
-                if (Opcode == VEX::STWSpm)
-                    NewOpcode = VEX::STW3;
-                else if (Opcode == VEX::STHSpm)
-                    NewOpcode = VEX::STH3;
-                else
-                    NewOpcode = VEX::STB3;
-            }
-            break;
-        case 4:
-            if (isLoad) {
-                if (Opcode == VEX::LDWSpm)
-                    NewOpcode = VEX::LDW4;
-                else if (Opcode == VEX::LDHSpm)
-                    NewOpcode = VEX::LDH4;
-                else if (Opcode == VEX::LDHUSpm)
-                    NewOpcode = VEX::LDHU4;
-                else if (Opcode == VEX::LDBSpm)
-                    NewOpcode = VEX::LDB4;
-                else
-                    NewOpcode = VEX::LDBU4;
-            } else {
-                if (Opcode == VEX::STWSpm)
-                    NewOpcode = VEX::STW4;
-                else if (Opcode == VEX::STHSpm)
-                    NewOpcode = VEX::STH4;
-                else
-                    NewOpcode = VEX::STB4;
-            }
-            break;
-        case 5:
-            if (isLoad) {
-                if (Opcode == VEX::LDWSpm)
-                    NewOpcode = VEX::LDW5;
-                else if (Opcode == VEX::LDHSpm)
-                    NewOpcode = VEX::LDH5;
-                else if (Opcode == VEX::LDHUSpm)
-                    NewOpcode = VEX::LDHU5;
-                else if (Opcode == VEX::LDBSpm)
-                    NewOpcode = VEX::LDB5;
-                else
-                    NewOpcode = VEX::LDBU5;
-            } else {
-                if (Opcode == VEX::STWSpm)
-                    NewOpcode = VEX::STW5;
-                else if (Opcode == VEX::STHSpm)
-                    NewOpcode = VEX::STH5;
-                else
-                    NewOpcode = VEX::STB5;
-            }
-            break;
-        case 6:
-            if (isLoad) {
-                if (Opcode == VEX::LDWSpm)
-                    NewOpcode = VEX::LDW6;
-                else if (Opcode == VEX::LDHSpm)
-                    NewOpcode = VEX::LDH6;
-                else if (Opcode == VEX::LDHUSpm)
-                    NewOpcode = VEX::LDHU6;
-                else if (Opcode == VEX::LDBSpm)
-                    NewOpcode = VEX::LDB6;
-                else
-                    NewOpcode = VEX::LDBU6;
-            } else {
-                if (Opcode == VEX::STWSpm)
-                    NewOpcode = VEX::STW6;
-                else if (Opcode == VEX::STHSpm)
-                    NewOpcode = VEX::STH6;
-                else
-                    NewOpcode = VEX::STB6;
-            }
-            break;
-        case 7:
-            if (isLoad) {
-                if (Opcode == VEX::LDWSpm)
-                    NewOpcode = VEX::LDW7;
-                else if (Opcode == VEX::LDHSpm)
-                    NewOpcode = VEX::LDH7;
-                else if (Opcode == VEX::LDHUSpm)
-                    NewOpcode = VEX::LDHU7;
-                else if (Opcode == VEX::LDBSpm)
-                    NewOpcode = VEX::LDB7;
-                else
-                    NewOpcode = VEX::LDBU7;
-            } else {
-                if (Opcode == VEX::STWSpm)
-                    NewOpcode = VEX::STW7;
-                else if (Opcode == VEX::STHSpm)
-                    NewOpcode = VEX::STH7;
-                else
-                    NewOpcode = VEX::STB7;
-            }
-            break;
-        default:
-            llvm_unreachable("Wrong Lane!");
-            break;
-    }
-    return NewOpcode;
-}
-
 bool VEXPacketizerList::isLongImmediate(int64_t Immediate) {
 
     const int MAXIMUM_SHORTIMM = (1 << 8) - 1;
@@ -415,91 +234,61 @@ void VEXPacketizerList::reserveResourcesForLongImmediate (MachineBasicBlock::ite
     }
 }
 
-unsigned VEXPacketizerList::FindVariable(MachineBasicBlock::iterator MI) {
+//unsigned VEXPacketizerList::FindVariable(MachineBasicBlock::iterator MI) {
 
-    for (unsigned i = 0, e = Variables.size(); i != e; ++i) {
-        std::vector<MachineBasicBlock::iterator> Insts = Variables[i].getMemoryInstructions();
+//    for (unsigned i = 0, e = Variables.size(); i != e; ++i) {
+//        std::vector<MachineBasicBlock::iterator> Insts = Variables[i].getMemoryInstructions();
 
-        for (unsigned j = 0, endj = Insts.size(); j != endj; ++j) {
-            if (Insts[j] == MI) {
-                return i;
-            }
-        }
-    }
-    return -1;
-}
+//        for (unsigned j = 0, endj = Insts.size(); j != endj; ++j) {
+//            if (Insts[j] == MI) {
+//                return i;
+//            }
+//        }
+//    }
+//    return -1;
+//}
 
-int VEXPacketizerList::FindVariableThroughDefinition(MachineBasicBlock::iterator MI) {
+//void VEXPacketizerList::analyzeSPMInstruction(MachineInstr *MI) {
 
-    for (unsigned i = 0, e = Variables.size(); i != e; ++i) {
-        if (Variables[i].isDefinitionInstruction(MI))
-                return i;
-    }
-    return -1;
-}
+//    unsigned VariablePosition;
+//    if ((VariablePosition = FindVariable(MI)) < 0)
+//        llvm_unreachable("Error finding variable.");
 
+//    SPMVariable &Var = Variables[VariablePosition];
 
-void VEXPacketizerList::analyzeVariableConditions(MachineInstr *MI) {
+//    DEBUG(dbgs() << "Variable Name is: " <<  Var.getName() << "\n");
 
-    int VariablePosition;
-    if ((VariablePosition = FindVariableThroughDefinition(MI)) < 0)
-        return;
+//    unsigned IssueWidth = II->SchedModel.IssueWidth;
 
-    SPMVariable &Var = Variables[VariablePosition];
+//    DEBUG(dbgs() << " We may use: ");
 
-    unsigned Offset = DataInfo->getMemOffsetForVariable(Var);
+//    std::vector<unsigned> SPMs;
+//    if (Var.isNotAllocated()) {
+////        SPMs = getAllocationPriorityForSPMs(Var.getMaximumSPMs(IssueWidth));
+//        Var.setMemoryUnits(SPMs);
+//        for (unsigned i : SPMs)
+//          DEBUG(dbgs() << "SPM " << i << "\n");
+//    } /*else {
+//        unsigned MemUnit = Var.getMemoryUnit();
+//        DEBUG(dbgs() << MemUnit << "\n");
+//        DEBUG(dbgs() << "SPM was already allocated " << Var.getMemoryUnit() << "\n");
+//    }*/
 
-    DEBUG(dbgs() << "Update offset for Scratchpad Variable\n");
+//    unsigned MemUnit = Var.getMemoryUnit();
+//    DEBUG(dbgs() << MemUnit << "\n");
 
-    MachineOperand Op = MI->getOperand(1);
-    assert(Op.isGlobal() && "Must be a Global Address");
-    Op.ChangeToImmediate(Offset);
-    MI->RemoveOperand(1);
-    MI->addOperand(Op);
-}
+//}
 
-void VEXPacketizerList::analyzeSPMInstruction(MachineInstr *MI) {
+//void VEXPacketizerList::ReplaceSPMInstruction(MachineInstr *MI) {
 
-    unsigned VariablePosition;
-    if ((VariablePosition = FindVariable(MI)) < 0)
-        llvm_unreachable("Error finding variable.");
+//    unsigned VariablePosition;
+//    if ((VariablePosition = FindVariable(MI)) < 0)
+//        llvm_unreachable("Error finding variable.");
 
-    SPMVariable &Var = Variables[VariablePosition];
-
-    DEBUG(dbgs() << "Variable Name is: " <<  Var.getName() << "\n");
-
-    unsigned IssueWidth = II->SchedModel.IssueWidth;
-
-    DEBUG(dbgs() << " We may use: ");
-
-    std::vector<unsigned> SPMs;
-    if (Var.isNotAllocated()) {
-//        SPMs = getAllocationPriorityForSPMs(Var.getMaximumSPMs(IssueWidth));
-        Var.setMemoryUnits(SPMs);
-        for (unsigned i : SPMs)
-          DEBUG(dbgs() << "SPM " << i << "\n");
-    } /*else {
-        unsigned MemUnit = Var.getMemoryUnit();
-        DEBUG(dbgs() << MemUnit << "\n");
-        DEBUG(dbgs() << "SPM was already allocated " << Var.getMemoryUnit() << "\n");
-    }*/
-
-    unsigned MemUnit = Var.getMemoryUnit();
-    DEBUG(dbgs() << MemUnit << "\n");
-
-}
-
-void VEXPacketizerList::ReplaceSPMInstruction(MachineInstr *MI) {
-
-    unsigned VariablePosition;
-    if ((VariablePosition = FindVariable(MI)) < 0)
-        llvm_unreachable("Error finding variable.");
-
-    SPMVariable &Var = Variables[VariablePosition];
+//    SPMVariable &Var = Variables[VariablePosition];
 
 
-
-}
+//}
 
 
 // This function is extremely important when Packetizing Instructions
@@ -576,8 +365,8 @@ MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
 
     // TODO: Will Variable Definition always be like this?
     // Probably not when we have function calls.
-    if (MI->getOpcode() == VEX::MOVi && MI->getOperand(1).isGlobal())
-        analyzeVariableConditions(MI);
+//    if (MI->getOpcode() == VEX::MOVi && MI->getOperand(1).isGlobal())
+//        analyzeVariableConditions(MI);
 
     // Handles SPM Instructions
 //    if (isStoreSPM(MI) || isLoadSPM(MI)) {

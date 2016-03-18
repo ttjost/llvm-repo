@@ -70,7 +70,7 @@ public:
     bool FindVariable(StringRef Name);
     void UpdateDataType(StringRef Name, unsigned DataType);
 
-    unsigned getMemOffsetForVariable(SPMVariable &Var);
+    unsigned getVarOffsetInSPM(SPMVariable &Var);
 
     unsigned getOffsetAndUpdateMemories(SPMVariable &Var, unsigned NumberOfSPMs, unsigned OffsetSize);
 
