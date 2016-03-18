@@ -207,8 +207,18 @@ public:
     void AddMemoryInstruction(MachineBasicBlock::iterator MI);
     void AddDefinitionInstruction(MachineBasicBlock::iterator MI);
 
+    unsigned getObjectSize() {
+        if (DataType == MDFull)
+            return 4;
+        if (DataType == MDByte || DataType == MDByteU)
+            return 1;
+        if (DataType == MDHalf || DataType == MDHalfU)
+            return 2;
+    }
+
     std::vector<unsigned> getPropagationRegisters() const { return PropagationRegisters; }
     std::vector<MachineBasicBlock::iterator> getMemoryInstructions() const { return MemoryInstructions; }
+    MachineBasicBlock::iterator getFirstMemoryInstruction() const { return MemoryInstructions[0]; }
 
     MachineBasicBlock::iterator getFirstDefinition() const { return DefinitionInstructions[0]; }
     std::vector<MachineBasicBlock::iterator> getDefinitionInstructions() const { return DefinitionInstructions; }

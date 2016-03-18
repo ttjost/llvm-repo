@@ -31,6 +31,7 @@
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/MachineLoopInfo.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
+#include "llvm/CodeGen/LiveIntervalAnalysis.h"
 //#include "llvm/Analysis/LoopPass.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/AliasAnalysis.h"
@@ -128,6 +129,8 @@ class VEXDataReuseTracking: public MachineFunctionPass {
     TargetMachine &TM;
     DataReuseInfo* DataInfo;
 
+    LiveIntervals *LIS;
+
     // This implements a trace that is need for each global variable
     // that should be replaced with SPM code.
     // Here, we will store all instructions that are need once we find
@@ -163,10 +166,12 @@ class VEXDataReuseTracking: public MachineFunctionPass {
 
    unsigned getSPMOpcode(unsigned Opcode, unsigned Lane, bool isLoad);
 
-   void InsertPreamble(MachineFunction &MF, SPMVariable Variable);
+   void InsertPreamble(MachineFunction &MF, SPMVariable &Variable);
 
    unsigned getLoadOpcode(unsigned DataType);
    unsigned getSPMStoreOpcode(unsigned Lane, unsigned DataType);
+
+   void getMemoryOpcodes(SPMVariable &Variable, unsigned &LoadOpcode, unsigned &StoreOpcode);
 
 public:
     static char ID;
@@ -197,6 +202,10 @@ void VEXDataReuseTracking::getAnalysisUsage(AnalysisUsage &AU) const {
     AU.addRequired<AliasAnalysis>();
     AU.addRequired<MachineLoopInfo>();
     AU.addPreserved<MachineLoopInfo>();
+
+    AU.addRequired<LiveIntervals>();
+    AU.addPreserved<LiveIntervals>();
+
     MachineFunctionPass::getAnalysisUsage(AU);
 }
 
@@ -531,13 +540,13 @@ void VEXDataReuseTracking::
     if (Inst->mayLoad()) {
 
         MachineOperand DstReg = Inst->getOperand(0);
-        MachineOperand FrameIndex = Inst->getOperand(1);
+        MachineOperand BaseReg = Inst->getOperand(1);
         MachineOperand MemOperand = Inst->getOperand(2);
         assert(DstReg.isReg() && "Operand must be Register");
 
         newInstr = BuildMI(*MBB, Inst, Inst->getDebugLoc(),
                                                        TII->get(MemOpcode),
-                                                       DstReg.getReg()).addOperand(FrameIndex)
+                                                       DstReg.getReg()).addOperand(BaseReg)
                                                                        .addOperand(MemOperand)
                                                                        .addMemOperand(*Inst->memoperands_begin());
 //        newInstr->dump();
@@ -546,14 +555,14 @@ void VEXDataReuseTracking::
         Inst = newInstr;
     } else {
             MachineOperand BaseReg = Inst->getOperand(0);
-            MachineOperand FrameIndex = Inst->getOperand(1);
+            MachineOperand SrcReg = Inst->getOperand(1);
             MachineOperand MemOperand = Inst->getOperand(2);
             assert(BaseReg.isReg() && "Operand must be Register");
 
             newInstr =
                     BuildMI(*MBB, Inst, Inst->getDebugLoc(),
                             TII->get(MemOpcode)).addOperand(BaseReg)
-                                                 .addOperand(FrameIndex)
+                                                 .addOperand(SrcReg)
                                                  .addOperand(MemOperand)
                                                  .addMemOperand(*Inst->memoperands_begin());
 //            newInstr->dump();
@@ -602,7 +611,47 @@ void VEXDataReuseTracking::EvaluateVariableOffset(MachineBasicBlock::iterator In
     }
 }
 
-void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable Variable) {
+void VEXDataReuseTracking::getMemoryOpcodes(SPMVariable &Variable,
+                                            unsigned &LoadOpcode,
+                                            unsigned &StoreOpcode) {
+
+    unsigned Lane, Offset = 0;
+    Variable.CalculateLaneAndOffset(Lane, Offset);
+
+    DEBUG(dbgs() << "\Lane: " << Lane << "\n");
+
+    if (Variable.getObjectSize() == SPMVariable::MDFull) {
+        LoadOpcode = Lane + VEX::LDW0;
+        StoreOpcode = Lane + VEX::STW0;
+    } else if (Variable.getObjectSize() == SPMVariable::MDByte) {
+        LoadOpcode = Lane + VEX::LDB0;
+        StoreOpcode = Lane + VEX::STB0;
+    } else if (Variable.getObjectSize() == SPMVariable::MDByteU) {
+        LoadOpcode = Lane + VEX::LDBU0;
+        StoreOpcode = Lane + VEX::STB0;
+    } else if (Variable.getObjectSize() == SPMVariable::MDHalf) {
+        LoadOpcode = Lane + VEX::LDH0;
+        StoreOpcode = Lane + VEX::STH0;
+    } else if (Variable.getObjectSize() == SPMVariable::MDHalfU) {
+        LoadOpcode = Lane + VEX::LDHU0;
+        StoreOpcode = Lane + VEX::STH0;
+    } else
+        llvm_unreachable("Incorrect Object Size for Variable.");
+}
+
+// This function inserts the preamble code for the SPMs.
+// We first need to store data into the SPMs in order to use them later on.
+// The code generated for now will be in format of (we might need to optimize it later):
+// PREAMBLE_COEF:
+//      c0  ldw     $r0.12 = 0[$r0.10]
+//      c0  cmplt   $b0.0 = $r0.13, 12
+//      c0  add     $r0.10 = $r0.10, 4
+//      c0  add     $r0.13 = $r0.13, 4
+// ;;
+//      c0  asm,0	$r0.11, 0, $r0.12
+//      c0  br      $b0.0, PREAMBLE_COEF
+// ;;
+void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Variable) {
 
     MachineBasicBlock::iterator DefInstr = Variable.getFirstDefinition();
 
@@ -612,10 +661,18 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable Varia
     const VEXInstrInfo *TII = static_cast<const VEXInstrInfo *>(Subtarget.getInstrInfo());
 
     MachineBasicBlock *MBB = DefInstr->getParent();
+
+    // Create new Basic Block for Preamble
+    // Insert the BB after the one that defined (set) Variable -> mov $reg, VAR_NAME
+    // It is also necessary to renumber BBs, so we can keep an order among them
+    // Otherwise, it will not work.
     MachineBasicBlock *PreambleMBB = MF.CreateMachineBasicBlock(MBB->getBasicBlock());
+    MF.insert(std::next(MachineFunction::iterator(MBB)), PreambleMBB);
+    MF.RenumberBlocks();
 
-//    MF.insert(std::next(MachineFunction::iterator(MBB)), PreambleMBB);
-
+    // We need information about Register, in order to create new Virtual Register
+    // Each class of Register (GPR or Branch) have to be created and are required
+    // to create new VRegs.
     MachineRegisterInfo &RegInfo = MF.getRegInfo();
     const TargetRegisterClass *GPRegClass = &VEX::GPRegsRegClass;
     const TargetRegisterClass *BrRegClass = &VEX::BrRegsRegClass;
@@ -629,9 +686,41 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable Varia
 
     // Iniatiate building the BB which will Load from Memory and
     // Store data to SPMs.
-//    BuildMI(PreambleMBB, DebugLoc(), TII->get(VEX::LDW))
+    
+    MachineBasicBlock::iterator FirstLoad = Variable.getFirstMemoryInstruction();
+
+    // Load from Memory
+    unsigned LoadDst = RegInfo.createVirtualRegister(GPRegClass);
+    unsigned LoadOpcode, StoreOpcode;
+
+    getMemoryOpcodes(Variable, LoadOpcode, StoreOpcode);
+
+    // Load from Memory
+    MachineOperand MemOperand = FirstLoad->getOperand(2);
+    MachineBasicBlock::iterator Load = BuildMI(PreambleMBB, DebugLoc(), TII->get(LoadOpcode), LoadDst)
+                                               .addReg(FirstLoad->getOperand(0).getReg(), RegState::Kill)
+                                               .addOperand(MemOperand)
+                                               .addMemOperand(*FirstLoad->memoperands_begin());
+
+    // Store to SPM
+    MachineMemOperand *MMO =
+      MF.getMachineMemOperand(MachinePointerInfo::getFixedStack(0),
+                              MachineMemOperand::MOStore,
+                              Variable.getObjectSize(), 4);
+
+    LIS->InsertMachineInstrInMaps(Load);
+    MachineBasicBlock::iterator StoreSPM = BuildMI(PreambleMBB, DebugLoc(),
+                                                   TII->get(StoreOpcode)).addOperand(FirstLoad->getOperand(0))
+                                                        .addOperand(FirstLoad->getOperand(0))
+                                                        .addOperand(FirstLoad->getOperand(2))
+                                                        .addMemOperand(MMO);
+
+    // IMPORTANT: Add Instruction to LiveIntervalsAnalysis
+//    LIS->InsertMachineInstrRangeInMaps(PreambleMBB->begin(), PreambleMBB->end());
+    LIS->InsertMachineInstrInMaps(StoreSPM);
     // TODO: How do we calculate this?
     unsigned NumIterations = 16;
+
 
     DEBUG(dbgs() << "Starting Preamble Insertion \n");
     for (MachineBasicBlock::iterator Inst = PreambleMBB->begin(),
@@ -639,10 +728,13 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable Varia
         Inst->dump();
     }
     DEBUG(dbgs() << "Ending Preamble Insertion \n");
+
 }
 
 bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
     errs() << MF.getName() << "\n";
+
+    LIS = &getAnalysis<LiveIntervals>();
 
     for (MachineFunction::iterator MBB = MF.begin(),
          MBBE = MF.end(); MBBE != MBB; ++MBB) {
@@ -685,13 +777,7 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
     }
 
     std::vector<SPMVariable> Variables = DataInfo->getVariables();
-    for (auto Var : Variables) {
-
-        if (Var.areLoadsRequired()) {
-            DEBUG(dbgs() << "\nName:" << Var.getName()  << " requires previous Loads to scratchpads.\n");
-            InsertPreamble(MF, Var);
-        } else
-            DEBUG(dbgs() << "\nName:" << Var.getName()  << "\n");
+    for (auto &Var : Variables) {
 
         // Update Global Variables Offset, with SPM Offsets which
         // tells where the Variable will be located in the SPM(s).
@@ -713,6 +799,12 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
             analyzeMemoryInstruction(Inst, Lane, Offset);
             Inst->dump();
         }
+
+        if (Var.areLoadsRequired()) {
+            DEBUG(dbgs() << "\nName:" << Var.getName()  << " requires previous Loads to scratchpads.\n");
+            InsertPreamble(MF, Var);
+        } else
+            DEBUG(dbgs() << "\nName:" << Var.getName()  << "\n");
     }
     return false;
 }
