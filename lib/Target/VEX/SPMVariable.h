@@ -15,7 +15,7 @@
 #define SPMVARIABLE_H
 
 #include "llvm/CodeGen/MachineBasicBlock.h"
-
+#include "llvm/IR/GlobalValue.h"
 
 namespace llvm {
 
@@ -34,6 +34,8 @@ class SPMVariable {
 
     std::vector<unsigned> PropagationRegisters;      // Used for knowing which registers propagate the variable information
     std::vector<RegisterOffsetPair> RegistersAndOffsets;
+
+    const GlobalValue *GV;
 
     std::vector<MachineBasicBlock::iterator> MemoryInstructions;
 
@@ -61,6 +63,7 @@ class SPMVariable {
     unsigned NumElements;
 
     unsigned DataType;
+    unsigned DataSize;
 
     /// Flags values. These may be or'd together.
     enum MemOperandFlags {
@@ -106,20 +109,24 @@ public:
 //        PropagationRegisters.resize(0);
 //    }
     SPMVariable(StringRef Name, unsigned Register,
-                MachineBasicBlock::iterator Inst) : Name(Name),
+                MachineBasicBlock::iterator Inst,
+                const GlobalValue *V) : Name(Name),
                                                     Flags(0),
                                                     OffsetsPerBB(0),
                                                     MultipleStorage(false),
                                                     LoadsRequired(false),
                                                     AllocationPriority(-1),
                                                     DataType(0),
-                                                    Size (1000) {
+                                                    Size (1000),
+                                                    GV (V) {
         PropagationRegisters.push_back(Register);
         RegistersAndOffsets.resize(0);
         MemoryInstructions.resize(0);
         DefinitionInstructions.resize(0);
         DefinitionInstructions.push_back(Inst);
     }
+
+    const GlobalValue *getGlobalValue() const { return GV; }
 
     StringRef getName() const { return Name; }
     unsigned getFlags() const  { return Flags; } 
@@ -131,11 +138,25 @@ public:
 
     bool isDefinitionInstruction(MachineBasicBlock::iterator Inst);
 
-    bool isChar() const { return DataType & MDByte; }
-    bool isShort() const { return DataType & MDHalf; }
+    bool isChar() const { return (DataType & MDByte) || (DataType & MDByteU); }
+    bool isShort() const { return (DataType & MDHalf) || (DataType & MDHalfU); }
     bool isInt() const { return DataType & MDFull; }
 
-    void setDataType(unsigned flag) { DataType = flag; }
+    unsigned getDataSize() const { return DataSize; }
+
+    void setDataSize() {
+        if (DataType & MDFull)
+            DataSize = 4;
+        if ((DataType & MDByte) || (DataType & MDByteU))
+            DataSize = 1;
+        if ((DataType & MDHalf) || (DataType & MDHalfU))
+            DataSize = 2;
+    }
+
+    void setDataType(unsigned flag) {
+        DataType = flag;
+        setDataSize();
+    }
 
     void setFlags(unsigned flags) { Flags = flags; }
     void setLoad() { Flags |= MOLoad; }
