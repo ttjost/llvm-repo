@@ -9,12 +9,11 @@
 
 #include "DataReuseInfo.h"
 
-#include "VEXSubtarget.h"
-#include "llvm/IR/Function.h"
-#include "llvm/CodeGen/MachineInstrBuilder.h"
-#include "llvm/CodeGen/MachineRegisterInfo.h"
+#include "llvm/Support/Debug.h"
+#include "llvm/Support/raw_ostream.h"
 
 using namespace llvm;
+
 
 bool DataReuseInfo::AddVariable(SPMVariable Var) {
 
@@ -123,7 +122,7 @@ SPMVariable DataReuseInfo::getVariable(MachineBasicBlock::iterator MI) {
 // This will make the algorithm more fair and allow not to allocate
 // all variables in the same scratchpad.
 // It is hard-coded that External Memory is located in Lane0, therefore,
-// priority will be given starting at 1 and finishing in 0;
+// priority will be given starting at 1 and finishing at 0;
 // Vector will contain the positions where the SPMs are located
 // TODO: Better if we split this function into two.
 // For now, let it leave this way.

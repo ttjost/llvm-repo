@@ -12,18 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "llvm/ADT/DenseMap.h"
-#include "llvm/ADT/SmallPtrSet.h"
-#include "llvm/ADT/SmallVector.h"
-#include "llvm/ADT/ilist.h"
-#include "llvm/ADT/ilist_node.h"
-#include "llvm/IR/Constants.h"
-#include "llvm/IR/Dominators.h"
-#include "llvm/IR/Function.h"
-#include "llvm/IR/Instructions.h"
-#include "llvm/IR/Module.h"
-#include "llvm/IR/Operator.h"
-#include "llvm/IR/BasicBlock.h"
+#include "VEXTargetMachine.h"
 #include "llvm/Pass.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineInstr.h"
@@ -33,86 +22,20 @@
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/LiveIntervalAnalysis.h"
 //#include "llvm/Analysis/LoopPass.h"
-#include "llvm/Analysis/LoopInfo.h"
-#include "llvm/Analysis/AliasAnalysis.h"
-#include "llvm/Analysis/ScalarEvolution.h"
-#include "llvm/Analysis/ScalarEvolutionExpressions.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/raw_ostream.h"
-#include "VEXTargetMachine.h"
 
 //#define GET_INSTRINFO_HEADER
 //#include "VEXGenInstrInfo.inc"
+
 
 #define DEBUG_TYPE "vex-datareuse"
 
 using namespace llvm;
 
 namespace llvm {
-    MachineFunctionPass *createVEXDataReuseTrackingPostRegAlloc(VEXTargetMachine &TM);
     MachineFunctionPass *createVEXDataReuseTracking(VEXTargetMachine &TM);
-}
-
-namespace {
-    
-class VEXDataReuseTrackingPostRegAlloc: public MachineFunctionPass {
-    
-//    void getAnalysisUsage(AnalysisUsage &AU) const override;
-//    AliasAnalysis *AA;
-//    ScalarEvolution *SE;
-
-    TargetMachine &TM;
-    DataReuseInfo* DataInfo;
-
-public:
-    static char ID;
-    VEXDataReuseTrackingPostRegAlloc(TargetMachine &TM)
-    : MachineFunctionPass(ID), TM(TM) {
-        const VEXSubtarget &Subtarget = *static_cast<const VEXTargetMachine &>(TM).getSubtargetImpl();
-        const InstrItineraryData *II = Subtarget.getInstrItineraryData();
-
-        DataInfo = static_cast<const VEXTargetMachine &>(TM).getDataReuseInfo();
-        DataInfo->setNumSPMs(II->SchedModel.IssueWidth);
-        DataInfo->setIssueWidth(II->SchedModel.IssueWidth);
-    }
-    
-    const char *getPassName() const override {
-        return "VEX Data Reuse Tracking Pos RegAlloc";
-    }
-    
-    bool runOnMachineFunction(MachineFunction &MF) override;
-    
-};
-}
-
-//void VEXDataReuseTrackingPostRegAlloc::getAnalysisUsage(AnalysisUsage &AU) const {
-//    AU.addRequired<AliasAnalysis>();
-//    AU.addRequired<ScalarEvolution>();
-//    AU.addPreserved<ScalarEvolution>();
-//}
-
-bool VEXDataReuseTrackingPostRegAlloc::runOnMachineFunction(MachineFunction &MF) {
-
-    DEBUG(dbgs() << " Initiating VEXDataReuseTrackingPostRegAlloc Pass");
-
-    DEBUG(dbgs() << "Size: " << DataInfo->getVariables().size() << "\n");
-    for (DataReuseInfo::iterator VarIdx = DataInfo->begin(),
-         VarEnd = DataInfo->end(); VarIdx != VarEnd; ++VarIdx) {
-//        std::vector<MachineBasicBlock::iterator> MIs = VarIdx->getMemoryInstructions();
-//        for(MachineBasicBlock::iterator MI : MIs)
-//            MI->dump();
-    }
-
-    DEBUG(dbgs() << " Finalizing VEXDataReuseTrackingPostRegAlloc Pass\n");
-    return false;
-}
-
-char VEXDataReuseTrackingPostRegAlloc::ID = 0;
-//static RegisterPass<VEXDataReuseTrackingPass> X("VEXDataReuseTracking", "Data Reuse Tracking Pass", false, false);
-
-MachineFunctionPass *llvm::createVEXDataReuseTrackingPostRegAlloc(VEXTargetMachine &TM) {
-    return new VEXDataReuseTrackingPostRegAlloc(TM);
 }
 
 //===----------------------------------------------------------------------===//
@@ -199,7 +122,7 @@ public:
 }
 
 void VEXDataReuseTracking::getAnalysisUsage(AnalysisUsage &AU) const {
-    AU.addRequired<AliasAnalysis>();
+//    AU.addRequired<AliasAnalysis>();
     AU.addRequired<MachineLoopInfo>();
     AU.addPreserved<MachineLoopInfo>();
 

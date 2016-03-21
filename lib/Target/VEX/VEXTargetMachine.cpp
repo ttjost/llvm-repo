@@ -190,8 +190,8 @@ void VEXPassConfig::addPreRegAlloc() {
 }
 
 void VEXPassConfig::addPostRegAlloc() {
-    if (EnableSPMs)
-        addPass(createVEXDataReuseTrackingPostRegAlloc(getVEXTargetMachine()));
+//    if (EnableSPMs)
+//        addPass(createVEXDataReuseTrackingPostRegAlloc(getVEXTargetMachine()));
 }
 
 void VEXPassConfig::addPreEmitPass() {

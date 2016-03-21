@@ -13,9 +13,14 @@
 #include "llvm/IR/Function.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
+#include "llvm/Support/Debug.h"
+#include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/raw_ostream.h"
 
 using namespace llvm;
 
+
+#define DEBUG_TYPE "spmvariable"
 
 bool SPMVariable::operator==(const SPMVariable& rhs) {
 
@@ -55,12 +60,12 @@ void SPMVariable::AddDefinitionInstruction(MachineBasicBlock::iterator MI) {
 
 bool SPMVariable::isDefinitionInstruction(MachineBasicBlock::iterator Inst) {
 
-    dbgs() << "isDefinitionInstruction\n\n";
+    DEBUG(dbgs() << "isDefinitionInstruction\n");
     for (auto def : DefinitionInstructions) {
         def->dump();
         Inst->dump();
         if (def == Inst) {
-            dbgs() << "Same\n";
+            DEBUG(dbgs() << "Same\n");
             return true;
         }
     }
@@ -92,6 +97,5 @@ void SPMVariable::UpdateOffsetInfo() {
         if (RegistersAndOffsets[i].Offsets.size() > OffsetsPerBB)
             OffsetsPerBB = RegistersAndOffsets[i].Offsets.size();
     }
-//    dbgs() << "Offsets size: " << OffsetsPerBB << "\n";
     RegistersAndOffsets.resize(0);
 }

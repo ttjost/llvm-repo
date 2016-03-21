@@ -14,25 +14,8 @@
 #ifndef SPMVARIABLE_H
 #define SPMVARIABLE_H
 
-#include "llvm/ADT/StringMap.h"
-#include "llvm/CodeGen/MachineFrameInfo.h"
-#include "llvm/CodeGen/MachineFunction.h"
-#include "llvm/CodeGen/MachineMemOperand.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
-#include "llvm/CodeGen/PseudoSourceValue.h"
-#include "llvm/IR/GlobalValue.h"
-#include "llvm/IR/ValueMap.h"
-#include "llvm/Target/TargetFrameLowering.h"
-#include "llvm/Target/TargetMachine.h"
-#include <map>
-#include <string>
-#include <utility>
 
-#include "llvm/Support/Debug.h"
-#include "llvm/Support/ErrorHandling.h"
-#include "llvm/Support/raw_ostream.h"
-
-#define DEBUG_TYPE "datareuseinfo"
 
 namespace llvm {
 

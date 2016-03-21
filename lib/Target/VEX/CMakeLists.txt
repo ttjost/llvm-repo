@@ -23,6 +23,9 @@ add_public_tablegen_target(VEXCommonTableGen)
 
 # VEXCodeGen should match with LLVMBuild.txt VEXCodeGen
 add_llvm_target(VEXCodeGen
+  SPMVariable.cpp
+  DataReuseInfo.cpp
+  VEXDataReuseTracking.cpp
   VEXTargetMachine.cpp
   VEXFrameLowering.cpp
   VEXInstrInfo.cpp
@@ -30,18 +33,14 @@ add_llvm_target(VEXCodeGen
   VEXMachineFunctionInfo.cpp
   VEXRegisterInfo.cpp
   VEXSubtarget.cpp
-  VEXSubtargetInfo.cpp
-//  VEXDFAPacketizer.cpp
   VEXMachineScheduler.cpp
   VEXSelectionDAGInfo.cpp
   VEXAsmPrinter.cpp
   VEXMCInstLower.cpp
   VEXISelDAGToDAG.cpp
-  VEXVLIWPacketizer.cpp
   VEXModifyBranches.cpp
-  VEXDataReuseTracking.cpp
-  SPMVariable.cpp
-  DataReuseInfo.cpp
+  VEXVLIWPacketizer.cpp
+
   )
 
 # Should match with "subdirectories = MCTargetDesc TargetInfo" in LLVMBuild.txt
