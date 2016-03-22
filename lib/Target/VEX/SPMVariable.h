@@ -145,11 +145,11 @@ public:
     unsigned getDataSize() const { return DataSize; }
 
     void setDataSize() {
-        if (DataType & MDFull)
+        if (DataType == MDFull)
             DataSize = 4;
-        if ((DataType & MDByte) || (DataType & MDByteU))
+        else if ((DataType == MDByte) || (DataType == MDByteU))
             DataSize = 1;
-        if ((DataType & MDHalf) || (DataType & MDHalfU))
+        else if ((DataType == MDHalf) || (DataType == MDHalfU))
             DataSize = 2;
     }
 

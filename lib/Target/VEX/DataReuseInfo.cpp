@@ -134,8 +134,10 @@ unsigned DataReuseInfo::getOffsetAndUpdateMemories(SPMVariable &Var, unsigned Nu
     unsigned FirstMem = 1;
     unsigned MinimumOffset = MemoriesOffsets[1];
     for (unsigned i = 1, e = MemoriesOffsets.size(); i != 0 ; i=(i+1)%e) {
-        if (MemoriesOffsets[i] < MinimumOffset)
+        if (MemoriesOffsets[i] < MinimumOffset) {
             FirstMem = i;
+            MinimumOffset = MemoriesOffsets[i];
+        }
     }
 
     unsigned Temp = FirstMem;
