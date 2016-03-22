@@ -173,9 +173,11 @@ unsigned VEXDataReuseTracking::getInstructionDataType(MachineBasicBlock::iterato
     else if (Inst->getOpcode() == VEX::LDBU)
         return SPMVariable::MDByteU;
     else if (Inst->getOpcode() == VEX::LDH ||
-             Inst->getOpcode() == VEX::STH)
+             Inst->getOpcode() == VEX::STH||
+             Inst->getOpcode() == VEX::LDHExt)
         return SPMVariable::MDHalf;
-    else if (Inst->getOpcode() == VEX::LDHU)
+    else if (Inst->getOpcode() == VEX::LDHU ||
+             Inst->getOpcode() == VEX::LDBExt)
         return SPMVariable::MDHalfU;
 
     llvm_unreachable("Wrong instruction for Load or Store");
@@ -640,6 +642,14 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
         MBBNext = MBB->succ_begin()[0];
         MBB->ReplaceUsesOfBlockWith(MBBNext, PreambleMBB);
     } else {
+//        DEBUG(dbgs() << "**********************************************************************\n");
+//        for (MachineFunction::iterator MBB = MF.begin(),
+//             MBBE = MF.end(); MBBE != MBB; ++MBB) {
+//            MBB->dump();
+//        }
+        dbgs() << "**********************************************************************\n";
+
+        MBB->dump();
         llvm_unreachable("Sucessor cannot be different than one");
     }
     BuildMI(MBB, DebugLoc(), TII->get(VEX::GOTO)).addMBB(PreambleMBB);
@@ -685,12 +695,6 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
       MF.getMachineMemOperand(MachinePointerInfo(), MachineMemOperand::MOLoad,
                               4, 4);
 
-    // Load from Memory
-    MachineBasicBlock::iterator Load = BuildMI(PreambleMBB, DebugLoc(), TII->get(LoadOpcode), LoadDst)
-                                               .addReg(GlobalMemVariableReg, RegState::Kill)
-                                               .addImm(0)
-                                               .addMemOperand(MMOLoad);
-
     // IMPORTANT: Add Instruction to LiveIntervalsAnalysis
     // TODO: How do we calculate this?
     unsigned NumIterations = 16;
@@ -730,6 +734,12 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
     BuildMI(PreambleMBB, DebugLoc(), TII->get(VEX::ADDi),InductionRegFalse)
             .addReg(InductionReg, RegState::Kill)
             .addImm(1);
+
+    // Load from Memory
+    MachineBasicBlock::iterator Load = BuildMI(PreambleMBB, DebugLoc(), TII->get(LoadOpcode), LoadDst)
+                                               .addReg(GlobalMemVariableReg, RegState::Kill)
+                                               .addImm(0)
+                                               .addMemOperand(MMOLoad);
 
     // Store to SPM
     MachineMemOperand *MMOStore =

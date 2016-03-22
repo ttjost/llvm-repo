@@ -673,7 +673,25 @@ void MCAsmStreamer::EmitBytes(StringRef Data) {
     OS << MAI->getAscizDirective();
     Data = Data.substr(0, Data.size()-1);
   } else {
-    OS << MAI->getAsciiDirective();
+      // AUTHOR: Added this condition to generate correct code for
+      // VEX Simulator. If Ascii Directive is NULL, we generate
+      // code for VEX
+      if (MAI->getAsciiDirective()) {
+          OS << MAI->getAsciiDirective();
+      } else {
+          unsigned size = 0;
+          // Generate code for VEX Simulator
+          // We also need to take care of alignment here.
+          for (int i = 0, j = Data.size(); i != j; i++) {
+              OS << "\t.data1 " << (unsigned)(unsigned char)Data[i] << "\n";
+              size++;
+          }
+          unsigned padding;
+          if ((padding = size%8) != 0) {
+              OS << ".skip " << (unsigned)(unsigned char)(8 - padding) << "\n";
+          }
+          return;
+      }
   }
 
   PrintQuotedString(Data, OS);
