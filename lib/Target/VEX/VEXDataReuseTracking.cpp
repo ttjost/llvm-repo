@@ -681,36 +681,36 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
     if (!PreambleMBB)
         llvm_unreachable("Error creating new basic block");
 
-    // Insert the BB after the one that defined (set) Variable -> mov $reg, VAR_NAME
-    // It is also necessary to renumber BBs, so we can keep an order among them
-    // Otherwise, it will not work.
-    MF.insert(std::next(MachineFunction::iterator(MBB)), PreambleMBB);
+//    // Insert the BB after the one that defined (set) Variable -> mov $reg, VAR_NAME
+//    // It is also necessary to renumber BBs, so we can keep an order among them
+//    // Otherwise, it will not work.
+//    MF.insert(std::next(MachineFunction::iterator(MBB)), PreambleMBB);
     MF.RenumberBlocks();
     
-    // Check if there is only one successor
-    // For now, this should always be true
-    // We, then, modified the CFG and replace the
-    // old MBB for the PreambleMBB
-    // Also, we store the BB pointer to be used later by PreambleMBB
-    MachineBasicBlock *MBBNext = nullptr;
-    if (MBB->succ_size() == 1) {
-        MBBNext = MBB->succ_begin()[0];
-        MBB->ReplaceUsesOfBlockWith(MBBNext, PreambleMBB);
-    } else {
-        MBB->dump();
-        llvm_unreachable("Sucessor cannot be different than one");
-    }
+//    // Check if there is only one successor
+//    // For now, this should always be true
+//    // We, then, modified the CFG and replace the
+//    // old MBB for the PreambleMBB
+//    // Also, we store the BB pointer to be used later by PreambleMBB
+//    MachineBasicBlock *MBBNext = nullptr;
+//    if (MBB->succ_size() == 1) {
+//        MBBNext = MBB->succ_begin()[0];
+//        MBB->ReplaceUsesOfBlockWith(MBBNext, PreambleMBB);
+//    } else {
+//        MBB->dump();
+//        llvm_unreachable("Sucessor cannot be different than one");
+//    }
     
-    MachineBasicBlock::iterator LastInst = MBB->end();
-    --LastInst;
-    if (!LastInst->isBarrier())
-        BuildMI(MBB, DebugLoc(), TII->get(VEX::GOTO)).addMBB(PreambleMBB);
+//    MachineBasicBlock::iterator LastInst = MBB->end();
+//    --LastInst;
+//    if (!LastInst->isBarrier())
+//        BuildMI(MBB, DebugLoc(), TII->get(VEX::GOTO)).addMBB(PreambleMBB);
     
-    PreambleMBB->addSuccessor(MBBNext);
+//    PreambleMBB->addSuccessor(MBBNext);
     PreambleMBB->addSuccessor(PreambleMBB);
     
-    // Here we fix PHI Instruction
-    FixPHIInstructionFromNextBB(MBBNext, MBB, PreambleMBB);
+//    // Here we fix PHI Instruction
+//    FixPHIInstructionFromNextBB(MBBNext, MBB, PreambleMBB);
 
     // We need information about Register, in order to create new Virtual Register
     // Each class of Register (GPR or Branch) have to be created and are required
@@ -792,10 +792,10 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
             .addImm(1);
 
     // Load from Memory
-    MachineBasicBlock::iterator Load = BuildMI(PreambleMBB, DebugLoc(), TII->get(LoadOpcode), LoadDst)
-                                               .addReg(GlobalMemVariableReg)
-                                               .addImm(0)
-                                               .addMemOperand(MMOLoad);
+    BuildMI(PreambleMBB, DebugLoc(), TII->get(LoadOpcode), LoadDst)
+                                              .addReg(GlobalMemVariableReg)
+                                              .addImm(0)
+                                              .addMemOperand(MMOLoad);
 
     // Store to SPM
     MachineMemOperand *MMOStore =

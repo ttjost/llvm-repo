@@ -293,38 +293,106 @@ void VEXInstrInfo::adjustStackPtr(VEXFunctionInfo *VEXFI, unsigned SP, uint64_t 
     
 }
 
-// Insert Branch Code into the end of the specified MachineBasicBlock
-unsigned VEXInstrInfo::InsertBranch(MachineBasicBlock &MBB, MachineBasicBlock *TBB,
-                                    MachineBasicBlock *FBB,
-                                    const SmallVectorImpl<MachineOperand> &Cond,
-                                    DebugLoc DL) const {
-
-    assert(!FBB && "Does not handle InsertBranch for this case");
-    //MachineInstr *MI = BuildMI(*MBB.getParent(), DL, get(VEX::GOTO)).addMBB(TBB);
-    BuildMI(&MBB, DL, get(VEX::GOTO)).addMBB(TBB);
-
-    return 1;
-}
-
 void VEXInstrInfo::insertNoop(MachineBasicBlock &MBB,
                                  MachineBasicBlock::iterator MI) const {
     BuildMI(MBB, MI, MI->getDebugLoc(), get(VEX::NOP));
 }
 
-bool VEXInstrInfo::AnalyzeBranch(MachineBasicBlock &MBB,
-                                 MachineBasicBlock *&TBB,
-                                 MachineBasicBlock *&FBB,
-                                 SmallVectorImpl< MachineOperand > &Cond,
-                                 bool AllowModify) const {
-    return true;
+///// GetOppositeBranchOpc - Return the inverse of the specified
+///// opcode, e.g. turning BEQ to BNE.
+//static unsigned GetOppositeBranchOpc(unsigned Opc)
+//{
+//  switch (Opc) {
+//  default: llvm_unreachable("Illegal opcode!");
+//  case VEX::BR    : return VEX::BRF;
+//  case VEX::BRF    : return VEX::BR;
+//  }
+//}
+
+///// ReverseBranchCondition - Return the inverse opcode of the
+///// specified Branch instruction.
+//bool VEXInstrInfo::
+//ReverseBranchCondition(SmallVectorImpl<MachineOperand> &Cond) const
+//{
+//  assert( (Cond.size() && Cond.size() <= 3) &&
+//          "Invalid VEX branch condition!");
+//  Cond[0].setImm(GetOppositeBranchOpc(Cond[0].getImm()));
+//  return false;
+//}
+
+//unsigned VEXInstrInfo::InsertBranch(MachineBasicBlock &MBB, MachineBasicBlock *TBB,
+//                        MachineBasicBlock *FBB, ArrayRef<MachineOperand> Cond,
+//                        DebugLoc DL) const {
+
+//    // Shouldn't be a fall through.
+//    assert(TBB && "InsertBranch must not be told to insert a fallthrough");
+//    assert((Cond.size() == 2 || Cond.size() == 0) &&
+//           "ARM branch conditions have two components!");
+
+//    // For conditional branches, we use addOperand to preserve CPSR flags.
+
+//    if (!FBB) {
+//      if (Cond.empty()) // Unconditional branch?
+//          BuildMI(&MBB, DL, get(VEX::GOTO)).addMBB(TBB);
+//      else
+//        BuildMI(&MBB, DL, get(Cond[0].getImm())).addMBB(TBB)
+//          .addOperand(Cond[1]);
+//      return 1;
+//    }
+
+//    // Two-way conditional branch.
+//    BuildMI(&MBB, DL, get(Cond[0].getImm())).addMBB(TBB)
+//      .addOperand(Cond[1]);
+//    BuildMI(&MBB, DL, get(VEX::GOTO)).addMBB(FBB);
+//    return 2;
+
+//}
+
+//unsigned VEXInstrInfo::RemoveBranch(MachineBasicBlock &MBB) const {
+
+//    MachineBasicBlock::iterator I = MBB.getLastNonDebugInstr();
+
+//    if (I == MBB.end())
+//        return 0;
+
+//    if (!(I->getOpcode() == VEX::GOTO) &&
+//        !(I->getOpcode() == VEX::BR) &&
+//        !(I->getOpcode() == VEX::BRF))
+//        return 0;
+
+//    // Remove the Branch
+//    I->eraseFromParent();
+
+//    I = MBB.end();
+
+//    if (I == MBB.begin())
+//        return 1;
+
+//    --I;
+//    if (!(I->getOpcode() == VEX::BR) &&
+//        !(I->getOpcode() == VEX::BRF))
+//        return 1;
+
+//    // Remove the Branch
+//    I->removeFromParent();
+//    return 2;
+//}
+
+//bool VEXInstrInfo::AnalyzeBranch(MachineBasicBlock &MBB,
+//                                 MachineBasicBlock *&TBB,
+//                                 MachineBasicBlock *&FBB,
+//                                 SmallVectorImpl< MachineOperand > &Cond,
+//                                 bool AllowModify) const {
+////    return true;
 
 //    TBB = nullptr;
 //    FBB = nullptr;
 
+//    Cond.clear();
+
 //    MachineBasicBlock::iterator LastInst = MBB.end();
 
-//    if (LastInst == MBB.begin())
-//    //if (LastInst = MBB.begin() || !isUnpredicatedTerminator(--LastOpc)
+//    if (LastInst == MBB.begin() || !isUnpredicatedTerminator(--LastInst))
 //        return false;
 
 //    unsigned LastOpc = LastInst->getOpcode();
@@ -332,15 +400,15 @@ bool VEXInstrInfo::AnalyzeBranch(MachineBasicBlock &MBB,
 ////    // If it is a BUNDLE, then check if there is a
 ////    // branch instruction in it.
 ////    if (LastOpc == TargetOpcode::BUNDLE)
-//////        for (unsigned i = 0, e = LastInst->getNumOperands();
-//////             i != e; i++){
-//////            if (LastInst->getOperand(i) == VEX::GOTO ||
-//////                LastInst->getOperand(i) == VEX::BR ||
-//////                LastInst->getOperand(i) == VEX::BRF){
+////        for (unsigned i = 0, e = LastInst->getNumOperands();
+////             i != e; i++){
+////            if (LastInst->getOperand(i) == VEX::GOTO ||
+////                LastInst->getOperand(i) == VEX::BR ||
+////                LastInst->getOperand(i) == VEX::BRF){
 ////                LastOpc = LastInst->getOpcode();
-////                //LastInst = LastInst->getOperand(i);
-//////            }
-//////        }
+////                LastInst = LastInst->getOperand(i);
+////            }
+////        }
 
 //    if (LastOpc == VEX::GOTO) {
 //      TBB = LastInst->getOperand(0).getMBB();
@@ -348,22 +416,22 @@ bool VEXInstrInfo::AnalyzeBranch(MachineBasicBlock &MBB,
 //    }
 
 //    MachineBasicBlock::iterator SecondLastInst = --LastInst;
-//    LastInst = MBB.end();
+//    ++LastInst;
 //    unsigned SecondLastOpc = SecondLastInst->getOpcode();
 
 ////    // If it is a BUNDLE, then check if there is a
 ////    // branch instruction in it.
 ////    if (SecondLastOpc == TargetOpcode::BUNDLE)
-//////        for (unsigned i = 0, e = SecondLastInst->getNumOperands();
-//////             i != e; i++){
-//////            if (SecondLastInst->getOperand(i) == VEX::GOTO ||
-//////                SecondLastInst->getOperand(i) == VEX::BR ||
-//////                SecondLastInst->getOperand(i) == VEX::BRF){
+////        for (unsigned i = 0, e = SecondLastInst->getNumOperands();
+////             i != e; i++){
+////            if (SecondLastInst->getOperand(i).getInst().getOpcode() == VEX::GOTO ||
+////                SecondLastInst->getOperand(i).getOpcode() == VEX::BR ||
+////                SecondLastInst->getOperand(i).getOpcode() == VEX::BRF){
 ////                SecondLastOpc = SecondLastInst->getOpcode();
-//////                //SecondLastInst = SecondLastInst->getOperand(i);
-//////                break;
-//////            }
-//////        }
+////                SecondLastInst = SecondLastInst->getOperand(i);
+////                break;
+////            }
+////        }
 
 //    if ((SecondLastOpc == VEX::GOTO) &&
 //        (LastOpc == VEX::GOTO)) {
@@ -373,22 +441,250 @@ bool VEXInstrInfo::AnalyzeBranch(MachineBasicBlock &MBB,
 //    }
 
 //    if (LastOpc == VEX::BR) {
-//      // Block ends with fall-through condbranch.
-//      TBB = LastInst->getOperand(0).getMBB();
-//      Cond.push_back(LastInst->getOperand(1));
-//      Cond.push_back(LastInst->getOperand(2));
-//      return false;
+//        // Block ends with fall-through condbranch.
+//        TBB = LastInst->getOperand(1).getMBB();
+//        Cond.push_back(MachineOperand::CreateImm(LastOpc));
+//        Cond.push_back(LastInst->getOperand(1));
+//        return false;
 //    }
 
 //    if ((SecondLastOpc == VEX::BR && LastOpc == VEX::GOTO)) {
-//      TBB =  SecondLastInst->getOperand(0).getMBB();
-//      Cond.push_back(SecondLastInst->getOperand(1));
-//      Cond.push_back(SecondLastInst->getOperand(2));
-//      FBB = LastInst->getOperand(0).getMBB();
-//      return false;
+//        TBB =  SecondLastInst->getOperand(1).getMBB();
+//        Cond.push_back(MachineOperand::CreateImm(SecondLastOpc));
+//        Cond.push_back(SecondLastInst->getOperand(1));
+//        FBB = LastInst->getOperand(0).getMBB();
+//        return false;
 //    }
+
+//    return true;
+//}
+
+//===----------------------------------------------------------------------===//
+// Branch Analysis
+//===----------------------------------------------------------------------===//
+
+static unsigned GetAnalyzableBrOpc(unsigned Opc) {
+  return (Opc == VEX::BR || Opc == VEX::BRF || Opc == VEX::GOTO) ? Opc : 0;
 }
 
+/// GetOppositeBranchOpc - Return the inverse of the specified
+/// opcode, e.g. turning BEQ to BNE.
+static unsigned GetOppositeBranchOpc(unsigned Opc)
+{
+  switch (Opc) {
+  default: llvm_unreachable("Illegal opcode!");
+  case VEX::BR    : return VEX::BRF;
+  case VEX::BRF    : return VEX::BR;
+  }
+}
+
+static void AnalyzeCondBr(const MachineInstr* Inst, unsigned Opc,
+                          MachineBasicBlock *&BB,
+                          SmallVectorImpl<MachineOperand>& Cond) {
+  assert(GetAnalyzableBrOpc(Opc) && "Not an analyzable branch");
+  int NumOp = Inst->getNumExplicitOperands();
+
+  // for both int and fp branches, the last explicit operand is the
+  // MBB.
+  BB = Inst->getOperand(NumOp-1).getMBB();
+  Cond.push_back(MachineOperand::CreateImm(Opc));
+
+  for (int i=0; i<NumOp-1; i++)
+    Cond.push_back(Inst->getOperand(i));
+}
+
+bool VEXInstrInfo::AnalyzeBranch(MachineBasicBlock &MBB,
+                                  MachineBasicBlock *&TBB,
+                                  MachineBasicBlock *&FBB,
+                                  SmallVectorImpl<MachineOperand> &Cond,
+                                  bool AllowModify) const
+{
+  MachineBasicBlock::reverse_iterator I = MBB.rbegin(), REnd = MBB.rend();
+
+  // Skip all the debug instructions.
+  while (I != REnd && I->isDebugValue())
+    ++I;
+
+  if (I == REnd || !isUnpredicatedTerminator(&*I)) {
+    // If this block ends with no branches (it just falls through to its succ)
+    // just return false, leaving TBB/FBB null.
+    TBB = FBB = NULL;
+    return false;
+  }
+
+  MachineInstr *LastInst = &*I;
+  unsigned LastOpc = LastInst->getOpcode();
+
+  // Not an analyzable branch (must be an indirect jump).
+  if (!GetAnalyzableBrOpc(LastOpc)) {
+    return true;
+  }
+
+  // Get the second to last instruction in the block.
+  unsigned SecondLastOpc = 0;
+  MachineInstr *SecondLastInst = NULL;
+
+  if (++I != REnd) {
+    SecondLastInst = &*I;
+    SecondLastOpc = GetAnalyzableBrOpc(SecondLastInst->getOpcode());
+
+    // Not an analyzable branch (must be an indirect jump).
+    if (isUnpredicatedTerminator(SecondLastInst) && !SecondLastOpc) {
+      return true;
+    }
+  }
+
+  // If there is only one terminator instruction, process it.
+  if (!SecondLastOpc) {
+    // Unconditional branch
+    if (LastOpc == VEX::GOTO) {
+      TBB = LastInst->getOperand(0).getMBB();
+      // If the basic block is next, remove the GOTO inst
+      if(MBB.isLayoutSuccessor(TBB)) {
+        LastInst->eraseFromParent();
+      }
+
+      return false;
+    }
+
+    // Conditional branch
+    AnalyzeCondBr(LastInst, LastOpc, TBB, Cond);
+    return false;
+  }
+
+  // If we reached here, there are two branches.
+  // If there are three terminators, we don't know what sort of block this is.
+  if (++I != REnd && isUnpredicatedTerminator(&*I)) {
+    return true;
+  }
+
+  // If second to last instruction is an unconditional branch,
+  // analyze it and remove the last instruction.
+  if (SecondLastOpc == VEX::GOTO) {
+    // Return if the last instruction cannot be removed.
+    if (!AllowModify) {
+      return true;
+    }
+
+    TBB = SecondLastInst->getOperand(0).getMBB();
+    LastInst->eraseFromParent();
+    return false;
+  }
+
+  // Conditional branch followed by an unconditional branch.
+  // The last one must be unconditional.
+  if (LastOpc != VEX::GOTO) {
+    return true;
+  }
+
+  AnalyzeCondBr(SecondLastInst, SecondLastOpc, TBB, Cond);
+  FBB = LastInst->getOperand(0).getMBB();
+
+  return false;
+}
+
+void VEXInstrInfo::BuildCondBr(MachineBasicBlock &MBB,
+                                MachineBasicBlock *TBB, DebugLoc DL,
+                                ArrayRef<MachineOperand> Cond)
+  const {
+  unsigned Opc = Cond[0].getImm();
+  const MCInstrDesc &MCID = get(Opc);
+  MachineInstrBuilder MIB = BuildMI(&MBB, DL, MCID);
+
+  for (unsigned i = 1; i < Cond.size(); ++i)
+    MIB.addReg(Cond[i].getReg());
+
+  MIB.addMBB(TBB);
+}
+
+unsigned VEXInstrInfo::
+InsertBranch(MachineBasicBlock &MBB, MachineBasicBlock *TBB,
+                                MachineBasicBlock *FBB,
+                                ArrayRef<MachineOperand> Cond,
+                                DebugLoc DL) const {
+  // Shouldn't be a fall through.
+  assert(TBB && "InsertBranch must not be told to insert a fallthrough");
+
+  // # of condition operands:
+  //  Unconditional branches: 0
+  //  Floating point branches: 1 (opc)
+  //  Int BranchZero: 2 (opc, reg)
+  //  Int Branch: 3 (opc, reg0, reg1)
+  assert((Cond.size() <= 3) &&
+         "# of VEX branch conditions must be <= 3!");
+
+  // Two-way Conditional branch.
+  if (FBB) {
+    BuildCondBr(MBB, TBB, DL, Cond);
+    BuildMI(&MBB, DL, get(VEX::GOTO)).addMBB(FBB);
+    return 2;
+  }
+
+  // One way branch.
+  // Unconditional branch.
+  if (Cond.empty())
+    BuildMI(&MBB, DL, get(VEX::GOTO)).addMBB(TBB);
+  else // Conditional branch.
+    BuildCondBr(MBB, TBB, DL, Cond);
+  return 1;
+}
+
+unsigned VEXInstrInfo::
+RemoveBranch(MachineBasicBlock &MBB) const
+{
+  MachineBasicBlock::reverse_iterator I = MBB.rbegin(), REnd = MBB.rend();
+  MachineBasicBlock::reverse_iterator FirstBr;
+  unsigned removed;
+
+  // Skip all the debug instructions.
+  while (I != REnd && I->isDebugValue())
+    ++I;
+
+  FirstBr = I;
+
+  // Up to 2 branches are removed.
+  // Note that indirect branches are not removed.
+  for(removed = 0; I != REnd && removed < 2; ++I, ++removed)
+    if (!GetAnalyzableBrOpc(I->getOpcode()))
+      break;
+
+  MBB.erase(I.base(), FirstBr.base());
+
+  return removed;
+}
+
+/// ReverseBranchCondition - Return the inverse opcode of the
+/// specified Branch instruction.
+bool VEXInstrInfo::
+ReverseBranchCondition(SmallVectorImpl<MachineOperand> &Cond) const
+{
+  assert( (Cond.size() && Cond.size() <= 3) &&
+          "Invalid VEX branch condition!");
+  Cond[0].setImm(GetOppositeBranchOpc(Cond[0].getImm()));
+  return false;
+}
+
+bool VEXInstrInfo::isSchedulingBoundary(const MachineInstr *MI,
+                                           const MachineBasicBlock *MBB,
+                                           const MachineFunction &MF) const {
+  //Implementation from HexagonInstrInfo.
+
+  // Debug info is never a scheduling boundary. It's necessary to be explicit
+  // due to the special treatment of IT instructions below, otherwise a
+  // dbg_value followed by an IT will result in the IT instruction being
+  // considered a scheduling hazard, which is wrong. It should be the actual
+  // instruction preceding the dbg_value instruction(s), just like it is when
+  // debug info is not present.
+  if (MI->isDebugValue())
+    return false;
+
+  // Terminators and labels can't be scheduled around.
+  if (MI->getDesc().isTerminator() || MI->isPosition() || MI->isInlineAsm() || MI->isReturn()) {
+    return true;
+  }
+
+  return false;
+}
 
 // Used by the VLIW Scheduler
 DFAPacketizer* VEXInstrInfo::CreateTargetScheduleState

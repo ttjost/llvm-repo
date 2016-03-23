@@ -72,20 +72,30 @@ namespace llvm{
                             MachineBasicBlock &MBB, MachineBasicBlock::iterator I)
         const;
 
-        // Insert Branch Code into the end of the specified MachineBasicBlock
-        unsigned InsertBranch(MachineBasicBlock &MBB, MachineBasicBlock *TBB,
-                              MachineBasicBlock *FBB,
-                              const SmallVectorImpl<MachineOperand> &Cond,
-                              DebugLoc DL) const;
-
         void insertNoop(MachineBasicBlock &MBB,
                                             MachineBasicBlock::iterator MI) const;
-        
+
+        unsigned InsertBranch(MachineBasicBlock &MBB, MachineBasicBlock *TBB,
+                                MachineBasicBlock *FBB, ArrayRef<MachineOperand> Cond,
+                                DebugLoc DL) const override;
+
+        unsigned RemoveBranch(MachineBasicBlock &MBB) const override;
+
         bool AnalyzeBranch(MachineBasicBlock &MBB,
                            MachineBasicBlock *&TBB,
                            MachineBasicBlock *&FBB,
                            SmallVectorImpl< MachineOperand > &Cond,
                            bool AllowModify=false) const override;
+
+        void BuildCondBr(MachineBasicBlock &MBB,
+                         MachineBasicBlock *TBB, DebugLoc DL,
+                         ArrayRef<MachineOperand> Cond) const;
+
+        bool ReverseBranchCondition(SmallVectorImpl<MachineOperand> &Cond) const override;
+
+        bool isSchedulingBoundary(const MachineInstr *MI,
+                                  const MachineBasicBlock *MBB,
+                                  const MachineFunction &MF) const override;
 
         // Used by the VLIW Scheduler.
         DFAPacketizer* CreateTargetScheduleState(const TargetSubtargetInfo &STI) const;
