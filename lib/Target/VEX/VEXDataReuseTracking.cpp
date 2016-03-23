@@ -65,29 +65,37 @@ class VEXDataReuseTracking: public MachineFunctionPass {
     void analyzeMemoryInstruction (MachineBasicBlock::iterator& Inst,
                                    unsigned Lane, unsigned Offset);
 
-   void  EvaluateVariableOffset(MachineBasicBlock::iterator Inst,
+    void  EvaluateVariableOffset(MachineBasicBlock::iterator Inst,
                                 StringRef VariableName);
 
-   void analyzeVariableDefinitionInstruction(SPMVariable &Var, MachineInstr *MI,
+    void analyzeVariableDefinitionInstruction(SPMVariable &Var, MachineInstr *MI,
                                              unsigned Offset);
 
-   unsigned getInstructionDataType(MachineBasicBlock::iterator Inst);
+    unsigned getInstructionDataType(MachineBasicBlock::iterator Inst);
 
-   unsigned getSPMOpcode(unsigned Opcode, unsigned Lane, bool isLoad);
+    unsigned getSPMOpcode(unsigned Opcode, unsigned Lane, bool isLoad);
 
-   void InsertPreamble(MachineFunction &MF, SPMVariable &Variable);
+    // After Inserting Preamble, we might need to update
+    // PHI Instructions on the next BB, because their MBB operands,
+    // should be the same as the CFG. When adding a MBB in between
+    // two BBs, the next MBB will have incorrect MBB Operands in PHI Instructions.
+    void FixPHIInstructionFromNextBB(MachineBasicBlock *MBB,
+                                     MachineBasicBlock *PreviousMBB,
+                                     MachineBasicBlock *UpdatedMBB);
+    
+    void InsertPreamble(MachineFunction &MF, SPMVariable &Variable);
+    
+    unsigned getLoadOpcode(unsigned DataType);
+    unsigned getSPMStoreOpcode(unsigned Lane, unsigned DataType);
 
-   unsigned getLoadOpcode(unsigned DataType);
-   unsigned getSPMStoreOpcode(unsigned Lane, unsigned DataType);
+    void getMemoryOpcodes(SPMVariable &Variable, unsigned &LoadOpcode, unsigned &StoreOpcode);
 
-   void getMemoryOpcodes(SPMVariable &Variable, unsigned &LoadOpcode, unsigned &StoreOpcode);
-
-   void getStoreOpcode(SPMVariable &Variable,
+    void getStoreOpcode(SPMVariable &Variable,
+                        unsigned &LoadOpcode,
+                        bool isSPM);
+    void getLoadOpcode(SPMVariable &Variable,
                        unsigned &LoadOpcode,
                        bool isSPM);
-   void getLoadOpcode(SPMVariable &Variable,
-                      unsigned &LoadOpcode,
-                      bool isSPM);
 
 public:
     static char ID;
@@ -600,6 +608,49 @@ void VEXDataReuseTracking::getStoreOpcode(SPMVariable &Variable,
         llvm_unreachable("Incorrect Object Size for Variable.");
 }
 
+// After Inserting Preamble, we might need to update
+// PHI Instructions on the next BB, because their MBB operands,
+// should be the same as the CFG. When adding a MBB in between
+// two BBs, the next MBB will have incorrect MBB Operands in PHI Instructions.
+void VEXDataReuseTracking::FixPHIInstructionFromNextBB(MachineBasicBlock *MBB,
+                                 MachineBasicBlock *PreviousMBB,
+                                 MachineBasicBlock *UpdatedMBB) {
+    
+    const VEXSubtarget &Subtarget = *static_cast<const VEXTargetMachine &>(TM).getSubtargetImpl();
+    const VEXInstrInfo *TII = static_cast<const VEXInstrInfo *>(Subtarget.getInstrInfo());
+    
+    MachineBasicBlock *MBBTrue, *MBBFalse;
+    for (MachineBasicBlock::iterator Inst = MBB->begin();
+         Inst->getOpcode() == VEX::PHI; ++Inst) {
+     
+        MachineOperand Op0 = Inst->getOperand(0);
+        MachineOperand Op1 = Inst->getOperand(1);
+        MachineOperand Op2 = Inst->getOperand(2);
+        MachineOperand Op3 = Inst->getOperand(3);
+        MachineOperand Op4 = Inst->getOperand(4);
+        
+        if (Op2.getMBB() == PreviousMBB) {
+            MBBTrue = UpdatedMBB;
+            MBBFalse = Op4.getMBB();
+        } else if (Op4.getMBB() == PreviousMBB) {
+            MBBTrue = Op2.getMBB();
+            MBBFalse = UpdatedMBB;
+        } else
+            llvm_unreachable("PHI Instruction is incorrectly formed.");
+        
+        MachineBasicBlock::iterator TempInst = Inst;
+        
+        // Add PHI Instruction
+        Inst = BuildMI(*MBB, TempInst, DebugLoc(), TII->get(VEX::PHI), Op0.getReg())
+                    .addOperand(Op1)
+                    .addMBB(MBBTrue)
+                    .addOperand(Op3)
+                    .addMBB(MBBFalse);
+        
+        TempInst->eraseFromParent();
+    }
+}
+
 // This function inserts the preamble code for the SPMs.
 // We first need to store data into the SPMs in order to use them later on.
 // The code generated for now will be in format of (we might need to optimize it later):
@@ -615,7 +666,7 @@ void VEXDataReuseTracking::getStoreOpcode(SPMVariable &Variable,
 void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Variable) {
 
     MachineBasicBlock::iterator DefInstr = Variable.getFirstDefinition();
-
+    
     assert(DefInstr->getOperand(0).isDef() && "First Operand should be a Definition. Something is wrong");
 
     const VEXSubtarget &Subtarget = *static_cast<const VEXTargetMachine &>(TM).getSubtargetImpl();
@@ -624,14 +675,18 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
     MachineBasicBlock *MBB = DefInstr->getParent();
 
     // Create new Basic Block for Preamble
-    MachineBasicBlock *PreambleMBB = MF.CreateMachineBasicBlock();
+    //    MachineBasicBlock *PreambleMBB = MF.CreateMachineBasicBlock();
+    MachineBasicBlock *PreambleMBB = MBB->SplitCriticalEdge(std::next(MachineFunction::iterator(MBB)), this);
+    
+    if (!PreambleMBB)
+        llvm_unreachable("Error creating new basic block");
 
     // Insert the BB after the one that defined (set) Variable -> mov $reg, VAR_NAME
     // It is also necessary to renumber BBs, so we can keep an order among them
     // Otherwise, it will not work.
     MF.insert(std::next(MachineFunction::iterator(MBB)), PreambleMBB);
     MF.RenumberBlocks();
-
+    
     // Check if there is only one successor
     // For now, this should always be true
     // We, then, modified the CFG and replace the
@@ -642,19 +697,20 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
         MBBNext = MBB->succ_begin()[0];
         MBB->ReplaceUsesOfBlockWith(MBBNext, PreambleMBB);
     } else {
-//        DEBUG(dbgs() << "**********************************************************************\n");
-//        for (MachineFunction::iterator MBB = MF.begin(),
-//             MBBE = MF.end(); MBBE != MBB; ++MBB) {
-//            MBB->dump();
-//        }
-        dbgs() << "**********************************************************************\n";
-
         MBB->dump();
         llvm_unreachable("Sucessor cannot be different than one");
     }
-    BuildMI(MBB, DebugLoc(), TII->get(VEX::GOTO)).addMBB(PreambleMBB);
+    
+    MachineBasicBlock::iterator LastInst = MBB->end();
+    --LastInst;
+    if (!LastInst->isBarrier())
+        BuildMI(MBB, DebugLoc(), TII->get(VEX::GOTO)).addMBB(PreambleMBB);
+    
     PreambleMBB->addSuccessor(MBBNext);
     PreambleMBB->addSuccessor(PreambleMBB);
+    
+    // Here we fix PHI Instruction
+    FixPHIInstructionFromNextBB(MBBNext, MBB, PreambleMBB);
 
     // We need information about Register, in order to create new Virtual Register
     // Each class of Register (GPR or Branch) have to be created and are required
@@ -728,16 +784,16 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
 
     // Add Instruction for next value
      BuildMI(PreambleMBB, DebugLoc(), TII->get(VEX::ADDi), GlobalMemVariableRegFalse)
-                                                            .addReg(GlobalMemVariableReg, RegState::Kill)
+                                                            .addReg(GlobalMemVariableReg)
                                                             .addImm(Variable.getDataSize());
     // Add Instruction for Induction Variable
     BuildMI(PreambleMBB, DebugLoc(), TII->get(VEX::ADDi),InductionRegFalse)
-            .addReg(InductionReg, RegState::Kill)
+            .addReg(InductionReg)
             .addImm(1);
 
     // Load from Memory
     MachineBasicBlock::iterator Load = BuildMI(PreambleMBB, DebugLoc(), TII->get(LoadOpcode), LoadDst)
-                                               .addReg(GlobalMemVariableReg, RegState::Kill)
+                                               .addReg(GlobalMemVariableReg)
                                                .addImm(0)
                                                .addMemOperand(MMOLoad);
 
@@ -748,14 +804,14 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
 
     getStoreOpcode(Variable, StoreOpcode, true);
 
-    BuildMI(PreambleMBB, DebugLoc(),TII->get(StoreOpcode)).addReg(LoadDst, RegState::Kill)
-                                                        .addReg(SPMAddrReg, RegState::Kill)
+    BuildMI(PreambleMBB, DebugLoc(),TII->get(StoreOpcode)).addReg(LoadDst)
+                                                        .addReg(SPMAddrReg)
                                                         .addImm(0)
                                                         .addMemOperand(MMOStore);
 
     // Add Instruction for Induction Variable
     BuildMI(PreambleMBB, DebugLoc(), TII->get(VEX::ADDi),SPMAddrRegFalse)
-                                                            .addReg(SPMAddrReg, RegState::Kill)
+                                                            .addReg(SPMAddrReg)
                                                             .addImm(Variable.getDataSize());
 
     BuildMI(PreambleMBB, DebugLoc(), TII->get(VEX::BR)).addReg(CMPBranchReg)
@@ -767,12 +823,12 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
     LIS->InsertMachineInstrRangeInMaps(PreambleMBB->begin(), LastInstPreamble);
 
 
-    DEBUG(dbgs() << "Starting Preamble Insertion \n");
-    for (MachineBasicBlock::iterator Inst = PreambleMBB->begin(),
-         InstE = PreambleMBB->end(); Inst != InstE; ++Inst) {
-        Inst->dump();
-    }
-    DEBUG(dbgs() << "Ending Preamble Insertion \n");
+//    DEBUG(dbgs() << "Starting Preamble Insertion \n");
+//    for (MachineBasicBlock::iterator Inst = PreambleMBB->begin(),
+//         InstE = PreambleMBB->end(); Inst != InstE; ++Inst) {
+//        Inst->dump();
+//    }
+//    DEBUG(dbgs() << "Ending Preamble Insertion \n");
 
 
     for (MachineFunction::iterator MBB = MF.begin(),
@@ -786,6 +842,13 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
 
     LIS = &getAnalysis<LiveIntervals>();
 
+    for (MachineFunction::iterator MBB = MF.begin(),
+         MBBE = MF.end(); MBBE != MBB; ++MBB) {
+        MBB->dump();
+    }
+    dbgs() << "*******************************************************\n";
+    dbgs() << "*******************************************************\n";
+    dbgs() << "*******************************************************\n";
     for (MachineFunction::iterator MBB = MF.begin(),
          MBBE = MF.end(); MBBE != MBB; ++MBB) {
 
@@ -847,9 +910,7 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
 //          Offset = getInstructionOffset(Inst);
             Var.CalculateLaneAndOffset(Lane, Offset);
             DEBUG(dbgs() << "Lane:" << Lane << "\tOffset: " << Offset << "\n");
-            Inst->dump();
             analyzeMemoryInstruction(Inst, Lane, Offset);
-            Inst->dump();
         }
 
         if (Var.areLoadsRequired()) {
