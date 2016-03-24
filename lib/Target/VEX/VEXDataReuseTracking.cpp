@@ -793,19 +793,6 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
     --LastInstPreamble;
     LIS->InsertMachineInstrRangeInMaps(PreambleMBB->begin(), LastInstPreamble);
 
-
-//    DEBUG(dbgs() << "Starting Preamble Insertion \n");
-//    for (MachineBasicBlock::iterator Inst = PreambleMBB->begin(),
-//         InstE = PreambleMBB->end(); Inst != InstE; ++Inst) {
-//        Inst->dump();
-//    }
-//    DEBUG(dbgs() << "Ending Preamble Insertion \n");
-
-
-    for (MachineFunction::iterator MBB = MF.begin(),
-         MBBE = MF.end(); MBBE != MBB; ++MBB) {
-        MBB->dump();
-    }
 }
 
 bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
@@ -815,16 +802,13 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
 
     for (MachineFunction::iterator MBB = MF.begin(),
          MBBE = MF.end(); MBBE != MBB; ++MBB) {
+
+
         MBB->dump();
-    }
-    dbgs() << "*******************************************************\n";
-    dbgs() << "*******************************************************\n";
-    dbgs() << "*******************************************************\n";
-    for (MachineFunction::iterator MBB = MF.begin(),
-         MBBE = MF.end(); MBBE != MBB; ++MBB) {
 
         for (MachineBasicBlock::iterator Inst = MBB->begin(),
              InstE = MBB->end(); Inst != InstE; ++Inst) {
+
 
             unsigned DefinedRegister;
 
@@ -841,14 +825,15 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                 assert(Op.isGlobal() && "Must be a Global Address");
                 SPMVariable Variable(VariableName, DefinedRegister, Inst, Op.getGlobal());
                 DataInfo->AddVariable(Variable);
-//                DEBUG(dbgs() << "New Variable found in Register " << DefinedRegister << "\n");
+                DEBUG(dbgs() << "New Variable found in Register " << DefinedRegister << "\n");
                 SPMFound = true;
             }
-
+            Inst->dump();
             // Checks whether the instruction propagates SPMVariable
             if(PropagatesSPMVariable(Inst, VariableName)) {
                 // Replaces memory Instruction to SPM Instruction
                 // when necessary
+                Inst->dump();
                 if (Inst->mayLoadOrStore()) {
                     EvaluateVariableOffset(Inst, VariableName);
                     DataInfo->AddMemInstRef(VariableName, Inst);
