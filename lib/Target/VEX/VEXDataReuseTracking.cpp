@@ -804,6 +804,13 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
 
 }
 
+unsigned VEXDataReuseTracking::getInstructionOffset (MachineBasicBlock::iterator& Inst) {
+    for (unsigned i = 1, e = Inst->getNumOperands(); i != e ; ++i) {
+        if (Inst->getOperand(i).isImm())
+            return Inst->getOperand(i).isImm();
+    }
+}
+
 bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
     errs() << MF.getName() << "\n";
 
@@ -892,7 +899,8 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
         VarRelatedInstructions = Var.getMemoryInstructions();
         for (MachineBasicBlock::iterator Inst : VarRelatedInstructions) {
             unsigned Lane;
-//          Offset = getInstructionOffset(Inst);
+            Offset = getInstructionOffset(Inst);
+            DEBUG(dbgs() << "\tOffset: " << Offset << "\n");
             Var.CalculateLaneAndOffset(Lane, Offset);
             DEBUG(dbgs() << "Lane:" << Lane << "\tOffset: " << Offset << "\n");
             analyzeMemoryInstruction(Inst, Lane, Offset);
