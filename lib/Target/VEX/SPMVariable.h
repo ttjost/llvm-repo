@@ -56,7 +56,6 @@ class SPMVariable {
     bool LoadsRequired;
 
     unsigned OffsetsPerBB;
-    unsigned StorageUnits;
     unsigned NumUnits;
     unsigned InitialAddress;
     unsigned Size;
@@ -181,9 +180,9 @@ public:
 
 //        assert(Offset > 0 && "Only positive offset for now.");
 
-        Lane = (Offset%(NumMemories*DataType))/DataType;
-        Lane = (Lane + Memories[0])/NumMemories;
-        Offset = Offset/(NumMemories*DataType)*DataType;
+        Lane = (Offset%(NumMemories*DataSize))/DataSize;
+        Lane = (Lane + Memories[0]);
+        Offset = Offset/(NumMemories*DataSize)*DataSize;
     }
 
     void setMemoryUnits(std::vector<unsigned> Units) {
@@ -196,7 +195,6 @@ public:
 
     bool isNotAllocated() const { return AllocationPriority < 0; }
     
-    unsigned getStorageUnits() const { return StorageUnits; }
     unsigned getNumUnits() const { return NumUnits; }
     unsigned getInitialAddress() const { return InitialAddress; }
     unsigned getSize() const { return Size; }
@@ -205,19 +203,21 @@ public:
 
     bool areLoadsRequired() const { return LoadsRequired; }
 
-    unsigned getMaximumSPMs(unsigned IssueWidth) const { return OffsetsPerBB%IssueWidth; }
+    unsigned getMaximumSPMs(unsigned IssueWidth) {
+        for (unsigned i = IssueWidth; i != 0 ; --i)
+            if (OffsetsPerBB%i == 0) {
+                NumUnits = i;
+                return i;
+            }
+        llvm_unreachable("Could not find a unit!");
+    }
 
     void AddPropagationRegister(unsigned Register);
     void AddMemoryInstruction(MachineBasicBlock::iterator MI);
     void AddDefinitionInstruction(MachineBasicBlock::iterator MI);
 
-    unsigned getObjectSize() {
-        if (DataType == MDFull)
-            return 4;
-        if (DataType == MDByte || DataType == MDByteU)
-            return 1;
-        if (DataType == MDHalf || DataType == MDHalfU)
-            return 2;
+    unsigned getDataType() {
+        return DataType;
     }
 
     std::vector<unsigned> getPropagationRegisters() const { return PropagationRegisters; }

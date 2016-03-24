@@ -21,6 +21,7 @@ bool DataReuseInfo::AddVariable(SPMVariable Var) {
          i != e; ++i) {
         if (Variables[i] == Var) {
             Variables[i].AddDefinitionInstruction(Var.getFirstDefinition());
+            Variables[i].AddPropagationRegister(Var.getPropagationRegisters()[0]);
             return false;
         }
     }

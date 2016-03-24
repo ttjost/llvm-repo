@@ -34,6 +34,11 @@
 
 using namespace llvm;
 
+// Later, this will be known in compile time, with no hint.
+static cl::opt<int> LoopCounterPreamble("counter-preamble",
+                                cl::Hidden, cl::init(0),
+                                cl::desc("Information about the number of iterations to be performed in preamble"));
+
 namespace llvm {
     MachineFunctionPass *createVEXDataReuseTracking(VEXTargetMachine &TM);
 }
@@ -545,19 +550,19 @@ void VEXDataReuseTracking::getMemoryOpcodes(SPMVariable &Variable,
 
     DEBUG(dbgs() << "\Lane: " << Lane << "\n");
 
-    if (Variable.getObjectSize() == SPMVariable::MDFull) {
+    if (Variable.getDataType() == SPMVariable::MDFull) {
         LoadOpcode = Lane + VEX::LDW0;
         StoreOpcode = Lane + VEX::STW0;
-    } else if (Variable.getObjectSize() == SPMVariable::MDByte) {
+    } else if (Variable.getDataType() == SPMVariable::MDByte) {
         LoadOpcode = Lane + VEX::LDB0;
         StoreOpcode = Lane + VEX::STB0;
-    } else if (Variable.getObjectSize() == SPMVariable::MDByteU) {
+    } else if (Variable.getDataType() == SPMVariable::MDByteU) {
         LoadOpcode = Lane + VEX::LDBU0;
         StoreOpcode = Lane + VEX::STB0;
-    } else if (Variable.getObjectSize() == SPMVariable::MDHalf) {
+    } else if (Variable.getDataType() == SPMVariable::MDHalf) {
         LoadOpcode = Lane + VEX::LDH0;
         StoreOpcode = Lane + VEX::STH0;
-    } else if (Variable.getObjectSize() == SPMVariable::MDHalfU) {
+    } else if (Variable.getDataType() == SPMVariable::MDHalfU) {
         LoadOpcode = Lane + VEX::LDHU0;
         StoreOpcode = Lane + VEX::STH0;
     } else
@@ -573,15 +578,15 @@ void VEXDataReuseTracking::getLoadOpcode(SPMVariable &Variable,
 
     DEBUG(dbgs() << "\Lane: " << Lane << "\n");
 
-    if (Variable.getObjectSize() == SPMVariable::MDFull) {
+    if (Variable.getDataType() == SPMVariable::MDFull) {
         isSPM ? LoadOpcode = VEX::LDW0 + Lane: LoadOpcode = VEX::LDW;
-    } else if (Variable.getObjectSize() == SPMVariable::MDByte) {
+    } else if (Variable.getDataType() == SPMVariable::MDByte) {
         isSPM ? LoadOpcode = VEX::LDB0 + Lane: LoadOpcode = VEX::LDB;
-    } else if (Variable.getObjectSize() == SPMVariable::MDByteU) {
+    } else if (Variable.getDataType() == SPMVariable::MDByteU) {
         isSPM ? LoadOpcode = VEX::LDBU0 + Lane: LoadOpcode = VEX::LDBU;
-    } else if (Variable.getObjectSize() == SPMVariable::MDHalf) {
+    } else if (Variable.getDataType() == SPMVariable::MDHalf) {
         isSPM ? LoadOpcode = VEX::LDH0 + Lane: LoadOpcode = VEX::LDH;
-    } else if (Variable.getObjectSize() == SPMVariable::MDHalfU) {
+    } else if (Variable.getDataType() == SPMVariable::MDHalfU) {
         isSPM ? LoadOpcode = VEX::LDHU0 + Lane: LoadOpcode = VEX::LDHU;
     } else
         llvm_unreachable("Incorrect Object Size for Variable.");
@@ -596,13 +601,13 @@ void VEXDataReuseTracking::getStoreOpcode(SPMVariable &Variable,
 
     DEBUG(dbgs() << "\Lane: " << Lane << "\n");
 
-    if (Variable.getObjectSize() == SPMVariable::MDFull) {
+    if (Variable.getDataType() == SPMVariable::MDFull) {
         isSPM ? LoadOpcode = VEX::STW0 + Lane: LoadOpcode = VEX::STW;
-    } else if (Variable.getObjectSize() == SPMVariable::MDByte ||
-               Variable.getObjectSize() == SPMVariable::MDByteU) {
+    } else if (Variable.getDataType() == SPMVariable::MDByte ||
+               Variable.getDataType() == SPMVariable::MDByteU) {
         isSPM ? LoadOpcode = VEX::STB0 + Lane: LoadOpcode = VEX::STB;
-    } else if (Variable.getObjectSize() == SPMVariable::MDHalf ||
-               Variable.getObjectSize() == SPMVariable::MDHalfU) {
+    } else if (Variable.getDataType() == SPMVariable::MDHalf ||
+               Variable.getDataType() == SPMVariable::MDHalfU) {
         isSPM ? LoadOpcode = VEX::STH0 + Lane: LoadOpcode = VEX::STH;
     } else
         llvm_unreachable("Incorrect Object Size for Variable.");
@@ -675,6 +680,7 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
     MachineBasicBlock *MBB = DefInstr->getParent();
 
     // Create new Basic Block for Preamble
+    // This will do almost all tricks to create a BB in between two BBs.
     MachineBasicBlock *PreambleMBB = MBB->SplitCriticalEdge(std::next(MachineFunction::iterator(MBB)), this);
     
     if (!PreambleMBB)
@@ -722,9 +728,12 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
       MF.getMachineMemOperand(MachinePointerInfo(), MachineMemOperand::MOLoad,
                               4, 4);
 
-    // IMPORTANT: Add Instruction to LiveIntervalsAnalysis
-    // TODO: How do we calculate this?
-    unsigned NumIterations = 16;
+    // TODO: For now, we pass this info in command line
+    // How do we calculate this? Maybe with ScalarEvolution
+    if (LoopCounterPreamble == 0)
+        llvm_unreachable("You need to specify the number of iterations on the Preamble Loop.");
+    
+    unsigned NumIterations = LoopCounterPreamble;
 
     // Add PHI Instruction
     BuildMI(*PreambleMBB, PreambleMBB->begin(), DebugLoc(), TII->get(VEX::PHI), InductionReg)
@@ -799,16 +808,36 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
     errs() << MF.getName() << "\n";
 
     LIS = &getAnalysis<LiveIntervals>();
-
-    for (MachineFunction::iterator MBB = MF.begin(),
-         MBBE = MF.end(); MBBE != MBB; ++MBB) {
-
-
-        MBB->dump();
-
+    
+    // Here we will perform a Breadth First Search
+    // because we should perform the analysis on the variables,
+    // respecting which BB have more probability on executing first.
+    // This is important for some cases when PHI nodes do not propagate
+    // properly the variable.
+    std::deque<MachineFunction::iterator> BFSinMBBs(1, MF.begin());
+    
+    unsigned iterator = 0;
+    std::vector<bool> VisitedNodes(MF.size(), false);
+    VisitedNodes[0] = true;
+    
+    MachineFunction::iterator MBB;
+    while (!BFSinMBBs.empty()) {
+        
+        MBB = BFSinMBBs.front();
+        BFSinMBBs.pop_front();
+        
+//        MBB->dump();
+        
+        for (MachineBasicBlock::succ_iterator SI = MBB->succ_begin(),
+             SE = MBB->succ_end(); SI != SE; ++SI) {
+            if (!VisitedNodes[(*(SI))->getNumber()]) {
+                BFSinMBBs.push_back(*(SI));
+                VisitedNodes[(*(SI))->getNumber()] = true;
+            }
+        }
+        
         for (MachineBasicBlock::iterator Inst = MBB->begin(),
              InstE = MBB->end(); Inst != InstE; ++Inst) {
-
 
             unsigned DefinedRegister;
 
@@ -828,7 +857,7 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                 DEBUG(dbgs() << "New Variable found in Register " << DefinedRegister << "\n");
                 SPMFound = true;
             }
-            Inst->dump();
+//            Inst->dump();
             // Checks whether the instruction propagates SPMVariable
             if(PropagatesSPMVariable(Inst, VariableName)) {
                 // Replaces memory Instruction to SPM Instruction

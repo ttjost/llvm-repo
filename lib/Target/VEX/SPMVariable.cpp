@@ -28,7 +28,6 @@ bool SPMVariable::operator==(const SPMVariable& rhs) {
 //        this->getFlags() == rhs.getFlags() &&
         this->isMultipleStorage() == rhs.isMultipleStorage() &&
         this->isDinamicallyAllocated() == rhs.isDinamicallyAllocated() &&
-        this->getStorageUnits() == rhs.getStorageUnits() &&
         this->getNumUnits() == rhs.getNumUnits() &&
         this->getInitialAddress() == rhs.getInitialAddress() &&
         this->getSize() == rhs.getSize() &&
