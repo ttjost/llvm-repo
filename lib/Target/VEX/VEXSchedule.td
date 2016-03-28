@@ -147,9 +147,7 @@ InstrItinData<IIBranch      , [InstrStage<1,  [IUnit1]>]>,
 // Each lane has its own Itinerary, therefore,
 // we should define a diferent itinerary for each one of them.
 InstrItinData<IILane0       , [InstrStage<1,  [IUnit0]>]>,
-InstrItinData<IILane1       , [InstrStage<1,  [IUnit1]>]>,
-InstrItinData<IILane2       , [InstrStage<1,  [IUnit2]>]>,
-InstrItinData<IILane3       , [InstrStage<1,  [IUnit3]>]>
+InstrItinData<IILane1       , [InstrStage<1,  [IUnit1]>]>
 ]>;
 
 def rVEX4IssueItineraries : ProcessorItineraries<[IUnit0, IUnit1, IUnit2, IUnit3], [], [

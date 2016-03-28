@@ -127,6 +127,9 @@ class VEXTargetMachine;
         // If we don't do that, poor VLIW Code is generated
         bool enableMachineSchedDefaultSched() const override { return false; }
         
+//        bool enablePostRAScheduler() const override {
+//            return true;
+//        }
 //        bool enablePostMachineScheduler() const override { return true; }
         
     };

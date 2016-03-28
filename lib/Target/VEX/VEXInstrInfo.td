@@ -707,84 +707,84 @@ def STBSpm       : StoreInstrSpm<"stwSpm", 0b00010101, IIAll>;
 // Instead, we manually select them in the VEXVLIWPacketizer
 
 // Lane 0
-def LDW0       : LoadInstrSpm<"ldw0", 0b00010000, IIAll>;
-def STW0       : StoreInstrSpm<"stw0", 0b00010101, IIAll>;
-def LDH0       : LoadInstrSpm<"ldh0", 0b00010000, IIAll>;
-def LDHU0      : LoadInstrSpm<"ldhu0", 0b00010000, IIAll>;
-def STH0       : StoreInstrSpm<"sth0", 0b00010101, IIAll>;
-def LDB0       : LoadInstrSpm<"ldb0", 0b00010000, IIAll>;
-def LDBU0      : LoadInstrSpm<"ldbu0", 0b00010000, IIAll>;
-def STB0       : StoreInstrSpm<"stb0", 0b00010101, IIAll>;
+def LDW0       : LoadInstrSpm<"ldw0", 0b00010000, IILane0>;
+def STW0       : StoreInstrSpm<"stw0", 0b00010101, IILane0>;
+def LDH0       : LoadInstrSpm<"ldh0", 0b00010000, IILane0>;
+def LDHU0      : LoadInstrSpm<"ldhu0", 0b00010000, IILane0>;
+def STH0       : StoreInstrSpm<"sth0", 0b00010101, IILane0>;
+def LDB0       : LoadInstrSpm<"ldb0", 0b00010000, IILane0>;
+def LDBU0      : LoadInstrSpm<"ldbu0", 0b00010000, IILane0>;
+def STB0       : StoreInstrSpm<"stb0", 0b00010101, IILane0>;
 
 // Lane 1
-def LDW1       : LoadInstrSpm<"ldw1", 0b00010000, IIAll>;
-def STW1       : StoreInstrSpm<"stw1", 0b00010101, IIAll>;
-def LDH1       : LoadInstrSpm<"ldh1", 0b00010000, IIAll>;
-def LDHU1      : LoadInstrSpm<"ldhu1", 0b00010000, IIAll>;
-def STH1       : StoreInstrSpm<"sth1", 0b00010101, IIAll>;
-def LDB1       : LoadInstrSpm<"ldb1", 0b00010000, IIAll>;
-def LDBU1      : LoadInstrSpm<"ldbu1", 0b00010000, IIAll>;
-def STB1       : StoreInstrSpm<"stb1", 0b00010101, IIAll>;
+def LDW1       : LoadInstrSpm<"ldw1", 0b00010000, IILane1>;
+def STW1       : StoreInstrSpm<"stw1", 0b00010101, IILane1>;
+def LDH1       : LoadInstrSpm<"ldh1", 0b00010000, IILane1>;
+def LDHU1      : LoadInstrSpm<"ldhu1", 0b00010000, IILane1>;
+def STH1       : StoreInstrSpm<"sth1", 0b00010101, IILane1>;
+def LDB1       : LoadInstrSpm<"ldb1", 0b00010000, IILane1>;
+def LDBU1      : LoadInstrSpm<"ldbu1", 0b00010000, IILane1>;
+def STB1       : StoreInstrSpm<"stb1", 0b00010101, IILane1>;
 
 // Lane 2
-def LDW2       : LoadInstrSpm<"ldw2", 0b00010000, IIAll>;
-def STW2       : StoreInstrSpm<"stw2", 0b00010101, IIAll>;
-def LDH2       : LoadInstrSpm<"ldh2", 0b00010000, IIAll>;
-def LDHU2      : LoadInstrSpm<"ldhu2", 0b00010000, IIAll>;
-def STH2       : StoreInstrSpm<"sth2", 0b00010101, IIAll>;
-def LDB2       : LoadInstrSpm<"ldb2", 0b00010000, IIAll>;
-def LDBU2      : LoadInstrSpm<"ldbu2", 0b00010000, IIAll>;
-def STB2       : StoreInstrSpm<"stb2", 0b00010101, IIAll>;
+def LDW2       : LoadInstrSpm<"ldw2", 0b00010000, IILane2>;
+def STW2       : StoreInstrSpm<"stw2", 0b00010101, IILane2>;
+def LDH2       : LoadInstrSpm<"ldh2", 0b00010000, IILane2>;
+def LDHU2      : LoadInstrSpm<"ldhu2", 0b00010000, IILane2>;
+def STH2       : StoreInstrSpm<"sth2", 0b00010101, IILane2>;
+def LDB2       : LoadInstrSpm<"ldb2", 0b00010000, IILane2>;
+def LDBU2      : LoadInstrSpm<"ldbu2", 0b00010000, IILane2>;
+def STB2       : StoreInstrSpm<"stb2", 0b00010101, IILane2>;
 
 // Lane 3
-def LDW3       : LoadInstrSpm<"ldw3", 0b00010000, IIAll>;
-def STW3       : StoreInstrSpm<"stw3", 0b00010101, IIAll>;
-def LDH3       : LoadInstrSpm<"ldh3", 0b00010000, IIAll>;
-def LDHU3      : LoadInstrSpm<"ldhu3", 0b00010000, IIAll>;
-def STH3       : StoreInstrSpm<"sth3", 0b00010101, IIAll>;
-def LDB3       : LoadInstrSpm<"ldb3", 0b00010000, IIAll>;
-def LDBU3      : LoadInstrSpm<"ldbu3", 0b00010000, IIAll>;
-def STB3       : StoreInstrSpm<"stb3", 0b00010101, IIAll>;
+def LDW3       : LoadInstrSpm<"ldw3", 0b00010000, IILane3>;
+def STW3       : StoreInstrSpm<"stw3", 0b00010101, IILane3>;
+def LDH3       : LoadInstrSpm<"ldh3", 0b00010000, IILane3>;
+def LDHU3      : LoadInstrSpm<"ldhu3", 0b00010000, IILane3>;
+def STH3       : StoreInstrSpm<"sth3", 0b00010101, IILane3>;
+def LDB3       : LoadInstrSpm<"ldb3", 0b00010000, IILane3>;
+def LDBU3      : LoadInstrSpm<"ldbu3", 0b00010000, IILane3>;
+def STB3       : StoreInstrSpm<"stb3", 0b00010101, IILane3>;
 
 // Lane 4
-def LDW4       : LoadInstrSpm<"ldw4", 0b00010000, IIAll>;
-def STW4       : StoreInstrSpm<"stw4", 0b00010101, IIAll>;
-def LDH4       : LoadInstrSpm<"ldh4", 0b00010000, IIAll>;
-def LDHU4      : LoadInstrSpm<"ldhu4", 0b00010000, IIAll>;
-def STH4       : StoreInstrSpm<"sth4", 0b00010101, IIAll>;
-def LDB4       : LoadInstrSpm<"ldb4", 0b00010000, IIAll>;
-def LDBU4      : LoadInstrSpm<"ldbu4", 0b00010000, IIAll>;
-def STB4       : StoreInstrSpm<"stb4", 0b00010101, IIAll>;
+def LDW4       : LoadInstrSpm<"ldw4", 0b00010000, IILane4>;
+def STW4       : StoreInstrSpm<"stw4", 0b00010101, IILane4>;
+def LDH4       : LoadInstrSpm<"ldh4", 0b00010000, IILane4>;
+def LDHU4      : LoadInstrSpm<"ldhu4", 0b00010000, IILane4>;
+def STH4       : StoreInstrSpm<"sth4", 0b00010101, IILane4>;
+def LDB4       : LoadInstrSpm<"ldb4", 0b00010000, IILane4>;
+def LDBU4      : LoadInstrSpm<"ldbu4", 0b00010000, IILane4>;
+def STB4       : StoreInstrSpm<"stb4", 0b00010101, IILane4>;
 
 // Lane 5
-def LDW5       : LoadInstrSpm<"ldw5", 0b00010000, IIAll>;
-def STW5       : StoreInstrSpm<"stw5", 0b00010101, IIAll>;
-def LDH5       : LoadInstrSpm<"ldh5", 0b00010000, IIAll>;
-def LDHU5      : LoadInstrSpm<"ldhu5", 0b00010000, IIAll>;
-def STH5       : StoreInstrSpm<"sth5", 0b00010101, IIAll>;
-def LDB5       : LoadInstrSpm<"ldb5", 0b00010000, IIAll>;
-def LDBU5      : LoadInstrSpm<"ldbu5", 0b00010000, IIAll>;
-def STB5       : StoreInstrSpm<"stb5", 0b00010101, IIAll>;
+def LDW5       : LoadInstrSpm<"ldw5", 0b00010000, IILane5>;
+def STW5       : StoreInstrSpm<"stw5", 0b00010101, IILane5>;
+def LDH5       : LoadInstrSpm<"ldh5", 0b00010000, IILane5>;
+def LDHU5      : LoadInstrSpm<"ldhu5", 0b00010000, IILane5>;
+def STH5       : StoreInstrSpm<"sth5", 0b00010101, IILane5>;
+def LDB5       : LoadInstrSpm<"ldb5", 0b00010000, IILane5>;
+def LDBU5      : LoadInstrSpm<"ldbu5", 0b00010000, IILane5>;
+def STB5       : StoreInstrSpm<"stb5", 0b00010101, IILane5>;
 
 // Lane 6
-def LDW6       : LoadInstrSpm<"ldw6", 0b00010000, IIAll>;
-def STW6       : StoreInstrSpm<"stw6", 0b00010101, IIAll>;
-def LDH6       : LoadInstrSpm<"ldh6", 0b00010000, IIAll>;
-def LDHU6      : LoadInstrSpm<"ldhu6", 0b00010000, IIAll>;
-def STH6       : StoreInstrSpm<"sth6", 0b00010101, IIAll>;
-def LDB6       : LoadInstrSpm<"ldb6", 0b00010000, IIAll>;
-def LDBU6      : LoadInstrSpm<"ldbu6", 0b00010000, IIAll>;
-def STB6       : StoreInstrSpm<"stb6", 0b00010101, IIAll>;
+def LDW6       : LoadInstrSpm<"ldw6", 0b00010000, IILane6>;
+def STW6       : StoreInstrSpm<"stw6", 0b00010101, IILane6>;
+def LDH6       : LoadInstrSpm<"ldh6", 0b00010000, IILane6>;
+def LDHU6      : LoadInstrSpm<"ldhu6", 0b00010000, IILane6>;
+def STH6       : StoreInstrSpm<"sth6", 0b00010101, IILane6>;
+def LDB6       : LoadInstrSpm<"ldb6", 0b00010000, IILane6>;
+def LDBU6      : LoadInstrSpm<"ldbu6", 0b00010000, IILane6>;
+def STB6       : StoreInstrSpm<"stb6", 0b00010101, IILane6>;
 
 // Lane 7
-def LDW7       : LoadInstrSpm<"ldw7", 0b00010000, IIAll>;
-def STW7       : StoreInstrSpm<"stw7", 0b00010101, IIAll>;
-def LDH7       : LoadInstrSpm<"ldh7", 0b00010000, IIAll>;
-def LDHU7      : LoadInstrSpm<"ldhu7", 0b00010000, IIAll>;
-def STH7       : StoreInstrSpm<"sth7", 0b00010101, IIAll>;
-def LDB7       : LoadInstrSpm<"ldb7", 0b00010000, IIAll>;
-def LDBU7      : LoadInstrSpm<"ldbu7", 0b00010000, IIAll>;
-def STB7       : StoreInstrSpm<"stb7", 0b00010101, IIAll>;
+def LDW7       : LoadInstrSpm<"ldw7", 0b00010000, IILane7>;
+def STW7       : StoreInstrSpm<"stw7", 0b00010101, IILane7>;
+def LDH7       : LoadInstrSpm<"ldh7", 0b00010000, IILane7>;
+def LDHU7      : LoadInstrSpm<"ldhu7", 0b00010000, IILane7>;
+def STH7       : StoreInstrSpm<"sth7", 0b00010101, IILane7>;
+def LDB7       : LoadInstrSpm<"ldb7", 0b00010000, IILane7>;
+def LDBU7      : LoadInstrSpm<"ldbu7", 0b00010000, IILane7>;
+def STB7       : StoreInstrSpm<"stb7", 0b00010101, IILane7>;
 
 
 //===----------------------------------------------------------------------===//

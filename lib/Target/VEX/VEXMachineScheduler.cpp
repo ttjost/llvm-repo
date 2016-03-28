@@ -425,7 +425,7 @@ void ConvergingVEXVLIWScheduler::traceCandidate(const char *Label,
            << " ";
   else
     dbgs() << "     ";
-  SU->dump(DAG);
+//  SU->dump(DAG);
 }
 #endif
 
@@ -777,10 +777,10 @@ SUnit *ConvergingVEXVLIWScheduler::pickNode(bool &IsTopNode) {
     //SU->InsertNop = false;
     if (SU->Preds.size() != 0) {
       DEBUG(dbgs() << "Preds of:\n");
-      SU->dump(DAG);
+//      SU->dump(DAG);
       for (SUnit::const_pred_iterator I = SU->Preds.begin(), E = SU->Preds.end();
         I != E; ++I) {
-         I->getSUnit()->dump(DAG);
+//         I->getSUnit()->dump(DAG);
         unsigned Latency = I->getLatency();
         unsigned CurrentCycle = Top.ResourceModel->getTotalPackets();
         if(!isAvailable)

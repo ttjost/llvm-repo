@@ -104,7 +104,7 @@ class VEXPacketizerList : public VLIWPacketizerList {
 //    unsigned FindVariable(MachineBasicBlock::iterator MI);
 //    int FindVariableThroughDefinition(MachineBasicBlock::iterator MI);
 
-    unsigned getSPMOpcode(unsigned Opcode, unsigned Lane);
+//    unsigned getSPMOpcode(unsigned Opcode, unsigned Lane);
 //    void ReplaceSPMInstruction(MachineInstr *MI);
 
 public:

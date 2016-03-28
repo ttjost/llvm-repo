@@ -57,6 +57,21 @@ void SPMVariable::AddDefinitionInstruction(MachineBasicBlock::iterator MI) {
     DefinitionInstructions.push_back(MI);
 }
 
+void SPMVariable::AddBaseRegister(MachineBasicBlock *MBB, unsigned BaseRegister) {
+    BaseRegs[MBB] = BaseRegister;
+}
+
+unsigned SPMVariable::FindBaseRegister(MachineBasicBlock *MBB) {
+    std::map<MachineBasicBlock *, unsigned>::iterator it;
+    
+    it = BaseRegs.find(MBB);
+    
+    if (it != BaseRegs.end())
+        return BaseRegs[MBB];
+    else
+        return 0;
+}
+
 bool SPMVariable::isDefinitionInstruction(MachineBasicBlock::iterator Inst) {
 
     DEBUG(dbgs() << "isDefinitionInstruction\n");
@@ -69,6 +84,113 @@ bool SPMVariable::isDefinitionInstruction(MachineBasicBlock::iterator Inst) {
         }
     }
     return false;
+}
+
+// Return Lane and Offset for that Value in Scratchpad
+// We only need to worry about this when using Multiple Storages.
+// Otherwise, finding out Lane and Offset is straightforward.
+void SPMVariable::CalculateLaneAndOffset(unsigned &Lane, unsigned &Offset) {
+    
+    if (!MultipleStorage) {
+        Lane = Memories[0];
+        return;
+    }
+    
+    if (ConsecutiveDataPerSPM == 1) {
+        
+        Lane = ((Offset - MinimumOffset) % (DataSize * NumMemories)) / DataSize;
+        Offset = ((Offset - MinimumOffset) / (DataSize * NumMemories)) * DataSize;
+        
+        Lane = Memories[Lane];
+        return;
+        
+    } else {
+        unsigned DistanceForNextOffsetWithinBB = (ConsecutiveDataPerSPM*DataSize)*NumMemories;
+    
+        unsigned Temp = (Offset-(Offset/(MinimumOffset + DistanceForNextOffsetWithinBB))*DistanceForNextOffsetWithinBB);
+    
+        if (MinimumOffset == 0)
+            MinimumOffset = 1;
+    
+        Lane = Temp/MinimumOffset - 1;
+    
+        Lane = Lane %NumMemories;
+    
+        assert(Lane < NumMemories && "Lane is wrongly calculated!");
+    
+        Lane = Memories[Lane];
+
+        Offset = ((Temp + (Offset/(MinimumOffset +
+                              DistanceForNextOffsetWithinBB))*OffsetsPerBB -
+                   Lane*(ConsecutiveDataPerSPM*DataSize)) * DataSize)/(OffsetsPerBB);
+    }
+}
+
+unsigned SPMVariable::getMaximumSPMs(unsigned IssueWidth) {
+    for (unsigned i = IssueWidth; i != 0 ; --i)
+        if (OffsetsPerBB%i == 0) {
+            NumUnits = i;
+            return i;
+        }
+    llvm_unreachable("Could not find a unit!");
+}
+
+unsigned SPMVariable::getMemoryUnit() {
+    assert(AllocationPriority >= 0 && "Allocation was not performed.");
+    if (MultipleStorage)
+        return Memories[(AllocationPriority++)%Memories.size()];
+    else
+        return Memories[0];
+}
+
+void SPMVariable::CalculateOffsetDistribution() {
+    
+    unsigned OffsetDistance = INT_MAX;
+    
+    int MinOffset;
+    
+    std::vector<int> SortedOffsets;
+    
+    for (unsigned i = 0, e = MemoryInstructions.size(); i != e; ++i) {
+        for (unsigned j = 1, EndOp = MemoryInstructions[i]->getNumOperands(); j != EndOp; ++j)
+            if (MemoryInstructions[i]->getOperand(j).isImm()) {
+                SortedOffsets.push_back(MemoryInstructions[i]->getOperand(j).getImm());
+                break;
+            }
+    }
+    
+    std::sort(SortedOffsets.begin(), SortedOffsets.end());
+    
+    int TempOffset = SortedOffsets[0];
+    for (unsigned i = 1, e = SortedOffsets.size(); i != e; ++i) {
+        
+        if (MinOffset > TempOffset)
+            MinOffset = TempOffset;
+        
+        unsigned distance = std::abs(SortedOffsets[i] - TempOffset);
+        
+        TempOffset = SortedOffsets[i];
+        
+        if (distance < OffsetDistance)
+            OffsetDistance = distance;
+    }
+    
+    ConsecutiveDataPerSPM = OffsetDistance/DataSize;
+    MinimumOffset = MinOffset;
+    
+}
+
+void SPMVariable::setMemoryUnits(std::vector<unsigned> Units) {
+    if (AllocationPriority >= 0)
+        return;
+    AllocationPriority++;
+    Memories = Units;
+    NumMemories = Memories.size();
+    
+    if (NumMemories > 1)
+        MultipleStorage = true;
+    else
+        MultipleStorage = false;
 }
 
 void SPMVariable::AddOffset(unsigned Register, unsigned Offset) {

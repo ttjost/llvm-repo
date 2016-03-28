@@ -16,6 +16,7 @@
 
 #include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/IR/GlobalValue.h"
+#include <map>
 
 namespace llvm {
 
@@ -37,6 +38,7 @@ class SPMVariable {
 
     const GlobalValue *GV;
 
+    std::map<MachineBasicBlock*, unsigned> BaseRegs;
     std::vector<MachineBasicBlock::iterator> MemoryInstructions;
 
     std::vector<MachineBasicBlock::iterator> DefinitionInstructions;
@@ -55,6 +57,9 @@ class SPMVariable {
 
     bool LoadsRequired;
 
+    int MinimumOffset;
+    
+    unsigned ConsecutiveDataPerSPM;
     unsigned OffsetsPerBB;
     unsigned NumUnits;
     unsigned InitialAddress;
@@ -168,54 +173,41 @@ public:
     bool isMultipleStorage() const { return MultipleStorage; }
     bool isDinamicallyAllocated() const  { return DynamicAllocation; }
 
-    unsigned getMemoryUnit() {
-        assert(AllocationPriority >= 0 && "Allocation was not performed.");
-        if (MultipleStorage)
-            return Memories[(AllocationPriority++)%Memories.size()];
-        else
-            return Memories[0];
-    }
-
-    void CalculateLaneAndOffset(unsigned &Lane, unsigned &Offset) {
-
-//        assert(Offset > 0 && "Only positive offset for now.");
-
-        Lane = (Offset%(NumMemories*DataSize))/DataSize;
-        Lane = (Lane + Memories[0]);
-        Offset = Offset/(NumMemories*DataSize)*DataSize;
-    }
-
-    void setMemoryUnits(std::vector<unsigned> Units) {
-        if (AllocationPriority >= 0)
-            return;
-        AllocationPriority++;
-        Memories = Units;
-        NumMemories = Memories.size();
-    }
-
+    unsigned getMemoryUnit();
+    
+    void CalculateOffsetDistribution();
+    
+    // Return Lane and Offset for that Value in Scratchpad
+    // We only need to worry about this when using Multiple Storages.
+    // Otherwise, finding out Lane and Offset is straightforward.
+    void CalculateLaneAndOffset(unsigned &Lane, unsigned &Offset);
+    
+    void setMemoryUnits(std::vector<unsigned> Units);
+    
     bool isNotAllocated() const { return AllocationPriority < 0; }
     
+    std::vector<unsigned> getMemories() const { return Memories; }
+    
+    int getMinimumOffset() const  { return MinimumOffset; }
     unsigned getNumUnits() const { return NumUnits; }
     unsigned getInitialAddress() const { return InitialAddress; }
     unsigned getSize() const { return Size; }
     unsigned getNumElements() const { return NumElements; }
     unsigned getMaxOffsetPerBB() const { return OffsetsPerBB; }
+    
+    unsigned getConsecutiveDataPerSPM() const { return ConsecutiveDataPerSPM; } 
 
     bool areLoadsRequired() const { return LoadsRequired; }
 
-    unsigned getMaximumSPMs(unsigned IssueWidth) {
-        for (unsigned i = IssueWidth; i != 0 ; --i)
-            if (OffsetsPerBB%i == 0) {
-                NumUnits = i;
-                return i;
-            }
-        llvm_unreachable("Could not find a unit!");
-    }
-
+    unsigned getMaximumSPMs(unsigned IssueWidth);
+    
     void AddPropagationRegister(unsigned Register);
     void AddMemoryInstruction(MachineBasicBlock::iterator MI);
     void AddDefinitionInstruction(MachineBasicBlock::iterator MI);
 
+    void AddBaseRegister(MachineBasicBlock *MBB, unsigned BaseRegister);
+    unsigned FindBaseRegister(MachineBasicBlock *MBB);
+                         
     unsigned getDataType() {
         return DataType;
     }
