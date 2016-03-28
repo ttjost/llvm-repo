@@ -1244,6 +1244,14 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
         // We will tell exactly in which SPM the data will be stored.
         VarRelatedInstructions = Var.getMemoryInstructions();
         for (MachineBasicBlock::iterator Inst : VarRelatedInstructions) {
+            // For now, we will set here the number of elements for this variable.
+            // Since we only have one LoopCounter, all variables will have "the same"
+            // number of elements. Of course, this will and should only have an effect
+            // on the preamble insertion, since offsets are used similarly to the way
+            // LLVM generates memory instructions. Therefore, we won't create new
+            // instructions that manipulate wrong values
+            // TODO:: Fix this to set every variable with its on proper loop counter
+            Var.setNumElements(LoopCounterPreamble);
             unsigned Lane;
             
             Offset = getInstructionOffset(Inst);

@@ -100,30 +100,20 @@ void SPMVariable::CalculateLaneAndOffset(unsigned &Lane, unsigned &Offset) {
         
         Lane = ((Offset - MinimumOffset) % (DataSize * NumMemories)) / DataSize;
         Offset = ((Offset - MinimumOffset) / (DataSize * NumMemories)) * DataSize;
-        
-        Lane = Memories[Lane];
-        return;
-        
-    } else {
-        unsigned DistanceForNextOffsetWithinBB = (ConsecutiveDataPerSPM*DataSize)*NumMemories;
-    
-        unsigned Temp = (Offset-(Offset/(MinimumOffset + DistanceForNextOffsetWithinBB))*DistanceForNextOffsetWithinBB);
-    
-        if (MinimumOffset == 0)
-            MinimumOffset = 1;
-    
-        Lane = Temp/MinimumOffset - 1;
-    
-        Lane = Lane %NumMemories;
-    
-        assert(Lane < NumMemories && "Lane is wrongly calculated!");
-    
-        Lane = Memories[Lane];
 
-        Offset = ((Temp + (Offset/(MinimumOffset +
-                              DistanceForNextOffsetWithinBB))*OffsetsPerBB -
-                   Lane*(ConsecutiveDataPerSPM*DataSize)) * DataSize)/(OffsetsPerBB);
+    } else {
+        unsigned Row, Column, Temp;
+
+        Row = ((Offset-MinimumOffset)/DataSize)%OffsetsPerBB;
+        Column = ((Offset-MinimumOffset)/DataSize)/OffsetsPerBB;
+
+        Temp = Row*OffsetsPerBB + Column;
+
+        Lane = Temp%NumMemories;
+        Offset = (Temp/NumMemories)*DataSize;
+
     }
+    Lane = Memories[Lane];
 }
 
 unsigned SPMVariable::getMaximumSPMs(unsigned IssueWidth) {
@@ -191,6 +181,10 @@ void SPMVariable::setMemoryUnits(std::vector<unsigned> Units) {
         MultipleStorage = true;
     else
         MultipleStorage = false;
+}
+
+void SPMVariable::setNumElements(unsigned Elements) {
+    NumElements = Elements;
 }
 
 void SPMVariable::AddOffset(unsigned Register, unsigned Offset) {

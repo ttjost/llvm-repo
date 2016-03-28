@@ -183,7 +183,8 @@ public:
     void CalculateLaneAndOffset(unsigned &Lane, unsigned &Offset);
     
     void setMemoryUnits(std::vector<unsigned> Units);
-    
+    void setNumElements(unsigned Elements);
+
     bool isNotAllocated() const { return AllocationPriority < 0; }
     
     std::vector<unsigned> getMemories() const { return Memories; }
