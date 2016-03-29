@@ -328,8 +328,7 @@ class ReturnInstr<string OpcStr, bits<8> OpVal, InstrItinClass Itin>
     let isReturn = 1;
 }
 
-
-let isTerminator = 1, isBarrier = 1, isBranch = 1 in {
+let isTerminator = 1, isBranch = 1 in {
 multiclass BranchInstr<string OpcStr1, string OpcStr2, bits<8> OpVal, SDNode OpNode, InstrItinClass Itin>{
 def R : InstVEX<(outs), (ins BrRegs:$s1, brtarget:$offset),
                 !strconcat(OpcStr1, " $s1, $offset"),

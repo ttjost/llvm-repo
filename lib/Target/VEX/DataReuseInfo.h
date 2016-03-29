@@ -39,6 +39,10 @@ public:
         NumSPMs = SPMs;
     }
 
+    void resetVariables() {
+        Variables.resize(0);
+    }
+
     void setIssueWidth (unsigned issuewidth) {
         IssueWidth = issuewidth;
     }

@@ -24,14 +24,14 @@ using namespace llvm;
 
 bool SPMVariable::operator==(const SPMVariable& rhs) {
 
-    if (this->getName() == rhs.getName() &&
+    if (this->getName() == rhs.getName() /*&&
 //        this->getFlags() == rhs.getFlags() &&
         this->isMultipleStorage() == rhs.isMultipleStorage() &&
         this->isDinamicallyAllocated() == rhs.isDinamicallyAllocated() &&
         this->getNumUnits() == rhs.getNumUnits() &&
         this->getInitialAddress() == rhs.getInitialAddress() &&
         this->getSize() == rhs.getSize() &&
-        this->getNumElements() == rhs.getNumElements())
+        this->getNumElements() == rhs.getNumElements()*/)
         return true;
     else
         return false;
@@ -76,8 +76,8 @@ bool SPMVariable::isDefinitionInstruction(MachineBasicBlock::iterator Inst) {
 
     DEBUG(dbgs() << "isDefinitionInstruction\n");
     for (auto def : DefinitionInstructions) {
-        def->dump();
-        Inst->dump();
+        DEBUG(def->dump());
+        DEBUG(Inst->dump());
         if (def == Inst) {
             DEBUG(dbgs() << "Same\n");
             return true;
