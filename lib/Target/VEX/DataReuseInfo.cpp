@@ -170,8 +170,7 @@ unsigned DataReuseInfo::AllocateSPMs(SPMVariable &Var) {
     } else
         llvm_unreachable("There is no support for a different Issue Width yet. Choose between 2, 4 and 8.");
 
-
-    unsigned NumberOfSPMs = Var.getMaximumSPMs(IssueWidth);
+    unsigned NumberOfSPMs = Var.getMaximumSPMs(IssueWidth/Variables.size());
     unsigned OffsetsPerSPMs = Var.getSize()/NumberOfSPMs;
 
     return getOffsetAndUpdateMemories(Var, NumberOfSPMs, OffsetsPerSPMs);

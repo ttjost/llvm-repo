@@ -884,7 +884,7 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
         --MBB;
         DEBUG(MBB->dump());
     }
-
+    MBB->dump();
     // Create new Basic Block for Preamble
     // This will do almost all tricks to create a BB in between two BBs.
     MachineBasicBlock *PreambleMBB = MBB->SplitCriticalEdge(std::next(MachineFunction::iterator(MBB)), this);
@@ -1283,6 +1283,9 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                     Var.AddBaseRegister(MBB, BaseReg);
                     
                     MachineBasicBlock::pred_iterator SI = MBB->pred_begin();
+                    
+                    if (*(SI) == MBB)
+                        ++SI;
                     
                     assert(*(SI) != MBB && "Cannot be the same BB");
                     
