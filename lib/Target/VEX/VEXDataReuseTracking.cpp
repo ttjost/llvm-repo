@@ -96,7 +96,7 @@ class VEXDataReuseTracking: public MachineFunctionPass {
     
     MachineBasicBlock* CreatePreamble(MachineFunction &MF, SPMVariable &Variable);
 
-    void InsertPreamble(MachineFunction &MF, SPMVariable &Variable);
+    void InsertPreamble(MachineFunction &MF, SPMVariable &Variable, MachineBasicBlock *PreambleMBB);
     
     unsigned getLoadOpcode(unsigned DataType);
     unsigned getSPMStoreOpcode(unsigned Lane, unsigned DataType);
@@ -898,7 +898,7 @@ MachineBasicBlock* VEXDataReuseTracking::CreatePreamble(MachineFunction &MF, SPM
 //      c0  asm,0	$r0.11, 0, $r0.12
 //      c0  br      $b0.0, PREAMBLE_COEF
 // ;;
-void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Variable) {
+void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Variable, MachineBasicBlock *PreambleMBB) {
     
     MachineBasicBlock::iterator DefInstr = Variable.getFirstDefinition();
     MachineBasicBlock::iterator FirstMemInstr = Variable.getFirstMemoryInstruction();
@@ -910,24 +910,25 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
 
     assert(DefInstr->getParent()->getParent() == &MF && "DefInstr is not defined in this MF, but somewhere else");
 
-    MachineFunction::iterator MBB = DefInstr->getParent();
-    if (DefInstr->getParent() == FirstMemInstr->getParent()) {
-        --MBB;
+    MachineFunction::iterator MBB;
+    
+    MachineBasicBlock::pred_iterator PredMBB = PreambleMBB->pred_begin();
+    if (*PredMBB == PreambleMBB) {
+        ++PredMBB;
     }
+    
+    MBB = *PredMBB;
 
-    MBB->dump();
-    (*MBB->succ_begin())->dump();
-
-    MF.dump();
+//    DEBUG(MF.dump());
     // Create new Basic Block for Preamble
     // This will do almost all tricks to create a BB in between two BBs.
-    MachineBasicBlock *PreambleMBB = MBB->SplitCriticalEdge(*MBB->succ_begin(), this);
+    //MachineBasicBlock *PreambleMBB = MBB->SplitCriticalEdge(*MBB->succ_begin(), this);
 
     if (!PreambleMBB)
         llvm_unreachable("Error creating new basic block");
 
-    PreambleMBB->addSuccessor(PreambleMBB);
-    MF.RenumberBlocks();
+//    PreambleMBB->addSuccessor(PreambleMBB);
+//    MF.RenumberBlocks();
 
     unsigned MaxOffsetPerBB = Variable.getMaxOffsetPerBB();
     unsigned NumMemories = Variable.getNumUnits();
@@ -967,29 +968,25 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
     unsigned InductionRegFalse = RegInfo.createVirtualRegister(GPRegClass);
 
     MachineBasicBlock::iterator LastNonTerminatorInstr = MBB->end();
-    --LastNonTerminatorInstr;
     
-    while (LastNonTerminatorInstr->isTerminator() && LastNonTerminatorInstr != PreambleMBB->begin())
+    while (LastNonTerminatorInstr->isTerminator() && LastNonTerminatorInstr != MBB->begin())
         --LastNonTerminatorInstr;
     
-    MachineInstr *Inst = BuildMI(*MBB, LastNonTerminatorInstr,LastNonTerminatorInstr->getDebugLoc(),
+    MachineInstr *Inst = BuildMI(*MBB, LastNonTerminatorInstr, DebugLoc(),
                            TII->get(VEX::MOVi),
                            InductionRegTrue).addImm(0);
-    Inst->dump();
     //LIS->InsertMachineInstrInMaps(Inst);
     unsigned GlobalMemVariableReg = RegInfo.createVirtualRegister(GPRegClass);
     unsigned GlobalMemVariableRegTrue = RegInfo.createVirtualRegister(GPRegClass);
     unsigned GlobalMemVariableRegFalse = RegInfo.createVirtualRegister(GPRegClass);
-    Inst = BuildMI(*MBB, LastNonTerminatorInstr,LastNonTerminatorInstr->getDebugLoc(),
+    Inst = BuildMI(*MBB, LastNonTerminatorInstr, DebugLoc(),
             TII->get(VEX::MOVi),GlobalMemVariableRegTrue).addGlobalAddress(Variable.getGlobalValue());
-    Inst->dump();
     LIS->InsertMachineInstrInMaps(Inst);
 
     unsigned SPMAddrReg = RegInfo.createVirtualRegister(GPRegClass);
     unsigned SPMAddrRegTrue = RegInfo.createVirtualRegister(GPRegClass);
     unsigned SPMAddrRegFalse = RegInfo.createVirtualRegister(GPRegClass);
-    Inst = BuildMI(*MBB, LastNonTerminatorInstr,LastNonTerminatorInstr->getDebugLoc(),TII->get(VEX::MOVi),SPMAddrRegTrue).addImm(Variable.getInitialAddress());
-    Inst->dump();
+    Inst = BuildMI(*MBB, LastNonTerminatorInstr, DebugLoc(),TII->get(VEX::MOVi),SPMAddrRegTrue).addImm(Variable.getInitialAddress());
     LIS->InsertMachineInstrInMaps(Inst);
 
     LastNonTerminatorInstr = PreambleMBB->getLastNonDebugInstr();
@@ -1007,40 +1004,47 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
         llvm_unreachable("You need to specify the number of iterations on the Preamble Loop.");
 
     // Add PHI Instruction
-    BuildMI(*PreambleMBB, PreambleMBB->begin(), DebugLoc(), TII->get(VEX::PHI), InductionReg)
+    Inst = BuildMI(*PreambleMBB, PreambleMBB->begin(), DebugLoc(), TII->get(VEX::PHI), InductionReg)
         .addReg(InductionRegTrue)
         .addMBB(MBB)
         .addReg(InductionRegFalse)
         .addMBB(PreambleMBB);
+    LIS->InsertMachineInstrInMaps(Inst);
 
     // Add PHI Instruction
-    BuildMI(*PreambleMBB, PreambleMBB->begin(), DebugLoc(), TII->get(VEX::PHI), GlobalMemVariableReg)
+    Inst = BuildMI(*PreambleMBB, PreambleMBB->begin(), DebugLoc(), TII->get(VEX::PHI), GlobalMemVariableReg)
         .addReg(GlobalMemVariableRegTrue)
         .addMBB(MBB)
         .addReg(GlobalMemVariableRegFalse)
         .addMBB(PreambleMBB);
+    LIS->InsertMachineInstrInMaps(Inst);
 
     // Add PHI Instruction
-    BuildMI(*PreambleMBB, PreambleMBB->begin(), DebugLoc(), TII->get(VEX::PHI), SPMAddrReg)
+    Inst =BuildMI(*PreambleMBB, PreambleMBB->begin(), DebugLoc(), TII->get(VEX::PHI), SPMAddrReg)
         .addReg(SPMAddrRegTrue)
         .addMBB(MBB)
         .addReg(SPMAddrRegFalse)
         .addMBB(PreambleMBB);
+    LIS->InsertMachineInstrInMaps(Inst);
 
     // Comparison Instruction
     unsigned CMPBranchReg = RegInfo.createVirtualRegister(BrRegClass);
-    BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(),TII->get(VEX::CMPLTBRegi),CMPBranchReg)
+    Inst = BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(),TII->get(VEX::CMPLTBRegi),CMPBranchReg)
                                                         .addReg(InductionReg)
                                                         .addImm(ExternalLoopCounter);
+    LIS->InsertMachineInstrInMaps(Inst);
 
     // Add Instruction for next value
-     BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(), TII->get(VEX::ADDi), GlobalMemVariableRegFalse)
+    Inst = BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(), TII->get(VEX::ADDi), GlobalMemVariableRegFalse)
                                                             .addReg(GlobalMemVariableReg)
                                                             .addImm(Variable.getDataSize());
+    LIS->InsertMachineInstrInMaps(Inst);
+    
     // Add Instruction for Induction Variable
-    BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(), TII->get(VEX::ADDi),InductionRegFalse)
+    Inst = BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(), TII->get(VEX::ADDi),InductionRegFalse)
             .addReg(InductionReg)
             .addImm(1);
+    LIS->InsertMachineInstrInMaps(Inst);
     
     unsigned SPMOffset = 0;
     unsigned GlobalOffset = 0;
@@ -1060,10 +1064,11 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
                 
                 LoadOpcode = getLoadOpcode(Variable.getDataType());
                 // Load from Memory
-                BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(), TII->get(LoadOpcode), LoadDst[j])
-                .addReg(GlobalMemVariableReg)
-                .addImm(GlobalOffset)
-                .addMemOperand(MMOLoad);
+                Inst = BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(), TII->get(LoadOpcode), LoadDst[j])
+                        .addReg(GlobalMemVariableReg)
+                        .addImm(GlobalOffset)
+                        .addMemOperand(MMOLoad);
+                LIS->InsertMachineInstrInMaps(Inst);
                 
                 // Store to SPM
                 MachineMemOperand *MMOStore =
@@ -1072,10 +1077,11 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
                 
                 StoreOpcode = getSPMOpcodeFromDataType(Variable.getDataType(), Memories[j], false);
                 
-                BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(),TII->get(StoreOpcode)).addReg(LoadDst[j])
-                .addReg(SPMAddrReg)
-                .addImm(SPMOffset)
-                .addMemOperand(MMOStore);
+                Inst = BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(),TII->get(StoreOpcode)).addReg(LoadDst[j])
+                        .addReg(SPMAddrReg)
+                        .addImm(SPMOffset)
+                        .addMemOperand(MMOStore);
+                LIS->InsertMachineInstrInMaps(Inst);
                 
                 GlobalOffset += InternalOffset;
             }
@@ -1083,17 +1089,16 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
         }
         
         // Add Instruction for Induction Variable
-        BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(), TII->get(VEX::ADDi),SPMAddrRegFalse)
+        Inst = BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(), TII->get(VEX::ADDi),SPMAddrRegFalse)
         .addReg(SPMAddrReg)
         .addImm(InternalLoopCounter*Variable.getDataSize());
+    LIS->InsertMachineInstrInMaps(Inst);
 
-    BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(), TII->get(VEX::BR)).addReg(CMPBranchReg)
-    .addMBB(PreambleMBB);
+    Inst = BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(), TII->get(VEX::BR)).addReg(CMPBranchReg)
+            .addMBB(PreambleMBB);
+    LIS->InsertMachineInstrInMaps(Inst);
 
-    --LastNonTerminatorInstr;
     DEBUG(PreambleMBB->dump());
-
-    LIS->InsertMachineInstrRangeInMaps(PreambleMBB->begin(), LastNonTerminatorInstr);
 
 //    LastNonTerminatorInstr = PreambleMBB->getLastNonDebugInstr();
 //    if (LastNonTerminatorInstr->getOpcode() != VEX::GOTO) {
@@ -1240,13 +1245,13 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
 
     std::vector<SPMVariable> Variables = DataInfo->getVariables();
 
-//    std::vector<MachineBasicBlock *> Preambles;
-//    for (auto &Var : Variables) {
-//        if (Var.areLoadsRequired()) {
-//            Preambles.push_back(CreatePreamble(MF, Var));
-//        }
-//    }
-
+    std::vector<MachineBasicBlock *> Preambles;
+    for (auto &Var : Variables) {
+        if (Var.areLoadsRequired()) {
+            Preambles.push_back(CreatePreamble(MF, Var));
+        }
+    }
+    
     unsigned PreambleIt = 0;
 
     for (auto &Var : Variables) {
@@ -1344,7 +1349,7 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                     
                     // Add Instruction for next value
                     MachineInstr* Inst3 = BuildMI(*MBB, LastInst, DebugLoc(), TII->get(VEX::ADDi), BaseRegFalse)
-                    .addReg(BaseReg, RegState::Kill)
+                    .addReg(BaseReg)
                     .addImm(Var.getMaxOffsetPerBB()/Var.getNumUnits()*Var.getDataSize());
                     
                     LIS->InsertMachineInstrInMaps(Inst3);
@@ -1362,7 +1367,7 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
 
         if (Var.areLoadsRequired()) {
             DEBUG(dbgs() << "\nName:" << Var.getName()  << " requires previous Loads to scratchpads.\n");
-            InsertPreamble(MF, Var);
+            InsertPreamble(MF, Var, Preambles[PreambleIt++]);
         } else
             DEBUG(dbgs() << "\nName:" << Var.getName()  << "\n");
     }
