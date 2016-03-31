@@ -40,7 +40,7 @@ add_llvm_target(VEXCodeGen
   VEXISelDAGToDAG.cpp
   VEXModifyBranches.cpp
   VEXVLIWPacketizer.cpp
-
+  HexagonMachineScheduler.cpp
   )
 
 # Should match with "subdirectories = MCTargetDesc TargetInfo" in LLVMBuild.txt

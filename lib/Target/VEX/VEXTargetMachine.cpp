@@ -25,6 +25,7 @@
 #include "llvm/CodeGen/TargetLoweringObjectFileImpl.h"
 #include "llvm/Support/CommandLine.h"
 #include "VEXDataReuseTracking.cpp"
+#include "HexagonMachineScheduler.cpp"
 
 using namespace llvm;
 
@@ -125,7 +126,8 @@ void VEXNewTargetMachine::anchor() {}
 //}
 
 static ScheduleDAGInstrs *createVLIWMachineSched(MachineSchedContext *C) {
-    return new VEXVLIWMachineScheduler(C, make_unique<ConvergingVEXVLIWScheduler>());
+//    return new VEXVLIWMachineScheduler(C, make_unique<ConvergingVEXVLIWScheduler>());
+    return new VLIWMachineScheduler(C, make_unique<ConvergingVLIWScheduler>());
 }
 
 static MachineSchedRegistry
