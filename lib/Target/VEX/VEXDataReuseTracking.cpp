@@ -118,8 +118,9 @@ public:
         const VEXInstrInfo *TII = static_cast<const VEXInstrInfo *>(Subtarget.getInstrInfo());
 
         DataInfo = static_cast<const VEXTargetMachine &>(TM).getDataReuseInfo();
-        DataInfo->setIssueWidth(Subtarget.getInstrItineraryData()->SchedModel.IssueWidth);
-        DataInfo->setNumSPMs(Subtarget.getInstrItineraryData()->SchedModel.IssueWidth);
+        unsigned issue = Subtarget.getInstrItineraryData()->SchedModel.IssueWidth > 8 ? 8 : Subtarget.getInstrItineraryData()->SchedModel.IssueWidth;
+        DataInfo->setNumSPMs(issue);
+        DataInfo->setIssueWidth(issue);
     }
 
     const char *getPassName() const override {

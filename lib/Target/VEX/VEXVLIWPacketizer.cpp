@@ -91,10 +91,6 @@ class VEXPacketizerList : public VLIWPacketizerList {
 
 //    std::map<unsigned, unsigned>
 
-    // Methods to handle ScratchPads
-    DataReuseInfo* DataInfo;
-    std::vector<SPMVariable> Variables;
-
     bool isStoreSPM(MachineBasicBlock::iterator Inst);
     bool isLoadSPM(MachineBasicBlock::iterator Inst);
     bool isLoadSPM(unsigned Opcode);
@@ -117,24 +113,6 @@ public:
         Subtarget = &MF.getSubtarget<VEXSubtarget>();
         II = static_cast<const VEXSubtarget *>(Subtarget)->getInstrItineraryData();
         DataHazards.clear();
-
-        // Get Data Reuse Information used for Scratchpads
-        DataInfo = static_cast<VEXTargetMachine &>(TM).getDataReuseInfo();
-        DataInfo->setNumSPMs(II->SchedModel.IssueWidth);
-        DataInfo->setIssueWidth(II->SchedModel.IssueWidth);
-        Variables = DataInfo->getVariables();
-
-//        DEBUG(dbgs() << " Initiating VLIWPacketizer Pass");
-
-//        DEBUG(dbgs() << "Size: " << DataInfo->getVariables().size() << "\n");
-//        for (DataReuseInfo::iterator VarIdx = DataInfo->begin(),
-//             VarEnd = DataInfo->end(); VarIdx != VarEnd; ++VarIdx) {
-//            std::vector<MachineBasicBlock::iterator> MIs = VarIdx->getMemoryInstructions();
-//            for(MachineBasicBlock::iterator MI : MIs)
-//                MI->dump();
-//        }
-
-//        DEBUG(dbgs() << " Finalizing VLIWPacketizer Pass");
     }
 
     bool isSoloInstruction(MachineInstr *MI) override;

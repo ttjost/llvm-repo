@@ -17,7 +17,7 @@
 #include "VEXVLIWPacketizer.cpp"
 #include "VEXModifyBranches.cpp"
 #include "VEXMachineScheduler.h"
-#include "../Hexagon/HexagonMachineScheduler.h"
+#include "HexagonMachineScheduler.h"
 //#include "VEXSubtarget.h"
 //#include "VEXTargetObjectFile.h"
 #include "llvm/IR/PassManager.h"
