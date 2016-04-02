@@ -1077,6 +1077,7 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
                                 .addImm(GlobalOffset)
                             .addMemOperand(MMOLoad);
                 LIS->InsertMachineInstrInMaps(Inst);
+                GlobalOffset += InternalOffset;
                 
             } while (++iterator < FuncUnits);
             
@@ -1096,8 +1097,6 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
                 LIS->InsertMachineInstrInMaps(Inst);
                 
             } while (--iterator > 0);
-            
-            GlobalOffset += InternalOffset;
         }
         SPMOffset += Variable.getDataSize();
     }
