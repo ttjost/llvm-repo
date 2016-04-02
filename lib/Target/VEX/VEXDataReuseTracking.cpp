@@ -1079,7 +1079,7 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
                 LIS->InsertMachineInstrInMaps(Inst);
                 GlobalOffset += InternalOffset;
                 
-            } while (++iterator < FuncUnits);
+            } while (++iterator < FuncUnits && j < NumMemories);
             
             // Store to SPM
             MachineMemOperand *MMOStore =
