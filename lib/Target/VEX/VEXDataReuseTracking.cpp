@@ -887,6 +887,16 @@ MachineBasicBlock* VEXDataReuseTracking::CreatePreamble(MachineFunction &MF, SPM
     return PreambleMBB;
 }
 
+
+int NumberOfSetBits(unsigned i)
+{
+    // Java: use >>> instead of >>
+    // C or C++: use uint32_t
+    i = i - ((i >> 1) & 0x55555555);
+    i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
+    return (((i + (i >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24;
+}
+
 // This function inserts the preamble code for the SPMs.
 // We first need to store data into the SPMs in order to use them later on.
 // The code generated for now will be in format of (we might need to optimize it later):
@@ -909,6 +919,12 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
     const VEXSubtarget &Subtarget = *static_cast<const VEXTargetMachine &>(TM).getSubtargetImpl();
     const VEXInstrInfo *TII = static_cast<const VEXInstrInfo *>(Subtarget.getInstrInfo());
 
+    unsigned InsnClass = FirstMemInstr->getDesc().getSchedClass();
+    const llvm::InstrStage *IS = Subtarget.getInstrItineraryData()->beginStage(InsnClass);
+    unsigned FuncUnits = IS->getUnits();
+    
+    FuncUnits = NumberOfSetBits(FuncUnits);
+    
     assert(DefInstr->getParent()->getParent() == &MF && "DefInstr is not defined in this MF, but somewhere else");
 
     MachineFunction::iterator MBB;
@@ -1056,11 +1072,6 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
     unsigned LoadDst[NumMemories];
     unsigned LoadOpcode, StoreOpcode;
     
-    
-    unsigned InsnClass = FirstMemInstr->getDesc().getSchedClass();
-    const llvm::InstrStage *IS = Subtarget.getInstrItineraryData()->beginStage(InsnClass);
-    unsigned FuncUnits = IS->getUnits();
-    
     LoadOpcode = getLoadOpcode(Variable.getDataType());
     
     for (unsigned i = 0; i < InternalLoopCounter; ++i) {
@@ -1086,7 +1097,6 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
             MF.getMachineMemOperand(MachinePointerInfo(), MachineMemOperand::MOStore,
                                     4, 4);
             
-            iterator = FuncUnits;
             do {
                 StoreOpcode = getSPMOpcodeFromDataType(Variable.getDataType(), Memories[j-iterator], false);
                 
