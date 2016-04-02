@@ -39,6 +39,10 @@ cl::opt<bool> EnableSPMs("enable-spms",
                                 cl::Hidden, cl::init(false),
                                 cl::desc("Enable Code Generation for ScratchPad Memories"));
 
+cl::opt<bool> UseHexagonScheduler("enable-hexagonsched",
+                                cl::Hidden, cl::init(false),
+                                cl::desc("Enable Hexagon Scheduler"));
+
 // This might never be used
 // We will probably generate code for SPM right before Register Allocation
 static cl::opt<bool> PreIsel("pre-isel",
@@ -126,8 +130,10 @@ void VEXNewTargetMachine::anchor() {}
 //}
 
 static ScheduleDAGInstrs *createVLIWMachineSched(MachineSchedContext *C) {
-    return new VEXVLIWMachineScheduler(C, make_unique<ConvergingVEXVLIWScheduler>());
-//    return new VLIWMachineScheduler(C, make_unique<ConvergingVLIWScheduler>());
+    if (UseHexagonScheduler)
+        return new VLIWMachineScheduler(C, make_unique<ConvergingVLIWScheduler>());
+    else
+        return new VEXVLIWMachineScheduler(C, make_unique<ConvergingVEXVLIWScheduler>());
 }
 
 static MachineSchedRegistry

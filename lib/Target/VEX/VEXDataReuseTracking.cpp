@@ -1321,7 +1321,7 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
             
             if (Var.isMultipleStorage() && isLoop) {
                 
-                if (!(BaseReg = Var.FindBaseRegister(MBB))) {
+/*                if (!(BaseReg = Var.FindBaseRegister(MBB))) {
                     MachineRegisterInfo &RegInfo = MF.getRegInfo();
                     
                     BaseReg = RegInfo.createVirtualRegister(&VEX::GPRegsRegClass);
@@ -1336,8 +1336,6 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                     
                     assert(*(SI) != MBB && "Cannot be the same BB");
                     
-                    (*(SI))->dump();
-                    MBB->dump();
                     MachineInstr* Inst = BuildMI(*(SI), DebugLoc(),
                             TII->get(VEX::MOVi),
                             BaseRegTrue).addImm(0);
@@ -1368,9 +1366,7 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                     .addImm(Var.getMaxOffsetPerBB()/Var.getNumUnits()*Var.getDataSize());
                     
                     LIS->InsertMachineInstrInMaps(Inst3);
-                    
-                    (*SI)->dump();
-                }
+                }*/
                 MBBs.insert(MBB);
             }
             
