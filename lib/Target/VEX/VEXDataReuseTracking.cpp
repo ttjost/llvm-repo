@@ -1057,37 +1057,50 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
     unsigned LoadOpcode, StoreOpcode;
     
     
-        for (unsigned i = 0; i < InternalLoopCounter; ++i) {
+    unsigned InsnClass = FirstMemInstr->getDesc().getSchedClass();
+    const llvm::InstrStage *IS = Subtarget.getInstrItineraryData()->beginStage(InsnClass);
+    unsigned FuncUnits = IS->getUnits();
+    
+    LoadOpcode = getLoadOpcode(Variable.getDataType());
+    
+    for (unsigned i = 0; i < InternalLoopCounter; ++i) {
             
-            for (unsigned j = 0; j < NumMemories; ++j) {
-                
+        for (unsigned j = 0; j < NumMemories; ) {
+            
+            unsigned iterator = 0;
+            do {
                 LoadDst[j] = RegInfo.createVirtualRegister(GPRegClass);
-                
-                LoadOpcode = getLoadOpcode(Variable.getDataType());
+            
                 // Load from Memory
-                Inst = BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(), TII->get(LoadOpcode), LoadDst[j])
-                        .addReg(GlobalMemVariableReg)
-                        .addImm(GlobalOffset)
-                        .addMemOperand(MMOLoad);
+                Inst = BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(), TII->get(LoadOpcode), LoadDst[j++])
+                                .addReg(GlobalMemVariableReg)
+                                .addImm(GlobalOffset)
+                            .addMemOperand(MMOLoad);
                 LIS->InsertMachineInstrInMaps(Inst);
                 
-                // Store to SPM
-                MachineMemOperand *MMOStore =
-                MF.getMachineMemOperand(MachinePointerInfo(), MachineMemOperand::MOStore,
-                                        4, 4);
+            } while (iterator++ < FuncUnits);
+            
+            // Store to SPM
+            MachineMemOperand *MMOStore =
+            MF.getMachineMemOperand(MachinePointerInfo(), MachineMemOperand::MOStore,
+                                    4, 4);
+            
+            iterator = FuncUnits;
+            do {
+                StoreOpcode = getSPMOpcodeFromDataType(Variable.getDataType(), Memories[j-iterator], false);
                 
-                StoreOpcode = getSPMOpcodeFromDataType(Variable.getDataType(), Memories[j], false);
-                
-                Inst = BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(),TII->get(StoreOpcode)).addReg(LoadDst[j])
-                        .addReg(SPMAddrReg)
-                        .addImm(SPMOffset)
-                        .addMemOperand(MMOStore);
+                Inst = BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(),TII->get(StoreOpcode)).addReg(LoadDst[j-iterator])
+                                .addReg(SPMAddrReg)
+                                .addImm(SPMOffset)
+                            .addMemOperand(MMOStore);
                 LIS->InsertMachineInstrInMaps(Inst);
                 
-                GlobalOffset += InternalOffset;
-            }
-            SPMOffset += Variable.getDataSize();
+            } while (iterator-- > 0);
+            
+            GlobalOffset += InternalOffset;
         }
+        SPMOffset += Variable.getDataSize();
+    }
         
         // Add Instruction for Induction Variable
         Inst = BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(), TII->get(VEX::ADDi),SPMAddrRegFalse)
