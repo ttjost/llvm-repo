@@ -57,6 +57,8 @@ class VEXDataReuseTracking: public MachineFunctionPass {
     TargetMachine &TM;
     DataReuseInfo* DataInfo;
     LiveIntervals *LIS;
+    
+    unsigned MemFuncUnits;
 
     bool IsSPMVariable (MachineBasicBlock::iterator Inst,
                         StringRef& VariableName,
@@ -918,12 +920,6 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
 
     const VEXSubtarget &Subtarget = *static_cast<const VEXTargetMachine &>(TM).getSubtargetImpl();
     const VEXInstrInfo *TII = static_cast<const VEXInstrInfo *>(Subtarget.getInstrInfo());
-
-    unsigned InsnClass = FirstMemInstr->getDesc().getSchedClass();
-    const llvm::InstrStage *IS = Subtarget.getInstrItineraryData()->beginStage(InsnClass);
-    unsigned FuncUnits = IS->getUnits();
-    
-    FuncUnits = NumberOfSetBits(FuncUnits);
     
     assert(DefInstr->getParent()->getParent() == &MF && "DefInstr is not defined in this MF, but somewhere else");
 
@@ -1076,30 +1072,37 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
     
     for (unsigned i = 0; i < InternalLoopCounter; ++i) {
             
-        for (unsigned j = 0; j < NumMemories; ++j) {
+        for (unsigned j = 0; j < NumMemories; ) {
             
-            LoadDst[j] = RegInfo.createVirtualRegister(GPRegClass);
+            unsigned iterator = 0;
+            do {
+                LoadDst[j] = RegInfo.createVirtualRegister(GPRegClass);
             
-            // Load from Memory
-            Inst = BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(), TII->get(LoadOpcode), LoadDst[j])
+                // Load from Memory
+                Inst = BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(), TII->get(LoadOpcode), LoadDst[j++])
                                 .addReg(GlobalMemVariableReg)
                                 .addImm(GlobalOffset)
                             .addMemOperand(MMOLoad);
-            LIS->InsertMachineInstrInMaps(Inst);
-            GlobalOffset += InternalOffset;
+                LIS->InsertMachineInstrInMaps(Inst);
+                GlobalOffset += InternalOffset;
+                
+            } while (++iterator < MemFuncUnits && j < NumMemories);
             
             // Store to SPM
             MachineMemOperand *MMOStore =
             MF.getMachineMemOperand(MachinePointerInfo(), MachineMemOperand::MOStore,
                                     4, 4);
             
-            StoreOpcode = getSPMOpcodeFromDataType(Variable.getDataType(), Memories[j], false);
+            do {
+                StoreOpcode = getSPMOpcodeFromDataType(Variable.getDataType(), Memories[j-iterator], false);
                 
-            Inst = BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(),TII->get(StoreOpcode)).addReg(LoadDst[j])
+                Inst = BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(),TII->get(StoreOpcode)).addReg(LoadDst[j-iterator])
                                 .addReg(SPMAddrReg)
                                 .addImm(SPMOffset)
                             .addMemOperand(MMOStore);
-            LIS->InsertMachineInstrInMaps(Inst);
+                LIS->InsertMachineInstrInMaps(Inst);
+                
+            } while (--iterator > 0);
         }
         SPMOffset += Variable.getDataSize();
     }
@@ -1192,8 +1195,16 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
 
     LIS = &getAnalysis<LiveIntervals>();
     
+    
     const VEXSubtarget &Subtarget = *static_cast<const VEXTargetMachine &>(TM).getSubtargetImpl();
     const VEXInstrInfo *TII = static_cast<const VEXInstrInfo *>(Subtarget.getInstrInfo());
+    
+    MachineInstr* Load = BuildMI(MF, DebugLoc(), TII->get(VEX::LDW));
+    
+    unsigned InsnClass = Load->getDesc().getSchedClass();
+    const llvm::InstrStage *IS = Subtarget.getInstrItineraryData()->beginStage(InsnClass);
+
+    MemFuncUnits = NumberOfSetBits(IS->getUnits());
     
     // Here we will perform a Breadth First Search
     // because we should perform the analysis on the variables,
