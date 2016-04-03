@@ -1076,37 +1076,30 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
     
     for (unsigned i = 0; i < InternalLoopCounter; ++i) {
             
-        for (unsigned j = 0; j < NumMemories; ) {
+        for (unsigned j = 0; j < NumMemories; ++j) {
             
-            unsigned iterator = 0;
-            do {
-                LoadDst[j] = RegInfo.createVirtualRegister(GPRegClass);
+            LoadDst[j] = RegInfo.createVirtualRegister(GPRegClass);
             
-                // Load from Memory
-                Inst = BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(), TII->get(LoadOpcode), LoadDst[j++])
+            // Load from Memory
+            Inst = BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(), TII->get(LoadOpcode), LoadDst[j])
                                 .addReg(GlobalMemVariableReg)
                                 .addImm(GlobalOffset)
                             .addMemOperand(MMOLoad);
-                LIS->InsertMachineInstrInMaps(Inst);
-                GlobalOffset += InternalOffset;
-                
-            } while (++iterator < FuncUnits && j < NumMemories);
+            LIS->InsertMachineInstrInMaps(Inst);
+            GlobalOffset += InternalOffset;
             
             // Store to SPM
             MachineMemOperand *MMOStore =
             MF.getMachineMemOperand(MachinePointerInfo(), MachineMemOperand::MOStore,
                                     4, 4);
             
-            do {
-                StoreOpcode = getSPMOpcodeFromDataType(Variable.getDataType(), Memories[j-iterator], false);
+            StoreOpcode = getSPMOpcodeFromDataType(Variable.getDataType(), Memories[j], false);
                 
-                Inst = BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(),TII->get(StoreOpcode)).addReg(LoadDst[j-iterator])
+            Inst = BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(),TII->get(StoreOpcode)).addReg(LoadDst[j])
                                 .addReg(SPMAddrReg)
                                 .addImm(SPMOffset)
                             .addMemOperand(MMOStore);
-                LIS->InsertMachineInstrInMaps(Inst);
-                
-            } while (--iterator > 0);
+            LIS->InsertMachineInstrInMaps(Inst);
         }
         SPMOffset += Variable.getDataSize();
     }
