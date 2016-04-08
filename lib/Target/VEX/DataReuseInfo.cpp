@@ -132,9 +132,9 @@ unsigned DataReuseInfo::getOffsetAndUpdateMemories(SPMVariable &Var, unsigned Nu
     std::vector<unsigned> Mem;
     Mem.resize(0);
     // We should give priority to Memory 1, so we iterate from 1 to 0 (as in a circular buffer).
-    unsigned FirstMem = 1;
-    unsigned MinimumOffset = MemoriesOffsets[1];
-    for (unsigned i = 1, e = MemoriesOffsets.size(); i != 0 ; i=(i+1)%e) {
+    unsigned FirstMem = GlobalMemUnits;
+    unsigned MinimumOffset = MemoriesOffsets[FirstMem];
+    for (unsigned i = FirstMem, e = MemoriesOffsets.size(); i != 0 ; i=(i+1)%e) {
         if (MemoriesOffsets[i] < MinimumOffset) {
             FirstMem = i;
             MinimumOffset = MemoriesOffsets[i];

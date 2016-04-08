@@ -28,10 +28,16 @@ class DataReuseInfo {
     std::vector<unsigned> MemoriesOffsets;
     unsigned IssueWidth;
 
+    unsigned GlobalMemUnits;
+
 public:
-    DataReuseInfo() {
+    DataReuseInfo() : GlobalMemUnits(1) {
         Variables.resize(0);
         MemoriesOffsets.resize(0);
+    }
+
+    void setGlobalMemUnits (unsigned Units) {
+        GlobalMemUnits = Units;
     }
 
     void setNumSPMs (unsigned SPMs) {

@@ -135,31 +135,29 @@ unsigned SPMVariable::getMemoryUnit() {
 
 void SPMVariable::CalculateOffsetDistribution() {
     
-    unsigned OffsetDistance = INT_MAX;
+    unsigned OffsetDistance = UINT_MAX;
     
-    int MinOffset;
-    
-    std::vector<int> SortedOffsets;
+    std::set<int> SortedOffsets;
     
     for (unsigned i = 0, e = MemoryInstructions.size(); i != e; ++i) {
         for (unsigned j = 1, EndOp = MemoryInstructions[i]->getNumOperands(); j != EndOp; ++j)
             if (MemoryInstructions[i]->getOperand(j).isImm()) {
-                SortedOffsets.push_back(MemoryInstructions[i]->getOperand(j).getImm());
+                SortedOffsets.insert(MemoryInstructions[i]->getOperand(j).getImm());
                 break;
             }
     }
     
-    std::sort(SortedOffsets.begin(), SortedOffsets.end());
-    
-    int TempOffset = SortedOffsets[0];
-    for (unsigned i = 1, e = SortedOffsets.size(); i != e; ++i) {
+    auto itBegin = SortedOffsets.begin();
+    int MinOffset = *itBegin;
+    int TempOffset = *itBegin;
+    for(auto it = ++itBegin; it != SortedOffsets.end(); ++it) {
         
         if (MinOffset > TempOffset)
             MinOffset = TempOffset;
         
-        unsigned distance = std::abs(SortedOffsets[i] - TempOffset);
+        unsigned distance = std::abs(*it - TempOffset);
         
-        TempOffset = SortedOffsets[i];
+        TempOffset = *it;
         
         if (distance < OffsetDistance)
             OffsetDistance = distance;
