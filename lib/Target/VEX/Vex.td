@@ -62,12 +62,11 @@ def: Proc<"simple-8issue", Simple8IssueModel, []>;
 
 def: Proc<"simple-4issue-4mem", Simple4Issue4MemModel, []>;
 def: Proc<"simple-8issue-4mem", Simple8Issue4MemModel, []>;
-def: Proc<"simple-8issue-8mem", Simple8Issue4MemModel, []>;
+def: Proc<"simple-8issue-8mem", Simple8Issue8MemModel, []>;
 
 def: Proc<"simple-8issue-2mem", Simple8Issue2MemModel, []>;
 
 def: Proc<"simple-16issue", Simple16IssueModel, []>;
-
 
 //#if CH >= CH11_1 1
 def VEXAsmParser : AsmParser {
