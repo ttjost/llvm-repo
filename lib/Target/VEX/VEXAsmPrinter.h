@@ -75,6 +75,7 @@ public:
     void EmitFunctionBodyStart() override;
     void EmitFunctionBodyEnd() override;
     void EmitStartOfAsmFile(Module &M);
+    void EmitEndOfAsmFile(Module &M);
     virtual MachineLocation getDebugValueLocation(const MachineInstr *MI) const;
     void PrintDebugValueComment(const MachineInstr *MI, raw_ostream &OS);
     bool PrintAsmOperand(const MachineInstr *MI, unsigned OpNo,

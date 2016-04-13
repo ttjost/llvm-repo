@@ -54,6 +54,8 @@ class VEXTargetMachine;
         
         VEXABIEnum VEXABI;
         
+        unsigned AllocationOrder;
+        
         // Tells whether is the new Scheduling Algorithm to be used
         // Used for my dissertation (Tiago)
         bool isNewScheduling;
@@ -97,6 +99,11 @@ class VEXTargetMachine;
         bool isSimple_8Issue() const { return VEXArchVersion == simple_8issue; }
         
         const InstrItineraryData *getInstrItineraryData() const { return &InstrItins; }
+        
+        unsigned RotateRegisterOrder() const {
+//            AllocationOrder = (AllocationOrder + 1)%2;
+            return AllocationOrder;
+        }
         
         bool abiUsesSoftFloat() const;
         

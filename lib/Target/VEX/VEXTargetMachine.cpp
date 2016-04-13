@@ -164,7 +164,8 @@ namespace {
         createMachineScheduler(MachineSchedContext *C) const override {
             return createVLIWMachineSched(C);
         }
-    
+        
+        void addIRPasses() override;
         bool addPreISel() override;
         bool addInstSelector() override;
         void addPreEmitPass() override;
@@ -173,6 +174,10 @@ namespace {
         void addMachineSSAOptimization() override;
         
     };
+}
+
+void VEXPassConfig::addIRPasses() {
+    TargetPassConfig::addIRPasses();
 }
 
 bool VEXPassConfig::addPreISel() {

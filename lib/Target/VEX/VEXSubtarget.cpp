@@ -46,27 +46,29 @@ extern cl::opt<bool> GenericBinary;
 
 extern bool FixGlobalBaseReg;
 
-// Select the VEX CPU for the given triple and cpu name.
-// FIXME : Merge with the copy in VEXMCTargetDesc.cpp
-static StringRef selectVEXCPU(Triple TT, StringRef CPU){
-    if(CPU.empty() || CPU == "generic"){
-        if (TT.getArch() == Triple::vex)
-            CPU = "rvex-4issue";
-    }
-    return CPU;
-}
+//// Select the VEX CPU for the given triple and cpu name.
+//// FIXME : Merge with the copy in VEXMCTargetDesc.cpp
+//static StringRef selectVEXCPU(Triple TT, StringRef CPU){
+//    if(CPU.empty() || CPU == "generic"){
+//        if (TT.getArch() == Triple::vex)
+//            CPU = "rvex-4issue";
+//    }
+//    return CPU;
+//}
 
 // VEXSubtarget::VEXSubtarget
 VEXSubtarget::VEXSubtarget(const Triple &TT, const std::string &CPU,
                            const std::string &FS, bool isNewScheduling,
                            bool EnableVLIWScheduling, Reloc::Model _RM,
                            VEXTargetMachine &_TM):
-    VEXABI(ABI32), isNewScheduling(isNewScheduling),
-    EnableVLIWScheduling(EnableVLIWScheduling),
-    InstrInfo(initializeSubtargetDependencies(CPU, FS)),
     VEXGenSubtargetInfo(TT, CPU, FS),
+    VEXABI(ABI32),
+    AllocationOrder(0),
+    isNewScheduling(isNewScheduling),
+    EnableVLIWScheduling(EnableVLIWScheduling),
     RM(_RM), TargetTriple(TT),
     TSInfo(*_TM.getDataLayout()),
+    InstrInfo(initializeSubtargetDependencies(CPU, FS)),
     FrameLowering(),
     TLInfo(_TM, *this) {
         DEBUG(errs() << "Subtarget\n");

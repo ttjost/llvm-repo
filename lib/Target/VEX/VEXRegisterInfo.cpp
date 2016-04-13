@@ -170,3 +170,19 @@ getFrameRegister(const MachineFunction &MF) const{
     return VEX::Reg1;
 }
 
+
+// We only need to change the allocation order and
+// call the target-independent getRegAllocationHints function
+void VEXRegisterInfo::
+    getRegAllocationHints(unsigned VirtReg,
+                           ArrayRef<MCPhysReg> Order,
+                           SmallVectorImpl<MCPhysReg> &Hints,
+                           const MachineFunction &MF,
+                           const VirtRegMap *VRM) const {
+    
+//    Order.
+    TargetRegisterInfo::getRegAllocationHints(VirtReg, Order, Hints, MF, VRM);
+        
+    
+}
+

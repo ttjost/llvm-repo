@@ -182,7 +182,7 @@ void VEXAsmPrinter::EmitFunctionEntryLabel() {
     unsigned StackSize = MF->getFrameInfo()->getStackSize() == 0 ? 0 : RoundUpToAlignment(MF->getFrameInfo()->getStackSize(), 32);
     OutStreamer->EmitRawText(".section .text \n.proc \n.entry caller, sp=$r0.1, rl=$l0.0, asize=-" +
                             Twine(StackSize) +
-                            ", arg()");
+                            ", arg($r0.3:u32, $r0.4:u32, $r0.5:u32, $r0.6:u32, $r0.7:u32, $r0.8:u32, $r0.9:u32, $r0.10:u32)");
     OutStreamer->EmitRawText(Twine(CurrentFnSym->getName())+"::");
 }
 
@@ -235,6 +235,17 @@ void VEXAsmPrinter::EmitStartOfAsmFile(Module &M){
 //    // return to previous section
 //    if(OutStreamer.hasRawTextSupport())
 //        OutStreamer.EmitRawText(StringRef("\t.previous"));
+}
+
+void VEXAsmPrinter::EmitEndOfAsmFile(Module &M) {
+    
+    for (Module::iterator I = M.begin(), E = M.end(); I != E; ++I) {
+        if (I->isDeclaration()) {
+            OutStreamer->EmitRawText(".import " + I->getName() + "\n");
+            OutStreamer->EmitRawText(".type " + I->getName() + ", @function\n");
+        }
+    }
+    
 }
 
 // FIXME :  Is this algorithm correct?

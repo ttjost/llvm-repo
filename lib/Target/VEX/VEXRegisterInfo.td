@@ -46,7 +46,7 @@ def GPRegs : RegisterClass<"VEX", [i32], 32, (add Lr, (sequence "Reg%u", 0, 63))
 
     let AltOrders = [(add GPRegs),(rotl GPRegs, 32)];
     let AltOrderSelect = [{
-        return 1;
+        return MF.getSubtarget<VEXSubtarget>().RotateRegisterOrder();
   }];
 }
 

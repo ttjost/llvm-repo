@@ -60,6 +60,12 @@ public:
     bool trackLivenessAfterRegAlloc(const MachineFunction &MF) const override {
         return true;
     }
+    
+    void getRegAllocationHints(unsigned VirtReg,
+                               ArrayRef<MCPhysReg> Order,
+                               SmallVectorImpl<MCPhysReg> &Hints,
+                               const MachineFunction &MF,
+                               const VirtRegMap *VRM) const override;
 
 };
 
