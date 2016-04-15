@@ -546,10 +546,10 @@ def Simple16IssueItineraries : ProcessorItineraries<[IUnit0, IUnit1, IUnit2, IUn
                                                    IUnit4, IUnit5, IUnit6, IUnit7,
                                                    IUnit8, IUnit9, IUnit10, IUnit11,
                                                    IUnit12, IUnit13, IUnit14, IUnit15]>]>,
-   InstrItinData<IILoad        , [InstrStage<1,  [IUnit0]>]>,
-   InstrItinData<IILoadLr      , [InstrStage<1,  [IUnit0]>]>,
-   InstrItinData<IIStore       , [InstrStage<1,  [IUnit0]>]>,
-   InstrItinData<IIStoreLr     , [InstrStage<1,  [IUnit0]>]>,
+   InstrItinData<IILoad        , [InstrStage<1,  [IUnit8]>]>,
+   InstrItinData<IILoadLr      , [InstrStage<1,  [IUnit8]>]>,
+   InstrItinData<IIStore       , [InstrStage<1,  [IUnit8]>]>,
+   InstrItinData<IIStoreLr     , [InstrStage<1,  [IUnit8]>]>,
    InstrItinData<IICpGrBr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
                                                    IUnit4, IUnit5, IUnit6, IUnit7,
                                                    IUnit8, IUnit9, IUnit10, IUnit11,
@@ -582,6 +582,70 @@ def Simple16IssueItineraries : ProcessorItineraries<[IUnit0, IUnit1, IUnit2, IUn
    InstrItinData<IILane7       , [InstrStage<1,  [IUnit7]>]>
 ]>;
 
+
+def Simple16Issue2MemItineraries : ProcessorItineraries<[IUnit0, IUnit1, IUnit2, IUnit3,
+                                                   IUnit4, IUnit5, IUnit6, IUnit7,
+                                                   IUnit8, IUnit9, IUnit10, IUnit11,
+                                                   IUnit12, IUnit13, IUnit14, IUnit15], [], [
+   InstrItinData<IIAll         , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+                                                   IUnit4, IUnit5, IUnit6, IUnit7,
+                                                   IUnit8, IUnit9, IUnit10, IUnit11,
+                                                   IUnit12, IUnit13, IUnit14, IUnit15]>]>,
+   InstrItinData<IIAlu         , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+                                                   IUnit4, IUnit5, IUnit6, IUnit7,
+                                                   IUnit8, IUnit9, IUnit10, IUnit11,
+                                                   IUnit12, IUnit13, IUnit14, IUnit15]>]>,
+   InstrItinData<IICmpBr       , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+                                                   IUnit4, IUnit5, IUnit6, IUnit7,
+                                                   IUnit8, IUnit9, IUnit10, IUnit11,
+                                                   IUnit12, IUnit13, IUnit14, IUnit15]>]>,
+   InstrItinData<IICmpGr       , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+                                                   IUnit4, IUnit5, IUnit6, IUnit7,
+                                                   IUnit8, IUnit9, IUnit10, IUnit11,
+                                                   IUnit12, IUnit13, IUnit14, IUnit15]>]>,
+   InstrItinData<IISelect      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+                                                   IUnit4, IUnit5, IUnit6, IUnit7,
+                                                   IUnit8, IUnit9, IUnit10, IUnit11,
+                                                   IUnit12, IUnit13, IUnit14, IUnit15]>]>,
+   InstrItinData<IIMultiply    , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+                                                   IUnit4, IUnit5, IUnit6, IUnit7,
+                                                   IUnit8, IUnit9, IUnit10, IUnit11,
+                                                   IUnit12, IUnit13, IUnit14, IUnit15]>]>,
+   InstrItinData<IILoad        , [InstrStage<1,  [IUnit8, IUnit9]>]>,
+   InstrItinData<IILoadLr      , [InstrStage<1,  [IUnit8, IUnit9]>]>,
+   InstrItinData<IIStore       , [InstrStage<1,  [IUnit8, IUnit9]>]>,
+   InstrItinData<IIStoreLr     , [InstrStage<1,  [IUnit8, IUnit9]>]>,
+   InstrItinData<IICpGrBr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+                                                   IUnit4, IUnit5, IUnit6, IUnit7,
+                                                   IUnit8, IUnit9, IUnit10, IUnit11,
+                                                   IUnit12, IUnit13, IUnit14, IUnit15]>]>,
+   InstrItinData<IICpBrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+                                                   IUnit4, IUnit5, IUnit6, IUnit7,
+                                                   IUnit8, IUnit9, IUnit10, IUnit11,
+                                                   IUnit12, IUnit13, IUnit14, IUnit15]>]>,
+   InstrItinData<IICpLrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+                                                   IUnit4, IUnit5, IUnit6, IUnit7,
+                                                   IUnit8, IUnit9, IUnit10, IUnit11,
+                                                   IUnit12, IUnit13, IUnit14, IUnit15]>]>,
+   InstrItinData<IICpGrLr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+                                                  IUnit4, IUnit5, IUnit6, IUnit7,
+                                                  IUnit8, IUnit9, IUnit10, IUnit11,
+                                                  IUnit12, IUnit13, IUnit14, IUnit15]>]>,
+   InstrItinData<IIBranch      , [InstrStage<1,  [IUnit15]>]>,
+
+   // ScratchPad Memory Instructions
+   // We separate them according to the their position.
+   // Each lane has its own Itinerary, therefore,
+   // we should define a diferent itinerary for each one of them.
+   InstrItinData<IILane0       , [InstrStage<1,  [IUnit0]>]>,
+   InstrItinData<IILane1       , [InstrStage<1,  [IUnit1]>]>,
+   InstrItinData<IILane2       , [InstrStage<1,  [IUnit2]>]>,
+   InstrItinData<IILane3       , [InstrStage<1,  [IUnit3]>]>,
+   InstrItinData<IILane4       , [InstrStage<1,  [IUnit4]>]>,
+   InstrItinData<IILane5       , [InstrStage<1,  [IUnit5]>]>,
+   InstrItinData<IILane6       , [InstrStage<1,  [IUnit6]>]>,
+   InstrItinData<IILane7       , [InstrStage<1,  [IUnit7]>]>
+]>;
 
 def rVEX2IssueModel : SchedMachineModel {
     let IssueWidth = 2;
@@ -654,3 +718,10 @@ def Simple16IssueModel : SchedMachineModel {
     let LoadLatency = 1;
     let Itineraries = Simple16IssueItineraries;
 }
+
+def Simple16Issue2MemModel : SchedMachineModel {
+    let IssueWidth = 16;
+    let LoadLatency = 1;
+    let Itineraries = Simple16Issue2MemItineraries;
+}
+

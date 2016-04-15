@@ -703,7 +703,7 @@ def STBSpm       : StoreInstrSpm<"stwSpm", 0b00010101, IIAll>;
 
 // Separate Instructions for Each Lane
 // LLVM does not select these instructions automatically
-// Instead, we manually select them in the VEXVLIWPacketizer
+// Instead, we manually select them at VEXDataReuseTracking.cpp
 
 // Lane 0
 def LDW0       : LoadInstrSpm<"ldw0", 0b00010000, IILane0>;

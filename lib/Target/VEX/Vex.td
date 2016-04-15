@@ -68,6 +68,8 @@ def: Proc<"simple-8issue-2mem", Simple8Issue2MemModel, []>;
 
 def: Proc<"simple-16issue", Simple16IssueModel, []>;
 
+def: Proc<"simple-16issue-2mem", Simple16Issue2MemModel, []>;
+
 //#if CH >= CH11_1 1
 def VEXAsmParser : AsmParser {
     let ShouldEmitMatchRegisterName = 0;
