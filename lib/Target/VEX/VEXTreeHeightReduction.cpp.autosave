@@ -116,12 +116,19 @@ Instruction* VEXTreeHeightReductionPass::getLaterDefiner(Instruction I) {
 
 bool VEXTreeHeightReductionPass::meetsConditions(Instruction *I) {
 
-    if (Instruction->getOpcode() == Instruction::Add ||
-        Instruction->getOpcode() == Instruction::Sub)
-
-
-    else if (Instruction->getOpcode() == Instruction::Mul)
-
+    Instruction *LaterDefiner;
+    if (I->getOpcode() == Instruction::Add ||
+        I->getOpcode() == Instruction::Sub) {
+    
+        LaterDefiner = getLaterDefiner(I);
+        
+        if (LaterDefiner->getOpcode() == Instruction::Add ||
+            LaterDefiner->getOpcode() == Instruction::Sub) {
+               
+        }
+    } else if (I->getOpcode() == Instruction::Mul) {
+        
+    }
 }
 
 bool VEXTreeHeightReductionPass::runOnBasicBlock(BasicBlock &BB) {
