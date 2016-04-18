@@ -26,6 +26,8 @@ namespace llvm {
 
     FunctionPass *createVEXISelDag(VEXTargetMachine &TM);
     
+    FunctionPass *createVEXTreeHeightReductionPass();
+    
 //    FunctionPass *createVEXModuloScheduler(VEXTargetMachine &TM);
     
     FunctionPass *createVEXPostRAScheduler();

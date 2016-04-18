@@ -177,6 +177,7 @@ namespace {
 }
 
 void VEXPassConfig::addIRPasses() {
+    addPass(createVEXTreeHeightReductionPass());
     TargetPassConfig::addIRPasses();
 }
 
