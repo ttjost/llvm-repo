@@ -42,7 +42,7 @@ public:
     static char ID;
     
     VEXTreeHeightReductionPass() : BasicBlockPass(ID) {
-        
+        Heights.clear();
     }
     
     const char *getPassName() const override {
@@ -245,14 +245,15 @@ void VEXTreeHeightReductionPass::associativityAnalysis(Instruction *I) {
         EarliestOp->eraseFromParent();
         I->eraseFromParent();
         
-//        Heights.erase(EarliestOp);
-//        Heights.erase(I);
+        Heights[EarliestOp] = 1;
+        Heights[I] = 1;
     }
 }
 
 bool VEXTreeHeightReductionPass::runOnBasicBlock(BasicBlock &BB) {
     
-    DEBUG(dbgs() << "VEX Tree Height Reduction!\n ");
+    DEBUG(dbgs() << "VEX Tree Height Reduction!\n");
+    BB.dump();
     computeHeights(BB);
 
     for (std::map<Instruction *, int>::iterator it = Heights.begin(); it != Heights.end(); ++it) {
@@ -266,8 +267,6 @@ bool VEXTreeHeightReductionPass::runOnBasicBlock(BasicBlock &BB) {
     }
     
     BB.dump();
-//    for (Instruction *I = BB.begin(), *E = BB.end(); I != E; ++I)
-//        I->dump();
     
     return false;
 }
