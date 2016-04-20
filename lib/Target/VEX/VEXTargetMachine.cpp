@@ -43,6 +43,10 @@ cl::opt<bool> UseHexagonScheduler("enable-hexagonsched",
                                 cl::Hidden, cl::init(false),
                                 cl::desc("Enable Hexagon Scheduler"));
 
+cl::opt<bool> EnableTHR("enable-thr",
+                                cl::Hidden, cl::init(false),
+                                cl::desc("Enable Tree Height Reduction for VEX"));
+
 // This might never be used
 // We will probably generate code for SPM right before Register Allocation
 static cl::opt<bool> PreIsel("pre-isel",
@@ -177,7 +181,8 @@ namespace {
 }
 
 void VEXPassConfig::addIRPasses() {
-    addPass(createVEXTreeHeightReductionPass());
+    if (EnableTHR)
+        addPass(createVEXTreeHeightReductionPass());
     TargetPassConfig::addIRPasses();
 }
 

@@ -26,6 +26,9 @@
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
+#include <deque>
+#include <vector>
+#include <map>
 
 #define DEBUG_TYPE "vex-thr"
 
@@ -38,11 +41,16 @@ class VEXTreeHeightReductionPass : public BasicBlockPass {
     std::map<Instruction *, int> Heights;
     BasicBlock *basicblock;
     
+    std::vector<Instruction *> Roots;
+    std::deque<Value *> Leaves;
+
 public:
     static char ID;
     
     VEXTreeHeightReductionPass() : BasicBlockPass(ID) {
         Heights.clear();
+        Roots.clear();
+        Leaves.clear();
     }
     
     const char *getPassName() const override {
@@ -53,6 +61,7 @@ public:
     // sext instructions.
     bool runOnBasicBlock(BasicBlock &BB) override;
     
+    void sortHeights();
     void computeHeights(BasicBlock &BB);
     bool isValidOperation(Instruction* I);
     void computeHeight(Instruction* I);
@@ -66,6 +75,13 @@ public:
     Instruction* findHighestAvailableOperation(Instruction *I);
     
     Instruction* climbUp(unsigned Opcode, Instruction *FirstOp, Instruction *SecondOp);
+
+    // Huffman Optimization for Tree Height Reduction
+    Instruction *getInstructionUse(Instruction *I);
+    void BalanceTree(Instruction *I);
+    bool isLeaf(Instruction *I);
+    void getLeaves();
+    void FindRoots();
     
 };
     
@@ -121,9 +137,35 @@ void VEXTreeHeightReductionPass::computeHeights(BasicBlock &BB) {
     }
 }
 
+template <typename T1, typename T2>
+struct less_second {
+    typedef std::pair<T1, T2> type;
+    bool operator ()(type const& a, type const& b) const {
+        return a.second < b.second;
+    }
+};
+
+void VEXTreeHeightReductionPass::sortHeights() {
+
+    // Here we create a vector in order to properly sort the heights of the tree;
+    std::vector<std::pair<Instruction *, int> > sortedHeights;
+
+    for (auto it = Heights.begin(); it != Heights.end(); ++it) {
+        sortedHeights.push_back(*it);
+    }
+    std::sort(sortedHeights.begin(), sortedHeights.end(), less_second<Instruction *, int>());
+
+    // We start over the construction with the correct order
+    Heights.clear();
+
+    for (unsigned i = 0, e = sortedHeights.size(); i != e; ++i) {
+        Heights.insert(sortedHeights[i]);
+    }
+
+}
+
 Instruction* VEXTreeHeightReductionPass::getLaterDefiner(Instruction* I) {
 
-    I->dump();
     assert(isa<BinaryOperator>(I) && "Something wrong. Instruction should be BinaryOperator");
 
     Instruction *FirstOp = cast<Instruction>(I->getOperand(0));
@@ -226,7 +268,8 @@ void VEXTreeHeightReductionPass::associativityAnalysis(Instruction *I) {
     Instruction *EarliestOp = findHighestAvailableOperation(I);
     
     if (EarliestOp && EarliestOp != I) {
-        BasicBlock* BB = I->getParent();
+
+        DEBUG(dbgs() << "Reduce tree height!");
 //        climbUp(I->getOpcode(), getEarlierDefiner(EarliestOp), getEarlierDefiner(I));
         I->dump();
         EarliestOp->dump();
@@ -250,21 +293,134 @@ void VEXTreeHeightReductionPass::associativityAnalysis(Instruction *I) {
     }
 }
 
+bool VEXTreeHeightReductionPass::isLeaf(Instruction *I) {
+
+    if (Heights[I] == 1)
+        return true;
+    else
+        return false;
+}
+
+void VEXTreeHeightReductionPass::getLeaves() {
+
+    std::map<Instruction *, int>::iterator it = Heights.begin();
+    std::map<Instruction *, int>::iterator itEnd = Heights.end();
+
+    while (it->second == 1 && it != itEnd) {
+        Leaves.push_back(it->first);
+        ++it;
+    }
+}
+
+void VEXTreeHeightReductionPass::BalanceTree(Instruction *I) {
+
+    std::vector<Value *> WorkList;
+
+    assert(I->getNumOperands() == 2 && "Number of Operands should be 2");
+    WorkList.push_back(I->getOperand(0));
+    WorkList.push_back(I->getOperand(1));
+
+    while (!WorkList.empty()) {
+
+        Instruction *T = cast<Instruction>(WorkList.back());
+        WorkList.pop_back();
+
+        if (std::find(Roots.begin(), Roots.end(), T) != Roots.end())
+            llvm_unreachable("We do not implement subtraction yet. This is not difficult to support, though");
+        else
+            if (!isLeaf(I) && T->getOpcode() == I->getOpcode()) {
+                assert(T->getNumOperands() == 2 && "Number of Operands should be 2");
+                WorkList.push_back(T->getOperand(0));
+                WorkList.push_back(T->getOperand(1));
+            }
+    }
+
+    IRBuilder<> Builder(I);
+    Value *R1;
+
+    while (!Leaves.empty()) {
+        Instruction *Ra1 = dyn_cast<Instruction>(Leaves.front());
+        Leaves.pop_front();
+        Instruction *Rb1 = cast<Instruction>(Leaves.front());
+        Leaves.pop_front();
+
+        R1 = Builder.CreateAdd(Ra1, Rb1);
+
+        Leaves.push_back(R1);
+    }
+
+    I->replaceAllUsesWith(R1);
+
+    for (std::map<Instruction *, int>::iterator it = Heights.begin(); it != Heights.end(); ++it) {
+        (it->first)->eraseFromParent();
+    }
+}
+
+Instruction *VEXTreeHeightReductionPass::getInstructionUse(Instruction *I) {
+
+    for (std::map<Instruction *, int>::iterator it = Heights.begin(); it != Heights.end(); ++it) {
+        Instruction *InstrUse = it->first;
+        Instruction *Op1 = dyn_cast<Instruction>(InstrUse->getOperand(0));
+        Instruction *Op2 = dyn_cast<Instruction>(InstrUse->getOperand(1));
+
+        if (Op1 == I || Op2 == I) {
+            return InstrUse;
+        }
+    }
+    I->dump();
+    llvm_unreachable("This should never be reached. We must always find a Use of this Instruction within our Tree.");
+}
+
+void VEXTreeHeightReductionPass::FindRoots() {
+
+    // We sure must insert the last node as root
+    Roots.push_back(Heights.rbegin()->first);
+
+    for (std::map<Instruction *, int>::reverse_iterator it = Heights.rbegin(); it != Heights.rend(); ++it) {
+        Instruction *I = it->first;
+
+        if (isLeaf(I))
+            continue;
+
+        Instruction* InstrUse = getInstructionUse(I);
+        if ((InstrUse->getOpcode() != I->getOpcode())) {
+             llvm_unreachable("This should not be reached by our examples right now. We'll deal with this later.");
+        }
+    }
+
+    while (!Roots.empty()) {
+        BalanceTree(Roots.back());
+        Roots.pop_back();
+    }
+}
+
 bool VEXTreeHeightReductionPass::runOnBasicBlock(BasicBlock &BB) {
     
     DEBUG(dbgs() << "VEX Tree Height Reduction!\n");
     BB.dump();
     computeHeights(BB);
 
-    for (std::map<Instruction *, int>::iterator it = Heights.begin(); it != Heights.end(); ++it) {
-        if (Heights[it->first] == 1)
-            continue;
-        if (meetsConditions(it->first)) {
+    sortHeights();
+
+    getLeaves();
+
+    if (!Heights.empty()) {
+
+        DEBUG(dbgs() << "All nodes: ");
+        for (std::map<Instruction *, int>::reverse_iterator it = Heights.rbegin(); it != Heights.rend(); ++it) {
             DEBUG((it->first)->dump());
-            associativityAnalysis(it->first);
         }
 
+        DEBUG(dbgs() << "\nLeaves: ");
+        for (auto it : Leaves) {
+//            DEBUG(it->dump());
+        }
+
+        FindRoots();
     }
+
+    if (!Heights.empty())
+        FindRoots();
     
     BB.dump();
     
