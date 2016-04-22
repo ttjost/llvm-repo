@@ -1335,7 +1335,7 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
             
             if (Var.isMultipleStorage() && isLoop) {
                 
-/*                if (!(BaseReg = Var.FindBaseRegister(MBB))) {
+                if (!(BaseReg = Var.FindBaseRegister(MBB))) {
                     MachineRegisterInfo &RegInfo = MF.getRegInfo();
                     
                     BaseReg = RegInfo.createVirtualRegister(&VEX::GPRegsRegClass);
@@ -1380,7 +1380,7 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                     .addImm(Var.getMaxOffsetPerBB()/Var.getNumUnits()*Var.getDataSize());
                     
                     LIS->InsertMachineInstrInMaps(Inst3);
-                }*/
+                }
                 MBBs.insert(MBB);
             }
             
