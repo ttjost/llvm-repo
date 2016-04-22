@@ -103,8 +103,6 @@ void VEXTreeHeightReductionPass::computeHeight(Instruction* I) {
 
     if (isValidOperation(I) && HeightsByInstrOrder.find(I) == HeightsByInstrOrder.end()) {
 
-        DEBUG(I->dump());
-
         unsigned max = 0;
         Instruction *FirstOp, *SecondOp;
 
@@ -229,8 +227,6 @@ void VEXTreeHeightReductionPass::BalanceTree(Instruction *I) {
         Leaves.pop_front();
 
         R1 = Builder.CreateAdd(Ra1, Rb1);
-        
-        R1->dump();
 
         Leaves.push_back(R1);
     }
@@ -286,21 +282,8 @@ bool VEXTreeHeightReductionPass::runOnBasicBlock(BasicBlock &BB) {
         
         removeUnrelatedNodes();
         ReplaceAllLeaves();
-        
-        DEBUG(dbgs() << "All nodes: ");
-        for (std::multimap<unsigned, Instruction *>::reverse_iterator it = HeightsByLevel.rbegin(); it != HeightsByLevel.rend(); ++it) {
-            DEBUG(dbgs() << (it->first) << "\n");
-            DEBUG((it->second)->dump());
-        }
-        
-        DEBUG(dbgs() << "\nLeaves: ");
-        for (auto it : Leaves) {
-            DEBUG(it->dump());
-        }
-        
         FindRoots();
         
-        BB.dump();
         return true;
     }
     
