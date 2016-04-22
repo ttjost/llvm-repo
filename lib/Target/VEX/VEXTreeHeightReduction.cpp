@@ -105,7 +105,7 @@ void VEXTreeHeightReductionPass::computeHeight(Instruction* I) {
 
         DEBUG(I->dump());
 
-        int max = 0;
+        unsigned max = 0;
         Instruction *FirstOp, *SecondOp;
 
         FirstOp = dyn_cast<Instruction>(I->getOperand(0));
