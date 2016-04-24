@@ -60,24 +60,19 @@ public:
     // sext instructions.
     bool runOnBasicBlock(BasicBlock &BB) override;
     
-    void computeHeights(BasicBlock &BB);
-    bool isValidOperation(Instruction* I);
+    void computeNodes(BasicBlock &BB);
+    void computeNode(Instruction* I);
+    void computeLeaves();
+    void updateLeaves();
+    
+    void computeHeights();
     void computeHeight(Instruction* I);
-
-    Instruction* getLaterDefiner(Instruction* I);
-    Instruction* getEarlierDefiner(Instruction* I);
     
-    bool meetsConditions(Instruction *I);
-    void associativityAnalysis(Instruction *I);
-    
-    Instruction* findHighestAvailableOperation(Instruction *I);
-    
-    Instruction* climbUp(unsigned Opcode, Instruction *FirstOp, Instruction *SecondOp);
+    bool isValidOperation(Instruction* I);
 
     // Huffman Optimization for Tree Height Reduction
     void BalanceTree(Instruction *I);
     bool isLeaf(Instruction *I);
-    void ReplaceAllLeaves();
     void removeUnrelatedNodes();
     void FindRoots();
     
@@ -92,46 +87,171 @@ bool VEXTreeHeightReductionPass::isValidOperation(Instruction* I) {
 
     BinaryOperator* AluInst = cast<BinaryOperator>(I);
 
-    if (AluInst->getOpcode() == Instruction::Add ||
-        AluInst->getOpcode() == Instruction::Mul)
+    if (AluInst->getOpcode() == Instruction::Add)
         return true;
 
     return false;
 }
 
-void VEXTreeHeightReductionPass::computeHeight(Instruction* I) {
+void VEXTreeHeightReductionPass::computeLeaves() {
+    
+    DEBUG(dbgs() << "***** Computing Leaves *****\n");
+    
+    for (std::map<Instruction *, unsigned>::iterator it = HeightsByInstrOrder.begin();
+         it != HeightsByInstrOrder.end(); ++it) {
+        
+        Instruction *I = it->first;
+        
+        Instruction *FirstOp = dyn_cast<Instruction>(I->getOperand(0));
+        Instruction *SecondOp = dyn_cast<Instruction>(I->getOperand(1));
+        
+        if (FirstOp) {
+            if (HeightsByInstrOrder.find(FirstOp) == HeightsByInstrOrder.end()) {
+                HeightsByInstrOrder[FirstOp] = 0;
+                
+                DEBUG(dbgs() << "Instruction: ");
+                DEBUG(FirstOp->dump());
+            }
+        }
+        
+        if (SecondOp) {
+            if (HeightsByInstrOrder.find(SecondOp) == HeightsByInstrOrder.end()) {
+                HeightsByInstrOrder[SecondOp] = 0;
 
-    if (isValidOperation(I) && HeightsByInstrOrder.find(I) == HeightsByInstrOrder.end()) {
 
-        unsigned max = 0;
+                DEBUG(dbgs() << "Instruction: ");
+                DEBUG(SecondOp->dump());
+            }
+        }
+    }
+    DEBUG(dbgs() << "***** Finalized Computing Leaves *****\n");
+    
+}
+void VEXTreeHeightReductionPass::computeNode(Instruction* I) {
+    
+    if (isValidOperation(I)) {
+        
+        bool isInValidChain = false;
+        for (Value::use_iterator i = I->use_begin(),
+             e = I->use_end(); i != e; ++i) {
+            
+            Instruction *Use = cast<Instruction>(i->getUser());
+            if (HeightsByInstrOrder.find(Use) != HeightsByInstrOrder.end()) {
+                isInValidChain = true;
+            }
+        }
         Instruction *FirstOp, *SecondOp;
-
+        
         FirstOp = dyn_cast<Instruction>(I->getOperand(0));
         SecondOp = dyn_cast<Instruction>(I->getOperand(1));
-
-        if (FirstOp) {
-            if (HeightsByInstrOrder.find(FirstOp) != HeightsByInstrOrder.end()) {
-                max = max > HeightsByInstrOrder[FirstOp] ? max : HeightsByInstrOrder[FirstOp];
+        
+        if (FirstOp && FirstOp) {
+            if (isValidOperation(FirstOp)) {
+                isInValidChain = true;
             }
         }
-
+        
         if (SecondOp) {
-            if (HeightsByInstrOrder.find(SecondOp) != HeightsByInstrOrder.end()) {
-                max = max > HeightsByInstrOrder[SecondOp] ? max : HeightsByInstrOrder[SecondOp];
+            if (isValidOperation(SecondOp)) {
+                isInValidChain = true;
             }
         }
-        HeightsByInstrOrder[I] = 1 + max;
-        HeightsByLevel.insert(std::pair<unsigned, Instruction *>(1 + max, I));
-
-        DEBUG(dbgs() << "Instruction: " << I->getName() << " Height: " << HeightsByInstrOrder[I] << "\n");
+        
+        if (isInValidChain) {
+            HeightsByInstrOrder[I] = 0;
+            
+            DEBUG(dbgs() << "Instruction: ");
+            DEBUG(I->dump());
+            DEBUG(dbgs() << " Height: " << HeightsByInstrOrder[I] << "\n");
+        }
     }
 }
 
-void VEXTreeHeightReductionPass::computeHeights(BasicBlock &BB) {
+void VEXTreeHeightReductionPass::computeNodes(BasicBlock &BB) {
     
-    for (BasicBlock::iterator Inst = BB.begin(), InstE = BB.end(); Inst != InstE; ++Inst) {
+    DEBUG(dbgs() << "***** Computing Nodes *****\n");
+    
+    for (BasicBlock::reverse_iterator It = BB.rbegin(), ItE = BB.rend(); It != ItE; ++It) {
+        Instruction *Inst = &*It;
+        computeNode(Inst);
+    }
+    DEBUG(dbgs() << "***** Finalizing Computing Nodes *****\n");
+    
+    computeLeaves();
+}
+
+void VEXTreeHeightReductionPass::computeHeight(Instruction* I) {
+    
+    unsigned max = 0;
+    Instruction *FirstOp = dyn_cast<Instruction>(I->getOperand(0));
+    Instruction *SecondOp;
+    
+    if (I->getNumOperands() == 2)
+        SecondOp = dyn_cast<Instruction>(I->getOperand(1));
+    else
+        SecondOp = nullptr;
+    
+    if (HeightsByInstrOrder[I] != 0)
+        return;
+    
+    if (!isValidOperation(I)) {
+        
+        if (FirstOp) {
+            if (HeightsByInstrOrder.find(FirstOp) != HeightsByInstrOrder.end()) {
+                if (HeightsByInstrOrder[FirstOp] == 0)
+                    computeHeight(FirstOp);
+                max = max > HeightsByInstrOrder[FirstOp] ? max : HeightsByInstrOrder[FirstOp];
+            }
+        }
+        
+        if (SecondOp) {
+            if (HeightsByInstrOrder.find(SecondOp) != HeightsByInstrOrder.end()) {
+                if (HeightsByInstrOrder[SecondOp] == 0)
+                    computeHeight(SecondOp);
+                max = max > HeightsByInstrOrder[SecondOp] ? max : HeightsByInstrOrder[SecondOp];
+            }
+        }
+    }
+        HeightsByInstrOrder[I] = 1 + max;
+        HeightsByLevel.insert(std::pair<unsigned, Instruction *>(1 + max, I));
+        
+        DEBUG(dbgs() << "Instruction: ");
+        DEBUG(I->dump());
+        DEBUG(dbgs() << " Height: " << HeightsByInstrOrder[I] << "\n");
+}
+
+void VEXTreeHeightReductionPass::computeHeights() {
+    
+    DEBUG(dbgs() << "***** Computing Heights *****\n");
+    
+    for (std::map<Instruction *, unsigned>::iterator it = HeightsByInstrOrder.begin(); it != HeightsByInstrOrder.end(); ++it) {
+        (it->first)->dump();
+    }
+    
+    for (std::map<Instruction *, unsigned>::iterator it = HeightsByInstrOrder.begin(); it != HeightsByInstrOrder.end(); ++it) {
+        Instruction *Inst = it->first;
         computeHeight(Inst);
     }
+    
+    DEBUG(dbgs() << "***** Finalizing Computing Heights *****\n");
+}
+
+void VEXTreeHeightReductionPass::updateLeaves() {
+    
+    DEBUG(dbgs() << "***** Updating Leaves *****\n");
+    
+    std::multimap<unsigned, Instruction *>::iterator it = HeightsByLevel.begin();
+    std::multimap<unsigned, Instruction *>::iterator itEnd = HeightsByLevel.end();
+
+    while (it->first == 1 && it != itEnd) {
+        Instruction *I = it->second;
+        Leaves.push_back(cast<Instruction>(I));
+        ++it;
+    }
+    
+    DEBUG(dbgs() << "***** Finalizing Computing Heights *****\n");
+    
+    
 }
 
 bool VEXTreeHeightReductionPass::isLeaf(Instruction *I) {
@@ -140,26 +260,6 @@ bool VEXTreeHeightReductionPass::isLeaf(Instruction *I) {
         return true;
     else
         return false;
-}
-
-void VEXTreeHeightReductionPass::ReplaceAllLeaves() {
-
-    std::multimap<unsigned, Instruction *>::iterator it = HeightsByLevel.begin();
-    std::multimap<unsigned, Instruction *>::iterator itEnd = HeightsByLevel.end();
-    
-//    Instruction *NewInstr;
-//    IRBuilder<> Builder(HeightsByLevel.rbegin()->second);
-    while (it->first == 1 && it != itEnd) {
-        Instruction *I = it->second;
-
-//        NewInstr = I->clone();
-//        Builder.Insert(NewInstr);
-//        I->replaceAllUsesWith(NewInstr);
-//        I->eraseFromParent();
-//        Leaves.push_back(cast<Instruction>(NewInstr));
-        Leaves.push_back(cast<Instruction>(I));
-        ++it;
-    }
 }
 
 void VEXTreeHeightReductionPass::removeUnrelatedNodes() {
@@ -186,6 +286,7 @@ void VEXTreeHeightReductionPass::removeUnrelatedNodes() {
         
         if (!isPresented) {
             std::multimap<unsigned, Instruction *>::iterator tempIt = it++;
+//            (tempIt->second)->dump();
             HeightsByLevel.erase(tempIt);
             HeightsByInstrOrder.erase(tempIt->second);
         } else
@@ -225,7 +326,6 @@ void VEXTreeHeightReductionPass::BalanceTree(Instruction *I) {
         Leaves.pop_front();
         Instruction *Rb1 = cast<Instruction>(Leaves.front());
         Leaves.pop_front();
-
         R1 = Builder.CreateAdd(Ra1, Rb1);
 
         Leaves.push_back(R1);
@@ -234,33 +334,51 @@ void VEXTreeHeightReductionPass::BalanceTree(Instruction *I) {
     I->replaceAllUsesWith(R1);
 
     for (std::multimap<unsigned, Instruction *>::reverse_iterator it = HeightsByLevel.rbegin(); it != HeightsByLevel.rend(); ++it) {
-        if (it->first != 1)
+        if (it->first != 1) {
             (it->second)->eraseFromParent();
+        }
     }
 }
 
 void VEXTreeHeightReductionPass::FindRoots() {
 
-    // We sure must insert the last node as root
-    Roots.push_back(HeightsByLevel.rbegin()->second);
+    // We should search for instructions with have
+    // more than one use. We still don't know how to treat them.
+    // We will delete all instructions after that.
+    // TODO: This should be fixed to handle instructions with multiple uses.
+    for (std::multimap<unsigned, Instruction *>::iterator it = HeightsByLevel.begin(); it != HeightsByLevel.end(); ++it) {
+        Instruction *I = it->second;
 
-    for (std::map<Instruction *, unsigned>::reverse_iterator it = HeightsByInstrOrder.rbegin(); it != HeightsByInstrOrder.rend(); ++it) {
-        Instruction *I = it->first;
-
-        if (isLeaf(I))
-            continue;
+//        if (isLeaf(I))
+//            continue;
+//        
+//        for (Value::use_iterator i = I->use_begin(), e = I->use_end(); i != e; ++i) {
+//            
+//        }
         
-        for (Value::use_iterator i = I->use_begin(), e = I->use_end(); i != e; ++i) {
-            
-        }
         if (I->getNumUses() > 1) {
-             llvm_unreachable("This should not be reached by our examples right now. We'll deal with this later.");
+            std::multimap<unsigned, Instruction *>::iterator iterator = it;
+            ++iterator;
+            while (iterator != HeightsByLevel.end()) {
+                std::multimap<unsigned, Instruction *>::iterator tempIt = iterator;
+                ++iterator;
+                HeightsByLevel.erase(tempIt);
+                HeightsByInstrOrder.erase(tempIt->second);
+            }
+            break;
         }
     }
-
-    while (!Roots.empty()) {
-        BalanceTree(Roots.back());
-        Roots.pop_back();
+    
+    updateLeaves();
+    
+    // We sure must insert the last node as root
+    if (HeightsByLevel.size() > 5) {
+        Roots.push_back(HeightsByLevel.rbegin()->second);
+    
+        while (!Roots.empty()) {
+            BalanceTree(Roots.back());
+            Roots.pop_back();
+        }
     }
 }
 
@@ -274,14 +392,14 @@ bool VEXTreeHeightReductionPass::runOnBasicBlock(BasicBlock &BB) {
     Roots.clear();
     Leaves.clear();
     
-    computeHeights(BB);
+    computeNodes(BB);
+    computeHeights();
     
     // There is no way to improve over trees with 3 or less nodes.
     // We just leave the way it is.
     if (HeightsByLevel.size() > 3) {
         
         removeUnrelatedNodes();
-        ReplaceAllLeaves();
         FindRoots();
         
         return true;

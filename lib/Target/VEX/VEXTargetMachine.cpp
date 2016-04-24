@@ -181,9 +181,10 @@ namespace {
 }
 
 void VEXPassConfig::addIRPasses() {
+    TargetPassConfig::addIRPasses();
+    
     if (EnableTHR)
         addPass(createVEXTreeHeightReductionPass());
-    TargetPassConfig::addIRPasses();
 }
 
 bool VEXPassConfig::addPreISel() {
