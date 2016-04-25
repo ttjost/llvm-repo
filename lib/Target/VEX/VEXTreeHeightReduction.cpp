@@ -186,7 +186,7 @@ void VEXTreeHeightReductionPass::computeHeight(Instruction* I) {
     Instruction *FirstOp = dyn_cast<Instruction>(I->getOperand(0));
     Instruction *SecondOp;
     
-    if (I->getNumOperands() == 2)
+    if (I->getNumOperands() > 1)
         SecondOp = dyn_cast<Instruction>(I->getOperand(1));
     else
         SecondOp = nullptr;
@@ -194,7 +194,7 @@ void VEXTreeHeightReductionPass::computeHeight(Instruction* I) {
     if (HeightsByInstrOrder[I] != 0)
         return;
     
-    if (!isValidOperation(I)) {
+    if (isValidOperation(I)) {
         
         if (FirstOp) {
             if (HeightsByInstrOrder.find(FirstOp) != HeightsByInstrOrder.end()) {
@@ -214,7 +214,7 @@ void VEXTreeHeightReductionPass::computeHeight(Instruction* I) {
     }
         HeightsByInstrOrder[I] = 1 + max;
         HeightsByLevel.insert(std::pair<unsigned, Instruction *>(1 + max, I));
-        
+    
         DEBUG(dbgs() << "Instruction: ");
         DEBUG(I->dump());
         DEBUG(dbgs() << " Height: " << HeightsByInstrOrder[I] << "\n");
@@ -223,10 +223,6 @@ void VEXTreeHeightReductionPass::computeHeight(Instruction* I) {
 void VEXTreeHeightReductionPass::computeHeights() {
     
     DEBUG(dbgs() << "***** Computing Heights *****\n");
-    
-    for (std::map<Instruction *, unsigned>::iterator it = HeightsByInstrOrder.begin(); it != HeightsByInstrOrder.end(); ++it) {
-        (it->first)->dump();
-    }
     
     for (std::map<Instruction *, unsigned>::iterator it = HeightsByInstrOrder.begin(); it != HeightsByInstrOrder.end(); ++it) {
         Instruction *Inst = it->first;
@@ -324,11 +320,17 @@ void VEXTreeHeightReductionPass::BalanceTree(Instruction *I) {
     while (Leaves.size() > 1) {
         Instruction *Ra1 = dyn_cast<Instruction>(Leaves.front());
         Leaves.pop_front();
+        DEBUG(dbgs() << "Ra1: ");
+        DEBUG(Ra1->dump());
         Instruction *Rb1 = cast<Instruction>(Leaves.front());
         Leaves.pop_front();
+        DEBUG(dbgs() << "Rb1: ");
+        DEBUG(Rb1->dump());
         R1 = Builder.CreateAdd(Ra1, Rb1);
 
         Leaves.push_back(R1);
+        DEBUG(dbgs() << "Dst: ");
+        DEBUG(R1->dump());
     }
 
     I->replaceAllUsesWith(R1);
@@ -369,6 +371,7 @@ void VEXTreeHeightReductionPass::FindRoots() {
         }
     }
     
+    removeUnrelatedNodes();
     updateLeaves();
     
     // We sure must insert the last node as root
@@ -397,9 +400,8 @@ bool VEXTreeHeightReductionPass::runOnBasicBlock(BasicBlock &BB) {
     
     // There is no way to improve over trees with 3 or less nodes.
     // We just leave the way it is.
-    if (HeightsByLevel.size() > 3) {
+    if (HeightsByLevel.size() > 5) {
         
-        removeUnrelatedNodes();
         FindRoots();
         
         return true;
