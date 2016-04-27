@@ -71,7 +71,7 @@ class VEXDataReuseTracking: public MachineFunctionPass {
     
     void RearrangeInstructionsInMBB (MachineBasicBlock *MBB);
     
-    unsigned getInstructionOffset (MachineBasicBlock::iterator& Inst);
+    int64_t getInstructionOffset (MachineBasicBlock::iterator& Inst);
 
     void analyzeMemoryInstruction (MachineBasicBlock::iterator& Inst,
                                    unsigned Lane, unsigned Offset, unsigned BaseRegister);
@@ -104,13 +104,6 @@ class VEXDataReuseTracking: public MachineFunctionPass {
     unsigned getSPMStoreOpcode(unsigned Lane, unsigned DataType);
 
     void getMemoryOpcodes(SPMVariable &Variable, unsigned &LoadOpcode, unsigned &StoreOpcode);
-
-    void getStoreOpcode(SPMVariable &Variable,
-                        unsigned &LoadOpcode,
-                        bool isSPM);
-    void getLoadOpcode(SPMVariable &Variable,
-                       unsigned &LoadOpcode,
-                       bool isSPM);
 
 public:
     static char ID;
@@ -749,7 +742,8 @@ void VEXDataReuseTracking::getMemoryOpcodes(SPMVariable &Variable,
                                             unsigned &LoadOpcode,
                                             unsigned &StoreOpcode) {
 
-    unsigned Lane, Offset = 0;
+    unsigned Lane;
+    int64_t Offset = 0;
     Variable.CalculateLaneAndOffset(Lane, Offset);
 
     DEBUG(dbgs() << "\Lane: " << Lane << "\n");
@@ -769,50 +763,6 @@ void VEXDataReuseTracking::getMemoryOpcodes(SPMVariable &Variable,
     } else if (Variable.getDataType() == SPMVariable::MDHalfU) {
         LoadOpcode = Lane + VEX::LDHU0;
         StoreOpcode = Lane + VEX::STH0;
-    } else
-        llvm_unreachable("Incorrect Object Size for Variable.");
-}
-
-void VEXDataReuseTracking::getLoadOpcode(SPMVariable &Variable,
-                                         unsigned &LoadOpcode,
-                                         bool isSPM) {
-
-    unsigned Lane, Offset = 0;
-    Variable.CalculateLaneAndOffset(Lane, Offset);
-
-    DEBUG(dbgs() << "\Lane: " << Lane << "\n");
-
-    if (Variable.getDataType() == SPMVariable::MDFull) {
-        isSPM ? LoadOpcode = VEX::LDW0 + Lane: LoadOpcode = VEX::LDW;
-    } else if (Variable.getDataType() == SPMVariable::MDByte) {
-        isSPM ? LoadOpcode = VEX::LDB0 + Lane: LoadOpcode = VEX::LDB;
-    } else if (Variable.getDataType() == SPMVariable::MDByteU) {
-        isSPM ? LoadOpcode = VEX::LDBU0 + Lane: LoadOpcode = VEX::LDBU;
-    } else if (Variable.getDataType() == SPMVariable::MDHalf) {
-        isSPM ? LoadOpcode = VEX::LDH0 + Lane: LoadOpcode = VEX::LDH;
-    } else if (Variable.getDataType() == SPMVariable::MDHalfU) {
-        isSPM ? LoadOpcode = VEX::LDHU0 + Lane: LoadOpcode = VEX::LDHU;
-    } else
-        llvm_unreachable("Incorrect Object Size for Variable.");
-}
-
-void VEXDataReuseTracking::getStoreOpcode(SPMVariable &Variable,
-                                         unsigned &LoadOpcode,
-                                         bool isSPM) {
-
-    unsigned Lane, Offset = 0;
-    Variable.CalculateLaneAndOffset(Lane, Offset);
-
-    DEBUG(dbgs() << "\Lane: " << Lane << "\n");
-
-    if (Variable.getDataType() == SPMVariable::MDFull) {
-        isSPM ? LoadOpcode = VEX::STW0 + Lane: LoadOpcode = VEX::STW;
-    } else if (Variable.getDataType() == SPMVariable::MDByte ||
-               Variable.getDataType() == SPMVariable::MDByteU) {
-        isSPM ? LoadOpcode = VEX::STB0 + Lane: LoadOpcode = VEX::STB;
-    } else if (Variable.getDataType() == SPMVariable::MDHalf ||
-               Variable.getDataType() == SPMVariable::MDHalfU) {
-        isSPM ? LoadOpcode = VEX::STH0 + Lane: LoadOpcode = VEX::STH;
     } else
         llvm_unreachable("Incorrect Object Size for Variable.");
 }
@@ -1125,7 +1075,7 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
 //    }
 }
 
-unsigned VEXDataReuseTracking::getInstructionOffset (MachineBasicBlock::iterator& Inst) {
+int64_t VEXDataReuseTracking::getInstructionOffset (MachineBasicBlock::iterator& Inst) {
     for (unsigned i = 1, e = Inst->getNumOperands(); i != e ; ++i) {
         if (Inst->getOperand(i).isImm())
             return Inst->getOperand(i).getImm();
@@ -1186,7 +1136,7 @@ void VEXDataReuseTracking::RearrangeInstructionsInMBB (MachineBasicBlock *MBB) {
 }
 
 bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
-    DEBUG(dbgs() << MF.getName() << "\n");
+    DEBUG(dbgs() << "Function " << MF.getName() << "\n");
 
     // Here we reset Variables. We are still not considerig multiple functions and
     // how registers may propagate variables through functions.
@@ -1286,7 +1236,7 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
         // Update Global Variables Offset with SPM Offsets, which
         // tells where the Variable will be located in the SPM(s).
         std::vector<MachineBasicBlock::iterator> VarRelatedInstructions = Var.getDefinitionInstructions();
-        unsigned Offset = DataInfo->getVarOffsetInSPM(Var);
+        int64_t Offset = (int64_t) DataInfo->getVarOffsetInSPM(Var);
         
         MachineFunction *Func = VarRelatedInstructions[0]->getParent()->getParent();
         
@@ -1333,56 +1283,56 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                 }
             }
             
-//            if (Var.isMultipleStorage() && isLoop) {
-//                
-//                if (!(BaseReg = Var.FindBaseRegister(MBB))) {
-//                    MachineRegisterInfo &RegInfo = MF.getRegInfo();
-//                    
-//                    BaseReg = RegInfo.createVirtualRegister(&VEX::GPRegsRegClass);
-//                    unsigned BaseRegTrue = RegInfo.createVirtualRegister(&VEX::GPRegsRegClass);
-//                    unsigned BaseRegFalse = RegInfo.createVirtualRegister(&VEX::GPRegsRegClass);
-//                    Var.AddBaseRegister(MBB, BaseReg);
-//                    
-//                    MachineBasicBlock::pred_iterator SI = MBB->pred_begin();
-//                    
-//                    if (*(SI) == MBB)
-//                        ++SI;
-//                    
-//                    assert(*(SI) != MBB && "Cannot be the same BB");
-//                    
-//                    MachineInstr* Inst = BuildMI(*(SI), DebugLoc(),
-//                            TII->get(VEX::MOVi),
-//                            BaseRegTrue).addImm(0);
-//                    
-//                    // Terrible hack. Why can't we create more than one MOVi instruction?
-//                    // If we don't do like this, LLVM crashes, for some uncanny reason.
-//                    if (MBBs.empty())
-//                        LIS->InsertMachineInstrInMaps(Inst);
-//            
-//                    MachineBasicBlock::iterator LastInst = MBB->getLastNonDebugInstr();
-//                    
-//                    while (LastInst->isTerminator() && LastInst != MBB->begin()) {
-//                        --LastInst;
-//                    }
-//                    
-//                    // Add PHI Instruction
-//                    MachineInstr* Inst2 = BuildMI(*MBB, MBB->begin(), DebugLoc(), TII->get(VEX::PHI), BaseReg)
-//                    .addReg(BaseRegTrue)
-//                    .addMBB(*SI)
-//                    .addReg(BaseRegFalse)
-//                    .addMBB(MBB);
-//                    
-//                    LIS->InsertMachineInstrInMaps(Inst2);
-//                    
-//                    // Add Instruction for next value
-//                    MachineInstr* Inst3 = BuildMI(*MBB, LastInst, DebugLoc(), TII->get(VEX::ADDi), BaseRegFalse)
-//                    .addReg(BaseReg)
-//                    .addImm(Var.getMaxOffsetPerBB()/Var.getNumUnits()*Var.getDataSize());
-//                    
-//                    LIS->InsertMachineInstrInMaps(Inst3);
-//                }
-//                MBBs.insert(MBB);
-//            }
+            if (Var.isMultipleStorage() && isLoop) {
+                
+                if (!(BaseReg = Var.FindBaseRegister(MBB))) {
+                    MachineRegisterInfo &RegInfo = MF.getRegInfo();
+                    
+                    BaseReg = RegInfo.createVirtualRegister(&VEX::GPRegsRegClass);
+                    unsigned BaseRegTrue = RegInfo.createVirtualRegister(&VEX::GPRegsRegClass);
+                    unsigned BaseRegFalse = RegInfo.createVirtualRegister(&VEX::GPRegsRegClass);
+                    Var.AddBaseRegister(MBB, BaseReg);
+                    
+                    MachineBasicBlock::pred_iterator SI = MBB->pred_begin();
+                    
+                    if (*(SI) == MBB)
+                        ++SI;
+                    
+                    assert(*(SI) != MBB && "Cannot be the same BB");
+                    
+                    MachineInstr* Inst = BuildMI(*(SI), DebugLoc(),
+                            TII->get(VEX::MOVi),
+                            BaseRegTrue).addImm(0);
+                    
+                    // Terrible hack. Why can't we create more than one MOVi instruction?
+                    // If we don't do like this, LLVM crashes, for some uncanny reason.
+                    if (MBBs.empty())
+                        LIS->InsertMachineInstrInMaps(Inst);
+            
+                    MachineBasicBlock::iterator LastInst = MBB->getLastNonDebugInstr();
+                    
+                    while (LastInst->isTerminator() && LastInst != MBB->begin()) {
+                        --LastInst;
+                    }
+                    
+                    // Add PHI Instruction
+                    MachineInstr* Inst2 = BuildMI(*MBB, MBB->begin(), DebugLoc(), TII->get(VEX::PHI), BaseReg)
+                    .addReg(BaseRegTrue)
+                    .addMBB(*SI)
+                    .addReg(BaseRegFalse)
+                    .addMBB(MBB);
+                    
+                    LIS->InsertMachineInstrInMaps(Inst2);
+                    
+                    // Add Instruction for next value
+                    MachineInstr* Inst3 = BuildMI(*MBB, LastInst, DebugLoc(), TII->get(VEX::ADDi), BaseRegFalse)
+                    .addReg(BaseReg)
+                    .addImm(Var.getMaxOffsetPerBB()/Var.getNumUnits()*Var.getDataSize());
+                    
+                    LIS->InsertMachineInstrInMaps(Inst3);
+                }
+                MBBs.insert(MBB);
+            }
             
             analyzeMemoryInstruction(Inst, Lane, Offset, BaseReg);
         }

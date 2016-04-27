@@ -89,7 +89,7 @@ bool SPMVariable::isDefinitionInstruction(MachineBasicBlock::iterator Inst) {
 // Return Lane and Offset for that Value in Scratchpad
 // We only need to worry about this when using Multiple Storages.
 // Otherwise, finding out Lane and Offset is straightforward.
-void SPMVariable::CalculateLaneAndOffset(unsigned &Lane, unsigned &Offset) {
+void SPMVariable::CalculateLaneAndOffset(unsigned &Lane, int64_t &Offset) {
     
     if (!MultipleStorage) {
         Lane = Memories[0];

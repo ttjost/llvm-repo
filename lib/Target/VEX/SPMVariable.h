@@ -180,7 +180,7 @@ public:
     // Return Lane and Offset for that Value in Scratchpad
     // We only need to worry about this when using Multiple Storages.
     // Otherwise, finding out Lane and Offset is straightforward.
-    void CalculateLaneAndOffset(unsigned &Lane, unsigned &Offset);
+    void CalculateLaneAndOffset(unsigned &Lane, int64_t &Offset);
     
     void setMemoryUnits(std::vector<unsigned> Units);
     void setNumElements(unsigned Elements);
