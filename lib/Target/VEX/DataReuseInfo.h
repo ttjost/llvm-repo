@@ -31,7 +31,7 @@ class DataReuseInfo {
     unsigned GlobalMemUnits;
 
 public:
-    DataReuseInfo() : GlobalMemUnits(1) {
+    DataReuseInfo() : GlobalMemUnits(2) {
         Variables.resize(0);
         MemoriesOffsets.resize(0);
     }
