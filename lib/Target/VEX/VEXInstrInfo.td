@@ -785,6 +785,85 @@ def LDB7       : LoadInstrSpm<"ldb7", 0b00010000, IILane7>;
 def LDBU7      : LoadInstrSpm<"ldbu7", 0b00010000, IILane7>;
 def STB7       : StoreInstrSpm<"stb7", 0b00010101, IILane7>;
 
+// Lane 8
+def LDW8       : LoadInstrSpm<"ldw8", 0b00010000, IILane8>;
+def STW8       : StoreInstrSpm<"stw8", 0b00010101, IILane8>;
+def LDH8       : LoadInstrSpm<"ldh8", 0b00010000, IILane8>;
+def LDHU8      : LoadInstrSpm<"ldhu8", 0b00010000, IILane8>;
+def STH8       : StoreInstrSpm<"sth8", 0b00010101, IILane8>;
+def LDB8       : LoadInstrSpm<"ldb8", 0b00010000, IILane8>;
+def LDBU8      : LoadInstrSpm<"ldbu8", 0b00010000, IILane8>;
+def STB8       : StoreInstrSpm<"stb8", 0b00010101, IILane8>;
+
+// Lane 9
+def LDW9       : LoadInstrSpm<"ldw9", 0b00010000, IILane9>;
+def STW9       : StoreInstrSpm<"stw9", 0b00010101, IILane9>;
+def LDH9       : LoadInstrSpm<"ldh9", 0b00010000, IILane9>;
+def LDHU9      : LoadInstrSpm<"ldhu9", 0b00010000, IILane9>;
+def STH9       : StoreInstrSpm<"sth9", 0b00010101, IILane9>;
+def LDB9       : LoadInstrSpm<"ldb9", 0b00010000, IILane9>;
+def LDBU9      : LoadInstrSpm<"ldbu9", 0b00010000, IILane9>;
+def STB9       : StoreInstrSpm<"stb9", 0b00010101, IILane9>;
+
+// Lane 10
+def LDW10       : LoadInstrSpm<"ldw10", 0b00010000, IILane10>;
+def STW10       : StoreInstrSpm<"stw10", 0b00010101, IILane10>;
+def LDH10       : LoadInstrSpm<"ldh10", 0b00010000, IILane10>;
+def LDHU10      : LoadInstrSpm<"ldhu10", 0b00010000, IILane10>;
+def STH10       : StoreInstrSpm<"sth10", 0b00010101, IILane10>;
+def LDB10       : LoadInstrSpm<"ldb10", 0b00010000, IILane10>;
+def LDBU10      : LoadInstrSpm<"ldbu10", 0b00010000, IILane10>;
+def STB10       : StoreInstrSpm<"stb10", 0b00010101, IILane10>;
+
+// Lane 11
+def LDW11       : LoadInstrSpm<"ldw11", 0b00010000, IILane11>;
+def STW11       : StoreInstrSpm<"stw11", 0b00010101, IILane11>;
+def LDH11       : LoadInstrSpm<"ldh11", 0b00010000, IILane11>;
+def LDHU11      : LoadInstrSpm<"ldhu11", 0b00010000, IILane11>;
+def STH11       : StoreInstrSpm<"sth11", 0b00010101, IILane11>;
+def LDB11       : LoadInstrSpm<"ldb11", 0b00010000, IILane11>;
+def LDBU11      : LoadInstrSpm<"ldbu11", 0b00010000, IILane11>;
+def STB11       : StoreInstrSpm<"stb11", 0b00010101, IILane11>;
+
+// Lane 12
+def LDW12       : LoadInstrSpm<"ldw12", 0b00010000, IILane12>;
+def STW12       : StoreInstrSpm<"stw12", 0b00010101, IILane12>;
+def LDH12       : LoadInstrSpm<"ldh12", 0b00010000, IILane12>;
+def LDHU12      : LoadInstrSpm<"ldhu12", 0b00010000, IILane12>;
+def STH12       : StoreInstrSpm<"sth12", 0b00010101, IILane12>;
+def LDB12       : LoadInstrSpm<"ldb12", 0b00010000, IILane12>;
+def LDBU12      : LoadInstrSpm<"ldbu12", 0b00010000, IILane12>;
+def STB12       : StoreInstrSpm<"stb12", 0b00010101, IILane12>;
+
+// Lane 13
+def LDW13       : LoadInstrSpm<"ldw13", 0b00010000, IILane13>;
+def STW13       : StoreInstrSpm<"stw13", 0b00010101, IILane13>;
+def LDH13       : LoadInstrSpm<"ldh13", 0b00010000, IILane13>;
+def LDHU13      : LoadInstrSpm<"ldhu13", 0b00010000, IILane13>;
+def STH13       : StoreInstrSpm<"sth13", 0b00010101, IILane13>;
+def LDB13       : LoadInstrSpm<"ldb13", 0b00010000, IILane13>;
+def LDBU13      : LoadInstrSpm<"ldbu13", 0b00010000, IILane13>;
+def STB13       : StoreInstrSpm<"stb13", 0b00010101, IILane13>;
+
+// Lane 14
+def LDW14       : LoadInstrSpm<"ldw14", 0b00010000, IILane14>;
+def STW14       : StoreInstrSpm<"stw14", 0b00010101, IILane14>;
+def LDH14       : LoadInstrSpm<"ldh14", 0b00010000, IILane14>;
+def LDHU14      : LoadInstrSpm<"ldhu14", 0b00010000, IILane14>;
+def STH14       : StoreInstrSpm<"sth14", 0b00010101, IILane14>;
+def LDB14       : LoadInstrSpm<"ldb14", 0b00010000, IILane14>;
+def LDBU14      : LoadInstrSpm<"ldbu14", 0b00010000, IILane14>;
+def STB14       : StoreInstrSpm<"stb14", 0b00010101, IILane14>;
+
+// Lane 15
+def LDW15       : LoadInstrSpm<"ldw15", 0b00010000, IILane15>;
+def STW15       : StoreInstrSpm<"stw15", 0b00010101, IILane15>;
+def LDH15       : LoadInstrSpm<"ldh15", 0b00010000, IILane15>;
+def LDHU15      : LoadInstrSpm<"ldhu15", 0b00010000, IILane15>;
+def STH15       : StoreInstrSpm<"sth15", 0b00010101, IILane15>;
+def LDB15       : LoadInstrSpm<"ldb15", 0b00010000, IILane15>;
+def LDBU15      : LoadInstrSpm<"ldbu15", 0b00010000, IILane15>;
+def STB15       : StoreInstrSpm<"stb15", 0b00010101, IILane15>;
 
 //===----------------------------------------------------------------------===//
 //                      Return/Call instructions

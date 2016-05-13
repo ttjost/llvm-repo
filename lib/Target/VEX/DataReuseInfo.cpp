@@ -167,6 +167,8 @@ unsigned DataReuseInfo::AllocateSPMs(SPMVariable &Var) {
         assert(NumSPMs <= 4 && "Number of SPMs should be less or equal to 4.");
     } else if (IssueWidth == 8) {
         assert(NumSPMs <= 8 && "Number of SPMs should be less or equal to 8.");
+    } else if (IssueWidth == 16) {
+        assert(NumSPMs <= 16 && "Number of SPMs should be less or equal to 16.");
     } else
         llvm_unreachable("There is no support for a different Issue Width yet. Choose between 2, 4 and 8.");
 
