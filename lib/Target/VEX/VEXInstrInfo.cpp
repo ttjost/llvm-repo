@@ -129,11 +129,11 @@ bool VEXInstrInfo::expandPostRAPseudo(MachineBasicBlock::iterator MI) const {
             BuildMI(MBB, MI, MI->getDebugLoc(), get(VEX::ADDi), VEX::Reg1).addReg(VEX::Reg1).addImm(StackSize);
             
             unsigned Opcode;
-            if (isHPCompiler)
+//            if (isHPCompiler)
                 Opcode = VEX::CALL;
-            else
-                Opcode = VEX::GOTO;
-            
+//            else
+//                Opcode = VEX::GOTO;
+
             BuildMI(MBB, MI, MI->getDebugLoc(), get(Opcode)).addOperand(MI->getOperand(0));
             MBB.erase(MI);
             break;
