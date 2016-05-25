@@ -975,5 +975,11 @@ def : Pat<(VEXPseudoTailCall (VEXWrapper tglobaladdr:$dst)),
 def : Pat<(VEXPseudoTailCall (i32 tglobaladdr:$dst)),
             (PSEUDO_TCALL tglobaladdr:$dst)>;
 
+def : Pat<(VEXPseudoTailCall (VEXWrapper tglobaladdr:$dst)),
+            (PSEUDO_TCALL tglobaladdr:$dst)>;
+
+def : Pat<(VEXPseudoTailCall (VEXWrapper texternalsym:$dst)),
+            (PSEUDO_TCALL texternalsym:$dst)>;
+
 //include "VEXInstrVIS.td"
 //include "VEXInstrAliases.td"

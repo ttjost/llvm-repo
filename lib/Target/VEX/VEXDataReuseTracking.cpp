@@ -1145,7 +1145,7 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
 
     LIS = &getAnalysis<LiveIntervals>();
     
-    MF.dump();
+    DEBUG(MF.dump());
     
     const VEXSubtarget &Subtarget = *static_cast<const VEXTargetMachine &>(TM).getSubtargetImpl();
     const VEXInstrInfo *TII = static_cast<const VEXInstrInfo *>(Subtarget.getInstrInfo());
