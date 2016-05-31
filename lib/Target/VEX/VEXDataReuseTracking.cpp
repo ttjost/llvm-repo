@@ -14,6 +14,7 @@
 
 #include "VEXTargetMachine.h"
 #include "llvm/Pass.h"
+#include "llvm/IR/BasicBlock.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineInstr.h"
 #include "llvm/CodeGen/MachineMemOperand.h"
@@ -21,6 +22,9 @@
 #include "llvm/CodeGen/MachineLoopInfo.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/LiveIntervalAnalysis.h"
+#include "llvm/Analysis/ScalarEvolution.h"
+#include "llvm/Analysis/ScalarEvolutionExpander.h"
+#include "llvm/Analysis/ScalarEvolutionExpressions.h"
 //#include "llvm/Analysis/LoopPass.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -57,6 +61,8 @@ class VEXDataReuseTracking: public MachineFunctionPass {
     TargetMachine &TM;
     DataReuseInfo* DataInfo;
     LiveIntervals *LIS;
+    ScalarEvolution *SE;
+    MachineLoopInfo *MLI;
     
     unsigned MemFuncUnits;
 
@@ -132,11 +138,17 @@ public:
 
 void VEXDataReuseTracking::getAnalysisUsage(AnalysisUsage &AU) const {
 //    AU.addRequired<AliasAnalysis>();
+
+//    AU.addRequired<LoopInfoWrapperPass>();
+//    AU.addPreserved<LoopInfoWrapperPass>();
+
     AU.addRequired<MachineLoopInfo>();
     AU.addPreserved<MachineLoopInfo>();
 
     AU.addRequired<LiveIntervals>();
     AU.addPreserved<LiveIntervals>();
+
+    AU.addRequired<ScalarEvolution>();
 
     MachineFunctionPass::getAnalysisUsage(AU);
 }
@@ -714,15 +726,16 @@ void VEXDataReuseTracking::analyzeVariableDefinitionInstruction(SPMVariable &Var
 void VEXDataReuseTracking::EvaluateVariableOffset(MachineBasicBlock::iterator Inst,
                                                   StringRef VariableName) {
 
-    MachineLoopInfo &MLI = getAnalysis<MachineLoopInfo>();
+//    LoopInfo *LI = &getAnalysis<LoopInfoWrapperPass>().getLoopInfo();
 
     // If the BB belongs to a Loop
     // We should check if different addresses are
     // accessed in the same basic block.
     // Record this info in order to know how many SPMs will
     // be used to store the data structure for the variable
-    MachineLoop* loop = MLI.getLoopFor(Inst->getParent());
+    MachineLoop* loop = MLI->getLoopFor(Inst->getParent());
     if (loop) {
+//        dbgs() << "Small trip count: " << SE->getSmallConstantTripCount(LI->getLoopFor(loop->getTopBlock()->getBasicBlock())) << "\n\n";
 //        DEBUG(dbgs() << "\n\nInstruction is Inside Loop\n\n");
 
         assert(DataInfo->FindVariable(VariableName) && " Variable not found.");
@@ -818,14 +831,16 @@ MachineBasicBlock* VEXDataReuseTracking::CreatePreamble(MachineFunction &MF, SPM
     assert(DefInstr->getOperand(0).isDef() && "First Operand should be a Definition. Something is wrong");
 
     const VEXSubtarget &Subtarget = *static_cast<const VEXTargetMachine &>(TM).getSubtargetImpl();
-    const VEXInstrInfo *TII = static_cast<const VEXInstrInfo *>(Subtarget.getInstrInfo());
 
     assert(DefInstr->getParent()->getParent() == &MF && "DefInstr is not defined in this MF, but somewhere else");
 
     MachineFunction::iterator MBB = DefInstr->getParent();
     if (DefInstr->getParent() == FirstMemInstr->getParent()) {
-        --MBB;
+        do {
+          --MBB;
+        } while (MLI->getLoopFor(MBB));
     }
+
     // Create new Basic Block for Preamble
     // This will do almost all tricks to create a BB in between two BBs.
     MachineBasicBlock *PreambleMBB = MBB->SplitCriticalEdge(*MBB->succ_begin(), this);
@@ -864,7 +879,6 @@ int NumberOfSetBits(unsigned i)
 void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Variable, MachineBasicBlock *PreambleMBB) {
     
     MachineBasicBlock::iterator DefInstr = Variable.getFirstDefinition();
-    MachineBasicBlock::iterator FirstMemInstr = Variable.getFirstMemoryInstruction();
 
     assert(DefInstr->getOperand(0).isDef() && "First Operand should be a Definition. Something is wrong");
 
@@ -1144,7 +1158,9 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
     DataInfo->resetVariables();
 
     LIS = &getAnalysis<LiveIntervals>();
-    
+    SE = &getAnalysis<ScalarEvolution>();
+    MLI = &getAnalysis<MachineLoopInfo>();
+
     DEBUG(MF.dump());
     
     const VEXSubtarget &Subtarget = *static_cast<const VEXTargetMachine &>(TM).getSubtargetImpl();
@@ -1284,56 +1300,56 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                 }
             }
             
-//            if (Var.isMultipleStorage() && isLoop) {
-//                
-//                if (!(BaseReg = Var.FindBaseRegister(MBB))) {
-//                    MachineRegisterInfo &RegInfo = MF.getRegInfo();
-//                    
-//                    BaseReg = RegInfo.createVirtualRegister(&VEX::GPRegsRegClass);
-//                    unsigned BaseRegTrue = RegInfo.createVirtualRegister(&VEX::GPRegsRegClass);
-//                    unsigned BaseRegFalse = RegInfo.createVirtualRegister(&VEX::GPRegsRegClass);
-//                    Var.AddBaseRegister(MBB, BaseReg);
-//                    
-//                    MachineBasicBlock::pred_iterator SI = MBB->pred_begin();
-//                    
-//                    if (*(SI) == MBB)
-//                        ++SI;
-//                    
-//                    assert(*(SI) != MBB && "Cannot be the same BB");
-//                    
-//                    MachineInstr* Inst = BuildMI(*(SI), DebugLoc(),
-//                            TII->get(VEX::MOVi),
-//                            BaseRegTrue).addImm(0);
-//                    
-//                    // Terrible hack. Why can't we create more than one MOVi instruction?
-//                    // If we don't do like this, LLVM crashes, for some uncanny reason.
-//                    if (MBBs.empty())
-//                        LIS->InsertMachineInstrInMaps(Inst);
-//            
-//                    MachineBasicBlock::iterator LastInst = MBB->getLastNonDebugInstr();
-//                    
-//                    while (LastInst->isTerminator() && LastInst != MBB->begin()) {
-//                        --LastInst;
-//                    }
-//                    
-//                    // Add PHI Instruction
-//                    MachineInstr* Inst2 = BuildMI(*MBB, MBB->begin(), DebugLoc(), TII->get(VEX::PHI), BaseReg)
-//                    .addReg(BaseRegTrue)
-//                    .addMBB(*SI)
-//                    .addReg(BaseRegFalse)
-//                    .addMBB(MBB);
-//                    
-//                    LIS->InsertMachineInstrInMaps(Inst2);
-//                    
-//                    // Add Instruction for next value
-//                    MachineInstr* Inst3 = BuildMI(*MBB, LastInst, DebugLoc(), TII->get(VEX::ADDi), BaseRegFalse)
-//                    .addReg(BaseReg)
-//                    .addImm(Var.getMaxOffsetPerBB()/Var.getNumUnits()*Var.getDataSize());
-//                    
-//                    LIS->InsertMachineInstrInMaps(Inst3);
-//                }
-//                MBBs.insert(MBB);
-//            }
+            if (Var.isMultipleStorage() && isLoop) {
+
+                if (!(BaseReg = Var.FindBaseRegister(MBB))) {
+                    MachineRegisterInfo &RegInfo = MF.getRegInfo();
+
+                    BaseReg = RegInfo.createVirtualRegister(&VEX::GPRegsRegClass);
+                    unsigned BaseRegTrue = RegInfo.createVirtualRegister(&VEX::GPRegsRegClass);
+                    unsigned BaseRegFalse = RegInfo.createVirtualRegister(&VEX::GPRegsRegClass);
+                    Var.AddBaseRegister(MBB, BaseReg);
+
+                    MachineBasicBlock::pred_iterator SI = MBB->pred_begin();
+
+                    if (*(SI) == MBB)
+                        ++SI;
+
+                    assert(*(SI) != MBB && "Cannot be the same BB");
+
+                    MachineInstr* Inst = BuildMI(*(SI), DebugLoc(),
+                            TII->get(VEX::MOVi),
+                            BaseRegTrue).addImm(0);
+
+                    // Terrible hack. Why can't we create more than one MOVi instruction?
+                    // If we don't do like this, LLVM crashes, for some uncanny reason.
+                    if (MBBs.empty())
+                        LIS->InsertMachineInstrInMaps(Inst);
+
+                    MachineBasicBlock::iterator LastInst = MBB->getLastNonDebugInstr();
+
+                    while (LastInst->isTerminator() && LastInst != MBB->begin()) {
+                        --LastInst;
+                    }
+
+                    // Add PHI Instruction
+                    MachineInstr* Inst2 = BuildMI(*MBB, MBB->begin(), DebugLoc(), TII->get(VEX::PHI), BaseReg)
+                    .addReg(BaseRegTrue)
+                    .addMBB(*SI)
+                    .addReg(BaseRegFalse)
+                    .addMBB(MBB);
+
+                    LIS->InsertMachineInstrInMaps(Inst2);
+
+                    // Add Instruction for next value
+                    MachineInstr* Inst3 = BuildMI(*MBB, LastInst, DebugLoc(), TII->get(VEX::ADDi), BaseRegFalse)
+                    .addReg(BaseReg)
+                    .addImm(Var.getMaxOffsetPerBB()/Var.getNumUnits()*Var.getDataSize());
+
+                    LIS->InsertMachineInstrInMaps(Inst3);
+                }
+                MBBs.insert(MBB);
+            }
             
             analyzeMemoryInstruction(Inst, Lane, Offset, BaseReg);
         }

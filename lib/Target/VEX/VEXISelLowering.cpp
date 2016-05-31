@@ -124,7 +124,7 @@ VEXTargetLowering::VEXTargetLowering(const TargetMachine &TM,
     // See LowerConstant to see the reason for customizing i1 ISD::Constant
 //    setOperationAction(ISD::Constant, MVT::i1, Promote);
     setOperationAction(ISD::TRUNCATE, MVT::i1, Promote);
-    setOperationAction(ISD::SETCC, MVT::i1, Promote);
+    setOperationAction(ISD::SETCC, MVT::i1, Expand);
     setOperationAction(ISD::SELECT, MVT::i1, Promote);
     
     setOperationAction(ISD::SELECT_CC, MVT::i1, Promote);
@@ -160,7 +160,6 @@ VEXTargetLowering::VEXTargetLowering(const TargetMachine &TM,
     setOperationAction(ISD::SHL_PARTS, MVT::i32, Expand);
     setOperationAction(ISD::SRA_PARTS, MVT::i32, Expand);
     setOperationAction(ISD::SRL_PARTS, MVT::i32, Expand);
-    //setOperationAction(ISD::SETCC, MVT::i32, Custom);
 
     // Lower ADDE and ADDC
     setOperationAction(ISD::ADDE, MVT::i32, Custom);
