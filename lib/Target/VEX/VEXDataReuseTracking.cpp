@@ -111,6 +111,8 @@ class VEXDataReuseTracking: public MachineFunctionPass {
 
     void getMemoryOpcodes(SPMVariable &Variable, unsigned &LoadOpcode, unsigned &StoreOpcode);
 
+//    void doInitialization();
+
 public:
     static char ID;
     VEXDataReuseTracking(TargetMachine &TM)
@@ -271,6 +273,10 @@ bool VEXDataReuseTracking::PropagatesSPMVariable(MachineBasicBlock::iterator Ins
                         !Inst->mayLoad()) {
 //                        DEBUG(dbgs() << " Variable is Propagated through register " << Inst->getOperand(0).getReg() << "\n");
                         VarIdx->AddPropagationRegister(Inst->getOperand(0).getReg());
+                    } else {
+                        if (Inst->isCall()) {
+
+                        }
                     }
                     inInstructionPropagationFound  = true;
                     VariableName = VarIdx->getName();
@@ -1155,7 +1161,7 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
     // Here we reset Variables. We are still not considerig multiple functions and
     // how registers may propagate variables through functions.
     // TODO: We will need to modify to handle multiple functions.
-    DataInfo->resetVariables();
+    DataInfo->PropagateCallRegistersForVariables();
 
     LIS = &getAnalysis<LiveIntervals>();
     SE = &getAnalysis<ScalarEvolution>();

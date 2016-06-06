@@ -36,6 +36,8 @@ class SPMVariable {
     std::vector<unsigned> PropagationRegisters;      // Used for knowing which registers propagate the variable information
     std::vector<RegisterOffsetPair> RegistersAndOffsets;
 
+    std::vector<unsigned> PropagationCallRegisters;
+
     const GlobalValue *GV;
 
     std::map<MachineBasicBlock*, unsigned> BaseRegs;
@@ -203,8 +205,13 @@ public:
     unsigned getMaximumSPMs(unsigned IssueWidth);
     
     void AddPropagationRegister(unsigned Register);
+    void AddPropagationCallRegister(unsigned Register);
     void AddMemoryInstruction(MachineBasicBlock::iterator MI);
     void AddDefinitionInstruction(MachineBasicBlock::iterator MI);
+
+    void ResetInfo();
+
+    void TransferPropagationCallRegisters();
 
     void AddBaseRegister(MachineBasicBlock *MBB, unsigned BaseRegister);
     unsigned FindBaseRegister(MachineBasicBlock *MBB);

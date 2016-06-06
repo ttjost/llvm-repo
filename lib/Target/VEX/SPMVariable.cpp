@@ -47,6 +47,30 @@ void SPMVariable::AddPropagationRegister(unsigned Register) {
     PropagationRegisters.insert(it, Register);
 }
 
+void SPMVariable::AddPropagationCallRegister(unsigned Register) {
+
+    for (unsigned i = 0, e = PropagationCallRegisters.size(); i != e; ++i) {
+        if (PropagationCallRegisters[i] == Register)
+            return;
+    }
+    std::vector<unsigned>::iterator it = PropagationCallRegisters.begin();
+    PropagationCallRegisters.insert(it, Register);
+}
+
+void SPMVariable::ResetInfo() {
+    PropagationCallRegisters.clear();
+    MemoryInstructions.clear();
+    DefinitionInstructions.clear();
+    BaseRegs.clear();
+}
+
+void SPMVariable::TransferPropagationCallRegisters() {
+    if (!PropagationCallRegisters.empty()) {
+        PropagationRegisters.clear();
+        PropagationRegisters = PropagationCallRegisters;
+    }
+}
+
 void SPMVariable::AddMemoryInstruction(MachineBasicBlock::iterator MI) {
     if (MemoryInstructions.empty() && MI->mayLoad())
         LoadsRequired = true;

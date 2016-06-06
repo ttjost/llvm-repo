@@ -45,6 +45,13 @@ public:
         NumSPMs = SPMs;
     }
 
+    void PropagateCallRegistersForVariables() {
+        for (SPMVariable var : Variables) {
+            var.TransferPropagationCallRegisters();
+            var.ResetInfo();
+        }
+    }
+
     void resetVariables() {
         Variables.resize(0);
     }
