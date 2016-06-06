@@ -128,10 +128,10 @@ void SPMVariable::CalculateLaneAndOffset(unsigned &Lane, int64_t &Offset) {
     } else {
         unsigned Row, Column, Temp;
 
-        Row = ((Offset-MinimumOffset)/DataSize)%OffsetsPerBB;
-        Column = ((Offset-MinimumOffset)/DataSize)/OffsetsPerBB;
+        Row = ((Offset-MinimumOffset)/DataSize)%ConsecutiveDataPerSPM;
+        Column = ((Offset-MinimumOffset)/DataSize)/ConsecutiveDataPerSPM;
 
-        Temp = Row*OffsetsPerBB + Column;
+        Temp = Row*ConsecutiveDataPerSPM + Column;
 
         Lane = Temp%NumMemories;
         Offset = (Temp/NumMemories)*DataSize;
@@ -159,7 +159,7 @@ unsigned SPMVariable::getMemoryUnit() {
 
 void SPMVariable::CalculateOffsetDistribution() {
     
-    unsigned OffsetDistance = UINT_MAX;
+    unsigned OffsetDistance = DataSize;
     
     std::set<int> SortedOffsets;
     
@@ -174,17 +174,16 @@ void SPMVariable::CalculateOffsetDistribution() {
     auto itBegin = SortedOffsets.begin();
     int MinOffset = *itBegin;
     int TempOffset = *itBegin;
+    
     for(auto it = ++itBegin; it != SortedOffsets.end(); ++it) {
         
-        if (MinOffset > TempOffset)
-            MinOffset = TempOffset;
+        unsigned distance = std::abs((*it) - TempOffset);
         
-        unsigned distance = std::abs(*it - TempOffset);
-        
+        if (distance/DataSize > 1) {
+            OffsetDistance = (*it) - MinOffset;
+            break;
+        }
         TempOffset = *it;
-        
-        if (distance < OffsetDistance)
-            OffsetDistance = distance;
     }
     
     ConsecutiveDataPerSPM = OffsetDistance/DataSize;

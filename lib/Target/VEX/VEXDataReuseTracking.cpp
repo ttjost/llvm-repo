@@ -1237,10 +1237,6 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                 }
             }
         }
-        for (DataReuseInfo::iterator VarIdx = DataInfo->begin(),
-             VarEnd = DataInfo->end(); VarIdx != VarEnd; ++VarIdx) {
-            VarIdx->UpdateOffsetInfo();
-        }
     }
 
     std::vector<SPMVariable> Variables = DataInfo->getVariables();
@@ -1255,6 +1251,8 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
     unsigned PreambleIt = 0;
 
     for (auto &Var : Variables) {
+        
+        Var.UpdateOffsetInfo();
         
         // Update Global Variables Offset with SPM Offsets, which
         // tells where the Variable will be located in the SPM(s).
