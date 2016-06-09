@@ -74,9 +74,7 @@ class VEXDataReuseTracking: public MachineFunctionPass {
                                 StringRef &VariableName);
 
     bool isSPMInstruction(unsigned Opcode);
-    
-    void RearrangeInstructionsInMBB (MachineBasicBlock *MBB);
-    
+
     int64_t getInstructionOffset (MachineBasicBlock::iterator& Inst);
 
     void analyzeMemoryInstruction (MachineBasicBlock::iterator& Inst,
@@ -91,25 +89,14 @@ class VEXDataReuseTracking: public MachineFunctionPass {
     unsigned getInstructionDataType(MachineBasicBlock::iterator Inst);
 
     unsigned getSPMOpcode(unsigned Opcode, unsigned Lane, bool isLoad);
-    
-    unsigned getSPMOpcodeFromDataType(unsigned DataType, unsigned Lane, bool isLoad);
 
-    // After Inserting Preamble, we might need to update
-    // PHI Instructions on the next BB, because their MBB operands,
-    // should be the same as the CFG. When adding a MBB in between
-    // two BBs, the next MBB will have incorrect MBB Operands in PHI Instructions.
-    void FixPHIInstructionFromNextBB(MachineBasicBlock *MBB,
-                                     MachineBasicBlock *PreviousMBB,
-                                     MachineBasicBlock *UpdatedMBB);
+    unsigned getSPMOpcodeFromDataType(unsigned DataType, unsigned Lane, bool isLoad);
     
     MachineBasicBlock* CreatePreamble(MachineFunction &MF, SPMVariable &Variable);
 
     void InsertPreamble(MachineFunction &MF, SPMVariable &Variable, MachineBasicBlock *PreambleMBB);
     
     unsigned getLoadOpcode(unsigned DataType);
-    unsigned getSPMStoreOpcode(unsigned Lane, unsigned DataType);
-
-    void getMemoryOpcodes(SPMVariable &Variable, unsigned &LoadOpcode, unsigned &StoreOpcode);
 
 //    void doInitialization();
 
@@ -167,26 +154,6 @@ unsigned VEXDataReuseTracking::getLoadOpcode(unsigned DataType) {
         return VEX::LDH;
     else if (SPMVariable::MDHalfU)
         return VEX::LDHU;
-
-    llvm_unreachable("Wrong instruction for Load or Store");
-}
-
-// IMPORTANT:
-// Look the way we are Returning the Opcode.
-// Since the Instruction Opcodes are defined all together,
-// we can use addition to reach other Lanes, starting at Lane0
-unsigned VEXDataReuseTracking::getSPMStoreOpcode(unsigned Lane, unsigned DataType) {
-
-    if (DataType == SPMVariable::MDFull)
-        return VEX::LDW0+Lane;
-    else if (DataType == SPMVariable::MDByte)
-        return VEX::LDB0+Lane;
-    else if (DataType == SPMVariable::MDByteU)
-        return VEX::LDBU0+Lane;
-    else if (DataType == SPMVariable::MDHalf)
-        return VEX::LDH0+Lane;
-    else if (SPMVariable::MDHalfU)
-        return VEX::LDHU0+Lane;
 
     llvm_unreachable("Wrong instruction for Load or Store");
 }
@@ -741,91 +708,13 @@ void VEXDataReuseTracking::EvaluateVariableOffset(MachineBasicBlock::iterator In
     // be used to store the data structure for the variable
     MachineLoop* loop = MLI->getLoopFor(Inst->getParent());
     if (loop) {
-//        dbgs() << "Small trip count: " << SE->getSmallConstantTripCount(LI->getLoopFor(loop->getTopBlock()->getBasicBlock())) << "\n\n";
-//        DEBUG(dbgs() << "\n\nInstruction is Inside Loop\n\n");
-
         assert(DataInfo->FindVariable(VariableName) && " Variable not found.");
         MachineOperand MOReg = Inst->getOperand(1);
         MachineOperand MOImm = Inst->getOperand(2);
 
         assert (MOReg.isReg() && " MachineOperand should be Register");
         assert (MOImm.isImm() && " MachineOperand should be Immediate");
-
-//        DEBUG(dbgs() << "\tRegister: " << MOReg.getReg() << "\n");
-//        DEBUG(dbgs() << "\tOffset: " << MOImm.getImm() << "\n");
         DataInfo->AddOffset(VariableName, MOReg.getReg(), MOImm.getImm());
-    }
-}
-
-void VEXDataReuseTracking::getMemoryOpcodes(SPMVariable &Variable,
-                                            unsigned &LoadOpcode,
-                                            unsigned &StoreOpcode) {
-
-    unsigned Lane;
-    int64_t Offset = 0;
-    Variable.CalculateLaneAndOffset(Lane, Offset);
-
-    DEBUG(dbgs() << "\Lane: " << Lane << "\n");
-
-    if (Variable.getDataType() == SPMVariable::MDFull) {
-        LoadOpcode = Lane + VEX::LDW0;
-        StoreOpcode = Lane + VEX::STW0;
-    } else if (Variable.getDataType() == SPMVariable::MDByte) {
-        LoadOpcode = Lane + VEX::LDB0;
-        StoreOpcode = Lane + VEX::STB0;
-    } else if (Variable.getDataType() == SPMVariable::MDByteU) {
-        LoadOpcode = Lane + VEX::LDBU0;
-        StoreOpcode = Lane + VEX::STB0;
-    } else if (Variable.getDataType() == SPMVariable::MDHalf) {
-        LoadOpcode = Lane + VEX::LDH0;
-        StoreOpcode = Lane + VEX::STH0;
-    } else if (Variable.getDataType() == SPMVariable::MDHalfU) {
-        LoadOpcode = Lane + VEX::LDHU0;
-        StoreOpcode = Lane + VEX::STH0;
-    } else
-        llvm_unreachable("Incorrect Object Size for Variable.");
-}
-
-// After Inserting Preamble, we might need to update
-// PHI Instructions on the next BB, because their MBB operands,
-// should be the same as the CFG. When adding a MBB in between
-// two BBs, the next MBB will have incorrect MBB Operands in PHI Instructions.
-void VEXDataReuseTracking::FixPHIInstructionFromNextBB(MachineBasicBlock *MBB,
-                                 MachineBasicBlock *PreviousMBB,
-                                 MachineBasicBlock *UpdatedMBB) {
-    
-    const VEXSubtarget &Subtarget = *static_cast<const VEXTargetMachine &>(TM).getSubtargetImpl();
-    const VEXInstrInfo *TII = static_cast<const VEXInstrInfo *>(Subtarget.getInstrInfo());
-    
-    MachineBasicBlock *MBBTrue, *MBBFalse;
-    for (MachineBasicBlock::iterator Inst = MBB->begin();
-         Inst->getOpcode() == VEX::PHI; ++Inst) {
-     
-        MachineOperand Op0 = Inst->getOperand(0);
-        MachineOperand Op1 = Inst->getOperand(1);
-        MachineOperand Op2 = Inst->getOperand(2);
-        MachineOperand Op3 = Inst->getOperand(3);
-        MachineOperand Op4 = Inst->getOperand(4);
-        
-        if (Op2.getMBB() == PreviousMBB) {
-            MBBTrue = UpdatedMBB;
-            MBBFalse = Op4.getMBB();
-        } else if (Op4.getMBB() == PreviousMBB) {
-            MBBTrue = Op2.getMBB();
-            MBBFalse = UpdatedMBB;
-        } else
-            llvm_unreachable("PHI Instruction is incorrectly formed.");
-        
-        MachineBasicBlock::iterator TempInst = Inst;
-        
-        // Add PHI Instruction
-        Inst = BuildMI(*MBB, TempInst, DebugLoc(), TII->get(VEX::PHI), Op0.getReg())
-                    .addOperand(Op1)
-                    .addMBB(MBBTrue)
-                    .addOperand(Op3)
-                    .addMBB(MBBFalse);
-        
-        TempInst->eraseFromParent();
     }
 }
 
@@ -902,16 +791,8 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
     
     MBB = *PredMBB;
 
-//    DEBUG(MF.dump());
-    // Create new Basic Block for Preamble
-    // This will do almost all tricks to create a BB in between two BBs.
-    //MachineBasicBlock *PreambleMBB = MBB->SplitCriticalEdge(*MBB->succ_begin(), this);
-
     if (!PreambleMBB)
         llvm_unreachable("Error creating new basic block");
-
-//    PreambleMBB->addSuccessor(PreambleMBB);
-//    MF.RenumberBlocks();
 
     unsigned MaxOffsetPerBB = Variable.getMaxOffsetPerBB();
     unsigned NumMemories = Variable.getNumUnits();
@@ -1088,11 +969,6 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, SPMVariable &Vari
     LIS->InsertMachineInstrInMaps(Inst);
 
     DEBUG(PreambleMBB->dump());
-
-//    LastNonTerminatorInstr = PreambleMBB->getLastNonDebugInstr();
-//    if (LastNonTerminatorInstr->getOpcode() != VEX::GOTO) {
-//        BuildMI(PreambleMBB, DebugLoc(), TII->get(VEX::GOTO)).addMBB(*PreambleMBB->succ_begin());
-//    }
 }
 
 int64_t VEXDataReuseTracking::getInstructionOffset (MachineBasicBlock::iterator& Inst) {
@@ -1116,43 +992,6 @@ bool VEXDataReuseTracking::isSPMInstruction(unsigned Opcode) {
         return true;
     
     return false;
-}
-void VEXDataReuseTracking::RearrangeInstructionsInMBB (MachineBasicBlock *MBB) {
-    
-    const VEXSubtarget &Subtarget = *static_cast<const VEXTargetMachine &>(TM).getSubtargetImpl();
-    const VEXInstrInfo *TII = static_cast<const VEXInstrInfo *>(Subtarget.getInstrInfo());
-    
-    bool AfterFirstMemInstr = false;
-    
-    MachineBasicBlock::iterator MemoryInstrBucket;
-    
-    for (MachineBasicBlock::iterator MBBI = MBB->begin();
-         !MBBI->isTerminator(); ++MBBI) {
-        
-        unsigned Opcode = MBBI->getOpcode();
-        
-        DEBUG(MBBI->dump());
-        
-        if (isSPMInstruction(Opcode)) {
-            
-            
-            if (AfterFirstMemInstr) {
-                
-                MemoryInstrBucket = BuildMI(*MBB, ++MemoryInstrBucket, MBBI->getDebugLoc(),
-                        TII->get(Opcode)).addOperand(MBBI->getOperand(0))
-                                        .addOperand(MBBI->getOperand(1))
-                .addOperand(MBBI->getOperand(2));
-//                                        .addMemOperand(*MBBI->memoperands_begin());
-                MBBI->removeFromParent();
-                MBBI = MemoryInstrBucket;
-                AfterFirstMemInstr = false;
-                
-            } else {
-                AfterFirstMemInstr = true;
-                MemoryInstrBucket = MBBI;
-            }
-        }
-    }
 }
 
 bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
@@ -1185,8 +1024,7 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
     // This is important for some cases when PHI nodes do not propagate
     // properly the variable.
     std::deque<MachineFunction::iterator> BFSinMBBs(1, MF.begin());
-    
-    unsigned iterator = 0;
+
     std::vector<bool> VisitedNodes(MF.size(), false);
     VisitedNodes[0] = true;
     
@@ -1356,11 +1194,6 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
             }
             
             analyzeMemoryInstruction(Inst, Lane, Offset, BaseReg);
-        }
-        
-        for (std::set<MachineBasicBlock *>::iterator it = MBBs.begin();
-             it != MBBs.end(); ++it) {
-            //RearrangeInstructionsInMBB(*it);
         }
 
         if (Var.areLoadsRequired()) {
