@@ -73,7 +73,6 @@ bool VEXReorderFunctionsPass::runOnModule(Module &M) {
         }
     }
 
-
     Module::iterator Func;
     while (!BFSinModule.empty()) {
 
@@ -107,7 +106,7 @@ bool VEXReorderFunctionsPass::runOnModule(Module &M) {
         Func->eraseFromParent();
     }
 
-    M.dump();
+    DEBUG(M.dump());
     return false;
 }
 
