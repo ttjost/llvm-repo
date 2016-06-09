@@ -58,6 +58,8 @@ bool VEXReorderFunctionsPass::isMainFunction(Module::iterator F) {
 
 bool VEXReorderFunctionsPass::runOnModule(Module &M) {
 
+    DEBUG(M.dump());
+
     // Here we will perform a Breadth First Search
     // for searching the main function
     // and pushes into the FIFO.
@@ -79,14 +81,11 @@ bool VEXReorderFunctionsPass::runOnModule(Module &M) {
         Func = BFSinModule.front();
         BFSinModule.pop_front();
 
-        DEBUG(Func->dump());
-
         for (Function::iterator BB = Func->begin(), BBE = Func->end();
              BB != BBE; ++BB) {
             for (BasicBlock::iterator I = BB->begin(), E = BB->end();
                  I != E; ++I) {
                 if (CallInst *Inst = dyn_cast<CallInst>(I)) {
-                    DEBUG(dbgs() << "Call Instruction found\n");
 
                     Module::iterator CallFunc = Inst->getCalledFunction();
 
