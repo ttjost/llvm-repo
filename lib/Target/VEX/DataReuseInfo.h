@@ -46,7 +46,7 @@ public:
     }
 
     void PropagateCallRegistersForVariables() {
-        for (SPMVariable var : Variables) {
+        for (SPMVariable &var : Variables) {
             var.TransferPropagationCallRegisters();
             var.ResetInfo();
         }

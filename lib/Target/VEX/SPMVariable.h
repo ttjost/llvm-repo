@@ -40,6 +40,8 @@ class SPMVariable {
 
     const GlobalValue *GV;
 
+    bool Preamble;
+
     std::map<MachineBasicBlock*, unsigned> BaseRegs;
     std::vector<MachineBasicBlock::iterator> MemoryInstructions;
 
@@ -220,11 +222,14 @@ public:
         return DataType;
     }
 
+    void setPreambleInserted() { Preamble = true; }
+    bool isPreambleInserted() { return Preamble; }
+
     std::vector<unsigned> getPropagationRegisters() const { return PropagationRegisters; }
     std::vector<MachineBasicBlock::iterator> getMemoryInstructions() const { return MemoryInstructions; }
-    MachineBasicBlock::iterator getFirstMemoryInstruction() const { return MemoryInstructions[0]; }
+    MachineBasicBlock::iterator getFirstMemoryInstruction() const;
 
-    MachineBasicBlock::iterator getFirstDefinition() const { return DefinitionInstructions[0]; }
+    MachineBasicBlock::iterator getFirstDefinition() const;
     std::vector<MachineBasicBlock::iterator> getDefinitionInstructions() const { return DefinitionInstructions; }
 
     void AddOffset(unsigned Register, unsigned Offset);

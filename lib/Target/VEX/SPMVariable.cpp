@@ -160,6 +160,9 @@ unsigned SPMVariable::getMemoryUnit() {
 void SPMVariable::CalculateOffsetDistribution() {
     
     unsigned OffsetDistance = DataSize;
+
+    if (MemoryInstructions.empty())
+        return;
     
     std::set<int> SortedOffsets;
     
@@ -234,4 +237,19 @@ void SPMVariable::UpdateOffsetInfo() {
             OffsetsPerBB = RegistersAndOffsets[i].Offsets.size();
     }
     RegistersAndOffsets.resize(0);
+}
+
+MachineBasicBlock::iterator SPMVariable::getFirstDefinition() const {
+    if (!DefinitionInstructions.empty())
+        return DefinitionInstructions[0];
+    else
+        return NULL;
+}
+
+
+MachineBasicBlock::iterator SPMVariable::getFirstMemoryInstruction() const {
+    if (!MemoryInstructions.empty())
+        return MemoryInstructions[0];
+    else
+        return NULL;
 }
