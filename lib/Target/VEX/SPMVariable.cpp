@@ -79,8 +79,6 @@ void SPMVariable::AddMemoryInstruction(MachineBasicBlock::iterator MI) {
 
 void SPMVariable::AddDefinitionInstruction(MachineBasicBlock::iterator MI) {
     DefinitionInstructions.push_back(MI);
-    if (FirstDefInstruction)
-        FirstDefInstruction = MI;
 }
 
 void SPMVariable::AddBaseRegister(MachineBasicBlock *MBB, unsigned BaseRegister) {
@@ -250,5 +248,8 @@ MachineBasicBlock::iterator SPMVariable::getFirstDefinition() const {
 
 
 MachineBasicBlock::iterator SPMVariable::getFirstMemoryInstruction() const {
-    return FirstDefInstruction;
+    if (!MemoryInstructions.empty())
+        return MemoryInstructions[0];
+    else
+        return NULL;
 }

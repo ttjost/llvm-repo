@@ -43,7 +43,6 @@ add_llvm_target(VEXCodeGen
   HexagonMachineScheduler.cpp
   VEXTreeHeightReduction.cpp
   VEXReorderFunctions.cpp
-  VEXCreatePreamble.cpp
   )
 
 # Should match with "subdirectories = MCTargetDesc TargetInfo" in LLVMBuild.txt

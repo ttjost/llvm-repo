@@ -47,8 +47,6 @@ class SPMVariable {
 
     std::vector<MachineBasicBlock::iterator> DefinitionInstructions;
 
-    MachineBasicBlock::iterator FirstDefInstruction;
-
     // Define whether this variable will be stored in multiple SPMs
     // Default: false
     bool MultipleStorage;
@@ -104,15 +102,14 @@ public:
         MDFull = 5
     };
 
-    SPMVariable() : Name(""), Flags(0), MultipleStorage(false), LoadsRequired(false), AllocationPriority(-1), FirstDefInstruction(nullptr)   {
+    SPMVariable() : Name(""), Flags(0), MultipleStorage(false), LoadsRequired(false), AllocationPriority(-1)  {
         PropagationRegisters.resize(0);
     }
     SPMVariable(StringRef Name) : Name(Name),
                                   Flags(0),
                                   MultipleStorage(false),
                                   LoadsRequired(false),
-                                    AllocationPriority(-1),
-                                    FirstDefInstruction(nullptr) {
+                                    AllocationPriority(-1) {
         PropagationRegisters.resize(0);
     }
 
@@ -129,8 +126,7 @@ public:
                                                     AllocationPriority(-1),
                                                     DataType(0),
                                                     Size (1000),
-                                                    GV (V),
-                                                    FirstDefInstruction(nullptr) {
+                                                    GV (V) {
         PropagationRegisters.push_back(Register);
         RegistersAndOffsets.resize(0);
         MemoryInstructions.resize(0);
@@ -203,7 +199,7 @@ public:
     unsigned getSize() const { return Size; }
     unsigned getNumElements() const { return NumElements; }
     unsigned getMaxOffsetPerBB() const { return OffsetsPerBB; }
-
+    
     unsigned getConsecutiveDataPerSPM() const { return ConsecutiveDataPerSPM; } 
 
     bool areLoadsRequired() const { return LoadsRequired; }
