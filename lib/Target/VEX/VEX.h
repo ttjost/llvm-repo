@@ -23,6 +23,7 @@
 namespace llvm {
     class VEXTargetMachine;
     class FunctionPass;
+    class MachineFunctionPass;
 
     FunctionPass *createVEXISelDag(VEXTargetMachine &TM);
     
@@ -31,6 +32,10 @@ namespace llvm {
     ModulePass *createVEXReorderFunctionsPass();
     
 //    FunctionPass *createVEXModuloScheduler(VEXTargetMachine &TM);
+
+    MachineFunctionPass *createVEXDataReuseTracking(VEXTargetMachine &TM);
+
+    MachineFunctionPass *createVEXCreatePreamble(VEXTargetMachine &TM);
     
     FunctionPass *createVEXPostRAScheduler();
 
