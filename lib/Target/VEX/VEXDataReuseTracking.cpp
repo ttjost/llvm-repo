@@ -105,7 +105,6 @@ public:
     VEXDataReuseTracking(TargetMachine &TM)
         : MachineFunctionPass(ID), TM(TM) {
         const VEXSubtarget &Subtarget = *static_cast<const VEXTargetMachine &>(TM).getSubtargetImpl();
-        const VEXInstrInfo *TII = static_cast<const VEXInstrInfo *>(Subtarget.getInstrInfo());
 
         DataInfo = static_cast<const VEXTargetMachine &>(TM).getDataReuseInfo();
         unsigned issue = Subtarget.getInstrItineraryData()->SchedModel.IssueWidth > 8 ? 8 : Subtarget.getInstrItineraryData()->SchedModel.IssueWidth;
@@ -126,10 +125,6 @@ public:
 }
 
 void VEXDataReuseTracking::getAnalysisUsage(AnalysisUsage &AU) const {
-//    AU.addRequired<AliasAnalysis>();
-
-//    AU.addRequired<LoopInfoWrapperPass>();
-//    AU.addPreserved<LoopInfoWrapperPass>();
 
     AU.addRequired<MachineLoopInfo>();
     AU.addPreserved<MachineLoopInfo>();
@@ -733,6 +728,8 @@ MachineBasicBlock* VEXDataReuseTracking::CreatePreamble(MachineFunction &MF, Dat
         assert(DefInstr->getOperand(0).isDef() && "First Operand should be a Definition. Something is wrong");
         assert(DefInstr->getParent()->getParent() == &MF && "DefInstr is not defined in this MF, but somewhere else");
 
+        assert(FirstMemInstr->getParent()->getParent() == &MF && "FirstMemInstr is not defined in this MF, but somewhere else");
+
         MBB = DefInstr->getParent();
         if (DefInstr->getParent() == FirstMemInstr->getParent()) {
             do {
@@ -1051,7 +1048,6 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
             if (Inst->isBranch())
                 continue;
 
-            bool SPMFound = false;
             StringRef VariableName;
             if (IsSPMVariable(Inst, VariableName, DefinedRegister)) {
                 // A SPM Variable was found
@@ -1062,7 +1058,6 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                 SPMVariable Variable(VariableName, DefinedRegister, Inst, Op.getGlobal());
                 DataInfo->AddVariable(Variable);
                 DEBUG(dbgs() << "New Variable found in Register " << DefinedRegister << "\n");
-                SPMFound = true;
             }
             // Checks whether the instruction propagates SPMVariable
             if(PropagatesSPMVariable(Inst, VariableName)) {
@@ -1098,7 +1093,7 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
         std::vector<MachineBasicBlock::iterator> VarRelatedInstructions = Var->getDefinitionInstructions();
         int64_t Offset = (int64_t) DataInfo->getVarOffsetInSPM(*Var);
 
-        if (!VarRelatedInstructions.empty())
+        if (VarRelatedInstructions.empty())
             continue;
 
         Var->CalculateOffsetDistribution();
@@ -1206,7 +1201,6 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
         DEBUG(MBB->dump());
     
     return false;
-    
 }
 
 char VEXDataReuseTracking::ID = 0;

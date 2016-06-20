@@ -186,8 +186,8 @@ void VEXPassConfig::addIRPasses() {
     if (EnableTHR)
         addPass(createVEXTreeHeightReductionPass());
 
-    if (EnableSPMs)
-        addPass(createVEXReorderFunctionsPass());
+//    if (EnableSPMs)
+//        addPass(createVEXReorderFunctionsPass());
 }
 
 bool VEXPassConfig::addPreISel() {

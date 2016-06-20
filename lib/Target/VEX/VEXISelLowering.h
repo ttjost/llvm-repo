@@ -97,6 +97,8 @@ public:
     // getTargetNodeName - This method returns the name of a target specific
     // DAG node.
     const char *getTargetNodeName(unsigned Opcode) const override;
+
+    virtual bool useSoftFloat() const override { return true; }
     
 protected:
     /// ByValArgInfo - Byval argument information.

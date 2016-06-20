@@ -42,6 +42,10 @@ public:
 
     }
 
+    const char *getPassName() const override {
+        return "VEX Reorder Functions";
+    }
+
     bool runOnModule(Module &M);
 };
 
