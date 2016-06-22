@@ -19,7 +19,7 @@ bool DataReuseInfo::AddVariable(SPMVariable Var) {
 
     for (unsigned i = 0, e = Variables.size();
          i != e; ++i) {
-        if (Variables[i] == Var) {
+        if (Variables[i].getName() == Var.getName()) {
             Variables[i].AddDefinitionInstruction(Var.getFirstDefinition());
             Variables[i].AddPropagationRegister(Var.getPropagationRegisters()[0]);
             return false;
@@ -27,6 +27,26 @@ bool DataReuseInfo::AddVariable(SPMVariable Var) {
     }
     Variables.push_back(Var);
     return true;
+}
+
+bool DataReuseInfo::AddVariable(std::string Name, unsigned Register,
+                                MachineBasicBlock::iterator Inst) {
+
+    for (unsigned i = 0, e = Variables.size();
+         i != e; ++i) {
+        if (Variables[i].getName() == Name) {
+            Variables[i].AddDefinitionInstruction(Inst);
+            Variables[i].AddPropagationRegister(Register);
+            return false;
+        }
+    }
+    Variables.push_back(SPMVariable(Name, Register, Inst, nullptr));
+    return true;
+}
+
+void DataReuseInfo::RemoveVariable(int Position) {
+    assert(Position < Variables.size() && "RemoveVariable() out of range");
+    Variables.erase(Variables.begin() + Position);
 }
 
 bool DataReuseInfo::RemoveVariable(SPMVariable Var) {
@@ -41,7 +61,7 @@ bool DataReuseInfo::RemoveVariable(SPMVariable Var) {
     return false;
 }
 
-bool DataReuseInfo::RemoveVariable(StringRef Name) {
+bool DataReuseInfo::RemoveVariable(std::string Name) {
 
     for (std::vector<SPMVariable>::iterator i = Variables.begin(), e = Variables.end();
          i != e; ++i) {
@@ -65,7 +85,7 @@ bool DataReuseInfo::UpdateVariable(SPMVariable& Var) {
     return false;
 }
 
-bool DataReuseInfo::FindVariable(StringRef Name) {
+bool DataReuseInfo::FindVariable(std::string Name) {
 
     for(std::vector<SPMVariable>::iterator i = Variables.begin(),
         e = Variables.end(); i != e; ++i) {
@@ -76,32 +96,37 @@ bool DataReuseInfo::FindVariable(StringRef Name) {
     return false;
 }
 
-void DataReuseInfo::AddOffset(StringRef Name, unsigned Register, unsigned Offset) {
+void DataReuseInfo::AddOffset(std::string Name, unsigned Register, unsigned Offset, MachineBasicBlock* MBB) {
     for(std::vector<SPMVariable>::iterator i = Variables.begin(),
         e = Variables.end(); i != e; ++i) {
         if ((*i).getName() == Name) {
-            i->AddOffset(Register, Offset);
+            i->AddOffset(Register, Offset, MBB);
+            return;
         }
     }
+    llvm_unreachable("Variable not found.");
 }
 
-void DataReuseInfo::UpdateDataType(StringRef Name, unsigned DataType) {
+void DataReuseInfo::UpdateDataType(std::string Name, unsigned DataType) {
     for(std::vector<SPMVariable>::iterator i = Variables.begin(),
         e = Variables.end(); i != e; ++i) {
         if ((*i).getName() == Name) {
             i->setDataType(DataType);
+            return;
         }
     }
+    llvm_unreachable("Variable not found.");
 }
 
-
-void DataReuseInfo::AddMemInstRef(StringRef Name, MachineBasicBlock::iterator newInst) {
+void DataReuseInfo::AddMemInstRef(std::string Name, MachineBasicBlock::iterator newInst) {
     for(std::vector<SPMVariable>::iterator i = Variables.begin(),
         e = Variables.end(); i != e; ++i) {
         if ((*i).getName() == Name) {
             i->AddMemoryInstruction(newInst);
+            return;
         }
     }
+    llvm_unreachable("Variable not found.");
 }
 
 SPMVariable DataReuseInfo::getVariable(MachineBasicBlock::iterator MI) {

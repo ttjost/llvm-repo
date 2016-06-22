@@ -43,6 +43,11 @@ static cl::opt<int> LoopCounterPreamble("counter-preamble",
                                 cl::Hidden, cl::init(0),
                                 cl::desc("Information about the number of iterations to be performed in preamble"));
 
+// Later, this will be known in compile time, with no hint.
+static cl::opt<bool> OmitAnnotation("omit-annotation",
+                                cl::Hidden, cl::init(true),
+                                cl::desc("Information about the number of iterations to be performed in preamble"));
+
 namespace llvm {
     MachineFunctionPass *createVEXDataReuseTracking(VEXTargetMachine &TM);
 }
@@ -67,11 +72,11 @@ class VEXDataReuseTracking: public MachineFunctionPass {
     unsigned MemFuncUnits;
 
     bool IsSPMVariable (MachineBasicBlock::iterator Inst,
-                        StringRef& VariableName,
+                        std::string& VariableName,
                         unsigned& DefinedRegister);
 
     bool PropagatesSPMVariable (MachineBasicBlock::iterator Inst,
-                                StringRef &VariableName);
+                                std::string &VariableName);
 
     bool isSPMInstruction(unsigned Opcode);
 
@@ -81,7 +86,9 @@ class VEXDataReuseTracking: public MachineFunctionPass {
                                    unsigned Lane, unsigned Offset, unsigned BaseRegister);
 
     void  EvaluateVariableOffset(MachineBasicBlock::iterator Inst,
-                                StringRef VariableName);
+                                std::string VariableName);
+
+    void EvaluateVariables();
 
     void analyzeVariableDefinitionInstruction(SPMVariable &Var, MachineInstr *MI,
                                              unsigned Offset);
@@ -182,30 +189,39 @@ unsigned VEXDataReuseTracking::getInstructionDataType(MachineBasicBlock::iterato
 // This is important because we may have multiple Loads and Stores that use the same Virtual Register
 // at this point, therefore, we need to update information on lots of instructions.
 bool VEXDataReuseTracking::IsSPMVariable(MachineBasicBlock::iterator Inst,
-                                         StringRef& VariableName,
+                                         std::string& VariableName,
                                          unsigned& DefinedRegister) {
 
-    for (unsigned i = 0, e = Inst->getNumOperands();
-         i != e; ++i) {
+//    for (unsigned i = 0, e = Inst->getNumOperands();
+//         i != e; ++i) {
+    if (Inst->getNumOperands() > 1) {
 
-         if (Inst->getOperand(i).isGlobal()) {
-            const GlobalValue *GV = Inst->getOperand(i).getGlobal();
+         if (Inst->getOperand(1).isGlobal()) {
+            const GlobalValue *GV = Inst->getOperand(1).getGlobal();
 
-//            DEBUG(errs() << GV->getName() << " is a Global Variable");
-            if (GV->getName().startswith("spm_")) {
-//                DEBUG(errs() << " and should be stored in the SPM\n");
+            DEBUG(Inst->dump());
+
+            if (OmitAnnotation) {
                 assert(Inst->getOperand(0).isDef() && " It should be a register definition");
                 VariableName = GV->getName();
                 DefinedRegister = Inst->getOperand(0).getReg();
                 return true;
+            } else {
+                if (GV->getName().startswith("spm_")) {
+                    assert(Inst->getOperand(0).isDef() && " It should be a register definition");
+                    VariableName = GV->getName();
+                    DefinedRegister = Inst->getOperand(0).getReg();
+                    return true;
+                }
             }
          }
     }
+//    }
     return false;
 }
 
 bool VEXDataReuseTracking::PropagatesSPMVariable(MachineBasicBlock::iterator Inst,
-                                                 StringRef &VariableName) {
+                                                 std::string &VariableName) {
 
     bool AnyPropagationFound = false;
     for (unsigned i = 0, e = Inst->getNumOperands();
@@ -240,7 +256,7 @@ bool VEXDataReuseTracking::PropagatesSPMVariable(MachineBasicBlock::iterator Ins
                         }
                     }
                     inInstructionPropagationFound  = true;
-                    VariableName = VarIdx->getName();
+                    VariableName = Twine(VarIdx->getName()).str();
                 }
             }
         }
@@ -690,8 +706,27 @@ void VEXDataReuseTracking::analyzeVariableDefinitionInstruction(SPMVariable &Var
     MI->addOperand(Op);
 }
 
+void VEXDataReuseTracking::EvaluateVariables() {
+
+    std::vector<int> DeletedVariables;
+    std::vector<SPMVariable> Variables = DataInfo->getVariables();
+
+    for (int i = 0, e = Variables.size(); i != e; ++i) {
+        Var->UpdateOffsetInfo();
+
+        if (Var->getMaxOffsetPerBB() == 1) {
+            DeletedVariables.push_back(i);
+        }
+    }
+
+    for (int i = DeletedVariables.size()-1; i >= 0; --i) {
+        DataInfo->RemoveVariable(DeletedVariables[i]);
+    }
+
+}
+
 void VEXDataReuseTracking::EvaluateVariableOffset(MachineBasicBlock::iterator Inst,
-                                                  StringRef VariableName) {
+                                                  std::string VariableName) {
 
 //    LoopInfo *LI = &getAnalysis<LoopInfoWrapperPass>().getLoopInfo();
 
@@ -702,13 +737,12 @@ void VEXDataReuseTracking::EvaluateVariableOffset(MachineBasicBlock::iterator In
     // be used to store the data structure for the variable
     MachineLoop* loop = MLI->getLoopFor(Inst->getParent());
     if (loop) {
-        assert(DataInfo->FindVariable(VariableName) && " Variable not found.");
         MachineOperand MOReg = Inst->getOperand(1);
         MachineOperand MOImm = Inst->getOperand(2);
 
         assert (MOReg.isReg() && " MachineOperand should be Register");
         assert (MOImm.isImm() && " MachineOperand should be Immediate");
-        DataInfo->AddOffset(VariableName, MOReg.getReg(), MOImm.getImm());
+        DataInfo->AddOffset(VariableName, MOReg.getReg(), MOImm.getImm(), Inst->getParent());
     }
 }
 
@@ -1039,6 +1073,8 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                 VisitedNodes[(*(SI))->getNumber()] = true;
             }
         }
+
+        std::string VariableName;
         
         for (MachineBasicBlock::iterator Inst = MBB->begin(),
              InstE = MBB->end(); Inst != InstE; ++Inst) {
@@ -1048,30 +1084,64 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
             if (Inst->isBranch())
                 continue;
 
-            StringRef VariableName;
             if (IsSPMVariable(Inst, VariableName, DefinedRegister)) {
-                // A SPM Variable was found
+                // Found a candidate to be in the SPMs
                 // Initiate a new node
                 // and sets Variable as first store when necessary
                 MachineOperand Op = Inst->getOperand(1);
                 assert(Op.isGlobal() && "Must be a Global Address");
-                SPMVariable Variable(VariableName, DefinedRegister, Inst, Op.getGlobal());
-                DataInfo->AddVariable(Variable);
-                DEBUG(dbgs() << "New Variable found in Register " << DefinedRegister << "\n");
-            }
-            // Checks whether the instruction propagates SPMVariable
-            if(PropagatesSPMVariable(Inst, VariableName)) {
-                // Replaces memory Instruction to SPM Instruction
-                // when necessary
-                DEBUG(Inst->dump());
-                if (Inst->mayLoadOrStore()) {
-                    EvaluateVariableOffset(Inst, VariableName);
-                    DataInfo->AddMemInstRef(VariableName, Inst);
-                    DataInfo->UpdateDataType(VariableName, getInstructionDataType(Inst));
+
+                VariableName = Twine(Inst->getOperand(0).getReg()).str();
+                DataInfo->AddVariable(VariableName, DefinedRegister, Inst);
+            } else {
+                // Checks whether the instruction propagates SPMVariable
+                if(PropagatesSPMVariable(Inst, VariableName)) {
+                    // Replaces memory Instruction to SPM Instruction
+                    // when necessary
+                    if (Inst->mayLoadOrStore()) {
+                        EvaluateVariableOffset(Inst, VariableName);
+                        DataInfo->AddMemInstRef(VariableName, Inst);
+                        DataInfo->UpdateDataType(VariableName, getInstructionDataType(Inst));
+                    }
                 }
             }
         }
     }
+
+    for (DataReuseInfo::iterator Var = DataInfo->begin(), VarE = DataInfo->end();
+         Var != VarE; ++Var) {
+        DEBUG(dbgs() << "Variable " << Var->getName() << "\n");
+        std::vector<MachineBasicBlock::iterator>  MemInstructions = Var->getMemoryInstructions();
+        for (MachineBasicBlock::iterator Inst : MemInstructions) {
+            DEBUG(Inst->dump());
+        }
+    }
+
+    {
+        std::vector<int> DeletedVariables;
+        std::vector<SPMVariable> Variables = DataInfo->getVariables();
+        for (int i = 0, e = Variables.size(); i != e; ++i) {
+            if (!Variables[i].getFirstMemoryInstruction()) {
+                DeletedVariables.push_back(i);
+                DEBUG(dbgs() << "Variable " << Variables[i].getName() << " will be deleted\n");
+            }
+        }
+
+        for (int i = DeletedVariables.size()-1; i >= 0; --i) {
+            DataInfo->RemoveVariable(DeletedVariables[i]);
+        }
+    }
+
+    for (DataReuseInfo::iterator Var = DataInfo->begin(), VarE = DataInfo->end();
+         Var != VarE; ++Var) {
+        DEBUG(dbgs() << "Variable " << Var->getName() << "\n");
+        std::vector<MachineBasicBlock::iterator>  MemInstructions = Var->getMemoryInstructions();
+        for (MachineBasicBlock::iterator Inst : MemInstructions) {
+            DEBUG(Inst->dump());
+        }
+    }
+
+    EvaluateVariables();
 
     std::vector<MachineBasicBlock *> Preambles;
     for (DataReuseInfo::iterator Var = DataInfo->begin(), VarE = DataInfo->end();
@@ -1085,9 +1155,7 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
 
     for (DataReuseInfo::iterator Var = DataInfo->begin(), VarE = DataInfo->end();
          Var != VarE; ++Var) {
-        
-        Var->UpdateOffsetInfo();
-        
+
         // Update Global Variables Offset with SPM Offsets, which
         // tells where the Variable will be located in the SPM(s).
         std::vector<MachineBasicBlock::iterator> VarRelatedInstructions = Var->getDefinitionInstructions();

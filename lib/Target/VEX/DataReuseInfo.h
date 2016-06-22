@@ -66,11 +66,13 @@ public:
     unsigned getAvailableOffset(unsigned Memory, int Size);
 
     bool AddVariable(SPMVariable Var);
+    bool AddVariable(std::string Name, unsigned Register, MachineBasicBlock::iterator Inst);
+    void RemoveVariable(int Position);
     bool RemoveVariable(SPMVariable Var);
-    bool RemoveVariable(StringRef Name);
+    bool RemoveVariable(std::string Name);
     bool UpdateVariable(SPMVariable& Var);
-    bool FindVariable(StringRef Name);
-    void UpdateDataType(StringRef Name, unsigned DataType);
+    bool FindVariable(std::string Name);
+    void UpdateDataType(std::string Name, unsigned DataType);
 
     unsigned getVarOffsetInSPM(SPMVariable &Var);
 
@@ -80,8 +82,8 @@ public:
 
     unsigned AllocateSPMs(SPMVariable &Var);
 
-    void AddOffset(StringRef Name, unsigned Register, unsigned Offset);
-    void AddMemInstRef(StringRef Name, MachineBasicBlock::iterator newInst);
+    void AddOffset(std::string Name, unsigned Register, unsigned Offset, MachineBasicBlock* MBB);
+    void AddMemInstRef(std::string Name, MachineBasicBlock::iterator newInst);
 
     typedef std::vector<SPMVariable>::iterator iterator;
     typedef std::vector<SPMVariable>::const_iterator const_iterator;

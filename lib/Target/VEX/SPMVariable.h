@@ -25,16 +25,17 @@ namespace llvm {
 // is always given to vectors, since ILP can be better explored with them.
 class SPMVariable {
 
-    typedef struct RegisterOffsetPair {
+    typedef struct RegisterOffsetBBTriple {
         unsigned Register;
         std::vector<unsigned> Offsets;
-    } RegisterOffsetPair;
+        MachineBasicBlock *MBB;
+    } RegisterOffsetBBTriple;
 
-    StringRef Name;
+    std::string Name;
     unsigned Flags;         // See MemOperandFlags in MachineMemOperand.h
 
     std::vector<unsigned> PropagationRegisters;      // Used for knowing which registers propagate the variable information
-    std::vector<RegisterOffsetPair> RegistersAndOffsets;
+    std::vector<RegisterOffsetBBTriple> RegistersAndOffsets;
 
     std::vector<unsigned> PropagationCallRegisters;
 
@@ -105,7 +106,7 @@ public:
     SPMVariable() : Name(""), Flags(0), MultipleStorage(false), LoadsRequired(false), AllocationPriority(-1)  {
         PropagationRegisters.resize(0);
     }
-    SPMVariable(StringRef Name) : Name(Name),
+    SPMVariable(std::string Name) : Name(Name),
                                   Flags(0),
                                   MultipleStorage(false),
                                   LoadsRequired(false),
@@ -113,10 +114,10 @@ public:
         PropagationRegisters.resize(0);
     }
 
-//    SPMVariable(StringRef Name, unsigned Flags): Name(Name), Flags(Flags), MultipleStorage(false) {
+//    SPMVariable(std::string Name, unsigned Flags): Name(Name), Flags(Flags), MultipleStorage(false) {
 //        PropagationRegisters.resize(0);
 //    }
-    SPMVariable(StringRef Name, unsigned Register,
+    SPMVariable(std::string Name, unsigned Register,
                 MachineBasicBlock::iterator Inst,
                 const GlobalValue *V) : Name(Name),
                                                     Flags(0),
@@ -136,7 +137,7 @@ public:
 
     const GlobalValue *getGlobalValue() const { return GV; }
 
-    StringRef getName() const { return Name; }
+    std::string getName() const { return Name; }
     unsigned getFlags() const  { return Flags; } 
     bool isLoad() const { return Flags & MOLoad; }
     bool isStore() const { return Flags & MOStore; }
@@ -232,10 +233,12 @@ public:
     MachineBasicBlock::iterator getFirstDefinition() const;
     std::vector<MachineBasicBlock::iterator> getDefinitionInstructions() const { return DefinitionInstructions; }
 
-    void AddOffset(unsigned Register, unsigned Offset);
+    void AddOffset(unsigned Register, unsigned Offset, MachineBasicBlock* MBB);
     void UpdateOffsetInfo();
     
     bool operator==(const SPMVariable& rhs);
+
+//    SPMVariable& operator=(const SPMVariable& rhs);
 };
     
 }

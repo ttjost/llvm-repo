@@ -37,6 +37,12 @@ bool SPMVariable::operator==(const SPMVariable& rhs) {
         return false;
 }
 
+//SPMVariable& SPMVariable::operator=(const SPMVariable& rhs) {
+
+////    this->
+
+//}
+
 void SPMVariable::AddPropagationRegister(unsigned Register) {
 
     for (unsigned i = 0, e = PropagationRegisters.size(); i != e; ++i) {
@@ -211,13 +217,14 @@ void SPMVariable::setNumElements(unsigned Elements) {
     NumElements = Elements;
 }
 
-void SPMVariable::AddOffset(unsigned Register, unsigned Offset) {
+void SPMVariable::AddOffset(unsigned Register, unsigned Offset, MachineBasicBlock* MBB) {
 
     int RegisterPosition = -1;
     for (unsigned i = 0, e = RegistersAndOffsets.size(); i != e; ++i) {
-        if (RegistersAndOffsets[i].Register == Register) {
+        if (RegistersAndOffsets[i].MBB == MBB
+            /*&& RegistersAndOffsets[i].Register == Register*/) {
             RegisterPosition = i;
-            for (unsigned j = 0, e = RegistersAndOffsets.size(); j != e; ++j)
+            for (unsigned j = 0, e = RegistersAndOffsets[i].Offsets.size(); j != e; ++j)
                 if (RegistersAndOffsets[i].Offsets[j] == Offset)
                     return;
         }
@@ -226,7 +233,7 @@ void SPMVariable::AddOffset(unsigned Register, unsigned Offset) {
     if (RegisterPosition != -1) {
         RegistersAndOffsets[RegisterPosition].Offsets.push_back(Offset);
     }else {
-        RegistersAndOffsets.push_back({Register, {Offset} } );
+        RegistersAndOffsets.push_back({Register, {Offset}, MBB} );
     }
 }
 
@@ -235,8 +242,9 @@ void SPMVariable::UpdateOffsetInfo() {
     for (unsigned i = 0, e = RegistersAndOffsets.size(); i != e; ++i) {
         if (RegistersAndOffsets[i].Offsets.size() > OffsetsPerBB)
             OffsetsPerBB = RegistersAndOffsets[i].Offsets.size();
+
     }
-    RegistersAndOffsets.resize(0);
+//    RegistersAndOffsets.resize(0);
 }
 
 MachineBasicBlock::iterator SPMVariable::getFirstDefinition() const {
