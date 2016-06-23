@@ -66,7 +66,7 @@ public:
     unsigned getAvailableOffset(unsigned Memory, int Size);
 
     bool AddVariable(SPMVariable Var);
-    bool AddVariable(std::string Name, unsigned Register, MachineBasicBlock::iterator Inst);
+    bool AddVariable(std::string Name, unsigned Register, MachineBasicBlock::iterator Inst, const GlobalValue* GV);
     void RemoveVariable(int Position);
     bool RemoveVariable(SPMVariable Var);
     bool RemoveVariable(std::string Name);

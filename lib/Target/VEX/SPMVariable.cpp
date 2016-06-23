@@ -247,6 +247,16 @@ void SPMVariable::UpdateOffsetInfo() {
 //    RegistersAndOffsets.resize(0);
 }
 
+std::vector<MachineBasicBlock *> SPMVariable::getBasicblocks() {
+
+    std::vector<MachineBasicBlock *> BBs;
+
+    for (RegisterOffsetBBTriple RegOffsetBBTriple : RegistersAndOffsets) {
+        BBs.push_back(RegOffsetBBTriple.MBB);
+    }
+    return BBs;
+}
+
 MachineBasicBlock::iterator SPMVariable::getFirstDefinition() const {
     if (!DefinitionInstructions.empty())
         return DefinitionInstructions[0];

@@ -709,18 +709,36 @@ void VEXDataReuseTracking::analyzeVariableDefinitionInstruction(SPMVariable &Var
 void VEXDataReuseTracking::EvaluateVariables() {
 
     std::vector<int> DeletedVariables;
-    std::vector<SPMVariable> Variables = DataInfo->getVariables();
 
-    for (int i = 0, e = Variables.size(); i != e; ++i) {
+    unsigned i = 0;
+    for (DataReuseInfo::iterator Var = DataInfo->begin(), VarE = DataInfo->end();
+         Var != VarE; ++Var, ++i) {
         Var->UpdateOffsetInfo();
+        std::vector<MachineBasicBlock *> BBsInVar = Var->getBasicblocks();
 
-        if (Var->getMaxOffsetPerBB() == 1) {
+        unsigned MaxLoopDepth = 1;
+        unsigned LoopDepth;
+
+        for (auto BB : BBsInVar) {
+            LoopDepth = MLI->getLoopDepth(BB);
+            if (MaxLoopDepth < LoopDepth) {
+                MaxLoopDepth = LoopDepth;
+            }
+        }
+        if (Var->getMaxOffsetPerBB() == 1 || MaxLoopDepth == 1) {
             DeletedVariables.push_back(i);
         }
     }
 
     for (int i = DeletedVariables.size()-1; i >= 0; --i) {
         DataInfo->RemoveVariable(DeletedVariables[i]);
+    }
+
+    std::vector<SPMVariable> Variables = DataInfo->getVariables();
+
+    for (int i = 0, e = Variables.size(); i != e; ++i) {
+        DEBUG(dbgs() << "Variable Name: " << Variables[i].getName() <<  " with " <<
+              Variables[i].getMaxOffsetPerBB() << " offsets\n");
     }
 
 }
@@ -871,13 +889,18 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, DataReuseInfo::it
     MachineInstr *Inst = BuildMI(*MBB, LastNonTerminatorInstr, DebugLoc(),
                            TII->get(VEX::MOVi),
                            InductionRegTrue).addImm(0);
-    //LIS->InsertMachineInstrInMaps(Inst);
+
     unsigned GlobalMemVariableReg = RegInfo.createVirtualRegister(GPRegClass);
     unsigned GlobalMemVariableRegTrue = RegInfo.createVirtualRegister(GPRegClass);
     unsigned GlobalMemVariableRegFalse = RegInfo.createVirtualRegister(GPRegClass);
-    Inst = BuildMI(*MBB, LastNonTerminatorInstr, DebugLoc(),
-            TII->get(VEX::MOVi),GlobalMemVariableRegTrue).addGlobalAddress(Variable->getGlobalValue());
-    LIS->InsertMachineInstrInMaps(Inst);
+
+    if (Variable->getGlobalValue()) {
+        Inst = BuildMI(*MBB, LastNonTerminatorInstr, DebugLoc(),
+                TII->get(VEX::MOVi),GlobalMemVariableRegTrue).addGlobalAddress(Variable->getGlobalValue());
+        LIS->InsertMachineInstrInMaps(Inst);
+    } else {
+        StringRef(Variable->getName()).getAsInteger(10, GlobalMemVariableRegTrue);
+    }
 
     unsigned SPMAddrReg = RegInfo.createVirtualRegister(GPRegClass);
     unsigned SPMAddrRegTrue = RegInfo.createVirtualRegister(GPRegClass);
@@ -1027,6 +1050,10 @@ bool VEXDataReuseTracking::isSPMInstruction(unsigned Opcode) {
     return false;
 }
 
+std::vector<unsigned> getArgumentRegisters() {
+    return {VEX::Reg3, VEX::Reg4, VEX::Reg5, VEX::Reg6, VEX::Reg7, VEX::Reg8, VEX::Reg9, VEX::Reg10};
+}
+
 bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
     DEBUG(dbgs() << "Function " << MF.getName() << "\n");
 
@@ -1061,6 +1088,23 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
     VisitedNodes[0] = true;
     
     MachineFunction::iterator MBB;
+
+    MachineRegisterInfo &RegInfo = MF.getRegInfo();
+    std::vector<unsigned> ArgRegisters = getArgumentRegisters();
+
+    // Added to Variables all callee-saved register
+    for (unsigned Reg : ArgRegisters) {
+        if (RegInfo.isLiveIn(Reg)) {
+            unsigned DefinedRegister;
+            if (DefinedRegister = RegInfo.getLiveInVirtReg(Reg)) {
+                DataInfo->AddVariable(Twine(DefinedRegister).str(), DefinedRegister, nullptr, nullptr);
+                DEBUG(dbgs() << "Virtual reg " << DefinedRegister << "!\n");
+            } else {
+                DEBUG(dbgs() << "No virtual reg!");
+            }
+        }
+    }
+
     while (!BFSinMBBs.empty()) {
         
         MBB = BFSinMBBs.front();
@@ -1092,7 +1136,7 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                 assert(Op.isGlobal() && "Must be a Global Address");
 
                 VariableName = Twine(Inst->getOperand(0).getReg()).str();
-                DataInfo->AddVariable(VariableName, DefinedRegister, Inst);
+                DataInfo->AddVariable(VariableName, DefinedRegister, Inst, Op.getGlobal());
             } else {
                 // Checks whether the instruction propagates SPMVariable
                 if(PropagatesSPMVariable(Inst, VariableName)) {
@@ -1161,15 +1205,14 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
         std::vector<MachineBasicBlock::iterator> VarRelatedInstructions = Var->getDefinitionInstructions();
         int64_t Offset = (int64_t) DataInfo->getVarOffsetInSPM(*Var);
 
-        if (VarRelatedInstructions.empty())
-            continue;
+        std::set<MachineBasicBlock *> MBBs;
+
+        if (!VarRelatedInstructions.empty()) {
+            for (MachineBasicBlock::iterator Inst : VarRelatedInstructions)
+                analyzeVariableDefinitionInstruction(*Var, Inst, Offset);
+        }
 
         Var->CalculateOffsetDistribution();
-        
-        std::set<MachineBasicBlock *> MBBs;
-        
-        for (MachineBasicBlock::iterator Inst : VarRelatedInstructions)
-            analyzeVariableDefinitionInstruction(*Var, Inst, Offset);
 
         // Now we need to update every Memory Instruction traced
         // by its correspondent SPM Instruction.

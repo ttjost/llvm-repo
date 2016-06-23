@@ -132,7 +132,8 @@ public:
         RegistersAndOffsets.resize(0);
         MemoryInstructions.resize(0);
         DefinitionInstructions.resize(0);
-        DefinitionInstructions.push_back(Inst);
+        if (Inst)
+            DefinitionInstructions.push_back(Inst);
     }
 
     const GlobalValue *getGlobalValue() const { return GV; }
@@ -235,6 +236,8 @@ public:
 
     void AddOffset(unsigned Register, unsigned Offset, MachineBasicBlock* MBB);
     void UpdateOffsetInfo();
+
+    std::vector<MachineBasicBlock *> getBasicblocks();
     
     bool operator==(const SPMVariable& rhs);
 

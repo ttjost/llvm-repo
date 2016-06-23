@@ -29,18 +29,21 @@ bool DataReuseInfo::AddVariable(SPMVariable Var) {
     return true;
 }
 
+// TODO: Recheck implementation. Problem: Bad coding
 bool DataReuseInfo::AddVariable(std::string Name, unsigned Register,
-                                MachineBasicBlock::iterator Inst) {
+                                MachineBasicBlock::iterator Inst, const GlobalValue* GV) {
 
     for (unsigned i = 0, e = Variables.size();
          i != e; ++i) {
         if (Variables[i].getName() == Name) {
-            Variables[i].AddDefinitionInstruction(Inst);
+            llvm_unreachable("Should never come this.");
+            if (Inst)
+                Variables[i].AddDefinitionInstruction(Inst);
             Variables[i].AddPropagationRegister(Register);
             return false;
         }
     }
-    Variables.push_back(SPMVariable(Name, Register, Inst, nullptr));
+    Variables.push_back(SPMVariable(Name, Register, Inst, GV));
     return true;
 }
 
