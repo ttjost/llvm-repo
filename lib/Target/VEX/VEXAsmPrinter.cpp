@@ -77,12 +77,18 @@ void VEXAsmPrinter::EmitInstruction(const MachineInstr *MI){
         SmallVector<MCInst, 16> TmpInst;
         unsigned i;
         TmpInst0.setOpcode(I->getOpcode());
-        for (++I, i = 0; E != I && I->isInsideBundle(); ++I){
+        for (++I, i = 0; E != I && I->isInsideBundle(); ++I) {
             if (I->isCFIInstruction() ||
                 I->isDebugValue() ||
                 I->isImplicitDef()) {
                 continue;
             } else {
+                if (I->isCall()) {
+                    if (I->getOperand(0).isGlobal())
+                        FunctionsCalled.insert(I->getOperand(0).getGlobal()->getName().str());
+                    else if (I->getOperand(0).isSymbol())
+                        FunctionsCalled.insert(std::string(I->getOperand(0).getSymbolName()));
+                }
                 MCInst Tmp;
                 TmpInst.push_back(Tmp);
                 MCInstLowering.Lower(I, TmpInst0, TmpInst[i++], I->isInsideBundle());
@@ -101,6 +107,12 @@ void VEXAsmPrinter::EmitInstruction(const MachineInstr *MI){
         }
         OutStreamer->EmitInstruction(TmpInst0, getSubtargetInfo());
     } else {
+        if (MI->isCall()) {
+            if (MI->getOperand(0).isGlobal())
+                FunctionsCalled.insert(MI->getOperand(0).getGlobal()->getName().str());
+            else if (MI->getOperand(0).isSymbol())
+                FunctionsCalled.insert(std::string(MI->getOperand(0).getSymbolName()));
+        }
         MCInstLowering.Lower(MI, TmpInst0, TmpInst0, false);
         OutStreamer->EmitInstruction(TmpInst0, getSubtargetInfo());
     }
@@ -239,13 +251,16 @@ void VEXAsmPrinter::EmitStartOfAsmFile(Module &M){
 
 void VEXAsmPrinter::EmitEndOfAsmFile(Module &M) {
     
-    for (Module::iterator I = M.begin(), E = M.end(); I != E; ++I) {
-        if (I->isDeclaration()) {
-            OutStreamer->EmitRawText(".import " + I->getName() + "\n");
-            OutStreamer->EmitRawText(".type " + I->getName() + ", @function\n");
-        }
+//    for (Module::iterator I = M.begin(), E = M.end(); I != E; ++I) {
+//        if (I->isDeclaration()) {
+//            OutStreamer->EmitRawText(".import " + I->getName() + "\n");
+//            OutStreamer->EmitRawText(".type " + I->getName() + ", @function\n");
+//        }
+//    }
+    for(StringRef FuncCall: FunctionsCalled) {
+        OutStreamer->EmitRawText(".import " + FuncCall.str() + "\n");
+        OutStreamer->EmitRawText(".type " + FuncCall.str() + ", @function\n");
     }
-    
 }
 
 // FIXME :  Is this algorithm correct?

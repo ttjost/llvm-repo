@@ -36,6 +36,9 @@
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Support/raw_ostream.h"
 
+#include <set>
+#include <string>
+
 namespace llvm{
 
 class MCStreamer;
@@ -49,6 +52,8 @@ class LLVM_LIBRARY_VISIBILITY VEXAsmPrinter : public AsmPrinter {
     void EmitInstrWithMacroNoAT(const MachineInstr *MI);
 
     bool lowerOperand(const MachineOperand &MO, MCOperand &MCOp);
+    
+    std::set<std::string> FunctionsCalled;
 
 public:
 
