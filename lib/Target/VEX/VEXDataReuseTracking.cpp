@@ -718,14 +718,17 @@ void VEXDataReuseTracking::EvaluateVariables() {
 
         unsigned MaxLoopDepth = 1;
         unsigned LoopDepth;
+        
+        std::set<MachineLoop *> LoopsInFunction;
 
         for (auto BB : BBsInVar) {
+            LoopsInFunction.insert(MLI->getLoopFor(BB));
             LoopDepth = MLI->getLoopDepth(BB);
             if (MaxLoopDepth < LoopDepth) {
                 MaxLoopDepth = LoopDepth;
             }
         }
-        if (Var->getMaxOffsetPerBB() == 1 || MaxLoopDepth == 1) {
+        if (Var->getMaxOffsetPerBB() == 1 || (MaxLoopDepth == 1 && LoopsInFunction.size() <= 1)) {
             DeletedVariables.push_back(i);
         }
     }
@@ -1304,8 +1307,9 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
         if (Var->areLoadsRequired()) {
             DEBUG(dbgs() << "\nName:" << Var->getName()  << " requires previous Loads to scratchpads.\n");
             InsertPreamble(MF, Var, Preambles[PreambleIt++]);
-        } else
+        } else {
             DEBUG(dbgs() << "\nName:" << Var->getName()  << "\n");
+        }
     }
     
     for (MachineFunction::iterator MBB = MF.begin(), MBBE = MF.end(); MBB != MBBE; ++MBB)
