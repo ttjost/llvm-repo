@@ -889,7 +889,8 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, DataReuseInfo::it
         if (Variable->getConsecutiveDataPerSPM() > 1) {
             InternalOffset = Temp;
         } else {
-            InternalOffset = InternalLoopCounter*Variable->getDataSize();
+//            InternalOffset = InternalLoopCounter*Variable->getDataSize();
+            InternalOffset = Temp;
         }
     } else {
         InternalOffset = 1*Variable->getDataSize();
@@ -986,9 +987,16 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, DataReuseInfo::it
     LIS->InsertMachineInstrInMaps(Inst);
 
     // Add Instruction for next value
-    Inst = BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(), TII->get(VEX::ADDi), GlobalMemVariableRegFalse)
+    if (Variable->getConsecutiveDataPerSPM() > 1) {
+        Inst = BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(), TII->get(VEX::ADDi), GlobalMemVariableRegFalse)
                                                             .addReg(GlobalMemVariableReg)
                                                             .addImm(Variable->getDataSize());
+    } else {
+        Inst = BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(), TII->get(VEX::ADDi), GlobalMemVariableRegFalse)
+                                                            .addReg(GlobalMemVariableReg)
+                                                            .addImm(InternalLoopCounter*NumMemories*Variable->getDataSize());
+    }
+
     LIS->InsertMachineInstrInMaps(Inst);
     
     // Add Instruction for Induction Variable
@@ -1046,7 +1054,7 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, DataReuseInfo::it
     }
         
         // Add Instruction for Induction Variable
-        Inst = BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(), TII->get(VEX::ADDi),SPMAddrRegFalse)
+        Inst = BuildMI(*PreambleMBB, LastNonTerminatorInstr, DebugLoc(), TII->get(VEX::ADDi), SPMAddrRegFalse)
         .addReg(SPMAddrReg)
         .addImm(InternalLoopCounter*Variable->getDataSize());
     LIS->InsertMachineInstrInMaps(Inst);
@@ -1301,7 +1309,7 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
 
                     MachineBasicBlock::iterator LastNonTerminatorInstr = (*SI)->getLastNonDebugInstr();
                     (*SI)->dump();
-                    while (LastNonTerminatorInstr->isTerminator() && LastNonTerminatorInstr != MBB->begin()) {
+                    while (LastNonTerminatorInstr->isTerminator() && LastNonTerminatorInstr != (*SI)->begin()) {
                         --LastNonTerminatorInstr;
                     }
 
