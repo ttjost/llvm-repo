@@ -82,7 +82,7 @@ public:
 
     unsigned AllocateSPMs(SPMVariable &Var);
 
-    void AddOffset(std::string Name, unsigned Register, unsigned Offset, MachineBasicBlock* MBB);
+    void AddOffset(std::string Name, unsigned Register, unsigned Offset, MachineInstr *Inst, MachineBasicBlock* MBB);
     void AddMemInstRef(std::string Name, MachineBasicBlock::iterator newInst);
 
     typedef std::vector<SPMVariable>::iterator iterator;

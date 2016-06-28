@@ -28,12 +28,14 @@ class SPMVariable {
     typedef struct RegisterOffsetBBTriple {
         unsigned Register;
         std::vector<unsigned> Offsets;
+        MachineInstr *Inst;
         MachineBasicBlock *MBB;
     } RegisterOffsetBBTriple;
 
     std::string Name;
     unsigned Flags;         // See MemOperandFlags in MachineMemOperand.h
 
+    std::vector<MachineInstr*> PropagationInstructions;
     std::vector<unsigned> PropagationRegisters;      // Used for knowing which registers propagate the variable information
     std::vector<RegisterOffsetBBTriple> RegistersAndOffsets;
 
@@ -208,7 +210,7 @@ public:
 
     unsigned getMaximumSPMs(unsigned IssueWidth);
     
-    void AddPropagationRegister(unsigned Register);
+    void AddPropagationRegister(MachineInstr* Inst, unsigned Register);
     void AddPropagationCallRegister(unsigned Register);
     void AddMemoryInstruction(MachineBasicBlock::iterator MI);
     void AddDefinitionInstruction(MachineBasicBlock::iterator MI);
@@ -228,13 +230,15 @@ public:
     bool isPreambleInserted() { return Preamble; }
 
     std::vector<unsigned> getPropagationRegisters() const { return PropagationRegisters; }
+    std::vector<MachineInstr *> getPropagationInstructions() const { return PropagationInstructions; }
     std::vector<MachineBasicBlock::iterator> getMemoryInstructions() const { return MemoryInstructions; }
     MachineBasicBlock::iterator getFirstMemoryInstruction() const;
+    MachineBasicBlock::iterator getFirstMemoryInstruction(MachineBasicBlock *BB) const;
 
     MachineBasicBlock::iterator getFirstDefinition() const;
     std::vector<MachineBasicBlock::iterator> getDefinitionInstructions() const { return DefinitionInstructions; }
 
-    void AddOffset(unsigned Register, unsigned Offset, MachineBasicBlock* MBB);
+    void AddOffset(unsigned Register, unsigned Offset, MachineInstr* Inst, MachineBasicBlock* MBB);
     void UpdateOffsetInfo();
 
     std::vector<MachineBasicBlock *> getBasicblocks();

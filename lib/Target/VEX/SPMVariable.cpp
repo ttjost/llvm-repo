@@ -43,7 +43,7 @@ bool SPMVariable::operator==(const SPMVariable& rhs) {
 
 //}
 
-void SPMVariable::AddPropagationRegister(unsigned Register) {
+void SPMVariable::AddPropagationRegister(MachineInstr* Inst, unsigned Register) {
 
     for (unsigned i = 0, e = PropagationRegisters.size(); i != e; ++i) {
         if (PropagationRegisters[i] == Register)
@@ -51,6 +51,7 @@ void SPMVariable::AddPropagationRegister(unsigned Register) {
     }
     std::vector<unsigned>::iterator it = PropagationRegisters.begin();
     PropagationRegisters.insert(it, Register);
+    PropagationInstructions.insert(PropagationInstructions.begin(), Inst);
 }
 
 void SPMVariable::AddPropagationCallRegister(unsigned Register) {
@@ -217,7 +218,7 @@ void SPMVariable::setNumElements(unsigned Elements) {
     NumElements = Elements;
 }
 
-void SPMVariable::AddOffset(unsigned Register, unsigned Offset, MachineBasicBlock* MBB) {
+void SPMVariable::AddOffset(unsigned Register, unsigned Offset, MachineInstr* Inst, MachineBasicBlock* MBB) {
 
     int RegisterPosition = -1;
     for (unsigned i = 0, e = RegistersAndOffsets.size(); i != e; ++i) {
@@ -233,7 +234,7 @@ void SPMVariable::AddOffset(unsigned Register, unsigned Offset, MachineBasicBloc
     if (RegisterPosition != -1) {
         RegistersAndOffsets[RegisterPosition].Offsets.push_back(Offset);
     }else {
-        RegistersAndOffsets.push_back({Register, {Offset}, MBB} );
+        RegistersAndOffsets.push_back({Register, {Offset}, Inst, MBB} );
     }
 }
 
@@ -270,4 +271,11 @@ MachineBasicBlock::iterator SPMVariable::getFirstMemoryInstruction() const {
         return MemoryInstructions[0];
     else
         return NULL;
+}
+
+MachineBasicBlock::iterator SPMVariable::getFirstMemoryInstruction(MachineBasicBlock *BB) const {
+    for (RegisterOffsetBBTriple RegOffsetBBTriple : RegistersAndOffsets) {
+        if (RegOffsetBBTriple.MBB == BB)
+            return RegOffsetBBTriple.Inst;
+    }
 }

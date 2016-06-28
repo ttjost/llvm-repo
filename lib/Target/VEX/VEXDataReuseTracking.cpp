@@ -69,6 +69,8 @@ class VEXDataReuseTracking: public MachineFunctionPass {
     ScalarEvolution *SE;
     MachineLoopInfo *MLI;
     
+    std::deque<MachineFunction::iterator> BFS;
+
     unsigned MemFuncUnits;
 
     bool IsSPMVariable (MachineBasicBlock::iterator Inst,
@@ -88,6 +90,7 @@ class VEXDataReuseTracking: public MachineFunctionPass {
     void  EvaluateVariableOffset(MachineBasicBlock::iterator Inst,
                                 std::string VariableName);
 
+    bool CheckIfVariableResetsAddress(DataReuseInfo::iterator Variable, MachineLoop *Loop, MachineBasicBlock::iterator Inst);
     void EvaluateVariables();
 
     void analyzeVariableDefinitionInstruction(SPMVariable &Var, MachineInstr *MI,
@@ -249,7 +252,7 @@ bool VEXDataReuseTracking::PropagatesSPMVariable(MachineBasicBlock::iterator Ins
                     if (Inst->getOperand(0).isReg() &&
                         Inst->getOperand(0).isDef() &&
                         !Inst->mayLoad()) {
-                        VarIdx->AddPropagationRegister(Inst->getOperand(0).getReg());
+                        VarIdx->AddPropagationRegister(Inst, Inst->getOperand(0).getReg());
                     } else {
                         if (Inst->isCall()) {
                             VarIdx->AddPropagationCallRegister(Operand);
@@ -706,6 +709,22 @@ void VEXDataReuseTracking::analyzeVariableDefinitionInstruction(SPMVariable &Var
     MI->addOperand(Op);
 }
 
+bool VEXDataReuseTracking::CheckIfVariableResetsAddress(DataReuseInfo::iterator Variable,
+                                                        MachineLoop *Loop,
+                                                        MachineBasicBlock::iterator Inst) {
+
+
+    std::vector<MachineInstr *> PropInstrs = Variable->getPropagationInstructions();
+
+    MachineOperand DefMemInst = Inst->getOperand(1);
+    assert((!DefMemInst.isDef() && DefMemInst.isReg()) && "Operand cannot be a definition.");
+
+//    std::vector<bool> VisitedNodes(MF.size(), false);
+
+
+    return false;
+}
+
 void VEXDataReuseTracking::EvaluateVariables() {
 
     std::vector<int> DeletedVariables;
@@ -720,10 +739,16 @@ void VEXDataReuseTracking::EvaluateVariables() {
         unsigned LoopDepth;
         
         std::set<MachineLoop *> LoopsInFunction;
+        bool resetAddressInLoop;
 
         for (auto BB : BBsInVar) {
-            LoopsInFunction.insert(MLI->getLoopFor(BB));
+            MachineLoop *loop = MLI->getLoopFor(BB);
+            LoopsInFunction.insert(loop);
             LoopDepth = MLI->getLoopDepth(BB);
+
+            DEBUG(dbgs() << "Loop depth:" << LoopDepth << "\n");
+            CheckIfVariableResetsAddress(Var, loop, Var->getFirstMemoryInstruction(BB));
+
             if (MaxLoopDepth < LoopDepth) {
                 MaxLoopDepth = LoopDepth;
             }
@@ -763,7 +788,7 @@ void VEXDataReuseTracking::EvaluateVariableOffset(MachineBasicBlock::iterator In
 
         assert (MOReg.isReg() && " MachineOperand should be Register");
         assert (MOImm.isImm() && " MachineOperand should be Immediate");
-        DataInfo->AddOffset(VariableName, MOReg.getReg(), MOImm.getImm(), Inst->getParent());
+        DataInfo->AddOffset(VariableName, MOReg.getReg(), MOImm.getImm(), Inst, Inst->getParent());
     }
 }
 
@@ -913,8 +938,12 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, DataReuseInfo::it
 
     LastNonTerminatorInstr = PreambleMBB->getLastNonDebugInstr();
 
-    while (LastNonTerminatorInstr->isTerminator() && LastNonTerminatorInstr != PreambleMBB->begin())
-        --LastNonTerminatorInstr;
+    if (LastNonTerminatorInstr->isTerminator()) {
+        while (LastNonTerminatorInstr->isTerminator() && LastNonTerminatorInstr != PreambleMBB->begin())
+            --LastNonTerminatorInstr;
+    } else {
+        LastNonTerminatorInstr = PreambleMBB->end();
+    }
 
     MachineMemOperand *MMOLoad =
       MF.getMachineMemOperand(MachinePointerInfo(), MachineMemOperand::MOLoad,
@@ -1086,6 +1115,8 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
     // This is important for some cases when PHI nodes do not propagate
     // properly the variable.
     std::deque<MachineFunction::iterator> BFSinMBBs(1, MF.begin());
+    BFS.clear();
+    BFS.push_back(MF.begin());
 
     std::vector<bool> VisitedNodes(MF.size(), false);
     VisitedNodes[0] = true;
@@ -1117,6 +1148,7 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
              SE = MBB->succ_end(); SI != SE; ++SI) {
             if (!VisitedNodes[(*(SI))->getNumber()]) {
                 BFSinMBBs.push_back(*(SI));
+                BFS.push_back(*(SI));
                 VisitedNodes[(*(SI))->getNumber()] = true;
             }
         }
@@ -1267,23 +1299,39 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
 
                     assert(*(SI) != MBB && "Cannot be the same BB");
 
-                    MachineInstr* Inst = BuildMI(*(SI), DebugLoc(),
-                            TII->get(VEX::MOVi),
-                            BaseRegTrue).addImm(0);
+                    MachineBasicBlock::iterator LastNonTerminatorInstr = (*SI)->getLastNonDebugInstr();
+                    (*SI)->dump();
+                    while (LastNonTerminatorInstr->isTerminator() && LastNonTerminatorInstr != MBB->begin()) {
+                        --LastNonTerminatorInstr;
+                    }
+
+                    MachineInstr* Inst;
+
+                    if (LastNonTerminatorInstr != (*SI)->begin()) {
+                        Inst = BuildMI(**SI, LastNonTerminatorInstr, DebugLoc(),
+                                TII->get(VEX::MOVi),
+                                BaseRegTrue).addImm(0);
+                    } else {
+                        Inst = BuildMI(*SI, DebugLoc(),
+                                TII->get(VEX::MOVi),
+                                BaseRegTrue).addImm(0);
+                    }
+
+                    (*SI)->dump();
 
                     // Terrible hack. Why can't we create more than one MOVi instruction?
                     // If we don't do like this, LLVM crashes, for some uncanny reason.
                     if (MBBs.empty())
                         LIS->InsertMachineInstrInMaps(Inst);
 
-                    MachineBasicBlock::iterator LastInst = MBB->getLastNonDebugInstr();
+                    LastNonTerminatorInstr = MBB->getLastNonDebugInstr();
 
-                    while (LastInst->isTerminator() && LastInst != MBB->begin()) {
-                        --LastInst;
+                    while (LastNonTerminatorInstr->isTerminator() && LastNonTerminatorInstr != MBB->begin()) {
+                        --LastNonTerminatorInstr;
                     }
 
                     // Add PHI Instruction
-                    MachineInstr* Inst2 = BuildMI(*MBB, MBB->begin(), DebugLoc(), TII->get(VEX::PHI), BaseReg)
+                    MachineInstr* Inst2 = BuildMI(*MBB, MBB->getFirstNonPHI(), DebugLoc(), TII->get(VEX::PHI), BaseReg)
                     .addReg(BaseRegTrue)
                     .addMBB(*SI)
                     .addReg(BaseRegFalse)
@@ -1292,7 +1340,7 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                     LIS->InsertMachineInstrInMaps(Inst2);
 
                     // Add Instruction for next value
-                    MachineInstr* Inst3 = BuildMI(*MBB, LastInst, DebugLoc(), TII->get(VEX::ADDi), BaseRegFalse)
+                    MachineInstr* Inst3 = BuildMI(*MBB, LastNonTerminatorInstr, DebugLoc(), TII->get(VEX::ADDi), BaseRegFalse)
                     .addReg(BaseReg)
                     .addImm(Var->getMaxOffsetPerBB()/Var->getNumUnits()*Var->getDataSize());
 
@@ -1312,6 +1360,7 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
         }
     }
     
+    DEBUG(dbgs() << "\n\n\n\n");
     for (MachineFunction::iterator MBB = MF.begin(), MBBE = MF.end(); MBB != MBBE; ++MBB)
         DEBUG(MBB->dump());
     

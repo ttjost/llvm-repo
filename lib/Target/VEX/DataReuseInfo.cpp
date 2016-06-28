@@ -21,7 +21,7 @@ bool DataReuseInfo::AddVariable(SPMVariable Var) {
          i != e; ++i) {
         if (Variables[i].getName() == Var.getName()) {
             Variables[i].AddDefinitionInstruction(Var.getFirstDefinition());
-            Variables[i].AddPropagationRegister(Var.getPropagationRegisters()[0]);
+            Variables[i].AddPropagationRegister(Var.getFirstDefinition(), Var.getPropagationRegisters()[0]);
             return false;
         }
     }
@@ -39,7 +39,7 @@ bool DataReuseInfo::AddVariable(std::string Name, unsigned Register,
             llvm_unreachable("Should never come this.");
             if (Inst)
                 Variables[i].AddDefinitionInstruction(Inst);
-            Variables[i].AddPropagationRegister(Register);
+            Variables[i].AddPropagationRegister(Inst, Register);
             return false;
         }
     }
@@ -99,11 +99,11 @@ bool DataReuseInfo::FindVariable(std::string Name) {
     return false;
 }
 
-void DataReuseInfo::AddOffset(std::string Name, unsigned Register, unsigned Offset, MachineBasicBlock* MBB) {
+void DataReuseInfo::AddOffset(std::string Name, unsigned Register, unsigned Offset, MachineInstr* Inst,  MachineBasicBlock* MBB) {
     for(std::vector<SPMVariable>::iterator i = Variables.begin(),
         e = Variables.end(); i != e; ++i) {
         if ((*i).getName() == Name) {
-            i->AddOffset(Register, Offset, MBB);
+            i->AddOffset(Register, Offset, Inst, MBB);
             return;
         }
     }
