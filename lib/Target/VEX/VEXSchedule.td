@@ -205,8 +205,7 @@ InstrItinData<IICmpGr       , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
                                                IUnit4, IUnit5, IUnit6, IUnit7]>]>,
 InstrItinData<IISelect      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
                                                IUnit4, IUnit5, IUnit6, IUnit7]>]>,
-InstrItinData<IIMultiply    , [InstrStage<2,  [IUnit1, IUnit2, IUnit3, IUnit4,
-                                                IUnit5, IUnit6]>]>,
+InstrItinData<IIMultiply    , [InstrStage<2,  [IUnit1, IUnit2, IUnit5, IUnit6]>]>,
 InstrItinData<IILoad        , [InstrStage<2,  [IUnit0]>]>,
 InstrItinData<IILoadLr      , [InstrStage<4,  [IUnit0]>]>,
 InstrItinData<IIStore       , [InstrStage<1,  [IUnit0]>]>,
@@ -219,7 +218,7 @@ InstrItinData<IICpLrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
                                                IUnit4, IUnit5, IUnit6, IUnit7]>]>,
 InstrItinData<IICpGrLr      , [InstrStage<2,  [IUnit0, IUnit1, IUnit2, IUnit3,
                                                IUnit4, IUnit5, IUnit6, IUnit7]>]>,
-InstrItinData<IIBranch      , [InstrStage<1,  [IUnit7]>]>,
+InstrItinData<IIBranch      , [InstrStage<1,  [IUnit3]>]>,
 
 // ScratchPad Memory Instructions
 // We separate them according to the their position.

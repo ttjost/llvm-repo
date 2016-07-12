@@ -179,7 +179,10 @@ void VLIWMachineScheduler::schedule() {
   initQueues(TopRoots, BotRoots);
 
   bool IsTopNode = false;
-  while (SUnit *SU = SchedImpl->pickNode(IsTopNode)) {
+  while (CurrentTop != CurrentBottom) {
+
+      SUnit *SU = SchedImpl->pickNode(IsTopNode);
+
     if (!checkSchedLimit())
       break;
 
@@ -340,7 +343,9 @@ void ConvergingVLIWScheduler::VLIWSchedBoundary::bumpNode(SUnit *SU) {
 
   // Check the instruction group dispatch limit.
   // TODO: Check if this SU must end a dispatch group.
-  IssueCount += SchedModel->getNumMicroOps(SU->getInstr());
+  if (SU)
+    IssueCount += SchedModel->getNumMicroOps(SU->getInstr());
+
   if (startNewCycle) {
     DEBUG(dbgs() << "*** Max instrs at cycle " << CurrCycle << '\n');
     bumpCycle();
