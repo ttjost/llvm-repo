@@ -1324,8 +1324,6 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                                 BaseRegTrue).addImm(0);
                     }
 
-                    (*SI)->dump();
-
                     // Terrible hack. Why can't we create more than one MOVi instruction?
                     // If we don't do like this, LLVM crashes, for some uncanny reason.
                     if (MBBs.empty())

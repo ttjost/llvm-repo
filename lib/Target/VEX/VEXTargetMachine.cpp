@@ -133,16 +133,16 @@ void VEXNewTargetMachine::anchor() {}
 //    return &DefaultSubtarget;
 //}
 
-static ScheduleDAGInstrs *createVLIWMachineSched(MachineSchedContext *C) {
+static ScheduleDAGInstrs *createVEXVLIWMachineSched(MachineSchedContext *C) {
     if (UseHexagonScheduler)
-        return new VLIWMachineScheduler(C, make_unique<ConvergingVLIWScheduler>());
+        return new NewVEXVLIWMachineScheduler(C, make_unique<NewVEXConvergingVLIWScheduler>());
     else
         return new VEXVLIWMachineScheduler(C, make_unique<ConvergingVEXVLIWScheduler>());
 }
 
 static MachineSchedRegistry
 SchedCustomRegistry("vex", "Run VEX custom scheduler",
-                    createVLIWMachineSched);
+                    createVEXVLIWMachineSched);
 
 namespace {
 
@@ -166,7 +166,7 @@ namespace {
         
         ScheduleDAGInstrs *
         createMachineScheduler(MachineSchedContext *C) const override {
-            return createVLIWMachineSched(C);
+            return createVEXVLIWMachineSched(C);
         }
         
         void addIRPasses() override;
