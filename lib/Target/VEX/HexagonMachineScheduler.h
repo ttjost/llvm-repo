@@ -30,15 +30,17 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetInstrInfo.h"
 
+#include "VEXSubtarget.h"
+
 using namespace llvm;
 
 namespace llvm {
 //===----------------------------------------------------------------------===//
-// ConvergingVLIWScheduler - Implementation of the standard
+// NewVEXConvergingVLIWScheduler - Implementation of the standard
 // MachineSchedStrategy.
 //===----------------------------------------------------------------------===//
 
-class VLIWResourceModel {
+class NewVEXVLIWResourceModel {
   /// ResourcesModel - Represents VLIW state.
   /// Not limited to VLIW targets per say, but assumes
   /// definition of DFA by a target.
@@ -54,7 +56,7 @@ class VLIWResourceModel {
   unsigned TotalPackets;
 
 public:
-  VLIWResourceModel(const TargetSubtargetInfo &STI, const TargetSchedModel *SM)
+  NewVEXVLIWResourceModel(const TargetSubtargetInfo &STI, const TargetSchedModel *SM)
       : SchedModel(SM), TotalPackets(0) {
   ResourcesModel = STI.getInstrInfo()->CreateTargetScheduleState(STI);
 
@@ -67,7 +69,7 @@ public:
     ResourcesModel->clearResources();
   }
 
-  ~VLIWResourceModel() {
+  ~NewVEXVLIWResourceModel() {
     delete ResourcesModel;
   }
 
@@ -91,9 +93,9 @@ public:
 
 /// Extend the standard ScheduleDAGMI to provide more context and override the
 /// top-level schedule() driver.
-class VLIWMachineScheduler : public ScheduleDAGMILive {
+class NewVEXVLIWMachineScheduler : public ScheduleDAGMILive {
 public:
-  VLIWMachineScheduler(MachineSchedContext *C,
+  NewVEXVLIWMachineScheduler(MachineSchedContext *C,
                        std::unique_ptr<MachineSchedStrategy> S)
       : ScheduleDAGMILive(C, std::move(S)) {}
 
@@ -104,11 +106,11 @@ public:
   void postprocessDAG();
 };
 
-/// ConvergingVLIWScheduler shrinks the unscheduled zone using heuristics
+/// NewVEXConvergingVLIWScheduler shrinks the unscheduled zone using heuristics
 /// to balance the schedule.
-class ConvergingVLIWScheduler : public MachineSchedStrategy {
+class NewVEXConvergingVLIWScheduler : public MachineSchedStrategy {
 
-  /// Store the state used by ConvergingVLIWScheduler heuristics, required
+  /// Store the state used by NewVEXConvergingVLIWScheduler heuristics, required
   ///  for the lifetime of one invocation of pickNode().
   struct SchedCandidate {
     // The best SUnit candidate.
@@ -130,8 +132,8 @@ class ConvergingVLIWScheduler : public MachineSchedStrategy {
   /// Each Scheduling boundary is associated with ready queues. It tracks the
   /// current cycle in whichever direction at has moved, and maintains the state
   /// of "hazards" and other interlocks at the current cycle.
-  struct VLIWSchedBoundary {
-    VLIWMachineScheduler *DAG;
+  struct NewVEXVLIWSchedBoundary {
+    NewVEXVLIWMachineScheduler *DAG;
     const TargetSchedModel *SchedModel;
 
     ReadyQueue Available;
@@ -139,7 +141,7 @@ class ConvergingVLIWScheduler : public MachineSchedStrategy {
     bool CheckPending;
 
     ScheduleHazardRecognizer *HazardRec;
-    VLIWResourceModel *ResourceModel;
+    NewVEXVLIWResourceModel *ResourceModel;
 
     unsigned CurrCycle;
     unsigned IssueCount;
@@ -152,25 +154,25 @@ class ConvergingVLIWScheduler : public MachineSchedStrategy {
 
     /// Pending queues extend the ready queues with the same ID and the
     /// PendingFlag set.
-    VLIWSchedBoundary(unsigned ID, const Twine &Name):
+    NewVEXVLIWSchedBoundary(unsigned ID, const Twine &Name):
       DAG(nullptr), SchedModel(nullptr), Available(ID, Name+".A"),
-      Pending(ID << ConvergingVLIWScheduler::LogMaxQID, Name+".P"),
+      Pending(ID << NewVEXConvergingVLIWScheduler::LogMaxQID, Name+".P"),
       CheckPending(false), HazardRec(nullptr), ResourceModel(nullptr),
       CurrCycle(0), IssueCount(0),
       MinReadyCycle(UINT_MAX), MaxMinLatency(0) {}
 
-    ~VLIWSchedBoundary() {
+    ~NewVEXVLIWSchedBoundary() {
       delete ResourceModel;
       delete HazardRec;
     }
 
-    void init(VLIWMachineScheduler *dag, const TargetSchedModel *smodel) {
+    void init(NewVEXVLIWMachineScheduler *dag, const TargetSchedModel *smodel) {
       DAG = dag;
       SchedModel = smodel;
     }
 
     bool isTop() const {
-      return Available.getID() == ConvergingVLIWScheduler::TopQID;
+      return Available.getID() == NewVEXConvergingVLIWScheduler::TopQID;
     }
 
     bool checkHazard(SUnit *SU);
@@ -188,12 +190,12 @@ class ConvergingVLIWScheduler : public MachineSchedStrategy {
     SUnit *pickOnlyChoice();
   };
 
-  VLIWMachineScheduler *DAG;
+  NewVEXVLIWMachineScheduler *DAG;
   const TargetSchedModel *SchedModel;
 
   // State of the top and bottom scheduled instruction boundaries.
-  VLIWSchedBoundary Top;
-  VLIWSchedBoundary Bot;
+  NewVEXVLIWSchedBoundary Top;
+  NewVEXVLIWSchedBoundary Bot;
 
 public:
   /// SUnit::NodeQueueId: 0 (none), 1 (top), 2 (bot), 3 (both)
@@ -203,7 +205,7 @@ public:
     LogMaxQID = 2
   };
 
-  ConvergingVLIWScheduler()
+  NewVEXConvergingVLIWScheduler()
     : DAG(nullptr), SchedModel(nullptr), Top(TopQID, "TopQ"),
       Bot(BotQID, "BotQ") {}
 

@@ -1308,7 +1308,6 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                     assert(*(SI) != MBB && "Cannot be the same BB");
 
                     MachineBasicBlock::iterator LastNonTerminatorInstr = (*SI)->getLastNonDebugInstr();
-                    (*SI)->dump();
                     while (LastNonTerminatorInstr->isTerminator() && LastNonTerminatorInstr != (*SI)->begin()) {
                         --LastNonTerminatorInstr;
                     }
@@ -1324,8 +1323,6 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                                 TII->get(VEX::MOVi),
                                 BaseRegTrue).addImm(0);
                     }
-
-                    (*SI)->dump();
 
                     // Terrible hack. Why can't we create more than one MOVi instruction?
                     // If we don't do like this, LLVM crashes, for some uncanny reason.

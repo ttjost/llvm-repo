@@ -70,7 +70,9 @@ VEXSubtarget::VEXSubtarget(const Triple &TT, const std::string &CPU,
     TSInfo(*_TM.getDataLayout()),
     InstrInfo(initializeSubtargetDependencies(CPU, FS)),
     FrameLowering(),
-    TLInfo(_TM, *this) {
+    TLInfo(_TM, *this),
+    OptBBHeights(make_unique<BBsInfo>()),
+    SchedBBHeights(make_unique<BBsInfo>()) {
         DEBUG(errs() << "Subtarget\n");
         
 }

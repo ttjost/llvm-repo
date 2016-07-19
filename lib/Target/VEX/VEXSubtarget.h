@@ -26,6 +26,10 @@
 #include "VEXGenSubtargetInfo.inc"
 
 namespace llvm{
+
+struct BBsInfo {
+    std::map<StringRef, unsigned> BBInfo;
+};
     
 class StringRef;
 
@@ -74,9 +78,22 @@ class VEXTargetMachine;
         VEXFrameLowering FrameLowering;
         VEXTargetLowering TLInfo;
 
+        // Measure the height of each BB
+        std::unique_ptr<BBsInfo> OptBBHeights;
+        std::unique_ptr<BBsInfo> SchedBBHeights;
+
 //        VEXTargetMachine &TM;
         
     public:
+
+        BBsInfo* getOptBBHeights() const {
+            OptBBHeights.get();
+        }
+
+        BBsInfo* getSchedBBHeights() const {
+            SchedBBHeights.get();
+        }
+
         unsigned getTargetABI() const { return VEXABI; }
         
         ///This constructor initializes the data members to match that
@@ -99,7 +116,8 @@ class VEXTargetMachine;
         bool isSimple_8Issue() const { return VEXArchVersion == simple_8issue; }
         
         const InstrItineraryData *getInstrItineraryData() const { return &InstrItins; }
-        
+
+        const
         unsigned RotateRegisterOrder() const {
 //            AllocationOrder = (AllocationOrder + 1)%2;
             return AllocationOrder;
