@@ -20,7 +20,7 @@
 
 using namespace llvm;
 
-#define DEBUG_TYPE "misched"
+#define DEBUG_TYPE "vex-misched"
 
 /// Platform-specific modifications to DAG.
 void NewVEXVLIWMachineScheduler::postprocessDAG() {

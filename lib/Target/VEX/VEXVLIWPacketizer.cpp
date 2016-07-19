@@ -60,7 +60,6 @@ public:
     void getAnalysisUsage(AnalysisUsage &AU) const override {
         AU.setPreservesCFG();
         AU.addRequired<MachineDominatorTree>();
-        //AU.addRequired<MachineBranchProbabilityInfo>();
         AU.addPreserved<MachineDominatorTree>();
         AU.addRequired<MachineLoopInfo>();
         AU.addPreserved<MachineLoopInfo>();
@@ -69,7 +68,6 @@ public:
     }
 
     bool runOnMachineFunction(MachineFunction &MF) override;
-
 };
 
 
@@ -85,23 +83,9 @@ class VEXPacketizerList : public VLIWPacketizerList {
     const InstrItineraryData *II;
     TargetMachine &TM;
 
-    // Circular buffer for the allocation of SPMs,
-    // such that we can store data more uniformly.
-//    unsigned AllocationIndex;
-
-//    std::map<unsigned, unsigned>
-
     bool isStoreSPM(MachineBasicBlock::iterator Inst);
     bool isLoadSPM(MachineBasicBlock::iterator Inst);
     bool isLoadSPM(unsigned Opcode);
-//    void analyzeSPMInstruction(MachineInstr *MI);
-//    void analyzeVariableConditions(MachineInstr *MI);
-
-//    unsigned FindVariable(MachineBasicBlock::iterator MI);
-//    int FindVariableThroughDefinition(MachineBasicBlock::iterator MI);
-
-//    unsigned getSPMOpcode(unsigned Opcode, unsigned Lane);
-//    void ReplaceSPMInstruction(MachineInstr *MI);
 
 public:
     VEXPacketizerList(TargetMachine &TM,
@@ -212,63 +196,6 @@ void VEXPacketizerList::reserveResourcesForLongImmediate (MachineBasicBlock::ite
     }
 }
 
-//unsigned VEXPacketizerList::FindVariable(MachineBasicBlock::iterator MI) {
-
-//    for (unsigned i = 0, e = Variables.size(); i != e; ++i) {
-//        std::vector<MachineBasicBlock::iterator> Insts = Variables[i].getMemoryInstructions();
-
-//        for (unsigned j = 0, endj = Insts.size(); j != endj; ++j) {
-//            if (Insts[j] == MI) {
-//                return i;
-//            }
-//        }
-//    }
-//    return -1;
-//}
-
-//void VEXPacketizerList::analyzeSPMInstruction(MachineInstr *MI) {
-
-//    unsigned VariablePosition;
-//    if ((VariablePosition = FindVariable(MI)) < 0)
-//        llvm_unreachable("Error finding variable.");
-
-//    SPMVariable &Var = Variables[VariablePosition];
-
-//    DEBUG(dbgs() << "Variable Name is: " <<  Var.getName() << "\n");
-
-//    unsigned IssueWidth = II->SchedModel.IssueWidth;
-
-//    DEBUG(dbgs() << " We may use: ");
-
-//    std::vector<unsigned> SPMs;
-//    if (Var.isNotAllocated()) {
-////        SPMs = getAllocationPriorityForSPMs(Var.getMaximumSPMs(IssueWidth));
-//        Var.setMemoryUnits(SPMs);
-//        for (unsigned i : SPMs)
-//          DEBUG(dbgs() << "SPM " << i << "\n");
-//    } /*else {
-//        unsigned MemUnit = Var.getMemoryUnit();
-//        DEBUG(dbgs() << MemUnit << "\n");
-//        DEBUG(dbgs() << "SPM was already allocated " << Var.getMemoryUnit() << "\n");
-//    }*/
-
-//    unsigned MemUnit = Var.getMemoryUnit();
-//    DEBUG(dbgs() << MemUnit << "\n");
-
-//}
-
-//void VEXPacketizerList::ReplaceSPMInstruction(MachineInstr *MI) {
-
-//    unsigned VariablePosition;
-//    if ((VariablePosition = FindVariable(MI)) < 0)
-//        llvm_unreachable("Error finding variable.");
-
-//    SPMVariable &Var = Variables[VariablePosition];
-
-
-//}
-
-
 // This function is extremely important when Packetizing Instructions
 // First, we need to check if we should insert Bubbles (NoOps Instructions)
 // Multiple Noops might be necessary, in case we have high-latency instructions
@@ -339,17 +266,6 @@ MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
             else
                 continue;
         }
-
-
-    // TODO: Will Variable Definition always be like this?
-    // Probably not when we have function calls.
-//    if (MI->getOpcode() == VEX::MOVi && MI->getOperand(1).isGlobal())
-//        analyzeVariableConditions(MI);
-
-    // Handles SPM Instructions
-//    if (isStoreSPM(MI) || isLoadSPM(MI)) {
-//        analyzeSPMInstruction(MI);
-//    }
 
     // Allocate Resource
     VLIWPacketizerList::addToPacket(MI);
@@ -546,6 +462,15 @@ bool VEXPacketizer::runOnMachineFunction(MachineFunction &MF) {
             RegionEnd = I;
         }
     }
+    
+    const VEXSubtarget* Subtarget = &MF.getSubtarget<VEXSubtarget>();
+    BBsInfo* SchedBBs = Subtarget->getSchedBBHeights();
+    
+    for (MachineFunction::iterator MBB = MF.begin(), MBBe = MF.end();
+         MBB != MBBe; ++MBB) {
+        SchedBBs->BBInfo[MBB->getName()] = MBB->size() - 1;
+    }
+    
     return true;
 
 }
