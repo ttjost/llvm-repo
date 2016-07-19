@@ -739,7 +739,6 @@ void VEXDataReuseTracking::EvaluateVariables() {
         unsigned LoopDepth;
         
         std::set<MachineLoop *> LoopsInFunction;
-        bool resetAddressInLoop;
 
         for (auto BB : BBsInVar) {
             MachineLoop *loop = MLI->getLoopFor(BB);
@@ -1306,9 +1305,9 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                         ++SI;
 
                     assert(*(SI) != MBB && "Cannot be the same BB");
-
+                    DEBUG((*SI)->dump());
+                    
                     MachineBasicBlock::iterator LastNonTerminatorInstr = (*SI)->getLastNonDebugInstr();
-                    (*SI)->dump();
                     while (LastNonTerminatorInstr->isTerminator() && LastNonTerminatorInstr != (*SI)->begin()) {
                         --LastNonTerminatorInstr;
                     }
