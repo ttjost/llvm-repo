@@ -46,7 +46,7 @@ void VEXInstPrinter::printInst(const MCInst *mi, raw_ostream &O,
             for (unsigned i = 0, e = mi->getNumOperands();
                  i != e ; ++i){
                 const MCInst *inst = mi->getOperand(i).getInst();
-                
+
                 if (inst->getOpcode() == VEX::CALL || inst->getOpcode() == VEX::ICALL)
                     printCallDirective(inst, O);
                 else if (inst->getOpcode() == VEX::RET)
@@ -112,21 +112,52 @@ void VEXInstPrinter::printInst(const MCInst *mi, raw_ostream &O,
 }
 
 void VEXInstPrinter::printReturnDirective(const MCInst *MI, raw_ostream &O) {
-    O << ".return ret($r0.3:s32)\n";
+    O << ".return ret(";
+    unsigned numOperands = MI->getOperand(MI->getNumOperands()-1).getImm();
+
+    unsigned startReg = 3;
+    int i;
+    for (i = 0; i < numOperands - 1; ++i) {
+        O << "$r0." << i+startReg << ":u32,";
+    }
+    O << "$r0." << i+startReg << ":u32)\n";
 }
 
 void VEXInstPrinter::printCallDirective(const MCInst *MI, raw_ostream &O) {
     O << ".call ";
-    //printOperand(MI, 0, O);
+    unsigned indexReturn;
     if (MI->getOperand(0).isExpr()) {
+        indexReturn = 1;
         const MCExpr *Expr = MI->getOperand(0).getExpr();
         const MCSymbolRefExpr *SRE = dyn_cast<MCSymbolRefExpr>(Expr);
         O << SRE->getSymbol().getName();
     } else {
+        indexReturn = 0;
         O << "$l0.0";
     }
-    
-    O << ", caller, arg($r0.3:u32, $r0.4:u32, $r0.5:u32, $r0.6:u32, $r0.7:u32, $r0.8:u32, $r0.9:u32, $r0.10:u32), ret()\n";
+
+    O << ", caller, arg(";
+    if (indexReturn < MI->getNumOperands()) {
+        unsigned numOperands = MI->getOperand(indexReturn).getImm();
+        unsigned startReg = 3;
+        int i;
+        for (i = 0; i < numOperands - 1; ++i) {
+            O << "$r0." << i+startReg << ":u32,";
+        }
+        O << "$r0." << i+startReg << ":u32";
+        ++indexReturn;
+    }
+    O << "), ret(";
+    if (indexReturn < MI->getNumOperands()) {
+        unsigned numOperands = MI->getOperand(indexReturn).getImm();
+        unsigned startReg = 3;
+        int i;
+        for (i = 0; i < numOperands - 1; ++i) {
+            O << "$r0." << i+startReg << ":u32,";
+        }
+        O << "$r0." << i+startReg << ":u32";
+    }
+    O << ")\n";
 }
 
 

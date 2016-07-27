@@ -37,7 +37,9 @@ namespace llvm {
         VEXMCInstLower(VEXAsmPrinter &asmprinter);
         void Initialize(MCContext* C);
         void Lower(const MachineInstr *MI, MCInst &OutMI,
-                   MCInst &InBundleMI, bool isInsideBundle) const;
+                   MCInst &InBundleMI, bool isInsideBundle,
+                   unsigned numValArgument = 0,
+                   unsigned numValReturn = 0) const;
         MCOperand LowerOperand(const MachineOperand &MO, unsigned offset = 0) const;
     };
 }

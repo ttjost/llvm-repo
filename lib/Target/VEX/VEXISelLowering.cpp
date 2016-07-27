@@ -90,7 +90,9 @@ const char *VEXTargetLowering::getTargetNodeName(unsigned Opcode) const {
 //@VEXTargetLowering
 VEXTargetLowering::VEXTargetLowering(const TargetMachine &TM,
                                      const VEXSubtarget &STI)
-: TargetLowering(TM), Subtarget(STI){
+: TargetLowering(TM), Subtarget(STI),
+    FunctionArguments(make_unique<FunctionInfo>()),
+    FunctionReturns(make_unique<FunctionInfo>()) {
     //- Set .align 2
     // It will emit .align 2 later
       setMinFunctionAlignment(1);
@@ -99,6 +101,34 @@ VEXTargetLowering::VEXTargetLowering(const TargetMachine &TM,
     
     addRegisterClass(MVT::i32, &VEX::GPRegsRegClass);
     addRegisterClass(MVT::i1, &VEX::BrRegsRegClass);
+
+
+    // *************************************************
+    // Single-precision floating-point arithmetic.
+    setLibcallName(RTLIB::ADD_F32, "float32_add");
+    setLibcallName(RTLIB::SUB_F32, "float32_sub");
+    setLibcallName(RTLIB::MUL_F32, "float32_mul");
+    setLibcallName(RTLIB::DIV_F32, "float32_div");
+
+    // Double-precision floating-point arithmetic.
+//    setLibcallName(RTLIB::ADD_F64, "__adddf3vfp");
+//    setLibcallName(RTLIB::SUB_F64, "__subdf3vfp");
+//    setLibcallName(RTLIB::MUL_F64, "__muldf3vfp");
+//    setLibcallName(RTLIB::DIV_F64, "__divdf3vfp");
+
+    setLibcallName(RTLIB::FPEXT_F32_F64, "float32_to_float64");
+//    setLibcallName(RTLIB::FPEXT_F16_F32, "float64_to_float32");
+
+    // Single-precision comparisons.
+    setLibcallName(RTLIB::OEQ_F32, "__eqsf2vfp");
+    setLibcallName(RTLIB::UNE_F32, "__nesf2vfp");
+    setLibcallName(RTLIB::OLT_F32, "__ltsf2vfp");
+    setLibcallName(RTLIB::OLE_F32, "__lesf2vfp");
+    setLibcallName(RTLIB::OGE_F32, "__gesf2vfp");
+    setLibcallName(RTLIB::OGT_F32, "__gtsf2vfp");
+    setLibcallName(RTLIB::UO_F32,  "__unordsf2vfp");
+    setLibcallName(RTLIB::O_F32,   "__unordsf2vfp");
+    // *************************************************
     
     setOperationAction(ISD::SIGN_EXTEND_INREG, MVT::i1, Expand);
     
@@ -517,7 +547,6 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
     // Get a count of how many bytes are to be pushed on to the stack.
     unsigned NumBytes = ArgCCInfo.getNextStackOffset();
     
-    
     if(IsTailCall) {
         bool StructAttrFlag =
         DAG.getMachineFunction().getFunction()->hasStructRetAttr();
@@ -525,7 +554,7 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
                                                        IsVarArg, IsStructRet,
                                                        StructAttrFlag,
                                                        Outs, OutVals, Ins, DAG);
-        for (unsigned i = 0, e = ArgLocs.size(); i != e; ++i){
+        for (unsigned i = 0, e = ArgLocs.size(); i != e; ++i) {
             CCValAssign &VA = ArgLocs[i];
             if (VA.isMemLoc()) {
                 IsTailCall = false;
@@ -553,6 +582,23 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
     SmallVector<SDValue, 8> MemOpChains;
     SDValue StackPtr =
             DAG.getCopyFromReg(Chain, DL, VEX::Reg1, getPointerTy(DLayout));;
+
+    const GlobalAddressSDNode *GlobalNode = dyn_cast<GlobalAddressSDNode>(Callee);
+    const ExternalSymbolSDNode *ExtSymbNode = dyn_cast<ExternalSymbolSDNode>(Callee);
+
+    if (GlobalNode != nullptr) {
+        if (GlobalNode->getGlobal()->hasName()) {
+            DEBUG(dbgs() << GlobalNode->getGlobal()->getName() << ": "<< ArgLocs.size() << "\n");
+            addFunctionArgument(GlobalNode->getGlobal()->getName().str(), (unsigned)ArgLocs.size(), IsVarArg);
+        } else {
+            DEBUG(dbgs() << "No name: "<< ArgLocs.size() << "\n");
+        }
+    } else {
+        if (ExtSymbNode != nullptr) {
+            DEBUG(dbgs() << ExtSymbNode->getSymbol() << ": "<< ArgLocs.size() << "\n");
+            addFunctionArgument(std::string(ExtSymbNode->getSymbol()), (unsigned)ArgLocs.size(), IsVarArg);
+        }
+    }
 
     for (unsigned I = 0, E = ArgLocs.size(); I != E; ++I){
         CCValAssign &VA = ArgLocs[I];
@@ -720,8 +766,21 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
         InVals.push_back(convertLocVTToValVT(DAG, DL, VA, Chain, RetValue));
     }
 
-    return Chain;
+    if (GlobalNode != nullptr) {
+        if (GlobalNode->getGlobal()->hasName()) {
+            DEBUG(dbgs() << GlobalNode->getGlobal()->getName() << ": "<< RetLocs.size() << "\n");
+            addFunctionReturn(GlobalNode->getGlobal()->getName().str(), (unsigned)RetLocs.size());
+        } else {
+            DEBUG(dbgs() << "No name: "<< RetLocs.size() << "\n");
+        }
+    } else {
+        if (ExtSymbNode != nullptr) {
+            DEBUG(dbgs() << ExtSymbNode->getSymbol() << ": "<< RetLocs.size() << "\n");
+            addFunctionReturn(std::string(ExtSymbNode->getSymbol()), (unsigned)RetLocs.size());
+        }
+    }
 
+    return Chain;
 }
 
 // Copy byVal arg to registers and stack.
@@ -1108,8 +1167,7 @@ VEXTargetLowering::LowerReturn(SDValue Chain,
                                const SmallVectorImpl<SDValue> &OutVals,
                                SDLoc DL, SelectionDAG &DAG) const {
     DEBUG(errs() << "LowerReturn : \n");
-    
-    //DAG.dump();
+
     // CCValAssign - represent the assignment of the return value to a location
     SmallVector<CCValAssign, 16> RVLocs;
     
@@ -1138,12 +1196,15 @@ VEXTargetLowering::LowerReturn(SDValue Chain,
         Flag = Chain.getValue(1);
         RetOps.push_back(DAG.getRegister(VA.getLocReg(), VA.getLocVT()));
     }
-    
+
     RetOps[0] = Chain; // Update Chain.
     
     // Add the flag if we have it.
     if (Flag.getNode())
         RetOps.push_back(Flag);
+
+    DEBUG(dbgs() << DAG.getMachineFunction().getName().str() << ": "<< RVLocs.size() << "\n");
+    addFunctionReturn(DAG.getMachineFunction().getName().str(), (unsigned)RVLocs.size());
     
     return DAG.getNode(VEXISD::PSEUDO_RET, DL, MVT::Other, RetOps);
 }

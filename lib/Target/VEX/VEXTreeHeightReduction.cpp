@@ -101,15 +101,28 @@ void VEXTreeHeightReductionPass::computeLeaves() {
          it != HeightsByInstrOrder.end(); ++it) {
         
         Instruction *I = it->first;
-        
-        Instruction *FirstOp = dyn_cast<Instruction>(I->getOperand(0));
-        Instruction *SecondOp = dyn_cast<Instruction>(I->getOperand(1));
-        
+
+        DEBUG(dbgs() << "***** Num operands " << I->getNumOperands());
+        DEBUG(I->dump());
+        DEBUG(dbgs() << "***** Num operands " << I->getNumOperands());
+
+        Instruction *FirstOp;
+
+        if (I->getNumOperands() > 0)
+             FirstOp = dyn_cast<Instruction>(I->getOperand(0));
+        else
+            continue;
+
+        Instruction *SecondOp;
+
+        if (I->getNumOperands() > 1)
+             SecondOp = dyn_cast<Instruction>(I->getOperand(1));
+
         if (FirstOp) {
             if (HeightsByInstrOrder.find(FirstOp) == HeightsByInstrOrder.end()) {
                 HeightsByInstrOrder[FirstOp] = 0;
                 
-                DEBUG(dbgs() << "Instruction: ");
+                DEBUG(dbgs() << "First Op Instruction: ");
                 DEBUG(FirstOp->dump());
             }
         }
@@ -118,8 +131,7 @@ void VEXTreeHeightReductionPass::computeLeaves() {
             if (HeightsByInstrOrder.find(SecondOp) == HeightsByInstrOrder.end()) {
                 HeightsByInstrOrder[SecondOp] = 0;
 
-
-                DEBUG(dbgs() << "Instruction: ");
+                DEBUG(dbgs() << "Second Op Instruction: ");
                 DEBUG(SecondOp->dump());
             }
         }
@@ -183,8 +195,13 @@ void VEXTreeHeightReductionPass::computeNodes(BasicBlock &BB) {
 void VEXTreeHeightReductionPass::computeHeight(Instruction* I) {
     
     unsigned max = 0;
-    Instruction *FirstOp = dyn_cast<Instruction>(I->getOperand(0));
+    Instruction *FirstOp;
     Instruction *SecondOp;
+
+    if (I->getNumOperands() > 0)
+         FirstOp = dyn_cast<Instruction>(I->getOperand(0));
+    else
+         FirstOp = nullptr;
     
     if (I->getNumOperands() > 1)
         SecondOp = dyn_cast<Instruction>(I->getOperand(1));

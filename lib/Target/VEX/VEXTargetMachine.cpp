@@ -15,6 +15,7 @@
 #include "VEXTargetMachine.h"
 #include "VEX.h"
 #include "VEXVLIWPacketizer.cpp"
+#include "VEXSchedulerMonitor.cpp"
 #include "VEXModifyBranches.cpp"
 #include "VEXMachineScheduler.h"
 #include "HexagonMachineScheduler.h"
@@ -40,7 +41,7 @@ cl::opt<bool> EnableSPMs("enable-spms",
                                 cl::desc("Enable Code Generation for ScratchPad Memories"));
 
 cl::opt<bool> UseHexagonScheduler("enable-hexagonsched",
-                                cl::Hidden, cl::init(false),
+                                cl::Hidden, cl::init(true),
                                 cl::desc("Enable Hexagon Scheduler"));
 
 cl::opt<bool> EnableTHR("enable-thr",
@@ -224,6 +225,7 @@ void VEXPassConfig::addPreEmitPass() {
     addPass(createVEXModifyBranchesPass(getVEXTargetMachine()));
     //if (EnableVLIWScheduling)
         addPass(createVEXPacketizer(EnableVLIWScheduling, getVEXTargetMachine()), false);
+        addPass(createSchedulerMonitor(getVEXTargetMachine()));
 }
 
 TargetPassConfig *VEXTargetMachine::createPassConfig(PassManagerBase &PM){

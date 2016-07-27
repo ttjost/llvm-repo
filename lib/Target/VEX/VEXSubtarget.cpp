@@ -33,16 +33,18 @@ using namespace llvm;
 //#include "VEXSubtargetInfo.cpp"
 #include "VEXGenSubtargetInfo.inc"
 
+
 static cl::opt<bool>
 EnableVEXCalls("vex-calls", cl::Hidden,
                cl::desc("VEX Call: use stack only to pass arguments."),
                cl::init(false));
 
-static cl::opt<bool> DisableVEXMISched("disable-vex-misched",
-                                       cl::Hidden, cl::ZeroOrMore, cl::init(true),
+cl::opt<bool> DisableVEXMISched("disable-vex-misched",
+                                       cl::Hidden, cl::ZeroOrMore, cl::init(false),
                                        cl::desc("Disable VEX MI Scheduling"));
 
 extern cl::opt<bool> GenericBinary;
+
 
 extern bool FixGlobalBaseReg;
 
@@ -114,8 +116,6 @@ VEXSubtarget &VEXSubtarget::initializeSubtargetDependencies(StringRef CPU,
 }
 
 bool VEXSubtarget::enableMachineScheduler() const {
-    if (DisableVEXMISched)
-        return false;
     return true;
 }
 

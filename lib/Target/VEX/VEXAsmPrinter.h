@@ -55,6 +55,9 @@ class LLVM_LIBRARY_VISIBILITY VEXAsmPrinter : public AsmPrinter {
     
     std::set<std::string> FunctionsCalled;
 
+    FunctionInfo* FunctionsArguments;
+    FunctionInfo* FunctionsReturns;
+
 public:
 
     const VEXSubtarget *Subtarget;
@@ -62,7 +65,12 @@ public:
     VEXMCInstLower MCInstLowering;
 
     VEXAsmPrinter(TargetMachine &TM, std::unique_ptr<MCStreamer> Streamer)
-        : AsmPrinter(TM, std::move(Streamer)), MCInstLowering(*this) {}
+        : AsmPrinter(TM, std::move(Streamer)), MCInstLowering(*this) {
+
+        Subtarget = static_cast<VEXTargetMachine *>(&TM)->getSubtargetImpl();
+        FunctionsArguments = Subtarget->getTargetLowering()->getFunctionArguments();
+        FunctionsReturns = Subtarget->getTargetLowering()->getFunctionReturns();
+    }
 
     virtual const char *getPassName() const{
         return "VEX Assembly Printer";

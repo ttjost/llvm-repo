@@ -62,7 +62,7 @@ def: Proc<"simple-8issue", Simple8IssueModel, []>;
 
 def: Proc<"simple-4issue-4mem", Simple4Issue4MemModel, []>;
 def: Proc<"simple-8issue-4mem", Simple8Issue4MemModel, []>;
-def: Proc<"simple-8issue-8mem", Simple8Issue8MemModel, []>;
+def: Proc<"simple-8issue-max", Simple8Issue8MemModel, []>;
 
 def: Proc<"simple-8issue-2mem", Simple8Issue2MemModel, []>;
 

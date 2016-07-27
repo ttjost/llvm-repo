@@ -20,6 +20,8 @@
 
 using namespace llvm;
 
+extern cl::opt<bool> DisableVEXMISched;
+
 #define DEBUG_TYPE "vex-misched"
 
 /// Platform-specific modifications to DAG.
@@ -180,10 +182,26 @@ void NewVEXVLIWMachineScheduler::schedule() {
 
   initQueues(TopRoots, BotRoots);
 
+  const VEXSubtarget *STI = &MF.getSubtarget<VEXSubtarget>();
+  BBsInfo* OptBBs = STI->getOptBBHeights();
+
+  for (unsigned su = 0, e = SUnits.size(); su != e; ++su) {
+    if (OptBBs->BBInfo.find(SUnits[su].getInstr()->getParent()->getName()) != OptBBs->BBInfo.end()) {
+      if (OptBBs->BBInfo[SUnits[su].getInstr()->getParent()->getName()] < SUnits[su].getHeight() + 1) {
+        OptBBs->BBInfo[SUnits[su].getInstr()->getParent()->getName()] = SUnits[su].getHeight() + 1;
+      }
+    } else {
+      OptBBs->BBInfo[SUnits[su].getInstr()->getParent()->getName()] = SUnits[su].getHeight() + 1;
+    }
+  }
+
+  if (DisableVEXMISched)
+      return;
+
   bool IsTopNode = false;
   while (CurrentTop != CurrentBottom) {
 
-      SUnit *SU = SchedImpl->pickNode(IsTopNode);
+    SUnit *SU = SchedImpl->pickNode(IsTopNode);
 
     if (!checkSchedLimit())
       break;
@@ -196,15 +214,6 @@ void NewVEXVLIWMachineScheduler::schedule() {
     SchedImpl->schedNode(SU, IsTopNode);
   }
   assert(CurrentTop == CurrentBottom && "Nonempty unscheduled zone.");
-
-  const VEXSubtarget *STI = &MF.getSubtarget<VEXSubtarget>();
-
-  BBsInfo* OptBBs = STI->getOptBBHeights();
-
-    for (auto BBInfo : OptBBs->BBInfo) {
-        DEBUG (dbgs() << "BB: " << BBInfo.first << "\n");
-        DEBUG (dbgs() << "Height: " << BBInfo.second << "\n");
-    }
 
   placeDebugValues();
 }
@@ -687,19 +696,6 @@ SUnit *NewVEXConvergingVLIWScheduler::pickNode(bool &IsTopNode) {
 
   DEBUG(dbgs() << "***********\n\t"; SU->dump(DAG));
   DEBUG(dbgs() << "Height: " << SU->getHeight() << "\n***********");
-
-  const VEXSubtarget *STI = &DAG->MF.getSubtarget<VEXSubtarget>();
-
-  BBsInfo* OptBBs = STI->getOptBBHeights();
-
-    if (OptBBs->BBInfo.find(SU->getInstr()->getParent()->getName()) != OptBBs->BBInfo.end()) {
-        if (OptBBs->BBInfo[SU->getInstr()->getParent()->getName()] < SU->getHeight()) {
-            OptBBs->BBInfo[SU->getInstr()->getParent()->getName()] = SU->getHeight();
-        }
-    } else {
-        SU->getInstr()->dump();
-        OptBBs->BBInfo[SU->getInstr()->getParent()->getName()] = SU->getHeight();
-    }
 
   if (SU->isTopReady())
     Top.removeReady(SU);

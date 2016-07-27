@@ -93,7 +93,9 @@ MCOperand VEXMCInstLower::LowerOperand(const MachineOperand &MO,
 void VEXMCInstLower::Lower(const MachineInstr *MI,
                            MCInst &OutMI,
                            MCInst &InBundleMI,
-                           bool isInsideBundle) const{
+                           bool isInsideBundle,
+                           unsigned numValArgument,
+                           unsigned numValReturn) const{
     DEBUG(errs() << "MCInstLower::Lower\n");
 
     InBundleMI.setOpcode(MI->getOpcode());
@@ -104,6 +106,18 @@ void VEXMCInstLower::Lower(const MachineInstr *MI,
         
         if(MCOp.isValid())
             InBundleMI.addOperand(MCOp);
+    }
+
+    if (numValArgument != 0) {
+        MachineOperand MO = MachineOperand::CreateImm(numValArgument);
+        MCOperand MCOp = LowerOperand(MO);
+        InBundleMI.addOperand(MCOp);
+    }
+
+    if (numValReturn != 0) {
+        MachineOperand MO = MachineOperand::CreateImm(numValReturn);
+        MCOperand MCOp = LowerOperand(MO);
+        InBundleMI.addOperand(MCOp);
     }
 
     if (isInsideBundle) {

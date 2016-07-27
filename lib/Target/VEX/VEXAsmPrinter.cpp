@@ -83,15 +83,30 @@ void VEXAsmPrinter::EmitInstruction(const MachineInstr *MI){
                 I->isImplicitDef()) {
                 continue;
             } else {
+                unsigned numValReturn = 0;
+                unsigned numValArgument = 0;
+
                 if (I->isCall()) {
-                    if (I->getOperand(0).isGlobal())
+                    std::string FunctionName;
+
+                    if (I->getOperand(0).isGlobal()) {
                         FunctionsCalled.insert(I->getOperand(0).getGlobal()->getName().str());
-                    else if (I->getOperand(0).isSymbol())
+                        FunctionName = I->getOperand(0).getGlobal()->getName().str();
+                    } else if (I->getOperand(0).isSymbol()) {
                         FunctionsCalled.insert(std::string(I->getOperand(0).getSymbolName()));
+                        FunctionName = std::string(I->getOperand(0).getSymbolName());
+                    }
+                    std::multimap<std::string, unsigned>::iterator it = FunctionsArguments->info.find(FunctionName);
+                    numValArgument = (*it).second;
+                    FunctionsArguments->info.erase(it);
+                    numValReturn = FunctionsReturns->info.find(FunctionName)->second;
+                } else if (I->isReturn()) {
+                    numValReturn = FunctionsReturns->info.find(MF->getName().str())->second;
                 }
+
                 MCInst Tmp;
                 TmpInst.push_back(Tmp);
-                MCInstLowering.Lower(I, TmpInst0, TmpInst[i++], I->isInsideBundle());
+                MCInstLowering.Lower(I, TmpInst0, TmpInst[i++], I->isInsideBundle(), numValArgument, numValReturn);
             }
         }
         for (unsigned i = 0, e = TmpInst0.getNumOperands();
@@ -107,13 +122,28 @@ void VEXAsmPrinter::EmitInstruction(const MachineInstr *MI){
         }
         OutStreamer->EmitInstruction(TmpInst0, getSubtargetInfo());
     } else {
+        unsigned numValReturn = 0;
+        unsigned numValArgument = 0;
+
         if (MI->isCall()) {
-            if (MI->getOperand(0).isGlobal())
+            std::string FunctionName;
+
+            if (MI->getOperand(0).isGlobal()) {
                 FunctionsCalled.insert(MI->getOperand(0).getGlobal()->getName().str());
-            else if (MI->getOperand(0).isSymbol())
+                FunctionName = MI->getOperand(0).getGlobal()->getName().str();
+            } else if (MI->getOperand(0).isSymbol()) {
                 FunctionsCalled.insert(std::string(MI->getOperand(0).getSymbolName()));
+                FunctionName = std::string(MI->getOperand(0).getSymbolName());
+            }
+            std::multimap<std::string, unsigned>::iterator it = FunctionsArguments->info.find(FunctionName);
+            numValArgument = (*it).second;
+            FunctionsArguments->info.erase(it);
+            numValReturn = FunctionsReturns->info.find(FunctionName)->second;
+        } else if (MI->isReturn()) {
+            numValReturn = FunctionsReturns->info.find(MF->getName().str())->second;
         }
-        MCInstLowering.Lower(MI, TmpInst0, TmpInst0, false);
+
+        MCInstLowering.Lower(MI, TmpInst0, TmpInst0, false, numValReturn, numValArgument);
         OutStreamer->EmitInstruction(TmpInst0, getSubtargetInfo());
     }
 

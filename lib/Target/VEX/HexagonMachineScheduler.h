@@ -35,6 +35,7 @@
 using namespace llvm;
 
 namespace llvm {
+
 //===----------------------------------------------------------------------===//
 // NewVEXConvergingVLIWScheduler - Implementation of the standard
 // MachineSchedStrategy.
