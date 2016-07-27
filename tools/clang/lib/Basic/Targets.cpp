@@ -7087,6 +7087,9 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple) {
   default:
     return nullptr;
 
+  case llvm::Triple::vex:
+    return new VEXTargetInfo(Triple);
+
   case llvm::Triple::xcore:
     return new XCoreTargetInfo(Triple);
 
