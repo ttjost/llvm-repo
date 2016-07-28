@@ -369,6 +369,7 @@ static Triple::ArchType parseArch(StringRef ArchName) {
     .Case("shave", Triple::shave)
     .Case("wasm32", Triple::wasm32)
     .Case("wasm64", Triple::wasm64)
+    .Case("vex", Triple::vex)
     .Default(Triple::UnknownArch);
 }
 
