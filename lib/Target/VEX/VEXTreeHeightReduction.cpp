@@ -97,6 +97,8 @@ void VEXTreeHeightReductionPass::computeLeaves() {
     
     DEBUG(dbgs() << "***** Computing Leaves *****\n");
     
+    std::map<Instruction *, unsigned> tempHeightsByInstrOrder;
+
     for (std::map<Instruction *, unsigned>::iterator it = HeightsByInstrOrder.begin();
          it != HeightsByInstrOrder.end(); ++it) {
         
@@ -120,7 +122,7 @@ void VEXTreeHeightReductionPass::computeLeaves() {
 
         if (FirstOp) {
             if (HeightsByInstrOrder.find(FirstOp) == HeightsByInstrOrder.end()) {
-                HeightsByInstrOrder[FirstOp] = 0;
+                tempHeightsByInstrOrder[FirstOp] = 0;
                 
                 DEBUG(dbgs() << "First Op Instruction: ");
                 DEBUG(FirstOp->dump());
@@ -129,13 +131,19 @@ void VEXTreeHeightReductionPass::computeLeaves() {
         
         if (SecondOp) {
             if (HeightsByInstrOrder.find(SecondOp) == HeightsByInstrOrder.end()) {
-                HeightsByInstrOrder[SecondOp] = 0;
+                tempHeightsByInstrOrder[SecondOp] = 0;
 
                 DEBUG(dbgs() << "Second Op Instruction: ");
                 DEBUG(SecondOp->dump());
             }
         }
     }
+
+    for (std::map<Instruction *, unsigned>::iterator it = tempHeightsByInstrOrder.begin();
+         it != tempHeightsByInstrOrder.end(); ++it) {
+        HeightsByInstrOrder[it->first] = it->second;
+    }
+
     DEBUG(dbgs() << "***** Finalized Computing Leaves *****\n");
     
 }
@@ -157,7 +165,7 @@ void VEXTreeHeightReductionPass::computeNode(Instruction* I) {
         FirstOp = dyn_cast<Instruction>(I->getOperand(0));
         SecondOp = dyn_cast<Instruction>(I->getOperand(1));
         
-        if (FirstOp && FirstOp) {
+        if (FirstOp) {
             if (isValidOperation(FirstOp)) {
                 isInValidChain = true;
             }
@@ -418,12 +426,9 @@ bool VEXTreeHeightReductionPass::runOnBasicBlock(BasicBlock &BB) {
     // There is no way to improve over trees with 3 or less nodes.
     // We just leave the way it is.
     if (HeightsByLevel.size() > 5) {
-        
-        FindRoots();
-        
+        FindRoots();   
         return true;
     }
-    
     
     return false;
 }
