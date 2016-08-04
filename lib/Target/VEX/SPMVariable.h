@@ -17,6 +17,7 @@
 #include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/IR/GlobalValue.h"
 #include <map>
+#include <set>
 
 namespace llvm {
 
@@ -65,7 +66,10 @@ class SPMVariable {
     bool LoadsRequired;
 
     int MinimumOffset;
-    
+    unsigned totalInnerLoops;
+    unsigned MinimumDistance;
+    unsigned MaximumDistance;
+
     unsigned ConsecutiveDataPerSPM;
     unsigned OffsetsPerBB;
     unsigned NumUnits;
@@ -197,6 +201,7 @@ public:
     
     std::vector<unsigned> getMemories() const { return Memories; }
     
+    int getTotalInnerLoops() const  { return totalInnerLoops; }
     int getMinimumOffset() const  { return MinimumOffset; }
     unsigned getNumUnits() const { return NumUnits; }
     unsigned getInitialAddress() const { return InitialAddress; }

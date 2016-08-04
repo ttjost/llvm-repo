@@ -732,6 +732,7 @@ void VEXDataReuseTracking::EvaluateVariables() {
     unsigned i = 0;
     for (DataReuseInfo::iterator Var = DataInfo->begin(), VarE = DataInfo->end();
          Var != VarE; ++Var, ++i) {
+        Var->CalculateOffsetDistribution();
         Var->UpdateOffsetInfo();
         std::vector<MachineBasicBlock *> BBsInVar = Var->getBasicblocks();
 
@@ -882,9 +883,9 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, DataReuseInfo::it
     unsigned Temp = Variable->getConsecutiveDataPerSPM()*Variable->getDataSize();
     
     if (MaxOffsetPerBB > 1) {
-        ExternalLoopCounter = LoopCounterPreamble/MaxOffsetPerBB;
-        InternalLoopCounter = MaxOffsetPerBB/NumMemories;
-        
+        ExternalLoopCounter = LoopCounterPreamble/MaxOffsetPerBB/2;
+        InternalLoopCounter = MaxOffsetPerBB/NumMemories*2;
+
         if (Variable->getConsecutiveDataPerSPM() > 1) {
             InternalOffset = Temp;
         } else {
@@ -913,6 +914,9 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, DataReuseInfo::it
     
     while (LastNonTerminatorInstr->isTerminator() && LastNonTerminatorInstr != MBB->begin())
         --LastNonTerminatorInstr;
+
+//    if (LastNonTerminatorInstr->isPHI())
+//        ++LastNonTerminatorInstr;
     
     MachineInstr *Inst = BuildMI(*MBB, LastNonTerminatorInstr, DebugLoc(),
                            TII->get(VEX::MOVi),
@@ -941,6 +945,10 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, DataReuseInfo::it
     if (LastNonTerminatorInstr->isTerminator()) {
         while (LastNonTerminatorInstr->isTerminator() && LastNonTerminatorInstr != PreambleMBB->begin())
             --LastNonTerminatorInstr;
+
+//        if (LastNonTerminatorInstr->isPHI())
+//            ++LastNonTerminatorInstr;
+
     } else {
         LastNonTerminatorInstr = PreambleMBB->end();
     }
@@ -1308,18 +1316,25 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                     DEBUG((*SI)->dump());
                     
                     MachineBasicBlock::iterator LastNonTerminatorInstr = (*SI)->getLastNonDebugInstr();
-                    while (LastNonTerminatorInstr->isTerminator() && LastNonTerminatorInstr != (*SI)->begin()) {
+
+                    while (LastNonTerminatorInstr->isTerminator() &&
+                           (LastNonTerminatorInstr != (*SI)->begin() ||
+                           !LastNonTerminatorInstr->isPHI())) {
                         --LastNonTerminatorInstr;
                     }
 
-                    MachineInstr* Inst;
+                    MachineBasicBlock::iterator InstMOVi;
 
-                    if (LastNonTerminatorInstr != (*SI)->begin()) {
-                        Inst = BuildMI(**SI, LastNonTerminatorInstr, DebugLoc(),
+                    if (LastNonTerminatorInstr->isPHI() && LastNonTerminatorInstr == (*SI)->getLastNonDebugInstr()) {
+                        InstMOVi = BuildMI(*SI, DebugLoc(),
+                                TII->get(VEX::MOVi),
+                                BaseRegTrue).addImm(0);
+                    } else if (LastNonTerminatorInstr != (*SI)->begin() && LastNonTerminatorInstr != (*SI)->end()) {
+                        InstMOVi = BuildMI(**SI, LastNonTerminatorInstr, DebugLoc(),
                                 TII->get(VEX::MOVi),
                                 BaseRegTrue).addImm(0);
                     } else {
-                        Inst = BuildMI(*SI, DebugLoc(),
+                        InstMOVi = BuildMI(*SI, DebugLoc(),
                                 TII->get(VEX::MOVi),
                                 BaseRegTrue).addImm(0);
                     }
@@ -1327,7 +1342,7 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                     // Terrible hack. Why can't we create more than one MOVi instruction?
                     // If we don't do like this, LLVM crashes, for some uncanny reason.
                     if (MBBs.empty())
-                        LIS->InsertMachineInstrInMaps(Inst);
+                        LIS->InsertMachineInstrInMaps(InstMOVi);
 
                     LastNonTerminatorInstr = MBB->getLastNonDebugInstr();
 
@@ -1335,21 +1350,24 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                         --LastNonTerminatorInstr;
                     }
 
+                    if (LastNonTerminatorInstr->isPHI())
+                        ++LastNonTerminatorInstr;
+
                     // Add PHI Instruction
-                    MachineInstr* Inst2 = BuildMI(*MBB, MBB->getFirstNonPHI(), DebugLoc(), TII->get(VEX::PHI), BaseReg)
+                    MachineInstr* InstPHI = BuildMI(*MBB, MBB->getFirstNonPHI(), DebugLoc(), TII->get(VEX::PHI), BaseReg)
                     .addReg(BaseRegTrue)
                     .addMBB(*SI)
                     .addReg(BaseRegFalse)
                     .addMBB(MBB);
 
-                    LIS->InsertMachineInstrInMaps(Inst2);
+                    LIS->InsertMachineInstrInMaps(InstPHI);
 
                     // Add Instruction for next value
-                    MachineInstr* Inst3 = BuildMI(*MBB, LastNonTerminatorInstr, DebugLoc(), TII->get(VEX::ADDi), BaseRegFalse)
+                    MachineInstr* InstADDi = BuildMI(*MBB, LastNonTerminatorInstr, DebugLoc(), TII->get(VEX::ADDi), BaseRegFalse)
                     .addReg(BaseReg)
-                    .addImm(Var->getMaxOffsetPerBB()/Var->getNumUnits()*Var->getDataSize());
+                    .addImm(Var->getMaxOffsetPerBB()/Var->getNumUnits()*Var->getDataSize()*Var->getTotalInnerLoops());
 
-                    LIS->InsertMachineInstrInMaps(Inst3);
+                    LIS->InsertMachineInstrInMaps(InstADDi);
                 }
                 MBBs.insert(MBB);
             }

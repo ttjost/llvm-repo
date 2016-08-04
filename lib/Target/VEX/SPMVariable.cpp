@@ -166,8 +166,6 @@ unsigned SPMVariable::getMemoryUnit() {
 
 void SPMVariable::CalculateOffsetDistribution() {
     
-    unsigned OffsetDistance = DataSize;
-
     if (MemoryInstructions.empty())
         return;
     
@@ -184,19 +182,45 @@ void SPMVariable::CalculateOffsetDistribution() {
     auto itBegin = SortedOffsets.begin();
     int MinOffset = *itBegin;
     int TempOffset = *itBegin;
-    
+    MinimumDistance = UINT_MAX;
+    MaximumDistance = DataSize;
+    totalInnerLoops = 1;
+
+    unsigned OffsetDistance = DataSize;
+
     for(auto it = ++itBegin; it != SortedOffsets.end(); ++it) {
         
+//        OffsetDistance = std::abs((*it) - TempOffset);
+//        if (OffsetDistance/DataSize > 1) {
+//            if (MinimumDistance > OffsetDistance)
+//                MinimumDistance = OffsetDistance;
+//            if (MaximumDistance < OffsetDistance)
+//                MaximumDistance = OffsetDistance;
+//        }
+//        TempOffset = *it;
         unsigned distance = std::abs((*it) - TempOffset);
-        
+
+        if (MinimumDistance > distance)
+            MinimumDistance = distance;
+        if (MaximumDistance < distance)
+            MaximumDistance = distance;
+
         if (distance/DataSize > 1) {
-            OffsetDistance = (*it) - MinOffset;
+            OffsetDistance = distance;
             break;
+        } else {
+            ++totalInnerLoops;
+            TempOffset = (*it);
         }
-        TempOffset = *it;
     }
-    
+
     ConsecutiveDataPerSPM = OffsetDistance/DataSize;
+
+    if (MaximumDistance != MinimumDistance)
+        ConsecutiveDataPerSPM += (totalInnerLoops-1);
+    else
+        totalInnerLoops = 1; 
+
     MinimumOffset = MinOffset;
     
 }
@@ -241,11 +265,13 @@ void SPMVariable::AddOffset(unsigned Register, unsigned Offset, MachineInstr* In
 void SPMVariable::UpdateOffsetInfo() {
 
     for (unsigned i = 0, e = RegistersAndOffsets.size(); i != e; ++i) {
-        if (RegistersAndOffsets[i].Offsets.size() > OffsetsPerBB)
-            OffsetsPerBB = RegistersAndOffsets[i].Offsets.size();
-
+        if (RegistersAndOffsets[i].Offsets.size() > OffsetsPerBB) {
+            if (MinimumDistance != MaximumDistance)
+                OffsetsPerBB = RegistersAndOffsets[i].Offsets.size()/totalInnerLoops;
+            else
+                OffsetsPerBB = RegistersAndOffsets[i].Offsets.size();
+        }
     }
-//    RegistersAndOffsets.resize(0);
 }
 
 std::vector<MachineBasicBlock *> SPMVariable::getBasicblocks() {
