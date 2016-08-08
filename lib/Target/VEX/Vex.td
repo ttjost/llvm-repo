@@ -54,6 +54,14 @@ def: Proc<"rvex-default", rVEX4IssueModel, []>;
 def: Proc<"rvex-2issue", rVEX2IssueModel, []>;
 def: Proc<"rvex-4issue", rVEX4IssueModel, []>;
 def: Proc<"rvex-8issue", rVEX8IssueModel, []>;
+
+def: Proc<"rvex-2issue-1mem", rVEX2IssueModel, []>;
+def: Proc<"rvex-4issue-1mem", rVEX4IssueModel, []>;
+def: Proc<"rvex-8issue-1mem", rVEX8IssueModel, []>;
+
+def: Proc<"rvex-4issue-2mem", rVEX4Issue2MemModel, []>;
+def: Proc<"rvex-8issue-2mem", rVEX8Issue2MemModel, []>;
+
 def: Proc<"rvex-generic", rVEXGenericModel, []>;
 
 def: Proc<"simple-2issue", Simple2IssueModel, []>;
