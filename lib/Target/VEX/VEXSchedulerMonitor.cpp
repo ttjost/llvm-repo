@@ -48,13 +48,44 @@ public:
 
 bool VEXSchedulerMonitor::runOnMachineFunction(MachineFunction &MF) {
     
+//    const VEXSubtarget* Subtarget = &MF.getSubtarget<VEXSubtarget>();
+//    BBsInfo* SchedBBs = Subtarget->getSchedBBHeights();
+//    
+//    for (MachineFunction::iterator MBB = MF.begin(), MBBe = MF.end();
+//         MBB != MBBe; ++MBB) {
+//        SchedBBs->BBInfo[MBB->getName()] = MBB->size() - 1;
+//    }
+    
     const VEXSubtarget* Subtarget = &MF.getSubtarget<VEXSubtarget>();
     BBsInfo* SchedBBs = Subtarget->getSchedBBHeights();
     
     for (MachineFunction::iterator MBB = MF.begin(), MBBe = MF.end();
          MBB != MBBe; ++MBB) {
-        SchedBBs->BBInfo[MBB->getName()] = MBB->size() - 1;
+        int i = 0;
+        for (MachineBasicBlock::iterator MI = MBB->begin(), MIE = MBB->end();
+             MI != MIE; ++MI) {
+            MachineBasicBlock::instr_iterator I = &*MI;
+            ++I;
+            if (I->isBranch()) {
+                break;
+            }
+            ++i;
+        }
+        SchedBBs->BBInfo[MBB->getName()] = i;
     }
+    
+    BBsInfo* OptBBs = Subtarget->getOptBBHeights();
+    
+    for (auto BBInfo : SchedBBs->BBInfo) {
+        if (BBInfo.first != "(null)") {
+            DEBUG (errs() << "BB: " << BBInfo.first << "\n");
+            DEBUG (errs() << "Opt Height: " <<  OptBBs->BBInfo[BBInfo.first] << "\n");
+            DEBUG (errs() << "Sched Height: " << SchedBBs->BBInfo[BBInfo.first] << "\n\n");
+        }
+    }
+    SchedBBs->BBInfo.clear();
+    OptBBs->BBInfo.clear();
+
     return true;
 }
 

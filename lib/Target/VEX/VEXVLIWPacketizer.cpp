@@ -462,36 +462,6 @@ bool VEXPacketizer::runOnMachineFunction(MachineFunction &MF) {
             RegionEnd = I;
         }
     }
-    
-    const VEXSubtarget* Subtarget = &MF.getSubtarget<VEXSubtarget>();
-    BBsInfo* SchedBBs = Subtarget->getSchedBBHeights();
-    
-    for (MachineFunction::iterator MBB = MF.begin(), MBBe = MF.end();
-         MBB != MBBe; ++MBB) {
-        int i = 0;
-        for (MachineBasicBlock::iterator MI = MBB->begin(), MIE = MBB->end();
-             MI != MIE; ++MI) {
-             MachineBasicBlock::instr_iterator I = &*MI;
-             ++I;
-             if (I->isBranch()) {
-                 break;
-             }
-             ++i;
-        }
-        SchedBBs->BBInfo[MBB->getName()] = i;
-    }
-
-    BBsInfo* OptBBs = Subtarget->getOptBBHeights();
-
-    for (auto BBInfo : SchedBBs->BBInfo) {
-        if (BBInfo.first != "(null)") {
-            DEBUG (dbgs() << "BB: " << BBInfo.first << "\n");
-            DEBUG (dbgs() << "Opt Height: " <<  OptBBs->BBInfo[BBInfo.first] << "\n");
-            DEBUG (dbgs() << "Sched Height: " << SchedBBs->BBInfo[BBInfo.first] << "\n\n");
-        }
-    }
-    SchedBBs->BBInfo.clear();
-    OptBBs->BBInfo.clear();
 
     return true;
 
