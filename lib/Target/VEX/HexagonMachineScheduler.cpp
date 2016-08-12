@@ -187,10 +187,12 @@ void NewVEXVLIWMachineScheduler::schedule() {
 
   for (unsigned su = 0, e = SUnits.size(); su != e; ++su) {
     if (OptBBs->BBInfo.find(SUnits[su].getInstr()->getParent()->getName()) != OptBBs->BBInfo.end()) {
+//        assert(OptBBs->numberOfNodes[SUnits[su].getInstr()->getParent()->getName()] == e + 1 && "Number of instructions changed in BB! This should never happen");
       if (OptBBs->BBInfo[SUnits[su].getInstr()->getParent()->getName()] < SUnits[su].getHeight() + 1) {
         OptBBs->BBInfo[SUnits[su].getInstr()->getParent()->getName()] = SUnits[su].getHeight() + 1;
       }
     } else {
+      OptBBs->numberOfNodes[SUnits[su].getInstr()->getParent()->getName()] = e + 1;
       OptBBs->BBInfo[SUnits[su].getInstr()->getParent()->getName()] = SUnits[su].getHeight() + 1;
     }
   }
@@ -487,6 +489,7 @@ static SUnit *getSingleUnscheduledSucc(SUnit *SU) {
 // heuristic components for cost computation.
 static const unsigned PriorityOne = 200;
 static const unsigned PriorityTwo = 50;
+//static const unsigned PriorityTwo2 = 1000;
 static const unsigned ScaleTwo = 10;
 static const unsigned FactorOne = 2;
 
@@ -544,8 +547,12 @@ int NewVEXConvergingVLIWScheduler::SchedulingCost(ReadyQueue &Q, SUnit *SU,
   ResCount += (NumNodesBlocking * ScaleTwo);
 
   // Factor in reg pressure as a heuristic.
+//  DAG->getBotRPTracker().getPressure().
+//  DAG->getRegionCriticalPSets()
   ResCount -= (Delta.Excess.getUnitInc()*PriorityTwo);
   ResCount -= (Delta.CriticalMax.getUnitInc()*PriorityTwo);
+//  dbgs() << " Delta.Excess = " << Delta.Excess.getUnitInc() << "\n";
+//  dbgs() << " Delta.CriticalMax = " << Delta.CriticalMax.getUnitInc() << "\n";
 
   DEBUG(if (verbose) dbgs() << " Total(" << ResCount << ")");
 

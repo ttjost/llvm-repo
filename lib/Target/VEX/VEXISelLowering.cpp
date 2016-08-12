@@ -226,6 +226,8 @@ VEXTargetLowering::VEXTargetLowering(const TargetMachine &TM,
     setOperationAction(ISD::VAARG, MVT::Other, Expand);
     setOperationAction(ISD::VACOPY, MVT::Other, Expand);
     setOperationAction(ISD::VAEND, MVT::Other, Expand);
+
+    setOperationAction(ISD::DYNAMIC_STACKALLOC, MVT::i32,  Expand);
     
     setOperationAction(ISD::GlobalAddress, MVT::i8, Promote);
     setOperationAction(ISD::GlobalAddress, MVT::i16, Promote);
@@ -243,6 +245,7 @@ VEXTargetLowering::VEXTargetLowering(const TargetMachine &TM,
     // Perform DAG Combination of certain instructions
     setTargetDAGCombine(ISD::SELECT);
 
+    setStackPointerRegisterToSaveRestore(VEX::Reg1);
     //setStackPointerRegisterToSaveRestore(VEX::Reg1);
 
     // This should be enable when we implement the VLIW Packetizer

@@ -62,15 +62,28 @@ bool VEXSchedulerMonitor::runOnMachineFunction(MachineFunction &MF) {
     for (MachineFunction::iterator MBB = MF.begin(), MBBe = MF.end();
          MBB != MBBe; ++MBB) {
         int i = 0;
+        unsigned numberOfInstructions = 0;
         for (MachineBasicBlock::iterator MI = MBB->begin(), MIE = MBB->end();
              MI != MIE; ++MI) {
             MachineBasicBlock::instr_iterator I = &*MI;
+            if (I->isBundle()) {
+                MachineBasicBlock::const_instr_iterator InsideI = I;
+                MachineBasicBlock::const_instr_iterator InsideE = I->getParent()->instr_end();
+
+                unsigned i;
+                for (++InsideI, i = 0; InsideE != I && InsideI->isInsideBundle(); ++InsideI) {
+                    ++numberOfInstructions;
+                }
+            } else {
+                ++numberOfInstructions;
+            }
             ++I;
             if (I->isBranch()) {
                 break;
             }
             ++i;
         }
+        SchedBBs->numberOfNodes[MBB->getName()] = numberOfInstructions;
         SchedBBs->BBInfo[MBB->getName()] = i;
     }
     
@@ -80,7 +93,9 @@ bool VEXSchedulerMonitor::runOnMachineFunction(MachineFunction &MF) {
         if (BBInfo.first != "(null)") {
             DEBUG (errs() << "BB: " << BBInfo.first << "\n");
             DEBUG (errs() << "Opt Height: " <<  OptBBs->BBInfo[BBInfo.first] << "\n");
-            DEBUG (errs() << "Sched Height: " << SchedBBs->BBInfo[BBInfo.first] << "\n\n");
+            DEBUG (errs() << "Opt Number Of Instructions: " <<  OptBBs->numberOfNodes[BBInfo.first] << "\n");
+            DEBUG (errs() << "Sched Height: " << SchedBBs->BBInfo[BBInfo.first] << "\n");
+            DEBUG (errs() << "Sched Number Of Instructions: " << SchedBBs->numberOfNodes[BBInfo.first] << "\n\n");
         }
     }
     SchedBBs->BBInfo.clear();

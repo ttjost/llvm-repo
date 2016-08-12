@@ -29,6 +29,7 @@ namespace llvm{
 
 struct BBsInfo {
     std::map<StringRef, unsigned> BBInfo;
+    std::map<StringRef, unsigned> numberOfNodes;
 };
     
 class StringRef;

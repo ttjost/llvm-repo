@@ -119,7 +119,7 @@ void VEXInstPrinter::printReturnDirective(const MCInst *MI, raw_ostream &O) {
         unsigned startReg = 3;
         int i;
 
-        for (i = 0; i < numOperands - 1; ++i) {
+        for (i = 0; i < numOperands - 1 && i < 8; ++i) {
             O << "$r0." << i+startReg << ":u32,";
         }
         O << "$r0." << i+startReg << ":u32";
@@ -145,7 +145,7 @@ void VEXInstPrinter::printCallDirective(const MCInst *MI, raw_ostream &O) {
         unsigned numOperands = MI->getOperand(indexReturn).getImm();
         unsigned startReg = 3;
         int i;
-        for (i = 0; i < numOperands - 1; ++i) {
+        for (i = 0; i < numOperands - 1 && i < 8; ++i) {
             O << "$r0." << i+startReg << ":u32,";
         }
         O << "$r0." << i+startReg << ":u32";
@@ -156,7 +156,7 @@ void VEXInstPrinter::printCallDirective(const MCInst *MI, raw_ostream &O) {
         unsigned numOperands = MI->getOperand(indexReturn).getImm();
         unsigned startReg = 3;
         int i;
-        for (i = 0; i < numOperands - 1; ++i) {
+        for (i = 0; i < numOperands - 1 && i < 7; ++i) {
             O << "$r0." << i+startReg << ":u32,";
         }
         O << "$r0." << i+startReg << ":u32";

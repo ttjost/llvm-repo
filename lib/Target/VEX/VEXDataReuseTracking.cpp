@@ -753,8 +753,10 @@ void VEXDataReuseTracking::EvaluateVariables() {
                 MaxLoopDepth = LoopDepth;
             }
         }
-        if (Var->getMaxOffsetPerBB() == 1 || (MaxLoopDepth == 1 && LoopsInFunction.size() <= 1)) {
-            DeletedVariables.push_back(i);
+            if (OmitAnnotation) {
+                if (Var->getMaxOffsetPerBB() == 1 || (MaxLoopDepth == 1 && LoopsInFunction.size() <= 1)) {
+                    DeletedVariables.push_back(i);
+            }
         }
     }
 
