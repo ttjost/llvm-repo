@@ -165,15 +165,31 @@ std::pair<bool, SDNode*> VEXDAGToDAGISel::selectNode(SDNode *Node){
 //        break;
             
         case ISD::Constant: {
-            if (Node->getValueType(0) != MVT::i1){
-                DEBUG(errs() << "NOT i1 constant\n");
-                break;
-            } else {
-                DEBUG(errs() << "This is a i1 constant\n");
-                SDValue Reg0 = CurDAG->getRegister(VEX::Reg0, MVT::i32);
-                SDNode* Result = CurDAG->SelectNodeTo(Node, VEX::MTB, Node->getValueType(0), Reg0);
-                return std::make_pair(true, Result);
-            }
+//        if (N->getValueType(0) == MVT::i1) {
+//          SDNode* Result = 0;
+//          int32_t Val = cast<ConstantSDNode>(N)->getSExtValue();
+//          if (Val == -1) {
+//            Result = CurDAG->getMachineNode(Hexagon::TFR_PdTrue, dl, MVT::i1);
+//          } else if (Val == 0) {
+//            Result = CurDAG->getMachineNode(Hexagon::TFR_PdFalse, dl, MVT::i1);
+//          }
+//          if (Result) {
+//            ReplaceUses(N, Result);
+//            return Result;
+//          }
+//        }
+//            if (Node->getValueType(0) != MVT::i1){
+//                DEBUG(errs() << "NOT i1 constant\n");
+//                break;
+//            } else {
+//                DEBUG(errs() << "This is a i1 constant\n");
+//                int32_t Val = cast<ConstantSDNode>(Node)->getSExtValue();
+//                if (Val == 0) {
+//                    SDValue Reg0 = CurDAG->getRegister(VEX::Reg0, MVT::i32);
+//                    SDNode* Result = CurDAG->SelectNodeTo(Node, VEX::MTB, Node->getValueType(0), Reg0);
+//                    return std::make_pair(true, Result);
+//                }
+//            }
         }
         default: break;
     }
