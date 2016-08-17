@@ -173,14 +173,14 @@ int encodeMcu(UINT32 imageFormat, UINT8 outputBuffer[], int k)
 
 	for(i = 0; i < BLOCK_SIZE; ++i)
 	{
-		Temp[i] = (INT16)dataOut[i] * (INT16)256.0;
-		printf("dataOut[%d] = %d\n", i, (INT16)dataOut[i]);
-		printf("%f\n", 256.0);
-		printf("Temp[%d] = %d\n", i, (INT16)dataOut[i] * (INT16)256.0);
+	printf("%f", dataOut[i] * 256.0);	
+	Temp[i] = dataOut[i] * 256.0;
+		printf("Temp[%d] = %d\n", i, Temp[i]);
 	}
 	if(1 == 1)
 	{
 		for(i = 8; i < BLOCK_SIZE; ++i)
+
 		{
 			Temp[i] = 0.0;
 		}
