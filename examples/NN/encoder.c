@@ -96,7 +96,7 @@ int encodeMcu(UINT32 imageFormat, UINT8 outputBuffer[], int k)
 {
 	int i,j;
 	levelShift(Y1);
-	printf("encodemcu: %d\n",k);
+	printf("encodemcu1: %d\n",k);
 
 
 	for (i = 0; i < BLOCK_SIZE; ++i)
@@ -107,6 +107,7 @@ int encodeMcu(UINT32 imageFormat, UINT8 outputBuffer[], int k)
 	//bool isNN = true;
 	
 
+	printf("encodemcu2: %d\n",k);
 
 	int q = 0;
 	
@@ -130,7 +131,7 @@ int encodeMcu(UINT32 imageFormat, UINT8 outputBuffer[], int k)
 
 	layer2[layers[1]-1] = 1;	
 
-
+	printf("encodemcu3: %d\n",k);
 	
 	q = 0;
 	for(i = 0; i < layers[2] - 1; i++)
@@ -155,7 +156,7 @@ int encodeMcu(UINT32 imageFormat, UINT8 outputBuffer[], int k)
 		dataOut[i] = layer3[i];
 	}
 
-
+	printf("encodemcu4: %d\n",k);
 /*original
 	dct(Y1);
 	quantization(Y1, ILqt);
@@ -172,7 +173,10 @@ int encodeMcu(UINT32 imageFormat, UINT8 outputBuffer[], int k)
 
 	for(i = 0; i < BLOCK_SIZE; ++i)
 	{
-		Temp[i] = dataOut[i] * 256.0;
+		Temp[i] = (INT16)dataOut[i] * (INT16)256.0;
+		printf("dataOut[%d] = %d\n", i, (INT16)dataOut[i]);
+		printf("%f\n", 256.0);
+		printf("Temp[%d] = %d\n", i, (INT16)dataOut[i] * (INT16)256.0);
 	}
 	if(1 == 1)
 	{
@@ -182,7 +186,8 @@ int encodeMcu(UINT32 imageFormat, UINT8 outputBuffer[], int k)
 		}
 	}
 
-
+	printf("encodemcu5: %d\n",k);
 	k = huffman(1, outputBuffer, k);
+	printf("encodemcu6: %d\n",k);
 	return k;
 }
