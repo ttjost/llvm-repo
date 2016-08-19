@@ -19,8 +19,13 @@ def CC_VEX_Address : CallingConv<[
   // Handles byval parameters.
   CCIfByVal<CCPassByVal<4, 4>>,
   CCIfType<[i8, i16], CCPromoteToType<i32>>,
+  CCIfSRet<CCAssignToReg<[Reg2]>>,
   CCAssignToReg<[Reg3, Reg4, Reg5, Reg6, Reg7, Reg8, Reg9, Reg10]>,
-  CCAssignToStack<4, 4>
+  CCAssignToStack<4, 4>,
+
+// Integer arguments are passed in integer registers.
+CCIfType<[i64], CCAssignToRegWithShadow<[Reg3, Reg5, Reg7, Reg9],
+                                        [Reg4, Reg6, Reg8, Reg10]>>
 ]>;
 
 // It should also include LinkRegister which is represented by Reg64.

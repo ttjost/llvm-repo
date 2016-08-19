@@ -36,7 +36,7 @@ bool DataReuseInfo::AddVariable(std::string Name, unsigned Register,
     for (unsigned i = 0, e = Variables.size();
          i != e; ++i) {
         if (Variables[i].getName() == Name) {
-            llvm_unreachable("Should never come this.");
+//            llvm_unreachable("Should never come this.");
             if (Inst)
                 Variables[i].AddDefinitionInstruction(Inst);
             Variables[i].AddPropagationRegister(Inst, Register);

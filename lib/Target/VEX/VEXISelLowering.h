@@ -78,10 +78,6 @@ namespace llvm {
         };
     }
 
-struct FunctionInfo {
-    std::multimap<std::string, unsigned> info;
-};
-
 //===--------------------------------------------------------------------===//
 // TargetLowering Implementation
 //===--------------------------------------------------------------------===//
@@ -104,27 +100,6 @@ public:
 
     virtual bool useSoftFloat() const override { return true; }
 
-    void addFunctionArgument(std::string Function, unsigned numArguments, bool IsVarArg = false) const {
-//        if (FunctionArguments->info.find(Function) != FunctionArguments->info.end() && !IsVarArg)
-//            assert(FunctionArguments->info.find(Function)->second == numArguments && "Number of arguments do not match. Something is wrong");
-//        else
-            FunctionArguments->info.insert(std::pair<std::string, unsigned>(Function, numArguments));
-    }
-
-    void addFunctionReturn(std::string Function, unsigned numReturns) const {
-        if (FunctionReturns->info.find(Function) != FunctionReturns->info.end())
-            assert(FunctionReturns->info.find(Function)->second == numReturns && "Number of returns do not match. Something is wrong");
-        else
-            FunctionReturns->info.insert(std::pair<std::string, unsigned>(Function, numReturns));
-    }
-
-    FunctionInfo* getFunctionReturns() const {
-        FunctionReturns.get();
-    }
-
-    FunctionInfo* getFunctionArguments() const {
-        FunctionArguments.get();
-    }
     
 protected:
     /// ByValArgInfo - Byval argument information.
@@ -142,8 +117,8 @@ protected:
     
 private:
 
-    std::unique_ptr<FunctionInfo> FunctionReturns;
-    std::unique_ptr<FunctionInfo> FunctionArguments;
+//    std::unique_ptr<FunctionInfo> FunctionReturns;
+//    std::unique_ptr<FunctionInfo> FunctionArguments;
     
 #if 0
     // Create a TargetConstantPool node.

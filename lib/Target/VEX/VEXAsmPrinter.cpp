@@ -58,6 +58,11 @@ bool VEXAsmPrinter::runOnMachineFunction(MachineFunction &MF){
 
 //Emit Instruction must exists or will have run time error
 void VEXAsmPrinter::EmitInstruction(const MachineInstr *MI){
+
+    FunctionsArguments = VEXFI->getFunctionArguments();
+    FunctionsReturns = VEXFI->getFunctionReturns();
+    FunctionsCalled = VEXFI->getFunctionCalled();
+
     if(MI->isDebugValue()){
         SmallString<128> Str;
         raw_svector_ostream OS(Str);
@@ -90,16 +95,26 @@ void VEXAsmPrinter::EmitInstruction(const MachineInstr *MI){
                     std::string FunctionName;
 
                     if (I->getOperand(0).isGlobal()) {
-                        FunctionsCalled.insert(I->getOperand(0).getGlobal()->getName().str());
+                        FunctionsCalledByCallee.insert(I->getOperand(0).getGlobal()->getName().str());
                         FunctionName = I->getOperand(0).getGlobal()->getName().str();
                     } else if (I->getOperand(0).isSymbol()) {
-                        FunctionsCalled.insert(std::string(I->getOperand(0).getSymbolName()));
+                        FunctionsCalledByCallee.insert(std::string(I->getOperand(0).getSymbolName()));
                         FunctionName = std::string(I->getOperand(0).getSymbolName());
                     }
                     std::multimap<std::string, unsigned>::iterator it = FunctionsArguments->info.find(FunctionName);
-                    numValArgument = (*it).second;
-                    FunctionsArguments->info.erase(it);
-                    numValReturn = FunctionsReturns->info.find(FunctionName)->second;
+
+                    if (it == FunctionsArguments->info.end()) {
+                        it = FunctionsCalled->info.find(FunctionName);
+                        numValArgument = (*it).second;
+                        numValReturn = FunctionsReturns->info.find(FunctionName)->second;
+
+                    } else {
+                        numValArgument = (*it).second;
+                        numValReturn = FunctionsReturns->info.find(FunctionName)->second;
+                    }
+
+                    dbgs() << "Func: " << FunctionName << " NumValArg: " << numValArgument << " NumReturn: " << numValReturn << "\n";
+
                 } else if (I->isReturn()) {
                     numValReturn = FunctionsReturns->info.find(MF->getName().str())->second;
                 }
@@ -129,16 +144,25 @@ void VEXAsmPrinter::EmitInstruction(const MachineInstr *MI){
             std::string FunctionName;
 
             if (MI->getOperand(0).isGlobal()) {
-                FunctionsCalled.insert(MI->getOperand(0).getGlobal()->getName().str());
+                FunctionsCalledByCallee.insert(MI->getOperand(0).getGlobal()->getName().str());
                 FunctionName = MI->getOperand(0).getGlobal()->getName().str();
             } else if (MI->getOperand(0).isSymbol()) {
-                FunctionsCalled.insert(std::string(MI->getOperand(0).getSymbolName()));
+                FunctionsCalledByCallee.insert(std::string(MI->getOperand(0).getSymbolName()));
                 FunctionName = std::string(MI->getOperand(0).getSymbolName());
             }
             std::multimap<std::string, unsigned>::iterator it = FunctionsArguments->info.find(FunctionName);
-            numValArgument = (*it).second;
-            FunctionsArguments->info.erase(it);
-            numValReturn = FunctionsReturns->info.find(FunctionName)->second;
+
+            if (it == FunctionsArguments->info.end()) {
+                it = FunctionsCalled->info.find(FunctionName);
+                numValArgument = (*it).second;
+                numValReturn = FunctionsReturns->info.find(FunctionName)->second;
+
+            } else {
+                numValArgument = (*it).second;
+                numValReturn = FunctionsReturns->info.find(FunctionName)->second;
+            }
+            dbgs() << "Func: " << FunctionName << " NumValArg: " << numValArgument << " NumReturn: " << numValReturn << "\n";
+
         } else if (MI->isReturn()) {
             numValReturn = FunctionsReturns->info.find(MF->getName().str())->second;
         }
@@ -287,7 +311,7 @@ void VEXAsmPrinter::EmitEndOfAsmFile(Module &M) {
 //            OutStreamer->EmitRawText(".type " + I->getName() + ", @function\n");
 //        }
 //    }
-    for(StringRef FuncCall: FunctionsCalled) {
+    for(StringRef FuncCall: FunctionsCalledByCallee) {
         OutStreamer->EmitRawText(".import " + FuncCall.str() + "\n");
         OutStreamer->EmitRawText(".type " + FuncCall.str() + ", @function\n");
     }

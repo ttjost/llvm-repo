@@ -90,9 +90,9 @@ const char *VEXTargetLowering::getTargetNodeName(unsigned Opcode) const {
 //@VEXTargetLowering
 VEXTargetLowering::VEXTargetLowering(const TargetMachine &TM,
                                      const VEXSubtarget &STI)
-: TargetLowering(TM), Subtarget(STI),
+: TargetLowering(TM), Subtarget(STI)/*,
     FunctionArguments(make_unique<FunctionInfo>()),
-    FunctionReturns(make_unique<FunctionInfo>()) {
+    FunctionReturns(make_unique<FunctionInfo>())*/ {
     //- Set .align 2
     // It will emit .align 2 later
       setMinFunctionAlignment(1);
@@ -522,6 +522,8 @@ SDValue
 VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
             SmallVectorImpl<SDValue> &InVals) const {
 
+    DEBUG(errs() << "LowerCall\n");
+
     SelectionDAG &DAG = CLI.DAG;
 
     const DataLayout &DLayout = DAG.getDataLayout();
@@ -537,6 +539,8 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
     MachineFunction &MF = DAG.getMachineFunction();
     EVT PtrVT = getPointerTy(DLayout);
     bool &IsTailCall = CLI.IsTailCall;
+
+    VEXFunctionInfo *FuncInfo = MF.getInfo<VEXFunctionInfo>();
 //    bool IsTailCall = false;
 
     bool IsStructRet    = (Outs.empty()) ? false : Outs[0].Flags.isSRet();
@@ -597,14 +601,14 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
     if (GlobalNode != nullptr) {
         if (GlobalNode->getGlobal()->hasName()) {
             DEBUG(dbgs() << GlobalNode->getGlobal()->getName() << ": "<< ArgLocs.size() << "\n");
-            addFunctionArgument(GlobalNode->getGlobal()->getName().str(), (unsigned)ArgLocs.size(), IsVarArg);
+            FuncInfo->addFunctionCalled(GlobalNode->getGlobal()->getName().str(), (unsigned)ArgLocs.size(), IsVarArg);
         } else {
             DEBUG(dbgs() << "No name: "<< ArgLocs.size() << "\n");
         }
     } else {
         if (ExtSymbNode != nullptr) {
             DEBUG(dbgs() << ExtSymbNode->getSymbol() << ": "<< ArgLocs.size() << "\n");
-            addFunctionArgument(std::string(ExtSymbNode->getSymbol()), (unsigned)ArgLocs.size(), IsVarArg);
+            FuncInfo->addFunctionCalled(std::string(ExtSymbNode->getSymbol()), (unsigned)ArgLocs.size(), IsVarArg);
         }
     }
 
@@ -632,6 +636,9 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
         }else
             ArgValue = convertValVTToLocVT(DAG, DL, VA, ArgValue);
 
+        ArgValue->dump();
+        dbgs() << "Reg: " << VA.getLocReg() << "\n";
+        dbgs() << "Regs: " << VEX::Reg3 << " " << VEX::Reg10 << "\n";
         if (VA.isRegLoc())
             // Queue up the argument copies and emit them at the end.
             RegsToPass.push_back(std::make_pair(VA.getLocReg(), ArgValue));
@@ -777,14 +784,14 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
     if (GlobalNode != nullptr) {
         if (GlobalNode->getGlobal()->hasName()) {
             DEBUG(dbgs() << GlobalNode->getGlobal()->getName() << ": "<< RetLocs.size() << "\n");
-            addFunctionReturn(GlobalNode->getGlobal()->getName().str(), (unsigned)RetLocs.size());
+            FuncInfo->addFunctionReturn(GlobalNode->getGlobal()->getName().str(), (unsigned)RetLocs.size());
         } else {
             DEBUG(dbgs() << "No name: "<< RetLocs.size() << "\n");
         }
     } else {
         if (ExtSymbNode != nullptr) {
             DEBUG(dbgs() << ExtSymbNode->getSymbol() << ": "<< RetLocs.size() << "\n");
-            addFunctionReturn(std::string(ExtSymbNode->getSymbol()), (unsigned)RetLocs.size());
+            FuncInfo->addFunctionReturn(std::string(ExtSymbNode->getSymbol()), (unsigned)RetLocs.size());
         }
     }
 
@@ -1067,6 +1074,9 @@ const {
 
     CCInfo.AnalyzeFormalArguments(Ins, CC_VEX_Address);
 
+    DEBUG(dbgs() << DAG.getMachineFunction().getName().str() << ": "<< ArgLocs.size() << "\n");
+    FuncInfo->addFunctionArgument(DAG.getMachineFunction().getName().str(), (unsigned)ArgLocs.size());
+
     unsigned NumFixedGPRs = 0;
 
     for (unsigned I = 0, E = ArgLocs.size(); I != E; ++I){
@@ -1091,7 +1101,7 @@ const {
             continue;
         }
 
-        if (VA.isRegLoc()){
+        if (VA.isRegLoc()) {
             // Arguments passed in registers
             const TargetRegisterClass *RC;
             switch (LocVT.getSimpleVT().SimpleTy) {
@@ -1122,7 +1132,7 @@ const {
             unsigned VReg = MRI.createVirtualRegister(RC);
             MRI.addLiveIn(VA.getLocReg(), VReg);
             ArgValue = DAG.getCopyFromReg(Chain, DL, VReg, LocVT);
-        }else{
+        } else {
             assert(VA.isMemLoc() && "Argument not register or memory");
 //            llvm_unreachable("Not yet implemented!");
             // Create the frame index object for this incoming parameter.
@@ -1142,6 +1152,25 @@ const {
         // being passed.
         InVals.push_back(convertLocVTToValVT(DAG, DL, VA, Chain, ArgValue));
     }
+
+    //@Ordinary struct type: 1 {
+//    for (unsigned i = 0, e = ArgLocs.size(); i != e; ++i) {
+//        // The cpu0 ABIs for returning structs by value requires that we copy
+//        // the sret argument into $v0 for the return. Save the argument into
+//        // a virtual register so that we can access it from the return points.
+//        if (Ins[i].Flags.isSRet()) {
+//            unsigned Reg = FuncInfo->getSRetReturnReg();
+//            if (!Reg) {
+//                Reg = MF.getRegInfo().createVirtualRegister(
+//                        getRegClassFor(MVT::i32));
+//                FuncInfo->setSRetReturnReg(Reg);
+//          }
+//          SDValue Copy = DAG.getCopyToReg(DAG.getEntryNode(), DL, Reg, InVals[i]);
+//          Chain = DAG.getNode(ISD::TokenFactor, DL, MVT::Other, Copy, Chain);
+//          break;
+//        }
+//      }
+    //@Ordinary struct type: 1 }
 
     if (IsVarArg) {
 //        // This will point to the next argument passed via stack.
@@ -1178,6 +1207,10 @@ VEXTargetLowering::LowerReturn(SDValue Chain,
 
     // CCValAssign - represent the assignment of the return value to a location
     SmallVector<CCValAssign, 16> RVLocs;
+    MachineFunction &MF = DAG.getMachineFunction();
+    const DataLayout &DLayout = DAG.getDataLayout();
+
+    VEXFunctionInfo *FuncInfo = MF.getInfo<VEXFunctionInfo>();
 
     // CCState - Info about the registers and stack slot.
     CCState CCInfo(CallConv, IsVarArg, DAG.getMachineFunction(), RVLocs,
@@ -1205,6 +1238,24 @@ VEXTargetLowering::LowerReturn(SDValue Chain,
         RetOps.push_back(DAG.getRegister(VA.getLocReg(), VA.getLocVT()));
     }
 
+//    // The VEX ABIs for returning structs by value requires that we copy
+//    // the sret argument into $v0 for the return. We saved the argument into
+//    // a virtual register in the entry block, so now we copy the value out
+//    // and into $v0.
+//    if (MF.getFunction()->hasStructRetAttr()) {
+//      VEXFunctionInfo *VInfo = MF.getInfo<VEXFunctionInfo>();
+//      unsigned Reg = VInfo->getSRetReturnReg();
+
+//      if (!Reg)
+//        llvm_unreachable("sret virtual register not created in the entry block");
+//      SDValue Val = DAG.getCopyFromReg(Chain, DL, Reg, getPointerTy(DLayout));
+//      unsigned Reg3 = VEX::Reg3;
+
+//      Chain = DAG.getCopyToReg(Chain, DL, Reg3, Val, Flag);
+//      Flag = Chain.getValue(1);
+//      RetOps.push_back(DAG.getRegister(Reg3, getPointerTy(DLayout)));
+//    }
+
     RetOps[0] = Chain; // Update Chain.
 
     // Add the flag if we have it.
@@ -1212,7 +1263,7 @@ VEXTargetLowering::LowerReturn(SDValue Chain,
         RetOps.push_back(Flag);
 
     DEBUG(dbgs() << DAG.getMachineFunction().getName().str() << ": "<< RVLocs.size() << "\n");
-    addFunctionReturn(DAG.getMachineFunction().getName().str(), (unsigned)RVLocs.size());
+    FuncInfo->addFunctionReturn(DAG.getMachineFunction().getName().str(), (unsigned)RVLocs.size());
 
     return DAG.getNode(VEXISD::PSEUDO_RET, DL, MVT::Other, RetOps);
 }
