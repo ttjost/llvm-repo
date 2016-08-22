@@ -19,7 +19,7 @@ def CC_VEX_Address : CallingConv<[
   // Handles byval parameters.
   CCIfByVal<CCPassByVal<4, 4>>,
   CCIfType<[i8, i16], CCPromoteToType<i32>>,
-  CCIfSRet<CCAssignToReg<[Reg2]>>,
+//  CCIfSRet<CCAssignToReg<[Reg2]>>,
   CCAssignToReg<[Reg3, Reg4, Reg5, Reg6, Reg7, Reg8, Reg9, Reg10]>,
   CCAssignToStack<4, 4>,
 

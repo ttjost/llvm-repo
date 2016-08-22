@@ -59,10 +59,6 @@ bool VEXAsmPrinter::runOnMachineFunction(MachineFunction &MF){
 //Emit Instruction must exists or will have run time error
 void VEXAsmPrinter::EmitInstruction(const MachineInstr *MI){
 
-    FunctionsArguments = VEXFI->getFunctionArguments();
-    FunctionsReturns = VEXFI->getFunctionReturns();
-    FunctionsCalled = VEXFI->getFunctionCalled();
-
     if(MI->isDebugValue()){
         SmallString<128> Str;
         raw_svector_ostream OS(Str);

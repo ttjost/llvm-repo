@@ -67,6 +67,11 @@ public:
 
     VEXAsmPrinter(TargetMachine &TM, std::unique_ptr<MCStreamer> Streamer)
         : AsmPrinter(TM, std::move(Streamer)), MCInstLowering(*this) {
+            
+            Subtarget = static_cast<VEXTargetMachine *>(&TM)->getSubtargetImpl();
+            FunctionsArguments = Subtarget->getTargetLowering()->getFunctionArguments();
+            FunctionsReturns = Subtarget->getTargetLowering()->getFunctionReturns();
+            FunctionsCalled = Subtarget->getTargetLowering()->getFunctionCalled();
     }
 
     virtual const char *getPassName() const{

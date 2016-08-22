@@ -90,9 +90,10 @@ const char *VEXTargetLowering::getTargetNodeName(unsigned Opcode) const {
 //@VEXTargetLowering
 VEXTargetLowering::VEXTargetLowering(const TargetMachine &TM,
                                      const VEXSubtarget &STI)
-: TargetLowering(TM), Subtarget(STI)/*,
+: TargetLowering(TM), Subtarget(STI),
+    FunctionReturns(make_unique<FunctionInfo>()),
     FunctionArguments(make_unique<FunctionInfo>()),
-    FunctionReturns(make_unique<FunctionInfo>())*/ {
+    FunctionCalled(make_unique<FunctionInfo>()) {
     //- Set .align 2
     // It will emit .align 2 later
       setMinFunctionAlignment(1);
@@ -601,14 +602,14 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
     if (GlobalNode != nullptr) {
         if (GlobalNode->getGlobal()->hasName()) {
             DEBUG(dbgs() << GlobalNode->getGlobal()->getName() << ": "<< ArgLocs.size() << "\n");
-            FuncInfo->addFunctionCalled(GlobalNode->getGlobal()->getName().str(), (unsigned)ArgLocs.size(), IsVarArg);
+            addFunctionCalled(GlobalNode->getGlobal()->getName().str(), (unsigned)ArgLocs.size(), IsVarArg);
         } else {
             DEBUG(dbgs() << "No name: "<< ArgLocs.size() << "\n");
         }
     } else {
         if (ExtSymbNode != nullptr) {
             DEBUG(dbgs() << ExtSymbNode->getSymbol() << ": "<< ArgLocs.size() << "\n");
-            FuncInfo->addFunctionCalled(std::string(ExtSymbNode->getSymbol()), (unsigned)ArgLocs.size(), IsVarArg);
+            addFunctionCalled(std::string(ExtSymbNode->getSymbol()), (unsigned)ArgLocs.size(), IsVarArg);
         }
     }
 
@@ -747,8 +748,36 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
     // Emit the Call.
     SDVTList NodeTys = DAG.getVTList(MVT::Other, MVT::Glue);
 
-    if (IsTailCall)
+    // Even though we do not use this for tail call,
+    // we still need to know how many values this function return
+    // Assign locations to each value returned by this call.
+    SmallVector<CCValAssign, 16> RetLocs;
+    CCState RetCCInfo(CallConv, IsVarArg, MF, RetLocs, *DAG.getContext());
+    
+    AnalyzeRetResult(RetCCInfo, Ins);
+    
+    if (IsTailCall) {
+        
+        // When we have tail calls, we can assume that both callee and caller
+        // have the same number of return values. This is a known property of tail calls.
+        if (GlobalNode != nullptr) {
+            if (GlobalNode->getGlobal()->hasName()) {
+                DEBUG(dbgs() << GlobalNode->getGlobal()->getName() << ": "<< RetLocs.size() << "\n");
+                addFunctionReturn(MF.getName().str(), (unsigned)RetLocs.size());
+                addFunctionReturn(GlobalNode->getGlobal()->getName().str(), (unsigned)RetLocs.size());
+            } else {
+                DEBUG(dbgs() << "No name: "<< RetLocs.size() << "\n");
+            }
+        } else {
+            if (ExtSymbNode != nullptr) {
+                DEBUG(dbgs() << ExtSymbNode->getSymbol() << ": "<< RetLocs.size() << "\n");
+                addFunctionReturn(MF.getName().str(), (unsigned)RetLocs.size());
+                addFunctionReturn(std::string(ExtSymbNode->getSymbol()), (unsigned)RetLocs.size());
+            }
+        }
+        
         return DAG.getNode(VEXISD::PSEUDO_TAILCALL, DL, NodeTys, Ops);
+    }
 
     Chain = DAG.getNode(VEXISD::PSEUDO_CALL, DL, NodeTys, Ops);
     Glue = Chain.getValue(1);
@@ -759,12 +788,6 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
                                DAG.getConstant(0, DL, PtrVT, true),
                                Glue, DL);
     Glue = Chain.getValue(1);
-
-    // Assign locations to each value returned by this call.
-    SmallVector<CCValAssign, 16> RetLocs;
-    CCState RetCCInfo(CallConv, IsVarArg, MF, RetLocs, *DAG.getContext());
-
-    AnalyzeRetResult(RetCCInfo, Ins);
 
     // Copy all of the result registers out of their specified physreg.
     for (unsigned I = 0, E = RetLocs.size(); I != E; ++I) {
@@ -784,14 +807,14 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
     if (GlobalNode != nullptr) {
         if (GlobalNode->getGlobal()->hasName()) {
             DEBUG(dbgs() << GlobalNode->getGlobal()->getName() << ": "<< RetLocs.size() << "\n");
-            FuncInfo->addFunctionReturn(GlobalNode->getGlobal()->getName().str(), (unsigned)RetLocs.size());
+            addFunctionReturn(GlobalNode->getGlobal()->getName().str(), (unsigned)RetLocs.size());
         } else {
             DEBUG(dbgs() << "No name: "<< RetLocs.size() << "\n");
         }
     } else {
         if (ExtSymbNode != nullptr) {
             DEBUG(dbgs() << ExtSymbNode->getSymbol() << ": "<< RetLocs.size() << "\n");
-            FuncInfo->addFunctionReturn(std::string(ExtSymbNode->getSymbol()), (unsigned)RetLocs.size());
+            addFunctionReturn(std::string(ExtSymbNode->getSymbol()), (unsigned)RetLocs.size());
         }
     }
 
@@ -1075,7 +1098,7 @@ const {
     CCInfo.AnalyzeFormalArguments(Ins, CC_VEX_Address);
 
     DEBUG(dbgs() << DAG.getMachineFunction().getName().str() << ": "<< ArgLocs.size() << "\n");
-    FuncInfo->addFunctionArgument(DAG.getMachineFunction().getName().str(), (unsigned)ArgLocs.size());
+    addFunctionArgument(DAG.getMachineFunction().getName().str(), (unsigned)ArgLocs.size());
 
     unsigned NumFixedGPRs = 0;
 
@@ -1263,7 +1286,7 @@ VEXTargetLowering::LowerReturn(SDValue Chain,
         RetOps.push_back(Flag);
 
     DEBUG(dbgs() << DAG.getMachineFunction().getName().str() << ": "<< RVLocs.size() << "\n");
-    FuncInfo->addFunctionReturn(DAG.getMachineFunction().getName().str(), (unsigned)RVLocs.size());
+    addFunctionReturn(DAG.getMachineFunction().getName().str(), (unsigned)RVLocs.size());
 
     return DAG.getNode(VEXISD::PSEUDO_RET, DL, MVT::Other, RetOps);
 }

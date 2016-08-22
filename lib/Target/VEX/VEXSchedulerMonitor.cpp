@@ -25,6 +25,8 @@
 
 using namespace llvm;
 
+extern cl::opt<bool> TrackDAGHeight;
+
 namespace llvm {
     FunctionPass *createSchedulerMonitor(VEXTargetMachine &TM);
 }
@@ -83,23 +85,27 @@ bool VEXSchedulerMonitor::runOnMachineFunction(MachineFunction &MF) {
             }
             ++i;
         }
-        SchedBBs->numberOfNodes[MBB->getName()] = numberOfInstructions;
-        SchedBBs->BBInfo[MBB->getName()] = i;
-    }
-    
-    BBsInfo* OptBBs = Subtarget->getOptBBHeights();
-    
-    for (auto BBInfo : SchedBBs->BBInfo) {
-        if (BBInfo.first != "(null)") {
-            DEBUG (errs() << "BB: " << BBInfo.first << "\n");
-            DEBUG (errs() << "Opt Height: " <<  OptBBs->BBInfo[BBInfo.first] << "\n");
-            DEBUG (errs() << "Opt Number Of Instructions: " <<  OptBBs->numberOfNodes[BBInfo.first] << "\n");
-            DEBUG (errs() << "Sched Height: " << SchedBBs->BBInfo[BBInfo.first] << "\n");
-            DEBUG (errs() << "Sched Number Of Instructions: " << SchedBBs->numberOfNodes[BBInfo.first] << "\n\n");
+        
+        if (TrackDAGHeight) {
+            SchedBBs->numberOfNodes[MBB->getName()] = numberOfInstructions;
+            SchedBBs->BBInfo[MBB->getName()] = i;
         }
     }
-    SchedBBs->BBInfo.clear();
-    OptBBs->BBInfo.clear();
+    
+    if (TrackDAGHeight) {
+        BBsInfo* OptBBs = Subtarget->getOptBBHeights();
+            for (auto BBInfo : SchedBBs->BBInfo) {
+                if (BBInfo.first != "(null)") {
+                    DEBUG (errs() << "BB: " << BBInfo.first << "\n");
+                    DEBUG (errs() << "Opt Height: " <<  OptBBs->BBInfo[BBInfo.first] << "\n");
+                    DEBUG (errs() << "Opt Number Of Instructions: " <<  OptBBs->numberOfNodes[BBInfo.first] << "\n");
+                    DEBUG (errs() << "Sched Height: " << SchedBBs->BBInfo[BBInfo.first] << "\n");
+                    DEBUG (errs() << "Sched Number Of Instructions: " << SchedBBs->numberOfNodes[BBInfo.first] << "\n\n");
+                }
+            }
+        SchedBBs->BBInfo.clear();
+        OptBBs->BBInfo.clear();
+    }
 
     return true;
 }

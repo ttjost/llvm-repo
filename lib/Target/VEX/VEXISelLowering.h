@@ -23,6 +23,11 @@
 #include <deque>
 
 namespace llvm {
+    
+    struct FunctionInfo {
+        std::multimap<std::string, unsigned> info;
+    };
+    
     namespace VEXISD {
         enum NodeType{
             
@@ -99,7 +104,40 @@ public:
     const char *getTargetNodeName(unsigned Opcode) const override;
 
     virtual bool useSoftFloat() const override { return true; }
-
+    
+    FunctionInfo* getFunctionReturns() const {
+        return FunctionReturns.get();
+    }
+    
+    FunctionInfo* getFunctionArguments() const {
+        return FunctionArguments.get();
+    }
+    
+    FunctionInfo* getFunctionCalled() const {
+        return FunctionCalled.get();
+    }
+    
+    void addFunctionArgument(std::string Function, unsigned numArguments, bool IsVarArg = false) const {
+        if (FunctionArguments->info.find(Function) == FunctionArguments->info.end() || IsVarArg)
+            FunctionArguments->info.insert(std::pair<std::string, unsigned>(Function, numArguments));
+    }
+    
+    void addFunctionCalled(std::string Function, unsigned numArguments, bool IsVarArg = false) const {
+        if (FunctionCalled->info.find(Function) == FunctionCalled->info.end()) {
+            if (IsVarArg) {
+                FunctionCalled->info.insert(std::pair<std::string, unsigned>(Function, 8));
+            } else {
+                FunctionCalled->info.insert(std::pair<std::string, unsigned>(Function, numArguments));
+            }
+        }
+    }
+    
+    void addFunctionReturn(std::string Function, unsigned numReturns) const {
+        if (FunctionReturns->info.find(Function) != FunctionReturns->info.end())
+            assert(FunctionReturns->info.find(Function)->second == numReturns && "Number of returns do not match. Something is wrong");
+        else
+            FunctionReturns->info.insert(std::pair<std::string, unsigned>(Function, numReturns));
+    }
     
 protected:
     /// ByValArgInfo - Byval argument information.
@@ -116,9 +154,11 @@ protected:
     const VEXSubtarget &Subtarget;
     
 private:
+    
+    std::unique_ptr<FunctionInfo> FunctionReturns;
+    std::unique_ptr<FunctionInfo> FunctionArguments;
+    std::unique_ptr<FunctionInfo> FunctionCalled;
 
-//    std::unique_ptr<FunctionInfo> FunctionReturns;
-//    std::unique_ptr<FunctionInfo> FunctionArguments;
     
 #if 0
     // Create a TargetConstantPool node.

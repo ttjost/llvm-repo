@@ -34,10 +34,6 @@
 #define DEBUG_TYPE "vex-machinefunction"
 
 namespace llvm {
-
-struct FunctionInfo {
-    std::multimap<std::string, unsigned> info;
-};
     
     /// brief A class derived from PseudoSourceValue that represents a GOT entry
     /// resolved by lazy-binding.
@@ -66,10 +62,7 @@ struct FunctionInfo {
         VEXFunctionInfo (MachineFunction &MF)
         : MF(MF), VarArgsFrameIndex(0),
           MaxCallFrameSize(0), IsVarArgFunction(false),
-          EmitNOAT(false),
-            FunctionReturns(make_unique<FunctionInfo>()),
-            FunctionArguments(make_unique<FunctionInfo>()),
-            FunctionCalled(make_unique<FunctionInfo>()){
+          EmitNOAT(false){
             DEBUG(errs() << "Machine Function");
         }
         ~VEXFunctionInfo();
@@ -84,43 +77,10 @@ struct FunctionInfo {
         unsigned getSRetReturnReg() const { return SRetReturnReg; }
         void setSRetReturnReg(unsigned Reg) { SRetReturnReg = Reg; }
 
-        FunctionInfo* getFunctionReturns() const {
-            FunctionReturns.get();
-        }
-
-        FunctionInfo* getFunctionArguments() const {
-            FunctionArguments.get();
-        }
-
-        FunctionInfo* getFunctionCalled() const {
-            FunctionCalled.get();
-        }
-
-        void addFunctionArgument(std::string Function, unsigned numArguments, bool IsVarArg = false) {
-            if (FunctionArguments->info.find(Function) == FunctionArguments->info.end() || IsVarArg)
-                FunctionArguments->info.insert(std::pair<std::string, unsigned>(Function, numArguments));
-        }
-
-        void addFunctionCalled(std::string Function, unsigned numArguments, bool IsVarArg = false) {
-            if (FunctionCalled->info.find(Function) == FunctionCalled->info.end() || IsVarArg)
-                FunctionCalled->info.insert(std::pair<std::string, unsigned>(Function, numArguments));
-        }
-
-        void addFunctionReturn(std::string Function, unsigned numReturns) {
-            if (FunctionReturns->info.find(Function) != FunctionReturns->info.end())
-                assert(FunctionReturns->info.find(Function)->second == numReturns && "Number of returns do not match. Something is wrong");
-            else
-                FunctionReturns->info.insert(std::pair<std::string, unsigned>(Function, numReturns));
-        }
-
     private:
         virtual void anchor();
 
         bool EmitNOAT;
-
-        std::unique_ptr<FunctionInfo> FunctionReturns;
-        std::unique_ptr<FunctionInfo> FunctionArguments;
-        std::unique_ptr<FunctionInfo> FunctionCalled;
 
         MachineFunction& MF;
         

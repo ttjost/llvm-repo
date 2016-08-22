@@ -24,6 +24,10 @@ extern cl::opt<bool> DisableVEXMISched;
 
 #define DEBUG_TYPE "vex-misched"
 
+cl::opt<bool> TrackDAGHeight("track-dag-height",
+                                    cl::Hidden, cl::init(false),
+                                    cl::desc("Track height for the DAGs"));
+
 /// Platform-specific modifications to DAG.
 void NewVEXVLIWMachineScheduler::postprocessDAG() {
   SUnit* LastSequentialCall = nullptr;
@@ -182,20 +186,23 @@ void NewVEXVLIWMachineScheduler::schedule() {
 
   initQueues(TopRoots, BotRoots);
 
-  const VEXSubtarget *STI = &MF.getSubtarget<VEXSubtarget>();
-  BBsInfo* OptBBs = STI->getOptBBHeights();
-
-  for (unsigned su = 0, e = SUnits.size(); su != e; ++su) {
-    if (OptBBs->BBInfo.find(SUnits[su].getInstr()->getParent()->getName()) != OptBBs->BBInfo.end()) {
-//        assert(OptBBs->numberOfNodes[SUnits[su].getInstr()->getParent()->getName()] == e + 1 && "Number of instructions changed in BB! This should never happen");
-      if (OptBBs->BBInfo[SUnits[su].getInstr()->getParent()->getName()] < SUnits[su].getHeight() + 1) {
-        OptBBs->BBInfo[SUnits[su].getInstr()->getParent()->getName()] = SUnits[su].getHeight() + 1;
-      }
-    } else {
-      OptBBs->numberOfNodes[SUnits[su].getInstr()->getParent()->getName()] = e + 1;
-      OptBBs->BBInfo[SUnits[su].getInstr()->getParent()->getName()] = SUnits[su].getHeight() + 1;
+    
+    if (TrackDAGHeight) {
+        const VEXSubtarget *STI = &MF.getSubtarget<VEXSubtarget>();
+        BBsInfo* OptBBs = STI->getOptBBHeights();
+        
+        for (unsigned su = 0, e = SUnits.size(); su != e; ++su) {
+            if (OptBBs->BBInfo.find(SUnits[su].getInstr()->getParent()->getName()) != OptBBs->BBInfo.end()) {
+            //      assert(OptBBs->numberOfNodes[SUnits[su].getInstr()->getParent()->getName()] == e + 1 && "Number of instructions changed in BB! This should never happen");
+                if (OptBBs->BBInfo[SUnits[su].getInstr()->getParent()->getName()] < SUnits[su].getHeight() + 1) {
+                    OptBBs->BBInfo[SUnits[su].getInstr()->getParent()->getName()] = SUnits[su].getHeight() + 1;
+                }
+            } else {
+                OptBBs->numberOfNodes[SUnits[su].getInstr()->getParent()->getName()] = e + 1;
+                OptBBs->BBInfo[SUnits[su].getInstr()->getParent()->getName()] = SUnits[su].getHeight() + 1;
+            }
+        }
     }
-  }
 
   if (DisableVEXMISched)
       return;
