@@ -1,0 +1,78 @@
+Total Cycles:                               38406 (0.076812 msec)
+Execution Cycles:                           11434 ( 29.77%)
+Stall Cycles:                               26972 ( 70.23%)
+Nops:                                        1408 (  3.67%)
+Executed operations:                        18428
+
+Executed branches:                           2140 ( 11.61% ops)(18.72% insts)
+Not taken branches:                           628 (  3.41% ops)( 5.49% insts)(29.35% br)
+Taken branches:                              1512 (  8.20% ops)(13.22% insts)(70.65% br)
+  Taken uncond branches:                     1003 (  5.44% ops)( 8.77% insts)(46.87% br)
+  Taken cond branches:                        509 (  2.76% ops)( 4.45% insts)(23.79% br)
+Size of Loaded Code:                        64896 Bytes
+
+Instruction Memory Operations:
+  Accesses:                                 10758
+    Hits (Hit Rate):                        10377 ( 96.46%)
+    Misses (Miss Rate):                       381 (  3.54%)
+Instruction Memory Stall Cycles
+  Total (in cycles):                        17626 (100.00%)
+    Due to Misses:                          17145 ( 97.27%)
+    Due to Bus Conflicts:                     481 (  2.73%)
+
+Data Memory Operations:                     Cache          
+  Accesses:                                  4462 (100.00%)
+    Hits (Hit Rate):                         4274 ( 95.79%)
+    Misses (Miss Rate):                       188 (  4.21%)
+  Write Backs (% of Misses):                   37 ( 19.68%)
+Data Memory Stall Cycles
+  Total (in cycles):                         7834 (100.00%)
+    Due to Misses:                           6768 ( 86.39%)
+    Due to Bus Conflicts:                    1066 ( 13.61%)
+
+Percentage Bus Bandwidth Consumed:          65.44%
+
+
+Avg. IPC (no stalls):   1.61
+Avg. IPC (with stalls): 0.48
+
+  cycle counter =        11434
+  total ops     =        18428
+   width[ 0] =           54
+   width[ 1] =         4194
+   width[ 2] =         3934
+   width[ 3] =         1012
+   width[ 4] =          830
+   width[ 5] =            2
+
+
+Simulation time  =     0.0043 s
+Simulation speed =     4.2896 MOPS
+
+
+ta_init using default
+
+	CoreCkFreq           500
+	BusCkFreq            200
+	lg2CacheSize         15	# (CacheSize            = 32768)
+	lg2Sets              2	# (Sets                 = 4)
+	lg2LineSize          5	# (LineSize             = 32)
+	MissPenalty          36
+	WBPenalty            33
+	lg2StrSize           9	# (StrSize              = 512)
+	lg2StrSets           4	# (StrSets              = 16)
+	lg2StrLineSize       5	# (StrLineSize          = 32)
+	StrMissPenalty       36
+	StrWBPenalty         33
+	lg2ICacheSize        15	# (ICacheSize           = 32768)
+	lg2ICacheSets        0	# (ICacheSets           = 1)
+	lg2ICacheLineSize    6	# (ICacheLineSize       = 64)
+	ICachePenalty        45
+	NumCaches            1
+	BranchStall          1
+	StreamEnable         FALSE
+	PrefetchEnable       TRUE
+	LockEnable           FALSE
+	ProfGranularity      AUTO
+
+
