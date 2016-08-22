@@ -109,7 +109,7 @@ void VEXAsmPrinter::EmitInstruction(const MachineInstr *MI){
                         numValReturn = FunctionsReturns->info.find(FunctionName)->second;
                     }
 
-                    dbgs() << "Func: " << FunctionName << " NumValArg: " << numValArgument << " NumReturn: " << numValReturn << "\n";
+                    DEBUG(dbgs() << "Func: " << FunctionName << " NumValArg: " << numValArgument << " NumReturn: " << numValReturn << "\n");
 
                 } else if (I->isReturn()) {
                     numValReturn = FunctionsReturns->info.find(MF->getName().str())->second;
@@ -157,7 +157,7 @@ void VEXAsmPrinter::EmitInstruction(const MachineInstr *MI){
                 numValArgument = (*it).second;
                 numValReturn = FunctionsReturns->info.find(FunctionName)->second;
             }
-            dbgs() << "Func: " << FunctionName << " NumValArg: " << numValArgument << " NumReturn: " << numValReturn << "\n";
+            DEBUG(dbgs() << "Func: " << FunctionName << " NumValArg: " << numValArgument << " NumReturn: " << numValReturn << "\n");
 
         } else if (MI->isReturn()) {
             numValReturn = FunctionsReturns->info.find(MF->getName().str())->second;

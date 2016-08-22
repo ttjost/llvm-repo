@@ -637,9 +637,6 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
         }else
             ArgValue = convertValVTToLocVT(DAG, DL, VA, ArgValue);
 
-        ArgValue->dump();
-        dbgs() << "Reg: " << VA.getLocReg() << "\n";
-        dbgs() << "Regs: " << VEX::Reg3 << " " << VEX::Reg10 << "\n";
         if (VA.isRegLoc())
             // Queue up the argument copies and emit them at the end.
             RegsToPass.push_back(std::make_pair(VA.getLocReg(), ArgValue));
