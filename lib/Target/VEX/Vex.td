@@ -78,7 +78,6 @@ def: Proc<"simple-16issue", Simple16IssueModel, []>;
 
 def: Proc<"simple-16issue-2mem", Simple16Issue2MemModel, []>;
 
-def: Proc<"simple-16issue-2mem-16spm", Simple16Issue2Mem16SPMModel, []>;
 
 def: Proc<"simple-16issue-max", Simple16IssueMaxModel, []>;
 
@@ -93,6 +92,8 @@ def VEXAsmParserVariant : AsmParserVariant {
     string RegisterPrefix = "$";
 }
 //#endif
+
+//def: Proc<"simple-16issue-2mem-16spm", Simple16Issue2Mem16SPMModel, []>;
 
 //def VEXInstrInfo : InstrInfo;
 
