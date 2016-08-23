@@ -1343,8 +1343,8 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
 
                     // Terrible hack. Why can't we create more than one MOVi instruction?
                     // If we don't do like this, LLVM crashes, for some uncanny reason.
-                    if (MBBs.empty())
-                        LIS->InsertMachineInstrInMaps(InstMOVi);
+//                    if (MBBs.empty())
+//                        LIS->InsertMachineInstrInMaps(InstMOVi);
 
                     LastNonTerminatorInstr = MBB->getLastNonDebugInstr();
 
