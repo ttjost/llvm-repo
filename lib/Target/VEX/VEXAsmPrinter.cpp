@@ -163,7 +163,7 @@ void VEXAsmPrinter::EmitInstruction(const MachineInstr *MI){
             numValReturn = FunctionsReturns->info.find(MF->getName().str())->second;
         }
 
-        MCInstLowering.Lower(MI, TmpInst0, TmpInst0, false, numValReturn, numValArgument);
+        MCInstLowering.Lower(MI, TmpInst0, TmpInst0, false, numValArgument, numValReturn);
         OutStreamer->EmitInstruction(TmpInst0, getSubtargetInfo());
     }
 
