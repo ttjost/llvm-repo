@@ -74,12 +74,15 @@ def: Proc<"simple-8issue-max", Simple8Issue8MemModel, []>;
 
 def: Proc<"simple-8issue-2mem", Simple8Issue2MemModel, []>;
 
-def: Proc<"simple-16issue", Simple16IssueModel, []>;
+//def: Proc<"simple-16issue", Simple16IssueModel, []>;
 
-def: Proc<"simple-16issue-2mem", Simple16Issue2MemModel, []>;
+//def: Proc<"simple-16issue-2mem", Simple16Issue2MemModel, []>;
 
 
-def: Proc<"simple-16issue-max", Simple16IssueMaxModel, []>;
+//def: Proc<"simple-16issue-4mem", Simple16Issue4MemModel, []>;
+//def: Proc<"simple-16issue-8mem", Simple16Issue8MemModel, []>;
+
+//def: Proc<"simple-16issue-max", Simple16IssueMaxModel, []>;
 
 //#if CH >= CH11_1 1
 def VEXAsmParser : AsmParser {

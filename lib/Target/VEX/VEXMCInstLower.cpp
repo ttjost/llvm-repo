@@ -94,30 +94,38 @@ void VEXMCInstLower::Lower(const MachineInstr *MI,
                            MCInst &OutMI,
                            MCInst &InBundleMI,
                            bool isInsideBundle,
-                           unsigned numValArgument,
+                           unsigned numValArgumentOrLane,
                            unsigned numValReturn) const{
     DEBUG(errs() << "MCInstLower::Lower\n");
 
-    InBundleMI.setOpcode(MI->getOpcode());
+    if (!MI) {
+        InBundleMI.setOpcode(VEX::NOPInstr0 + numValArgumentOrLane);
+        MCOperand MCOp1 = MCOperand::createReg(VEX::Reg0);
+        InBundleMI.addOperand(MCOp1);
+        MCOperand MCOp2 = MCOperand::createReg(VEX::Reg0);
+        InBundleMI.addOperand(MCOp2);
+    } else {
+        InBundleMI.setOpcode(MI->getOpcode());
 
-    for (unsigned i = 0, e = MI->getNumOperands(); i != e ; ++i){
-        const MachineOperand &MO = MI->getOperand(i);
-        MCOperand MCOp = LowerOperand(MO);
-        
-        if(MCOp.isValid())
+        for (unsigned i = 0, e = MI->getNumOperands(); i != e ; ++i){
+            const MachineOperand &MO = MI->getOperand(i);
+            MCOperand MCOp = LowerOperand(MO);
+
+            if(MCOp.isValid())
+                InBundleMI.addOperand(MCOp);
+        }
+
+        if (numValArgumentOrLane != 0) {
+            MachineOperand MO = MachineOperand::CreateImm(numValArgumentOrLane);
+            MCOperand MCOp = LowerOperand(MO);
             InBundleMI.addOperand(MCOp);
-    }
+        }
 
-    if (numValArgument != 0) {
-        MachineOperand MO = MachineOperand::CreateImm(numValArgument);
-        MCOperand MCOp = LowerOperand(MO);
-        InBundleMI.addOperand(MCOp);
-    }
-
-    if (numValReturn != 0) {
-        MachineOperand MO = MachineOperand::CreateImm(numValReturn);
-        MCOperand MCOp = LowerOperand(MO);
-        InBundleMI.addOperand(MCOp);
+        if (numValReturn != 0) {
+            MachineOperand MO = MachineOperand::CreateImm(numValReturn);
+            MCOperand MCOp = LowerOperand(MO);
+            InBundleMI.addOperand(MCOp);
+        }
     }
 
     if (isInsideBundle) {

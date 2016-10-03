@@ -68,9 +68,6 @@ public:
     int getFrameIndexOffset(const MachineFunction &MF,
                                               int FI) const override;
 
-    void processFunctionBeforeCalleeSavedScan(MachineFunction &MF,
-                                               RegScavenger *RS) const ;
-
 };
     
 } // End llvm namespace

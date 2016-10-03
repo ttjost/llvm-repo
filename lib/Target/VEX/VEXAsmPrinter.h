@@ -47,6 +47,25 @@ class MachineBasicBlock;
 class Module;
 class raw_ostream;
 
+namespace LaneInformation {
+  const unsigned Lane0 = 1 << 0;
+  const unsigned Lane1 = 1 << 1;
+  const unsigned Lane2 = 1 << 2;
+  const unsigned Lane3 = 1 << 3;
+  const unsigned Lane4 = 1 << 4;
+  const unsigned Lane5 = 1 << 5;
+  const unsigned Lane6 = 1 << 6;
+  const unsigned Lane7 = 1 << 7;
+  const unsigned Lane8 = 1 << 8;
+  const unsigned Lane9 = 1 << 9;
+  const unsigned Lane10 = 1 << 10;
+  const unsigned Lane11 = 1 << 11;
+  const unsigned Lane12 = 1 << 12;
+  const unsigned Lane13 = 1 << 13;
+  const unsigned Lane14 = 1 << 14;
+  const unsigned Lane15 = 1 << 15;
+}
+
 class LLVM_LIBRARY_VISIBILITY VEXAsmPrinter : public AsmPrinter {
 
     void EmitInstrWithMacroNoAT(const MachineInstr *MI);
@@ -58,6 +77,8 @@ class LLVM_LIBRARY_VISIBILITY VEXAsmPrinter : public AsmPrinter {
     FunctionInfo* FunctionsArguments;
     FunctionInfo* FunctionsCalled;
     FunctionInfo* FunctionsReturns;
+
+    unsigned IssueWidth;
 
 public:
 
@@ -72,6 +93,7 @@ public:
             FunctionsArguments = Subtarget->getTargetLowering()->getFunctionArguments();
             FunctionsReturns = Subtarget->getTargetLowering()->getFunctionReturns();
             FunctionsCalled = Subtarget->getTargetLowering()->getFunctionCalled();
+            IssueWidth = Subtarget->getInstrItineraryData()->SchedModel.IssueWidth;
     }
 
     virtual const char *getPassName() const{
@@ -79,6 +101,8 @@ public:
     }
 
     virtual bool runOnMachineFunction(MachineFunction &MF);
+
+    const VEXSubtarget* getSubtarget() const { return Subtarget; }
 
     // EmitInstruction() must exists or will have run time error.
     void EmitInstruction(const MachineInstr *MI);

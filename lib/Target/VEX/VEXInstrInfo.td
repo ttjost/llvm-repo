@@ -381,6 +381,43 @@ def Fi  : InstVEX<(outs GPRegs:$dst), (ins BrRegs:$cond, GPRegs:$s1, imm32Op:$s2
 
 def NOP : Pseudo<(outs), (ins) , [], "nop">;
 
+// Look at how NOP Instruction for lanes 10 to 15 are named.
+// This happens to keep an order on instruction opcodes.
+def NOPInstr0 : InstVEX<(outs), (ins GPRegs:$src1, GPRegs:$src2),
+                        "nop0 $src1 , $src2", [], IIAll>;
+def NOPInstr1 : InstVEX<(outs), (ins GPRegs:$src1, GPRegs:$src2),
+                        "nop1 $src1, $src2", [], IIAll>;
+def NOPInstr2 : InstVEX<(outs), (ins GPRegs:$src1, GPRegs:$src2),
+                        "nop2 $src1, $src2", [], IIAll>;
+def NOPInstr3 : InstVEX<(outs), (ins GPRegs:$src1, GPRegs:$src2),
+                        "nop3 $src1, $src2", [], IIAll>;
+def NOPInstr4 : InstVEX<(outs), (ins GPRegs:$src1, GPRegs:$src2),
+                        "nop4 $src1, $src2", [], IIAll>;
+def NOPInstr5 : InstVEX<(outs), (ins GPRegs:$src1, GPRegs:$src2),
+                        "nop5 $src1, $src2", [], IIAll>;
+def NOPInstr6 : InstVEX<(outs), (ins GPRegs:$src1, GPRegs:$src2),
+                        "nop6 $src1, $src2", [], IIAll>;
+def NOPInstr7 : InstVEX<(outs), (ins GPRegs:$src1, GPRegs:$src2),
+                        "nop7 $src1, $src2", [], IIAll>;
+def NOPInstr8 : InstVEX<(outs), (ins GPRegs:$src1, GPRegs:$src2),
+                        "nop8 $src1, $src2", [], IIAll>;
+def NOPInstr9 : InstVEX<(outs), (ins GPRegs:$src1, GPRegs:$src2),
+                        "nop9 $src1, $src2", [], IIAll>;
+def NOPInstr_10 : InstVEX<(outs), (ins GPRegs:$src1, GPRegs:$src2),
+                        "nop10 $src1, $src2", [], IIAll>;
+def NOPInstr_11 : InstVEX<(outs), (ins GPRegs:$src1, GPRegs:$src2),
+                        "nop11 $src1, $src2", [], IIAll>;
+def NOPInstr_12 : InstVEX<(outs), (ins GPRegs:$src1, GPRegs:$src2),
+                        "nop12 $src1, $src2", [], IIAll>;
+def NOPInstr_13 : InstVEX<(outs), (ins GPRegs:$src1, GPRegs:$src2),
+                        "nop13 $src1, $src2", [], IIAll>;
+def NOPInstr_14 : InstVEX<(outs), (ins GPRegs:$src1, GPRegs:$src2),
+                        "nop14 $src1, $src2", [], IIAll>;
+def NOPInstr_15 : InstVEX<(outs), (ins GPRegs:$src1, GPRegs:$src2),
+                        "nop15 $src1, $src2", [], IIAll>;
+def NOPInstr_16 : InstVEX<(outs), (ins GPRegs:$src1, GPRegs:$src2),
+                        "nop16 $src1, $src2", [], IIAll>;
+
 
 // Pattern Fragments
 def zext8 : PatFrag<(ops node:$ptr), (i32 (zext (i8 node:$ptr)))>;
@@ -879,7 +916,7 @@ defm B        : BranchInstr<"br", "brf", 0b00000000, brcond, IIBranch>;
 
 def GOTO      : JumpInstr<"goto", 0b00000000, br, IIBranch>;
 
-let isCall = 1 in {
+let isCall = 1, Defs = [Lr] in {
 def CALL      : InstVEX<(outs), (ins i32imm:$offset),
                         "call $$l0.0 = $offset",
                         [(VEXPseudoCall imm:$offset)], IIBranch>;

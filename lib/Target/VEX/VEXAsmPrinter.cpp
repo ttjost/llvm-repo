@@ -18,6 +18,8 @@
 
 #include "MCTargetDesc/VEXBaseInfo.h"
 
+#include "VEXTargetMachine.h"
+
 #include "VEX.h"
 #include "VEXInstrInfo.h"
 #include "VEXTargetStreamer.h"
@@ -44,6 +46,10 @@ using namespace llvm;
 
 #define DEBUG_TYPE "vex-asm-printer"
 
+// Later, this will be known in compile time, with no hint.
+static cl::opt<bool> PrintNops("print-nops",
+                                cl::Hidden, cl::init(false),
+                                cl::desc("Print NOP Information in the assembly file"));
 
 // FIXME :  Verify if this is correct for our VEX architecture
 
@@ -55,6 +61,30 @@ bool VEXAsmPrinter::runOnMachineFunction(MachineFunction &MF){
     AsmPrinter::runOnMachineFunction(MF);
     return true;
 }
+
+struct LaneInfo {
+    unsigned Issue;
+    MachineBasicBlock::const_instr_iterator Instr;
+
+    LaneInfo(unsigned Issue, MachineBasicBlock::const_instr_iterator Inst)
+        : Issue(Issue), Instr(Inst) {
+    }
+};
+
+struct InstructionInfo {
+    // Ascending Sort
+    bool operator() (InstructionInfo i,InstructionInfo j) { return (i.TotalFuncUnits < j.TotalFuncUnits);}
+
+    MachineBasicBlock::const_instr_iterator Instr;
+    unsigned TotalFuncUnits;
+
+    InstructionInfo (MachineBasicBlock::const_instr_iterator I, unsigned FuncUnits) : Instr(I), TotalFuncUnits(FuncUnits) {
+    }
+
+    InstructionInfo () : Instr(nullptr), TotalFuncUnits(0) {
+    }
+
+};
 
 //Emit Instruction must exists or will have run time error
 void VEXAsmPrinter::EmitInstruction(const MachineInstr *MI){
@@ -70,56 +100,128 @@ void VEXAsmPrinter::EmitInstruction(const MachineInstr *MI){
     DEBUG(errs() << "Emitting instruction " << MI->getOpcode() << "\n");
     
     MCInst TmpInst0;
+    std::vector<LaneInfo *> Lanes(IssueWidth);
 
-    if (MI->isBundle()){
+    if (MI->isBundle()) {
+
+        for (unsigned i = 0; i < IssueWidth; ++i) {
+            Lanes[i] = new LaneInfo(i, nullptr);
+        }
+
         MachineBasicBlock::const_instr_iterator I = MI;
         MachineBasicBlock::const_instr_iterator E = MI->getParent()->instr_end();
+        if (PrintNops) {
 
-        SmallVector<MCInst, 16> TmpInst;
-        unsigned i;
-        TmpInst0.setOpcode(I->getOpcode());
-        for (++I, i = 0; E != I && I->isInsideBundle(); ++I) {
-            if (I->isCFIInstruction() ||
-                I->isDebugValue() ||
-                I->isImplicitDef()) {
-                continue;
-            } else {
-                unsigned numValReturn = 0;
-                unsigned numValArgument = 0;
+            std::vector<InstructionInfo *> Instrs;
 
-                if (I->isCall()) {
-                    std::string FunctionName;
+            for (++I; E != I && I->isInsideBundle(); ++I) {
 
-                    if (I->getOperand(0).isGlobal()) {
-                        FunctionsCalledByCallee.insert(I->getOperand(0).getGlobal()->getName().str());
-                        FunctionName = I->getOperand(0).getGlobal()->getName().str();
-                    } else if (I->getOperand(0).isSymbol()) {
-                        FunctionsCalledByCallee.insert(std::string(I->getOperand(0).getSymbolName()));
-                        FunctionName = std::string(I->getOperand(0).getSymbolName());
+                DEBUG(I->dump());
+
+                MCInstrDesc MID = I->getDesc();
+                unsigned InsnClass = MID.getSchedClass();
+                const InstrItineraryData* InstrItins = Subtarget->getInstrItineraryData();
+                const llvm::InstrStage *IS = InstrItins->beginStage(InsnClass);
+                unsigned FuncUnits = IS->getUnits();
+
+                Instrs.push_back(new InstructionInfo(I,FuncUnits));
+            }
+
+            std::sort(Instrs.begin(), Instrs.end(), [](InstructionInfo* a, InstructionInfo* b) {
+                    return a->TotalFuncUnits < b->TotalFuncUnits;
+                });
+
+            for (struct InstructionInfo* Inst : Instrs) {
+                DEBUG(Inst->Instr->dump());
+                DEBUG(dbgs() << " TotalFuncUnits: "
+                      << Inst->TotalFuncUnits << "\n\n");
+
+                for (unsigned i = 0; i < IssueWidth; ++i) {
+                    if (!(Lanes[i]->Instr) && ((Inst->TotalFuncUnits >> i) & 0x1)) {
+                        Lanes[i]->Instr = Inst->Instr;
+                        break;
                     }
-                    std::multimap<std::string, unsigned>::iterator it = FunctionsArguments->info.find(FunctionName);
-
-                    if (it == FunctionsArguments->info.end()) {
-                        it = FunctionsCalled->info.find(FunctionName);
-                        numValArgument = (*it).second;
-                        numValReturn = FunctionsReturns->info.find(FunctionName)->second;
-
-                    } else {
-                        numValArgument = (*it).second;
-                        numValReturn = FunctionsReturns->info.find(FunctionName)->second;
-                    }
-
-                    DEBUG(dbgs() << "Func: " << FunctionName << " NumValArg: " << numValArgument << " NumReturn: " << numValReturn << "\n");
-
-                } else if (I->isReturn()) {
-                    numValReturn = FunctionsReturns->info.find(MF->getName().str())->second;
                 }
+            }
 
-                MCInst Tmp;
-                TmpInst.push_back(Tmp);
-                MCInstLowering.Lower(I, TmpInst0, TmpInst[i++], I->isInsideBundle(), numValArgument, numValReturn);
+            for (unsigned i = 0; i < IssueWidth; ++i) {
+                DEBUG(dbgs() << "Lane: " << Lanes[i]->Issue << "\n");
+                if (Lanes[i]->Instr)
+                    DEBUG(Lanes[i]->Instr->dump());
+                else
+                    DEBUG(dbgs() << "No Instruction\n");
+            }
+
+        } else {
+            unsigned i = 0;
+            for (++I; E != I && I->isInsideBundle(); ++I) {
+                Lanes[i++]->Instr = I;
             }
         }
+
+
+        SmallVector<MCInst, 16> TmpInst;
+        unsigned inst = 0;
+        TmpInst0.setOpcode(MI->getOpcode());
+
+        unsigned numValReturn = 0;
+        unsigned numValArgumentOrLane = 0;
+
+        for (unsigned i = 0; i < IssueWidth; ++i) {
+            I = Lanes[i]->Instr;
+
+            if (!I) {
+                numValArgumentOrLane = i;
+                if (!PrintNops) {
+                    continue;
+                }
+            } else {
+                if (I->isCFIInstruction() ||
+                    I->isDebugValue() ||
+                    I->isImplicitDef()) {
+                    continue;
+                } else {
+                    if (I->isCall()) {
+                        std::string FunctionName;
+
+                        if (I->getOperand(0).isGlobal()) {
+                            FunctionsCalledByCallee.insert(I->getOperand(0).getGlobal()->getName().str());
+                            FunctionName = I->getOperand(0).getGlobal()->getName().str();
+                        } else if (I->getOperand(0).isSymbol()) {
+                            FunctionsCalledByCallee.insert(std::string(I->getOperand(0).getSymbolName()));
+                            FunctionName = std::string(I->getOperand(0).getSymbolName());
+                        }
+                        std::multimap<std::string, unsigned>::iterator it = FunctionsArguments->info.find(FunctionName);
+
+                        if (it == FunctionsArguments->info.end()) {
+                            it = FunctionsCalled->info.find(FunctionName);
+                            numValArgumentOrLane = (*it).second;
+                            numValReturn = FunctionsReturns->info.find(FunctionName)->second;
+
+                        } else {
+                            numValArgumentOrLane = (*it).second;
+                            numValReturn = FunctionsReturns->info.find(FunctionName)->second;
+                        }
+
+                        DEBUG(dbgs() << "Func: " << FunctionName << " NumValArg: " << numValArgumentOrLane << " NumReturn: " << numValReturn << "\n");
+
+                    } else if (I->isReturn()) {
+                        numValArgumentOrLane = 0;
+                        numValReturn = FunctionsReturns->info.find(MF->getName().str())->second;
+                    }
+                }
+            }
+
+            MCInst Tmp;
+            TmpInst.push_back(Tmp);
+            MCInstLowering.Lower(I, TmpInst0, TmpInst[inst++], true, numValArgumentOrLane, numValReturn);
+        }
+        if (PrintNops) {
+            MCInst Tmp;
+            TmpInst.push_back(Tmp);
+            MCInstLowering.Lower(nullptr, TmpInst0, TmpInst[inst++], true, 16, numValReturn);
+        }
+
         for (unsigned i = 0, e = TmpInst0.getNumOperands();
              i != e ; ++i){
                 // printInstruction(mi, O) defined in VEXGenAsmWriter.inc which came from
@@ -133,44 +235,115 @@ void VEXAsmPrinter::EmitInstruction(const MachineInstr *MI){
         }
         OutStreamer->EmitInstruction(TmpInst0, getSubtargetInfo());
     } else {
-        unsigned numValReturn = 0;
-        unsigned numValArgument = 0;
 
-        if (MI->isCall()) {
-            std::string FunctionName;
-
-            if (MI->getOperand(0).isGlobal()) {
-                FunctionsCalledByCallee.insert(MI->getOperand(0).getGlobal()->getName().str());
-                FunctionName = MI->getOperand(0).getGlobal()->getName().str();
-            } else if (MI->getOperand(0).isSymbol()) {
-                FunctionsCalledByCallee.insert(std::string(MI->getOperand(0).getSymbolName()));
-                FunctionName = std::string(MI->getOperand(0).getSymbolName());
-            }
-            std::multimap<std::string, unsigned>::iterator it = FunctionsArguments->info.find(FunctionName);
-
-            if (it == FunctionsArguments->info.end()) {
-                it = FunctionsCalled->info.find(FunctionName);
-                numValArgument = (*it).second;
-                numValReturn = FunctionsReturns->info.find(FunctionName)->second;
-
-            } else {
-                numValArgument = (*it).second;
-                numValReturn = FunctionsReturns->info.find(FunctionName)->second;
-            }
-            DEBUG(dbgs() << "Func: " << FunctionName << " NumValArg: " << numValArgument << " NumReturn: " << numValReturn << "\n");
-
-        } else if (MI->isReturn()) {
-            numValReturn = FunctionsReturns->info.find(MF->getName().str())->second;
+        for (unsigned i = 0; i < IssueWidth; ++i) {
+            Lanes[i] = new LaneInfo(i, nullptr);
         }
 
-        MCInstLowering.Lower(MI, TmpInst0, TmpInst0, false, numValReturn, numValArgument);
+        if (PrintNops) {
+
+            TmpInst0.setOpcode(VEX::BUNDLE);
+
+            MachineBasicBlock::const_instr_iterator I = MI;
+
+            DEBUG(I->dump());
+            MCInstrDesc MID = I->getDesc();
+            unsigned InsnClass = MID.getSchedClass();
+            const InstrItineraryData* InstrItins = Subtarget->getInstrItineraryData();
+            const llvm::InstrStage *IS = InstrItins->beginStage(InsnClass);
+            unsigned FuncUnits = IS->getUnits();
+            struct InstructionInfo* Inst = new InstructionInfo(I,FuncUnits);
+
+            DEBUG(Inst->Instr->dump());
+            DEBUG(dbgs() << " TotalFuncUnits: "
+                  << Inst->TotalFuncUnits << "\n\n");
+
+            for (unsigned i = 0; i < IssueWidth; ++i) {
+                if (!(Lanes[i]->Instr) && ((Inst->TotalFuncUnits >> i) & 0x1)) {
+                    Lanes[i]->Instr = Inst->Instr;
+                    break;
+                }
+            }
+
+            for (unsigned i = 0; i < IssueWidth; ++i) {
+                DEBUG(dbgs() << "Lane: " << Lanes[i]->Issue << "\n");
+                if (Lanes[i]->Instr)
+                    DEBUG(Lanes[i]->Instr->dump());
+                else
+                    DEBUG(dbgs() << "No Instruction\n");
+            }
+
+        } else {
+            Lanes[0]->Instr = MI;
+            TmpInst0.setOpcode(MI->getOpcode());
+        }
+
+        SmallVector<MCInst, 16> TmpInst;
+        unsigned inst = 0;
+
+        for (unsigned i = 0; i < IssueWidth; ++i) {
+            MachineBasicBlock::const_instr_iterator I = Lanes[i]->Instr;
+
+            unsigned numValReturn = 0;
+            unsigned numValArgumentOrLane = 0;
+
+            if (!I) {
+                numValArgumentOrLane = i;
+                if (!PrintNops) {
+                    continue;
+                }
+            } else {
+                if (I->isCFIInstruction() ||
+                    I->isDebugValue() ||
+                    I->isImplicitDef()) {
+                    continue;
+                } else {
+
+                    if (I->isCall()) {
+                        std::string FunctionName;
+
+                        if (I->getOperand(0).isGlobal()) {
+                            FunctionsCalledByCallee.insert(I->getOperand(0).getGlobal()->getName().str());
+                            FunctionName = I->getOperand(0).getGlobal()->getName().str();
+                        } else if (I->getOperand(0).isSymbol()) {
+                                    FunctionsCalledByCallee.insert(std::string(I->getOperand(0).getSymbolName()));
+                                    FunctionName = std::string(I->getOperand(0).getSymbolName());
+                        }
+                        std::multimap<std::string, unsigned>::iterator it = FunctionsArguments->info.find(FunctionName);
+
+                        if (it == FunctionsArguments->info.end()) {
+                            it = FunctionsCalled->info.find(FunctionName);
+                            numValArgumentOrLane = (*it).second;
+                            numValReturn = FunctionsReturns->info.find(FunctionName)->second;
+
+                        } else {
+                            numValArgumentOrLane = (*it).second;
+                            numValReturn = FunctionsReturns->info.find(FunctionName)->second;
+                        }
+                        DEBUG(dbgs() << "Func: " << FunctionName << " NumValArg: " << numValArgumentOrLane << " NumReturn: " << numValReturn << "\n");
+
+                    } else
+                        if (I->isReturn()) {
+                            numValArgumentOrLane = 0;
+                            numValReturn = FunctionsReturns->info.find(MF->getName().str())->second;
+                        }
+                }
+            }
+            if (PrintNops) {
+                MCInst Tmp;
+                TmpInst.push_back(Tmp);
+                MCInstLowering.Lower(I, TmpInst0, TmpInst[inst++], true, numValArgumentOrLane, numValReturn);
+            } else {
+                MCInstLowering.Lower(I, TmpInst0, TmpInst0, false, numValArgumentOrLane, numValReturn);
+            }
+        }
+        if (PrintNops) {
+            MCInst Tmp;
+            TmpInst.push_back(Tmp);
+            MCInstLowering.Lower(nullptr, TmpInst0, TmpInst[inst++], true, 16, 0);
+        }
         OutStreamer->EmitInstruction(TmpInst0, getSubtargetInfo());
     }
-
-//    do{
-//        MCInstLowering.Lower(I, TmpInst0);
-//        OutStreamer.EmitInstruction(TmpInst0, getSubtargetInfo());
-//    }while((++I != E) && I->isInsideBundle()); //
     DEBUG(errs() << "Done emitting\n");
 }
 

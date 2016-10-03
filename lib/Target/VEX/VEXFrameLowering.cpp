@@ -164,7 +164,7 @@ void VEXFrameLowering::emitPrologue(MachineFunction &MF,
     unsigned CFIIndex = MMI.addFrameInst(MCCFIInstruction::createDefCfaOffset(nullptr, -StackSize));
     BuildMI(MBB, MBBI, DL, TII.get(TargetOpcode::CFI_INSTRUCTION)).addCFIIndex(CFIIndex);
     
-    if(CSI.size()){
+    if(CSI.size()) {
         // Find the instruction past the last instruction that saves
         // a callee-saved register to the stack.
         for (unsigned i = 0; i < CSI.size(); ++i){
@@ -303,26 +303,26 @@ eliminateCallFramePseudoInstr(MachineFunction &MF, MachineBasicBlock &MBB,
   MBB.erase(I);
 }
 
-// This function is called immediately before the insertion of
-// Prolog and Epilog code. We need to explicitly tell the function
-// that Link Register needs to be saved for the function.
-// This only needs to happen when we have a call to another
-// function. If we don't we mark as unused and save an instruction
-// on being added.
-void
-VEXFrameLowering::processFunctionBeforeCalleeSavedScan
-                  (MachineFunction &MF, RegScavenger *RS) const {
+//// This function is called immediately before the insertion of
+//// Prolog and Epilog code. We need to explicitly tell the function
+//// that Link Register needs to be saved for the function.
+//// This only needs to happen when we have a call to another
+//// function. If we don't we mark as unused and save an instruction
+//// on being added.
+//void
+//VEXFrameLowering::processFunctionBeforeCalleeSavedScan
+//                  (MachineFunction &MF, RegScavenger *RS) const {
 
-    MachineRegisterInfo &MRI = MF.getRegInfo();
+//    MachineRegisterInfo &MRI = MF.getRegInfo();
 
-    // Needs to mark Link Register used only when
-    // the function calls another function
-    if (MF.getFrameInfo()->hasCalls())
-      MRI.setPhysRegUsed(VEX::Lr);
-    else {
-      MRI.setPhysRegUnused(VEX::Lr);
-    }
-}
+//    // Needs to mark Link Register used only when
+//    // the function calls another function
+//    if (MF.getFrameInfo()->hasCalls())
+//      MRI.setPhysRegUsed(VEX::Lr);
+//    else {
+//      MRI.setPhysRegUnused(VEX::Lr);
+//    }
+//}
 
 bool VEXFrameLowering::hasFP(const MachineFunction &MF) const{
     return false;

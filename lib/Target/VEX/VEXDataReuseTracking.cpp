@@ -48,6 +48,11 @@ static cl::opt<bool> OmitAnnotation("omit-annotation",
                                 cl::Hidden, cl::init(true),
                                 cl::desc("Information about the number of iterations to be performed in preamble"));
 
+// Later, this will be known in compile time, with no hint.
+static cl::opt<unsigned> NumMemories("num-memories",
+                                cl::Hidden, cl::init(0),
+                                cl::desc("Information about the number of iterations to be performed in preamble"));
+
 namespace llvm {
     MachineFunctionPass *createVEXDataReuseTracking(VEXTargetMachine &TM);
 }
@@ -118,7 +123,12 @@ public:
 
         DataInfo = static_cast<const VEXTargetMachine &>(TM).getDataReuseInfo();
         unsigned issue = Subtarget.getInstrItineraryData()->SchedModel.IssueWidth > 8 ? 8 : Subtarget.getInstrItineraryData()->SchedModel.IssueWidth;
-        DataInfo->setNumSPMs(issue);
+
+        if (NumMemories != 0)
+            DataInfo->setNumSPMs(NumMemories);
+        else
+            DataInfo->setNumSPMs(issue);
+
         DataInfo->setIssueWidth(issue);
     }
 
@@ -255,7 +265,7 @@ bool VEXDataReuseTracking::PropagatesSPMVariable(MachineBasicBlock::iterator Ins
                         VarIdx->AddPropagationRegister(Inst, Inst->getOperand(0).getReg());
                     } else {
                         if (Inst->isCall()) {
-                            VarIdx->AddPropagationCallRegister(Operand);
+//                            VarIdx->AddPropagationCallRegister(Operand);
                         }
                     }
                     inInstructionPropagationFound  = true;
@@ -747,7 +757,7 @@ void VEXDataReuseTracking::EvaluateVariables() {
             LoopDepth = MLI->getLoopDepth(BB);
 
             DEBUG(dbgs() << "Loop depth:" << LoopDepth << "\n");
-            CheckIfVariableResetsAddress(Var, loop, Var->getFirstMemoryInstruction(BB));
+//            CheckIfVariableResetsAddress(Var, loop, Var->getFirstMemoryInstruction(BB));
 
             if (MaxLoopDepth < LoopDepth) {
                 MaxLoopDepth = LoopDepth;
@@ -813,12 +823,14 @@ MachineBasicBlock* VEXDataReuseTracking::CreatePreamble(MachineFunction &MF, Dat
         assert(FirstMemInstr->getParent()->getParent() == &MF && "FirstMemInstr is not defined in this MF, but somewhere else");
 
         MBB = DefInstr->getParent();
-        if (DefInstr->getParent() == FirstMemInstr->getParent()) {
+        if (DefInstr->getParent() == FirstMemInstr->getParent() && MBB != MF.begin()) {
             do {
               --MBB;
             } while (MLI->getLoopFor(MBB));
         }
     }
+
+    MBB->dump();
 
     // Create new Basic Block for Preamble
     // This will do almost all tricks to create a BB in between two BBs.
@@ -912,7 +924,7 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, DataReuseInfo::it
     unsigned InductionRegTrue = RegInfo.createVirtualRegister(GPRegClass);
     unsigned InductionRegFalse = RegInfo.createVirtualRegister(GPRegClass);
 
-    MachineBasicBlock::iterator LastNonTerminatorInstr = MBB->end();
+    MachineBasicBlock::iterator LastNonTerminatorInstr = MBB->getLastNonDebugInstr();
     
     while (LastNonTerminatorInstr->isTerminator() && LastNonTerminatorInstr != MBB->begin())
         --LastNonTerminatorInstr;
@@ -1144,6 +1156,7 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
     std::vector<unsigned> ArgRegisters = getArgumentRegisters();
 
     // Added to Variables all callee-saved register
+    if (OmitAnnotation) {
     for (unsigned Reg : ArgRegisters) {
         if (RegInfo.isLiveIn(Reg)) {
             unsigned DefinedRegister;
@@ -1154,6 +1167,7 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                 DEBUG(dbgs() << "No virtual reg!");
             }
         }
+    }
     }
 
     while (!BFSinMBBs.empty()) {
@@ -1187,7 +1201,11 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                 MachineOperand Op = Inst->getOperand(1);
                 assert(Op.isGlobal() && "Must be a Global Address");
 
-                VariableName = Twine(Inst->getOperand(0).getReg()).str();
+                if (OmitAnnotation) {
+                    VariableName = Twine(Inst->getOperand(0).getReg()).str();
+                } /*else {
+                    VariableName = Twine(Inst->getOperand(0).getReg()).str();
+                }*/
                 DataInfo->AddVariable(VariableName, DefinedRegister, Inst, Op.getGlobal());
             } else {
                 // Checks whether the instruction propagates SPMVariable
@@ -1318,10 +1336,10 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                     DEBUG((*SI)->dump());
                     
                     MachineBasicBlock::iterator LastNonTerminatorInstr = (*SI)->getLastNonDebugInstr();
-
+                LastNonTerminatorInstr->dump();
                     while (LastNonTerminatorInstr->isTerminator() &&
-                           (LastNonTerminatorInstr != (*SI)->begin() ||
-                           !LastNonTerminatorInstr->isPHI())) {
+                           (LastNonTerminatorInstr != (*SI)->begin()/* ||
+                           !LastNonTerminatorInstr->isPHI()*/)) {
                         --LastNonTerminatorInstr;
                     }
 
@@ -1331,7 +1349,8 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                         InstMOVi = BuildMI(*SI, DebugLoc(),
                                 TII->get(VEX::MOVi),
                                 BaseRegTrue).addImm(0);
-                    } else if (LastNonTerminatorInstr != (*SI)->begin() && LastNonTerminatorInstr != (*SI)->end()) {
+                    } else if ((LastNonTerminatorInstr != (*SI)->begin() && LastNonTerminatorInstr != (*SI)->end())
+                               || (LastNonTerminatorInstr == (*SI)->begin() && LastNonTerminatorInstr->isTerminator())) {
                         InstMOVi = BuildMI(**SI, LastNonTerminatorInstr, DebugLoc(),
                                 TII->get(VEX::MOVi),
                                 BaseRegTrue).addImm(0);
@@ -1386,8 +1405,7 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
     }
     
     DEBUG(dbgs() << "\n\n\n\n");
-    for (MachineFunction::iterator MBB = MF.begin(), MBBE = MF.end(); MBB != MBBE; ++MBB)
-        DEBUG(MBB->dump());
+    DEBUG(MF.dump());
     
     return false;
 }
