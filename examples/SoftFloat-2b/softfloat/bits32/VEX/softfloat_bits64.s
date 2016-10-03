@@ -4266,7 +4266,7 @@ LBB43_40:                               ## %while.end
 	c0	or $r0.5 = $r0.2, $r0.5
 ;;
 LBB43_41:                               ## %if.end.55
-.call roundAndPackFloat32, caller, arg($r0.3:u32), ret($r0.3:u32,$r0.4:u32,$r0.5:u32)
+.call roundAndPackFloat32, caller, arg($r0.3:u32,$r0.4:u32,$r0.5:u32), ret($r0.3:u32)
 	c0	call $l0.0 = roundAndPackFloat32
 ;;
 LBB43_42:                               ## %cleanup
