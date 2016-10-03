@@ -1,4 +1,4 @@
-	.text
+.section .text
 #.globl shift32RightJamming
 .section .text 
 .proc 
@@ -16016,7 +16016,7 @@ LBB71_23:                               ## %lt64.exit
 ;;
 .endp
 
-	.section	.bss,"aw",@nobits
+	.section	.bss .section .data
 #.globl float_rounding_mode             ## @float_rounding_mode
 	.align	4
 float_rounding_mode:
@@ -16027,13 +16027,13 @@ float_rounding_mode:
 float_exception_flags:
 	.data4	0                       ## 0x0
 
-	.data
+.section .data
 #.globl float_detect_tininess           ## @float_detect_tininess
 	.align	4
 float_detect_tininess:
 	.data4	1                       ## 0x1
 
-	.section	.rodata,"a",@progbits
+	.section	.data 
 	.align	16                      ## @countLeadingZeros32.countLeadingZerosHigh
 countLeadingZeros32.countLeadingZerosHigh:
 	.data4	8                       ## 0x8
