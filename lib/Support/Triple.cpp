@@ -20,7 +20,8 @@ using namespace llvm;
 const char *Triple::getArchTypeName(ArchType Kind) {
   switch (Kind) {
   case UnknownArch: return "unknown";
-  
+
+  case hmcvex:         return "hmc-vex";
   case vex:         return "vex";
   case aarch64:     return "aarch64";
   case aarch64_be:  return "aarch64_be";
@@ -370,6 +371,7 @@ static Triple::ArchType parseArch(StringRef ArchName) {
     .Case("wasm32", Triple::wasm32)
     .Case("wasm64", Triple::wasm64)
     .Case("vex", Triple::vex)
+    .Case("hmc-vex", Triple::hmcvex)
     .Default(Triple::UnknownArch);
 }
 
@@ -998,6 +1000,7 @@ static unsigned getArchPointerBitWidth(llvm::Triple::ArchType Arch) {
   case llvm::Triple::msp430:
     return 16;
       
+  case llvm::Triple::hmcvex:
   case llvm::Triple::vex:
   case llvm::Triple::arm:
   case llvm::Triple::armeb:
@@ -1073,6 +1076,7 @@ Triple Triple::get32BitArchVariant() const {
     T.setArch(UnknownArch);
     break;
   
+  case Triple::hmcvex:
   case Triple::vex:
   case Triple::amdil:
   case Triple::hsail:
@@ -1118,6 +1122,7 @@ Triple Triple::get64BitArchVariant() const {
   Triple T(*this);
   switch (getArch()) {
       case Triple::vex:
+  case Triple::hmcvex:
   case Triple::UnknownArch:
   case Triple::arm:
   case Triple::armeb:
@@ -1201,6 +1206,7 @@ Triple Triple::getBigEndianArchVariant() const {
   case Triple::arm:
   case Triple::thumb:
       case Triple::vex:
+  case Triple::hmcvex:
     T.setArch(UnknownArch);
     break;
 
@@ -1245,6 +1251,7 @@ Triple Triple::getLittleEndianArchVariant() const {
     T.setArch(UnknownArch);
     break;
 
+  case Triple::hmcvex:
       case Triple::vex:
   case Triple::aarch64:
   case Triple::amdgcn:

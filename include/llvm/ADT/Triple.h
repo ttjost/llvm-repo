@@ -47,6 +47,7 @@ public:
     UnknownArch,
       
     vex,
+    hmcvex,
 
     arm,        // ARM (little endian): arm, armv.*, xscale
     armeb,      // ARM (big endian): armeb
