@@ -34,9 +34,6 @@
 
 using namespace llvm;
 
-cl::opt<bool> is32Reg("is32Reg",
-                            cl::Hidden, cl::desc("Enable 32 Registers instead of 64"));
-
 HMCVEXRegisterInfo::HMCVEXRegisterInfo(const HMCVEXSubtarget &ST)
     : HMCVEXGenRegisterInfo(HMCVEX::Lr), Subtarget(ST) {
         DEBUG(errs() << "Register Info\n");
@@ -51,10 +48,6 @@ HMCVEXRegisterInfo::HMCVEXRegisterInfo(const HMCVEXSubtarget &ST)
 // llc create CSR_SaveList and CSR_RegMask from above defined.
 const uint16_t* HMCVEXRegisterInfo::
 getCalleeSavedRegs(const MachineFunction *MF) const{
-    if (is32Reg) {
-        static const MCPhysReg CSR_List[] = { HMCVEX::Reg25, HMCVEX::Reg26, HMCVEX::Reg27, HMCVEX::Reg28, HMCVEX::Reg29, HMCVEX::Reg30, HMCVEX::Reg31, HMCVEX::Lr, 0 };
-        return CSR_List;
-    }
     return CSR_SaveList;
 }
 
@@ -83,11 +76,6 @@ getReservedRegs(const MachineFunction &MF) const {
     std::vector<uint16_t> ReservedHMCVEXRegs = {
             HMCVEX::Reg0, HMCVEX::Lr, HMCVEX::Reg1
     };
-    
-    if (is32Reg) {
-        for (unsigned i = HMCVEX::Reg32; i < HMCVEX::NUM_TARGET_REGS; ++i)
-            ReservedHMCVEXRegs.push_back(i);
-    }
 
     BitVector Reserved(getNumRegs());
     typedef TargetRegisterClass::iterator RegIter;

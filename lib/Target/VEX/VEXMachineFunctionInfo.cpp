@@ -17,8 +17,6 @@
 
 using namespace llvm;
 
-bool FixGlobalBaseReg;
-
 // class VEXCallEntry.
 VEXCallEntry::VEXCallEntry(const StringRef &N){
 #ifndef NDEBUG

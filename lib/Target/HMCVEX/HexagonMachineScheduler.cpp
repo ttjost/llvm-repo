@@ -24,10 +24,6 @@ extern cl::opt<bool> DisableHMCVEXMISched;
 
 #define DEBUG_TYPE "HMCVEX-misched"
 
-cl::opt<bool> TrackDAGHeight("track-dag-height",
-                                    cl::Hidden, cl::init(false),
-                                    cl::desc("Track height for the DAGs"));
-
 /// Platform-specific modifications to DAG.
 void NewHMCVEXVLIWMachineScheduler::postprocessDAG() {
   SUnit* LastSequentialCall = nullptr;
@@ -185,24 +181,6 @@ void NewHMCVEXVLIWMachineScheduler::schedule() {
           SUnits[su].dumpAll(this));
 
   initQueues(TopRoots, BotRoots);
-
-    
-    if (TrackDAGHeight) {
-        const HMCVEXSubtarget *STI = &MF.getSubtarget<HMCVEXSubtarget>();
-        BBsInfo* OptBBs = STI->getOptBBHeights();
-        
-        for (unsigned su = 0, e = SUnits.size(); su != e; ++su) {
-            if (OptBBs->BBInfo.find(SUnits[su].getInstr()->getParent()->getName()) != OptBBs->BBInfo.end()) {
-            //      assert(OptBBs->numberOfNodes[SUnits[su].getInstr()->getParent()->getName()] == e + 1 && "Number of instructions changed in BB! This should never happen");
-                if (OptBBs->BBInfo[SUnits[su].getInstr()->getParent()->getName()] < SUnits[su].getHeight() + 1) {
-                    OptBBs->BBInfo[SUnits[su].getInstr()->getParent()->getName()] = SUnits[su].getHeight() + 1;
-                }
-            } else {
-                OptBBs->numberOfNodes[SUnits[su].getInstr()->getParent()->getName()] = e + 1;
-                OptBBs->BBInfo[SUnits[su].getInstr()->getParent()->getName()] = SUnits[su].getHeight() + 1;
-            }
-        }
-    }
 
   if (DisableHMCVEXMISched)
       return;

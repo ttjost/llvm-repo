@@ -264,6 +264,10 @@ private:
     //SDValue LowerBRCOND(SDValue Op, SelectionDAG &DAG) const;
     
     SDValue PerformDAGCombine(SDNode *N, DAGCombinerInfo &DCI) const;
+
+    SDValue CombineMinMaxLegacy(SDLoc DL, EVT VT, SDValue lhs, SDValue rhs,
+                          SDValue True, SDValue False,
+                          SDValue CC, SelectionDAG &DAG) const;
     
 };
 

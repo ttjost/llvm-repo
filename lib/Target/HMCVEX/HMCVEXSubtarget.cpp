@@ -43,11 +43,6 @@ cl::opt<bool> DisableHMCVEXMISched("disable-HMCVEX-misched",
                                        cl::Hidden, cl::ZeroOrMore, cl::init(false),
                                        cl::desc("Disable HMCVEX MI Scheduling"));
 
-extern cl::opt<bool> GenericBinary;
-
-
-extern bool FixGlobalBaseReg;
-
 //// Select the HMCVEX CPU for the given triple and cpu name.
 //// FIXME : Merge with the copy in HMCVEXMCTargetDesc.cpp
 //static StringRef selectHMCVEXCPU(Triple TT, StringRef CPU){
@@ -82,29 +77,11 @@ HMCVEXSubtarget::HMCVEXSubtarget(const Triple &TT, const std::string &CPU,
 HMCVEXSubtarget &HMCVEXSubtarget::initializeSubtargetDependencies(StringRef CPU,
                                                             StringRef FS){
     
-    if (GenericBinary) {
-        errs() << "Generating Generic Binary.\n\t-mcpu=rHMCVEX-generic\n";
-        CPU = "rHMCVEX-generic";
-    } else if (CPU == "rHMCVEX-default") {
-        errs() << "clang: warning: unknown target CPU: assuming '-mcpu=rHMCVEX-4issue'\n" << "\n";
-        CPU = "rHMCVEX-4issue";
-    } else if (CPU == "help" || CPU.empty()) {
-        errs() << "-mcpu=<cpu-name>\n\tOptions: rHMCVEX-[2|4|8]issue, simple-[2|4|8]issue.\n\tDefault: rHMCVEX-4issue\n" << "\n";
-        CPU = "rHMCVEX-4issue";
+    if (CPU == "") {
+        errs() << "clang: warning: unknown target CPU: assuming '-mcpu=simple_64issue. '\n" << "\n";
     }
-    
-    if (CPU == "rHMCVEX-2issue")
-        HMCVEXArchVersion = rHMCVEX_2issue;
-    else if (CPU == "rHMCVEX-4issue")
-        HMCVEXArchVersion = rHMCVEX_4issue;
-    else if (CPU == "rHMCVEX-8issue")
-        HMCVEXArchVersion = rHMCVEX_8issue;
-    else if (CPU == "simple-2issue")
-        HMCVEXArchVersion = simple_2issue;
-    else if (CPU == "simple-4issue")
-        HMCVEXArchVersion = simple_4issue;
-    else if (CPU == "simple-8issue")
-        HMCVEXArchVersion = simple_8issue;
+
+    HMCVEXArchVersion = simple_64issue;
     
     // Parse features string.
     ParseSubtargetFeatures(CPU, FS);

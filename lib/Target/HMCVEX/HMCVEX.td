@@ -49,7 +49,7 @@ def     HMCVEXInstrInfo    :   InstrInfo;
 class Proc<string Name, SchedMachineModel Model, list<SubtargetFeature> Features>
 : ProcessorModel<Name, Model, Features>;
 
-def: Proc<"simple-8issue-max", Simple8Issue8MemModel, []>;
+def: Proc<"simple-64issue", Simple64Issue64MemModel, []>;
 
 def HMCVEXAsmParser : AsmParser {
     let ShouldEmitMatchRegisterName = 0;

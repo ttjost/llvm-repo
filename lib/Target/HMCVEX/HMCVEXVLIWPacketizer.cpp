@@ -30,10 +30,6 @@
 
 using namespace llvm;
 
-cl::opt<bool> GenericBinary("generic-binary",
-                            cl::Hidden, cl::desc("Enable Generic Binary"));
-
-
 namespace llvm {
     FunctionPass *createHMCVEXPacketizer(bool EnableVLIWScheduling, HMCVEXTargetMachine &TM);
 }
@@ -299,10 +295,7 @@ bool HMCVEXPacketizerList::isLegalToPacketizeTogether(SUnit *SUI, SUnit *SUJ) {
             if (dep.getSUnit() == SUI) {
                 if (dep.getKind() == SDep::Data) {
                     return false;
-
                 } else if (dep.getKind() == SDep::Output) {
-                    return false;
-                } else if (GenericBinary && dep.getKind() == SDep::Anti) {
                     return false;
                 }
             } else

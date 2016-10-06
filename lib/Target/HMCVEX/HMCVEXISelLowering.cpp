@@ -1934,9 +1934,9 @@ SDValue HMCVEXTargetLowering::LowerUREM(SDValue Op, SelectionDAG &DAG) const {
 }
 
 
-SDValue CombineMinMax(SDLoc DL, EVT VT, SDValue lhs, SDValue rhs,
+SDValue HMCVEXTargetLowering::CombineMinMaxLegacy(SDLoc DL, EVT VT, SDValue lhs, SDValue rhs,
                       SDValue True, SDValue False,
-                      SDValue CC, SelectionDAG &DAG) {
+                      SDValue CC, SelectionDAG &DAG) const {
 
     if (!(lhs == True && rhs == False) && !(rhs == True && lhs == False))
         return SDValue();
@@ -1997,7 +1997,7 @@ SDValue HMCVEXTargetLowering::PerformDAGCombine(SDNode *N,
                 SDValue False = N->getOperand(2);
 
                 if (VT == MVT::i32)
-                    return CombineMinMax(DL, VT, lhs, rhs, True, False, CC, DAG);
+                    return CombineMinMaxLegacy(DL, VT, lhs, rhs, True, False, CC, DAG);
             }
     }
 

@@ -35,9 +35,6 @@ using namespace llvm;
 #include "HMCVEXGenDFAPacketizer.inc"
 //#include "HMCVEXSubtargetInfo.cpp"
 
-cl::opt<bool> isHPCompiler("hp-compiler",
-                            cl::Hidden, cl::desc("Compiling for HP Compiler"));
-
 //@HMCVEXInstrInfo(){
 HMCVEXInstrInfo::HMCVEXInstrInfo(const HMCVEXSubtarget &STI) : Subtarget(STI), RI(STI) {
     DEBUG(errs() << "InstrInfo \n");
@@ -129,10 +126,7 @@ bool HMCVEXInstrInfo::expandPostRAPseudo(MachineBasicBlock::iterator MI) const {
             BuildMI(MBB, MI, MI->getDebugLoc(), get(HMCVEX::ADDi), HMCVEX::Reg1).addReg(HMCVEX::Reg1).addImm(StackSize);
             
             unsigned Opcode;
-//            if (isHPCompiler)
                 Opcode = HMCVEX::CALL;
-//            else
-//                Opcode = HMCVEX::GOTO;
 
             BuildMI(MBB, MI, MI->getDebugLoc(), get(Opcode)).addOperand(MI->getOperand(0));
             BuildMI(MBB, MI, MI->getDebugLoc(), get(HMCVEX::RET)).addReg(HMCVEX::Reg1).addReg(HMCVEX::Reg1).addImm(0).addReg(HMCVEX::Lr);

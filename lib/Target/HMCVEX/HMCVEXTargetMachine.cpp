@@ -31,7 +31,7 @@ static cl::opt<bool> EnableVLIWScheduling("enable-vliw-scheduling",
                                           cl::Hidden, cl::init(true),
                                           cl::desc("Enable VLIW Scheduling"));
 
-cl::opt<bool> UseHexagonScheduler("enable-hexagonsched",
+cl::opt<bool> UseHMCHexagonScheduler("enable-hexagonsched",
                                 cl::Hidden, cl::init(true),
                                 cl::desc("Enable Hexagon Scheduler"));
 
@@ -121,7 +121,7 @@ void HMCVEXNewTargetMachine::anchor() {}
 //}
 
 static ScheduleDAGInstrs *createHMCVEXVLIWMachineSched(MachineSchedContext *C) {
-    if (UseHexagonScheduler)
+    if (UseHMCHexagonScheduler)
         return new NewHMCVEXVLIWMachineScheduler(C, make_unique<NewHMCVEXConvergingVLIWScheduler>());
     else
         return new HMCVEXVLIWMachineScheduler(C, make_unique<ConvergingHMCVEXVLIWScheduler>());

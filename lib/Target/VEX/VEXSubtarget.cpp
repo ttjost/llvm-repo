@@ -46,8 +46,6 @@ cl::opt<bool> DisableVEXMISched("disable-vex-misched",
 extern cl::opt<bool> GenericBinary;
 
 
-extern bool FixGlobalBaseReg;
-
 //// Select the VEX CPU for the given triple and cpu name.
 //// FIXME : Merge with the copy in VEXMCTargetDesc.cpp
 //static StringRef selectVEXCPU(Triple TT, StringRef CPU){
@@ -92,7 +90,7 @@ VEXSubtarget &VEXSubtarget::initializeSubtargetDependencies(StringRef CPU,
         errs() << "-mcpu=<cpu-name>\n\tOptions: rvex-[2|4|8]issue, simple-[2|4|8]issue.\n\tDefault: rvex-4issue\n" << "\n";
         CPU = "rvex-4issue";
     }
-    
+
     if (CPU == "rvex-2issue")
         VEXArchVersion = rvex_2issue;
     else if (CPU == "rvex-4issue")
@@ -105,7 +103,7 @@ VEXSubtarget &VEXSubtarget::initializeSubtargetDependencies(StringRef CPU,
         VEXArchVersion = simple_4issue;
     else if (CPU == "simple-8issue")
         VEXArchVersion = simple_8issue;
-    
+
     // Parse features string.
     ParseSubtargetFeatures(CPU, FS);
     // Initialize scheduling itinerary for the specified CPU.

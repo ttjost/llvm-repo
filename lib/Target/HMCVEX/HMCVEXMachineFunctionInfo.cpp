@@ -17,8 +17,6 @@
 
 using namespace llvm;
 
-bool FixGlobalBaseReg;
-
 // class HMCVEXCallEntry.
 HMCVEXCallEntry::HMCVEXCallEntry(const StringRef &N){
 #ifndef NDEBUG
