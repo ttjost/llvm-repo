@@ -103,20 +103,17 @@ def IIBranch    : InstrItinClass;
 def Simple16IssueMaxItineraries : ProcessorItineraries<[IUnit0, IUnit1, IUnit2, IUnit3,
 IUnit4, IUnit5, IUnit6, IUnit7, IUnit8, IUnit9, IUnit10, IUnit11,
 IUnit12, IUnit13, IUnit14, IUnit15, IUnit16, IUnit17, IUnit18, IUnit19,
-IUnit20, IUnit21, IUnit22, IUnit23, IUnit24, IUnit25, IUnit26, IUnit27,
-IUnit28, IUnit29, IUnit30, IUnit31], [], [
+IUnit20, IUnit21, IUnit22, IUnit23, IUnit24, IUnit25, IUnit26, IUnit27], [], [
    InstrItinData<IIAll         , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
                                                    IUnit4, IUnit5, IUnit6, IUnit7,
                                                    IUnit8, IUnit9, IUnit10, IUnit11,
                                                    IUnit12, IUnit13, IUnit14, IUnit15,
-                                                   IUnit20, IUnit21, IUnit22, IUnit23, IUnit24, IUnit25, IUnit26, IUnit27,
-                                                   IUnit28, IUnit29, IUnit30, IUnit31]>]>,
+                                                   IUnit20, IUnit21, IUnit22, IUnit23, IUnit24, IUnit25, IUnit26, IUnit27]>]>,
    InstrItinData<IIAlu         , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
                                                    IUnit4, IUnit5, IUnit6, IUnit7,
                                                    IUnit8, IUnit9, IUnit10, IUnit11,
                                                    IUnit12, IUnit13, IUnit14, IUnit15,
-                                                   IUnit20, IUnit21, IUnit22, IUnit23, IUnit24, IUnit25, IUnit26, IUnit27,
-                                                   IUnit28, IUnit29, IUnit30, IUnit31]>]>,
+                                                   IUnit20, IUnit21, IUnit22, IUnit23, IUnit24, IUnit25, IUnit26, IUnit27]>]>,
    InstrItinData<IICmpBr       , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
                                                    IUnit4, IUnit5, IUnit6, IUnit7,
                                                    IUnit8, IUnit9, IUnit10, IUnit11,
@@ -136,9 +133,7 @@ IUnit28, IUnit29, IUnit30, IUnit31], [], [
    InstrItinData<IILoad        , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
    IUnit4, IUnit5, IUnit6, IUnit7,
    IUnit8, IUnit9, IUnit10, IUnit11,
-   IUnit12, IUnit13, IUnit14, IUnit15,
-   IUnit20, IUnit21, IUnit22, IUnit23, IUnit24, IUnit25, IUnit26, IUnit27,
-   IUnit28, IUnit29, IUnit30, IUnit31]>]>,
+   IUnit12, IUnit13, IUnit14, IUnit15]>]>,
    InstrItinData<IILoadLr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
    IUnit4, IUnit5, IUnit6, IUnit7,
    IUnit8, IUnit9, IUnit10, IUnit11,
@@ -146,9 +141,7 @@ IUnit28, IUnit29, IUnit30, IUnit31], [], [
    InstrItinData<IIStore       , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
    IUnit4, IUnit5, IUnit6, IUnit7,
    IUnit8, IUnit9, IUnit10, IUnit11,
-   IUnit12, IUnit13, IUnit14, IUnit15,
-   IUnit20, IUnit21, IUnit22, IUnit23, IUnit24, IUnit25, IUnit26, IUnit27,
-   IUnit28, IUnit29, IUnit30, IUnit31]>]>,
+   IUnit12, IUnit13, IUnit14, IUnit15]>]>,
    InstrItinData<IIStoreLr     , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
    IUnit4, IUnit5, IUnit6, IUnit7,
    IUnit8, IUnit9, IUnit10, IUnit11,
@@ -174,7 +167,7 @@ IUnit28, IUnit29, IUnit30, IUnit31], [], [
 
 
 def Simple64Issue64MemModel : SchedMachineModel {
-    let IssueWidth = 20;
+    let IssueWidth = 28;
     let LoadLatency = 1;
     let Itineraries = Simple16IssueMaxItineraries;
 }
