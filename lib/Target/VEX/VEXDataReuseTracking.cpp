@@ -897,8 +897,8 @@ void VEXDataReuseTracking::InsertPreamble(MachineFunction &MF, DataReuseInfo::it
     unsigned Temp = Variable->getConsecutiveDataPerSPM()*Variable->getDataSize();
     
     if (MaxOffsetPerBB > 1) {
-        ExternalLoopCounter = LoopCounterPreamble/MaxOffsetPerBB/2;
-        InternalLoopCounter = MaxOffsetPerBB/NumMemories*2;
+        ExternalLoopCounter = LoopCounterPreamble/MaxOffsetPerBB;
+        InternalLoopCounter = MaxOffsetPerBB/NumMemories;
 
         if (Variable->getConsecutiveDataPerSPM() > 1) {
             InternalOffset = Temp;

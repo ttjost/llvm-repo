@@ -144,7 +144,7 @@ VEXTargetLowering::VEXTargetLowering(const TargetMachine &TM,
     setLibcallName(RTLIB::OLE_F64, "float64_le");
 
     setLibcallName(RTLIB::OGT_F32, "float32_gt");
-    setLibcallName(RTLIB::OGT_F32, "float64_gt");
+    setLibcallName(RTLIB::OGT_F64, "float64_gt");
 
     // *************************************************
 
