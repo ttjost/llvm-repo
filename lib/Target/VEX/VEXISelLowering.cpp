@@ -106,6 +106,9 @@ VEXTargetLowering::VEXTargetLowering(const TargetMachine &TM,
 
     // *************************************************
     // Single-precision floating-point arithmetic.
+
+    TM.Options.NoNaNsFPMath = true;
+
     setLibcallName(RTLIB::ADD_F32, "float32_add");
     setLibcallName(RTLIB::SUB_F32, "float32_sub");
     setLibcallName(RTLIB::MUL_F32, "float32_mul");
@@ -123,17 +126,26 @@ VEXTargetLowering::VEXTargetLowering(const TargetMachine &TM,
     setLibcallName(RTLIB::FPTOSINT_F32_I32, "float32_to_int32");
 
     setLibcallName(RTLIB::FPEXT_F32_F64, "float32_to_float64");
-//    setLibcallName(RTLIB::FPEXT_F16_F32, "float64_to_float32");
 
     // Single-precision comparisons.
-//    setLibcallName(RTLIB::OEQ_F32, "__eqsf2vfp");
-//    setLibcallName(RTLIB::UNE_F32, "__nesf2vfp");
-//    setLibcallName(RTLIB::OLT_F32, "__ltsf2vfp");
-//    setLibcallName(RTLIB::OLE_F32, "__lesf2vfp");
-//    setLibcallName(RTLIB::OGE_F32, "__gesf2vfp");
-//    setLibcallName(RTLIB::OGT_F32, "__gtsf2vfp");
-//    setLibcallName(RTLIB::UO_F32,  "__unordsf2vfp");
-//    setLibcallName(RTLIB::O_F32,   "__unordsf2vfp");
+    setLibcallName(RTLIB::OEQ_F32, "float32_eq");
+    setLibcallName(RTLIB::OEQ_F64, "float64_eq");
+
+    setLibcallName(RTLIB::UNE_F32, "float32_neq");
+    setLibcallName(RTLIB::UNE_F64, "float64_neq");
+
+    setLibcallName(RTLIB::OGE_F32, "float32_ge");
+    setLibcallName(RTLIB::OGE_F64, "float64_ge");
+
+    setLibcallName(RTLIB::OLT_F32, "float32_lt");
+    setLibcallName(RTLIB::OLT_F64, "float64_lt");
+
+    setLibcallName(RTLIB::OLE_F32, "float32_le");
+    setLibcallName(RTLIB::OLE_F64, "float64_le");
+
+    setLibcallName(RTLIB::OGT_F32, "float32_gt");
+    setLibcallName(RTLIB::OGT_F32, "float64_gt");
+
     // *************************************************
 
     setOperationAction(ISD::SIGN_EXTEND_INREG, MVT::i1, Expand);

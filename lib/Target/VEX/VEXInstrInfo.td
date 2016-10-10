@@ -922,7 +922,7 @@ def CALL      : InstVEX<(outs), (ins i32imm:$offset),
                         [(VEXPseudoCall imm:$offset)], IIBranch>;
 }
 
-let isCall = 1 in {
+let isCall = 1, Defs = [Lr] in {
     def ICALL      : InstVEX<(outs), (ins i32imm:$offset),
     "icall $$l0.0 = $offset",
     [(VEXPseudoCall imm:$offset)], IIBranch>;
