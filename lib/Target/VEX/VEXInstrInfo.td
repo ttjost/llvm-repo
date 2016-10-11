@@ -434,11 +434,14 @@ def PSEUDO_RET : Pseudo<(outs), (ins) , [(VEXPseudoRet)]>{
     let isReturn = 1;
 }
 
+
+let Defs = [Lr] in {
 def PSEUDO_TCALL : Pseudo<(outs), (ins i32imm:$offset), [(VEXPseudoTailCall imm:$offset)]> {
     let isTerminator = 1;
     let isBarrier = 1;
     let isReturn = 1;
     let isCall = 1;
+}
 }
 
 def ADJCALLSTACKDOWN : Pseudo<(outs), (ins imm32Op:$amt),
