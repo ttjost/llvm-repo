@@ -35,8 +35,8 @@ using namespace llvm;
 #include "VEXGenDFAPacketizer.inc"
 //#include "VEXSubtargetInfo.cpp"
 
-cl::opt<bool> isHPCompiler("hp-compiler",
-                            cl::Hidden, cl::desc("Compiling for HP Compiler"));
+cl::opt<bool> isHPSim("hp-sim",
+                            cl::Hidden, cl::desc("Compiling for HP Simulator"));
 
 //@VEXInstrInfo(){
 VEXInstrInfo::VEXInstrInfo(const VEXSubtarget &STI) : Subtarget(STI), RI(STI) {
@@ -129,10 +129,10 @@ bool VEXInstrInfo::expandPostRAPseudo(MachineBasicBlock::iterator MI) const {
             BuildMI(MBB, MI, MI->getDebugLoc(), get(VEX::ADDi), VEX::Reg1).addReg(VEX::Reg1).addImm(StackSize);
             
             unsigned Opcode;
-//            if (isHPCompiler)
+            if (isHPSim)
                 Opcode = VEX::CALL;
-//            else
-//                Opcode = VEX::GOTO;
+            else
+                Opcode = VEX::GOTO;
 
             BuildMI(MBB, MI, MI->getDebugLoc(), get(Opcode)).addOperand(MI->getOperand(0));
             BuildMI(MBB, MI, MI->getDebugLoc(), get(VEX::RET)).addReg(VEX::Reg1).addReg(VEX::Reg1).addImm(0).addReg(VEX::Lr);
