@@ -77,11 +77,12 @@ HMCVEXSubtarget::HMCVEXSubtarget(const Triple &TT, const std::string &CPU,
 HMCVEXSubtarget &HMCVEXSubtarget::initializeSubtargetDependencies(StringRef CPU,
                                                             StringRef FS){
     
-    if (CPU == "") {
-        errs() << "clang: warning: unknown target CPU: assuming '-mcpu=simple_64issue. '\n" << "\n";
-    }
+//    if (CPU == "") {
+//        errs() << "clang: warning: unknown target CPU: assuming '-mcpu=simple-64issue. '\n" << "\n";
+//    }
 
     HMCVEXArchVersion = simple_64issue;
+    CPU = "simple-64issue";
     
     // Parse features string.
     ParseSubtargetFeatures(CPU, FS);

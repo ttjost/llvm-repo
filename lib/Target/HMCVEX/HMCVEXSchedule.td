@@ -102,34 +102,24 @@ def IIBranch    : InstrItinClass;
 
 def Simple16IssueMaxItineraries : ProcessorItineraries<[IUnit0, IUnit1, IUnit2, IUnit3,
 IUnit4, IUnit5, IUnit6, IUnit7, IUnit8, IUnit9, IUnit10, IUnit11,
-IUnit12, IUnit13, IUnit14, IUnit15, IUnit16, IUnit17, IUnit18, IUnit19,
-IUnit20, IUnit21, IUnit22, IUnit23, IUnit24, IUnit25, IUnit26, IUnit27], [], [
+IUnit12, IUnit13, IUnit14, IUnit15, IUnit16], [], [
    InstrItinData<IIAll         , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
                                                    IUnit4, IUnit5, IUnit6, IUnit7,
                                                    IUnit8, IUnit9, IUnit10, IUnit11,
-                                                   IUnit12, IUnit13, IUnit14, IUnit15,
-                                                   IUnit20, IUnit21, IUnit22, IUnit23, IUnit24, IUnit25, IUnit26, IUnit27]>]>,
+                                                   IUnit12, IUnit13, IUnit14, IUnit15, IUnit16]>]>,
    InstrItinData<IIAlu         , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
                                                    IUnit4, IUnit5, IUnit6, IUnit7,
                                                    IUnit8, IUnit9, IUnit10, IUnit11,
                                                    IUnit12, IUnit13, IUnit14, IUnit15,
-                                                   IUnit20, IUnit21, IUnit22, IUnit23, IUnit24, IUnit25, IUnit26, IUnit27]>]>,
-   InstrItinData<IICmpBr       , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
-                                                   IUnit4, IUnit5, IUnit6, IUnit7,
-                                                   IUnit8, IUnit9, IUnit10, IUnit11,
-                                                   IUnit12, IUnit13, IUnit14, IUnit15]>]>,
-   InstrItinData<IICmpGr       , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
-                                                   IUnit4, IUnit5, IUnit6, IUnit7,
-                                                   IUnit8, IUnit9, IUnit10, IUnit11,
-                                                   IUnit12, IUnit13, IUnit14, IUnit15]>]>,
-   InstrItinData<IISelect      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
-                                                   IUnit4, IUnit5, IUnit6, IUnit7,
-                                                   IUnit8, IUnit9, IUnit10, IUnit11,
-                                                  IUnit12, IUnit13, IUnit14, IUnit15]>]>,
+                                                   IUnit16]>]>,
+   InstrItinData<IICmpBr       , [InstrStage<1,  [IUnit16]>]>,
+   InstrItinData<IICmpGr       , [InstrStage<1,  [IUnit16]>]>,
+   InstrItinData<IISelect      , [InstrStage<1,  [IUnit16]>]>,
    InstrItinData<IIMultiply    , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
-                                                   IUnit4, IUnit5, IUnit6, IUnit7,
-                                                   IUnit8, IUnit9, IUnit10, IUnit11,
-                                                   IUnit12, IUnit13, IUnit14, IUnit15]>]>,
+   IUnit4, IUnit5, IUnit6, IUnit7,
+   IUnit8, IUnit9, IUnit10, IUnit11,
+   IUnit12, IUnit13, IUnit14, IUnit15,
+   IUnit16]>]>,
    InstrItinData<IILoad        , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
    IUnit4, IUnit5, IUnit6, IUnit7,
    IUnit8, IUnit9, IUnit10, IUnit11,
@@ -146,28 +136,17 @@ IUnit20, IUnit21, IUnit22, IUnit23, IUnit24, IUnit25, IUnit26, IUnit27], [], [
    IUnit4, IUnit5, IUnit6, IUnit7,
    IUnit8, IUnit9, IUnit10, IUnit11,
    IUnit12, IUnit13, IUnit14, IUnit15]>]>,
-   InstrItinData<IICpGrBr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
-                                                   IUnit4, IUnit5, IUnit6, IUnit7,
-                                                  IUnit8, IUnit9, IUnit10, IUnit11,
-                                                   IUnit12, IUnit13, IUnit14, IUnit15]>]>,
-   InstrItinData<IICpBrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
-                                                   IUnit4, IUnit5, IUnit6, IUnit7,
-                                                   IUnit8, IUnit9, IUnit10, IUnit11,
-                                                   IUnit12, IUnit13, IUnit14, IUnit15]>]>,
-   InstrItinData<IICpLrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
-                                                   IUnit4, IUnit5, IUnit6, IUnit7,
-                                                   IUnit8, IUnit9, IUnit10, IUnit11,
-                                                   IUnit12, IUnit13, IUnit14, IUnit15]>]>,
-   InstrItinData<IICpGrLr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
-   IUnit4, IUnit5, IUnit6, IUnit7, IUnit8, IUnit9, IUnit10, IUnit11,
-   IUnit12, IUnit13, IUnit14, IUnit15, IUnit16, IUnit17, IUnit18, IUnit19]>]>,
-   InstrItinData<IIBranch      , [InstrStage<1,  [IUnit15]>]>
+   InstrItinData<IICpGrBr      , [InstrStage<1,  [IUnit16]>]>,
+   InstrItinData<IICpBrGr      , [InstrStage<1,  [IUnit16]>]>,
+   InstrItinData<IICpLrGr      , [InstrStage<1,  [IUnit16]>]>,
+   InstrItinData<IICpGrLr      , [InstrStage<1,  [IUnit16]>]>,
+   InstrItinData<IIBranch      , [InstrStage<1,  [IUnit16]>]>
 ]>;
 
 
 
 def Simple64Issue64MemModel : SchedMachineModel {
-    let IssueWidth = 28;
+    let IssueWidth = 17;
     let LoadLatency = 1;
     let Itineraries = Simple16IssueMaxItineraries;
 }
