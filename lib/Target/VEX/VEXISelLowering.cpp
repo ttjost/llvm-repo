@@ -144,7 +144,7 @@ VEXTargetLowering::VEXTargetLowering(const TargetMachine &TM,
     setLibcallName(RTLIB::OLE_F64, "float64_le");
 
     setLibcallName(RTLIB::OGT_F32, "float32_gt");
-    setLibcallName(RTLIB::OGT_F64, "float64_gt");
+    setLibcallName(RTLIB::OGT_F32, "float64_gt");
 
     // *************************************************
 
@@ -557,6 +557,9 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
 //    bool IsTailCall = false;
 
     bool IsStructRet    = (Outs.empty()) ? false : Outs[0].Flags.isSRet();
+
+    if (IsStructRet)
+        llvm_unreachable("StructRet is not supported. Use the following option in clang: \"-freg-struct-return\" to remove this feature");
 
     // Analyze the operands of the call, assigning locations to each operand.
     SmallVector<CCValAssign, 16> ArgLocs;

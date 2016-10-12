@@ -12,7 +12,8 @@
 //===----------------------------------------------------------------------===/
 
 def RetCC_VEX : CallingConv<[
-    CCIfType<[i32], CCAssignToReg<[Reg3, Reg4]>>
+    CCIfType<[i32], CCAssignToReg<[Reg3, Reg4, Reg5, Reg6]>>,
+    CCIfType<[i64], CCAssignToReg<[Reg3, Reg4]>>
 ]>;
 
 def CC_VEX_Address : CallingConv<[

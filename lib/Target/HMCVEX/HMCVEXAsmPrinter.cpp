@@ -47,7 +47,7 @@ using namespace llvm;
 #define DEBUG_TYPE "HMCVEX-asm-printer"
 
 // Later, this will be known in compile time, with no hint.
-static cl::opt<bool> PrintNops("print-nops",
+static cl::opt<bool> PrintNops("print-nops-hmc",
                                 cl::Hidden, cl::init(false),
                                 cl::desc("Print NOP Information in the assembly file"));
 

@@ -27,19 +27,9 @@ using namespace llvm;
 
 #define DEBUG_TYPE "HMCVEX-targetmachine"
 
-static cl::opt<bool> EnableVLIWScheduling("enable-vliw-scheduling",
-                                          cl::Hidden, cl::init(true),
-                                          cl::desc("Enable VLIW Scheduling"));
-
-cl::opt<bool> UseHMCHexagonScheduler("enable-hexagonsched",
+cl::opt<bool> UseHMCHexagonScheduler("enable-hmchexagonsched",
                                 cl::Hidden, cl::init(true),
                                 cl::desc("Enable Hexagon Scheduler"));
-
-// This might never be used
-// We will probably generate code for SPM right before Register Allocation
-static cl::opt<bool> PreIsel("pre-isel",
-                                cl::Hidden, cl::init(false),
-                                cl::desc("Enable Code Generation for ScratchPad Memories before Instruction Selection"));
 
 extern "C" void LLVMInitializeHMCVEXTarget() {
     
@@ -89,7 +79,7 @@ HMCVEXTargetMachine(const Target &T, const Triple TT,
     : LLVMTargetMachine(T, computeDataLayout(), TT, CPU, FS, Options, RM, CM, OL),
         isNewScheduling(isNewScheduling),
         TLOF(make_unique<TargetLoweringObjectFileELF>()),
-        Subtarget(TT, CPU, FS, isNewScheduling, EnableVLIWScheduling, RM, *this){
+        Subtarget(TT, CPU, FS, isNewScheduling, true, RM, *this){
     initAsmInfo();
 }
 
@@ -168,7 +158,7 @@ bool HMCVEXPassConfig::addInstSelector() {
 }
 
 void HMCVEXPassConfig::addPreEmitPass() {
-        addPass(createHMCVEXPacketizer(EnableVLIWScheduling, getHMCVEXTargetMachine()), false);
+        addPass(createHMCVEXPacketizer(true, getHMCVEXTargetMachine()), false);
 }
 
 TargetPassConfig *HMCVEXTargetMachine::createPassConfig(PassManagerBase &PM){
