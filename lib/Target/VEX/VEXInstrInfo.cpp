@@ -36,7 +36,7 @@ using namespace llvm;
 //#include "VEXSubtargetInfo.cpp"
 
 cl::opt<bool> isHPSim("hp-sim",
-                            cl::Hidden, cl::desc("Compiling for HP Simulator"));
+                            cl::Hidden, cl::init(false), cl::desc("Compiling for HP Simulator"));
 
 //@VEXInstrInfo(){
 VEXInstrInfo::VEXInstrInfo(const VEXSubtarget &STI) : Subtarget(STI), RI(STI) {
