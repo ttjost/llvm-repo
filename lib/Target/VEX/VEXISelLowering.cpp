@@ -559,7 +559,7 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
     bool IsStructRet    = (Outs.empty()) ? false : Outs[0].Flags.isSRet();
 
     if (IsStructRet)
-        llvm_unreachable("StructRet is not supported. Use the following option in clang: \"-freg-struct-return\" to remove this feature");
+        errs() << "WARNING: Functions has StructRet which is not guaranteed to work properly. Use \"-freg-struct-return\" option in clang to remove this feature\n";
 
     // Analyze the operands of the call, assigning locations to each operand.
     SmallVector<CCValAssign, 16> ArgLocs;
