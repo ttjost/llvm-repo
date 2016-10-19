@@ -182,7 +182,7 @@ void NewHMCVEXVLIWMachineScheduler::schedule() {
 
   initQueues(TopRoots, BotRoots);
 
-  if (DisableHMCVEXMISched)
+  if (!DisableHMCVEXMISched)
       return;
 
   bool IsTopNode = false;

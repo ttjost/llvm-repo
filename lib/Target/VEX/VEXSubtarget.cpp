@@ -114,6 +114,8 @@ VEXSubtarget &VEXSubtarget::initializeSubtargetDependencies(StringRef CPU,
 }
 
 bool VEXSubtarget::enableMachineScheduler() const {
+    if (DisableVEXMISched)
+            return false;
     return true;
 }
 

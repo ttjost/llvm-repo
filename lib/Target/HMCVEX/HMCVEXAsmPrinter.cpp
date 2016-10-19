@@ -98,7 +98,7 @@ void HMCVEXAsmPrinter::EmitInstruction(const MachineInstr *MI){
     }
 
     DEBUG(errs() << "Emitting instruction " << MI->getOpcode() << "\n");
-    
+
     MCInst TmpInst0;
     std::vector<LaneInfo *> Lanes(IssueWidth);
 
@@ -156,11 +156,12 @@ void HMCVEXAsmPrinter::EmitInstruction(const MachineInstr *MI){
             unsigned i = 0;
             for (++I; E != I && I->isInsideBundle(); ++I) {
                 Lanes[i++]->Instr = I;
+                DEBUG(I->dump());
             }
         }
 
 
-        SmallVector<MCInst, 16> TmpInst;
+        SmallVector<MCInst, 32> TmpInst;
         unsigned inst = 0;
         TmpInst0.setOpcode(MI->getOpcode());
 
@@ -208,6 +209,9 @@ void HMCVEXAsmPrinter::EmitInstruction(const MachineInstr *MI){
                     } else if (I->isReturn()) {
                         numValArgumentOrLane = 0;
                         numValReturn = FunctionsReturns->info.find(MF->getName().str())->second;
+                    } else {
+                        numValArgumentOrLane = 0;
+                        numValReturn = 0;
                     }
                 }
             }
@@ -223,7 +227,7 @@ void HMCVEXAsmPrinter::EmitInstruction(const MachineInstr *MI){
         }
 
         for (unsigned i = 0, e = TmpInst0.getNumOperands();
-             i != e ; ++i){
+             i != e ; ++i) {
                 // printInstruction(mi, O) defined in HMCVEXGenAsmWriter.inc which came from
                 // HMCVEX.td indicate.
                 if (TmpInst0.getOperand(i).isInst())
@@ -233,6 +237,7 @@ void HMCVEXAsmPrinter::EmitInstruction(const MachineInstr *MI){
                 const MCInst *inst = TmpInst0.getOperand(i).getInst();
                 DEBUG(dbgs() << inst->getOpcode() << " \n");
         }
+
         OutStreamer->EmitInstruction(TmpInst0, getSubtargetInfo());
     } else {
 
@@ -278,7 +283,7 @@ void HMCVEXAsmPrinter::EmitInstruction(const MachineInstr *MI){
             TmpInst0.setOpcode(MI->getOpcode());
         }
 
-        SmallVector<MCInst, 16> TmpInst;
+        SmallVector<MCInst, 32> TmpInst;
         unsigned inst = 0;
 
         for (unsigned i = 0; i < IssueWidth; ++i) {

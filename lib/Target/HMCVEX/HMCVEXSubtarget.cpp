@@ -39,8 +39,8 @@ EnableHMCVEXCalls("HMCVEX-calls", cl::Hidden,
                cl::desc("HMCVEX Call: use stack only to pass arguments."),
                cl::init(false));
 
-cl::opt<bool> DisableHMCVEXMISched("disable-HMCVEX-misched",
-                                       cl::Hidden, cl::ZeroOrMore, cl::init(false),
+cl::opt<bool> DisableHMCVEXMISched("disable-hmcvex-misched",
+                                       cl::Hidden, cl::ZeroOrMore, cl::init(true),
                                        cl::desc("Disable HMCVEX MI Scheduling"));
 
 //// Select the HMCVEX CPU for the given triple and cpu name.

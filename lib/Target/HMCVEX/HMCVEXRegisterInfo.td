@@ -31,7 +31,7 @@ foreach I = 0-7 in
   def BrReg#I : Br<I, "b0."#I >, DwarfRegNum<[!add(I, 513)]>;
   
 // Define Link Register
-def Lr    :  Lr<0, "l0.0">, DwarfRegNum<[64]>;
+def Lr    :  Lr<0, "l0.0">, DwarfRegNum<[514]>;
 
 
 def GPRegs : RegisterClass<"HMCVEX", [i32], 32, (add Lr, (sequence "Reg%u", 0, 511))>;

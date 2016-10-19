@@ -243,34 +243,34 @@ void VEXAsmPrinter::EmitInstruction(const MachineInstr *MI){
         if (PrintNops) {
 
             TmpInst0.setOpcode(VEX::BUNDLE);
-
             MachineBasicBlock::const_instr_iterator I = MI;
 
-            DEBUG(I->dump());
-            MCInstrDesc MID = I->getDesc();
-            unsigned InsnClass = MID.getSchedClass();
-            const InstrItineraryData* InstrItins = Subtarget->getInstrItineraryData();
-            const llvm::InstrStage *IS = InstrItins->beginStage(InsnClass);
-            unsigned FuncUnits = IS->getUnits();
-            struct InstructionInfo* Inst = new InstructionInfo(I,FuncUnits);
+            if (!(I->getOpcode() == VEX::NOP)) {
+                DEBUG(I->dump());
+                MCInstrDesc MID = I->getDesc();
+                unsigned InsnClass = MID.getSchedClass();
+                const InstrItineraryData* InstrItins = Subtarget->getInstrItineraryData();
+                const llvm::InstrStage *IS = InstrItins->beginStage(InsnClass);
+                unsigned FuncUnits = IS->getUnits();
+                struct InstructionInfo* Inst = new InstructionInfo(I,FuncUnits);
 
-            DEBUG(Inst->Instr->dump());
-            DEBUG(dbgs() << " TotalFuncUnits: "
-                  << Inst->TotalFuncUnits << "\n\n");
+                DEBUG(Inst->Instr->dump());
+                DEBUG(dbgs() << " TotalFuncUnits: "
+                      << Inst->TotalFuncUnits << "\n\n");
 
-            for (unsigned i = 0; i < IssueWidth; ++i) {
-                if (!(Lanes[i]->Instr) && ((Inst->TotalFuncUnits >> i) & 0x1)) {
-                    Lanes[i]->Instr = Inst->Instr;
-                    break;
+                for (unsigned i = 0; i < IssueWidth; ++i) {
+                    if (!(Lanes[i]->Instr) && ((Inst->TotalFuncUnits >> i) & 0x1)) {
+                        Lanes[i]->Instr = Inst->Instr;
+                        break;
+                    }
                 }
-            }
-
-            for (unsigned i = 0; i < IssueWidth; ++i) {
-                DEBUG(dbgs() << "Lane: " << Lanes[i]->Issue << "\n");
-                if (Lanes[i]->Instr)
-                    DEBUG(Lanes[i]->Instr->dump());
-                else
-                    DEBUG(dbgs() << "No Instruction\n");
+                for (unsigned i = 0; i < IssueWidth; ++i) {
+                    DEBUG(dbgs() << "Lane: " << Lanes[i]->Issue << "\n");
+                    if (Lanes[i]->Instr)
+                        DEBUG(Lanes[i]->Instr->dump());
+                    else
+                        DEBUG(dbgs() << "No Instruction\n");
+                }
             }
 
         } else {

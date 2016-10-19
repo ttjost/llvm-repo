@@ -1336,7 +1336,7 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
                     DEBUG((*SI)->dump());
                     
                     MachineBasicBlock::iterator LastNonTerminatorInstr = (*SI)->getLastNonDebugInstr();
-                LastNonTerminatorInstr->dump();
+//                LastNonTerminatorInstr->dump();
                     while (LastNonTerminatorInstr->isTerminator() &&
                            (LastNonTerminatorInstr != (*SI)->begin()/* ||
                            !LastNonTerminatorInstr->isPHI()*/)) {
