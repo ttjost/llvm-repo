@@ -7,8 +7,8 @@ OBJ = .o
 IR = .ll
 EXE =
 INCLUDES = -I. -I..
-COMPILE_IR = /llvm_build/build_all/bin/clang -c -m32 -S -emit-llvm $(INCLUDES) -c -o $@  -O3
-COMPILE_ASM = /llvm_build/build_all/bin/llc -march=vex -mcpu=simple-8issue -o $@
+COMPILE_IR = /llvm_build/build_all/bin/clang --target=sparc-unknown-gnu-linux -c -m32 -S -emit-llvm $(INCLUDES) -c -o $@  -O3
+COMPILE_ASM = /llvm_build/build_all/bin/llc -hp-sim=true -march=vex -mcpu=rvex-4issue -o $@
 #LINK = gcc -m32 -o $@
 
 ALL: softfloat$(ASM)
