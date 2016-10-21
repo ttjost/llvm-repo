@@ -40,6 +40,10 @@ using namespace llvm;
 
 extern cl::opt<bool> EnableSPMs;
 
+static cl::opt<bool> UseDefaultSoftFloat("use-default-sfloat",
+                                        cl::Hidden, cl::init(false),
+                                        cl::desc("Which soft float library should be used? LLVM default or Berkeley SoftFloat?"));
+
 #if 0
 SDValue VEXTargetLowering::getTargetNode(ConstantPoolSDNode *N, EVT Ty,
                                           SelectionDAG &DAG,
@@ -109,43 +113,44 @@ VEXTargetLowering::VEXTargetLowering(const TargetMachine &TM,
 
     TM.Options.NoNaNsFPMath = true;
 
-    setLibcallName(RTLIB::ADD_F32, "float32_add");
-    setLibcallName(RTLIB::SUB_F32, "float32_sub");
-    setLibcallName(RTLIB::MUL_F32, "float32_mul");
-    setLibcallName(RTLIB::DIV_F32, "float32_div");
+    if (!UseDefaultSoftFloat) {
+        setLibcallName(RTLIB::FPTOSINT_F64_I32, "float64_to_int32");
+        setLibcallName(RTLIB::FPROUND_F64_F32, "float64_to_float32");
+        setLibcallName(RTLIB::SINTTOFP_I32_F32, "int32_to_float32");
+        setLibcallName(RTLIB::SINTTOFP_I32_F64, "int32_to_float64");
+        setLibcallName(RTLIB::FPTOSINT_F32_I32, "float32_to_int32");
+        setLibcallName(RTLIB::FPEXT_F32_F64, "float32_to_float64");
+        
+        // Single-precision comparisons.
+        setLibcallName(RTLIB::ADD_F32, "float32_add");
+        setLibcallName(RTLIB::SUB_F32, "float32_sub");
+        setLibcallName(RTLIB::MUL_F32, "float32_mul");
+        setLibcallName(RTLIB::DIV_F32, "float32_div");
+        
+        // Double-precision floating-point arithmetic.
+        setLibcallName(RTLIB::ADD_F64, "float64_add");
+        setLibcallName(RTLIB::SUB_F64, "float64_sub");
+        setLibcallName(RTLIB::MUL_F64, "float64_mul");
+        setLibcallName(RTLIB::DIV_F64, "float64_div");
+        
+        setLibcallName(RTLIB::OEQ_F32, "float32_eq");
+        setLibcallName(RTLIB::OEQ_F64, "float64_eq");
 
-    // Double-precision floating-point arithmetic.
-    setLibcallName(RTLIB::ADD_F64, "float64_add");
-    setLibcallName(RTLIB::SUB_F64, "float64_sub");
-    setLibcallName(RTLIB::MUL_F64, "float64_mul");
-    setLibcallName(RTLIB::DIV_F64, "float64_div");
-    setLibcallName(RTLIB::FPTOSINT_F64_I32, "float64_to_int32");
-    setLibcallName(RTLIB::FPROUND_F64_F32, "float64_to_float32");
-    setLibcallName(RTLIB::SINTTOFP_I32_F32, "int32_to_float32");
-    setLibcallName(RTLIB::SINTTOFP_I32_F64, "int32_to_float64");
-    setLibcallName(RTLIB::FPTOSINT_F32_I32, "float32_to_int32");
+        setLibcallName(RTLIB::UNE_F32, "float32_neq");
+        setLibcallName(RTLIB::UNE_F64, "float64_neq");
 
-    setLibcallName(RTLIB::FPEXT_F32_F64, "float32_to_float64");
+        setLibcallName(RTLIB::OGE_F32, "float32_ge");
+        setLibcallName(RTLIB::OGE_F64, "float64_ge");
 
-    // Single-precision comparisons.
-    setLibcallName(RTLIB::OEQ_F32, "float32_eq");
-    setLibcallName(RTLIB::OEQ_F64, "float64_eq");
+        setLibcallName(RTLIB::OLT_F32, "float32_lt");
+        setLibcallName(RTLIB::OLT_F64, "float64_lt");
 
-    setLibcallName(RTLIB::UNE_F32, "float32_neq");
-    setLibcallName(RTLIB::UNE_F64, "float64_neq");
+        setLibcallName(RTLIB::OLE_F32, "float32_le");
+        setLibcallName(RTLIB::OLE_F64, "float64_le");
 
-    setLibcallName(RTLIB::OGE_F32, "float32_ge");
-    setLibcallName(RTLIB::OGE_F64, "float64_ge");
-
-    setLibcallName(RTLIB::OLT_F32, "float32_lt");
-    setLibcallName(RTLIB::OLT_F64, "float64_lt");
-
-    setLibcallName(RTLIB::OLE_F32, "float32_le");
-    setLibcallName(RTLIB::OLE_F64, "float64_le");
-
-    setLibcallName(RTLIB::OGT_F32, "float32_gt");
-    setLibcallName(RTLIB::OGT_F32, "float64_gt");
-
+        setLibcallName(RTLIB::OGT_F32, "float32_gt");
+        setLibcallName(RTLIB::OGT_F64, "float64_gt");
+    }
     // *************************************************
 
     setOperationAction(ISD::SIGN_EXTEND_INREG, MVT::i1, Expand);
