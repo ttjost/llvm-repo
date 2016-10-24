@@ -35,14 +35,14 @@ these four paragraphs for those parts of this code that are retained.
 *----------------------------------------------------------------------------*/
 typedef unsigned int float32;
 typedef struct {
-    unsigned int high, low;
 //    unsigned int low, high;
+    unsigned int high, low;
 } float64;
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE floating-point underflow tininess-detection mode.
 *----------------------------------------------------------------------------*/
-extern int float_detect_tininess;
+extern signed char float_detect_tininess;
 enum {
     float_tininess_after_rounding  = 0,
     float_tininess_before_rounding = 1
@@ -51,31 +51,31 @@ enum {
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE floating-point rounding mode.
 *----------------------------------------------------------------------------*/
-extern int float_rounding_mode;
+extern signed char float_rounding_mode;
 enum {
     float_round_nearest_even = 0,
-    float_round_to_zero      = 1,
+    float_round_down         = 1,
     float_round_up           = 2,
-    float_round_down         = 3
+    float_round_to_zero      = 3
 };
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE floating-point exception flags.
 *----------------------------------------------------------------------------*/
-extern int float_exception_flags;
+extern signed char float_exception_flags;
 enum {
-    float_flag_inexact   =  1,
-    float_flag_divbyzero =  2,
-    float_flag_underflow =  4,
+    float_flag_invalid   =  1,
+    float_flag_divbyzero =  4,
     float_flag_overflow  =  8,
-    float_flag_invalid   = 16
+    float_flag_underflow = 16,
+    float_flag_inexact   = 32
 };
 
 /*----------------------------------------------------------------------------
 | Routine to raise any or all of the software IEC/IEEE floating-point
 | exception flags.
 *----------------------------------------------------------------------------*/
-void float_raise( int );
+void float_raise( signed char );
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE integer-to-floating-point conversion routines.
@@ -100,13 +100,13 @@ float32 float32_mul( float32, float32 );
 float32 float32_div( float32, float32 );
 float32 float32_rem( float32, float32 );
 float32 float32_sqrt( float32 );
-int float32_eq( float32, float32 );
-int float32_le( float32, float32 );
-int float32_lt( float32, float32 );
-int float32_eq_signaling( float32, float32 );
-int float32_le_quiet( float32, float32 );
-int float32_lt_quiet( float32, float32 );
-int float32_is_signaling_nan( float32 );
+char float32_eq( float32, float32 );
+char float32_le( float32, float32 );
+char float32_lt( float32, float32 );
+char float32_eq_signaling( float32, float32 );
+char float32_le_quiet( float32, float32 );
+char float32_lt_quiet( float32, float32 );
+char float32_is_signaling_nan( float32 );
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE double-precision conversion routines.
@@ -125,11 +125,11 @@ float64 float64_mul( float64, float64 );
 float64 float64_div( float64, float64 );
 float64 float64_rem( float64, float64 );
 float64 float64_sqrt( float64 );
-int float64_eq( float64, float64 );
-int float64_le( float64, float64 );
-int float64_lt( float64, float64 );
-int float64_eq_signaling( float64, float64 );
-int float64_le_quiet( float64, float64 );
-int float64_lt_quiet( float64, float64 );
-int float64_is_signaling_nan( float64 );
+char float64_eq( float64, float64 );
+char float64_le( float64, float64 );
+char float64_lt( float64, float64 );
+char float64_eq_signaling( float64, float64 );
+char float64_le_quiet( float64, float64 );
+char float64_lt_quiet( float64, float64 );
+char float64_is_signaling_nan( float64 );
 

@@ -2,6 +2,7 @@
 /*----------------------------------------------------------------------------
 | One of the macros `BIGENDIAN' or `LITTLEENDIAN' must be defined.
 *----------------------------------------------------------------------------*/
+//#define LITTLEENDIAN
 #define BIGENDIAN
 
 /*----------------------------------------------------------------------------
@@ -18,9 +19,9 @@
 | implementations of C, `flag', `uint8', and `int8' should all be `typedef'ed
 | to the same as `int'.
 *----------------------------------------------------------------------------*/
-typedef int flag;
-typedef int uint8;
-typedef int int8;
+typedef char flag;
+typedef unsigned char uint8;
+typedef signed char int8;
 typedef int uint16;
 typedef int int16;
 typedef unsigned int uint32;

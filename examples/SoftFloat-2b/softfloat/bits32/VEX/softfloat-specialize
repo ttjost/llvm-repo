@@ -34,7 +34,7 @@ these four paragraphs for those parts of this code that are retained.
 | Underflow tininess-detection mode, statically initialized to default value.
 | (The declaration in `softfloat.h' must match the `int8' type here.)
 *----------------------------------------------------------------------------*/
-int8 float_detect_tininess = float_tininess_before_rounding;
+int8 float_detect_tininess = float_tininess_after_rounding;
 
 /*----------------------------------------------------------------------------
 | Raises the exceptions specified by `flags'.  Floating-point traps can be
@@ -62,7 +62,7 @@ typedef struct {
 | The pattern for a default generated single-precision NaN.
 *----------------------------------------------------------------------------*/
 enum {
-    float32_default_nan = 0x7FFFFFFF
+    float32_default_nan = 0xFFC00000
 };
 
 /*----------------------------------------------------------------------------
@@ -136,7 +136,20 @@ static float32 propagateFloat32NaN( float32 a, float32 b )
     a |= 0x00400000;
     b |= 0x00400000;
     if ( aIsSignalingNaN | bIsSignalingNaN ) float_raise( float_flag_invalid );
-    return bIsSignalingNaN ? b : aIsSignalingNaN ? a : bIsNaN ? b : a;
+    if ( aIsSignalingNaN ) {
+        if ( bIsSignalingNaN ) goto returnLargerSignificand;
+        return bIsNaN ? b : a;
+    }
+    else if ( aIsNaN ) {
+        if ( bIsSignalingNaN | ! bIsNaN ) return a;
+ returnLargerSignificand:
+        if ( (bits32) ( a<<1 ) < (bits32) ( b<<1 ) ) return b;
+        if ( (bits32) ( b<<1 ) < (bits32) ( a<<1 ) ) return a;
+        return ( a < b ) ? a : b;
+    }
+    else {
+        return b;
+    }
 
 }
 
@@ -145,8 +158,8 @@ static float32 propagateFloat32NaN( float32 a, float32 b )
 | `low' values hold the most- and least-significant bits, respectively.
 *----------------------------------------------------------------------------*/
 enum {
-    float64_default_nan_high = 0x7FFFFFFF,
-    float64_default_nan_low  = 0xFFFFFFFF
+    float64_default_nan_high = 0xFFF80000,
+    float64_default_nan_low  = 0x00000000
 };
 
 /*----------------------------------------------------------------------------
@@ -226,7 +239,20 @@ static float64 propagateFloat64NaN( float64 a, float64 b )
     a.high |= 0x00080000;
     b.high |= 0x00080000;
     if ( aIsSignalingNaN | bIsSignalingNaN ) float_raise( float_flag_invalid );
-    return bIsSignalingNaN ? b : aIsSignalingNaN ? a : bIsNaN ? b : a;
+    if ( aIsSignalingNaN ) {
+        if ( bIsSignalingNaN ) goto returnLargerSignificand;
+        return bIsNaN ? b : a;
+    }
+    else if ( aIsNaN ) {
+        if ( bIsSignalingNaN | ! bIsNaN ) return a;
+ returnLargerSignificand:
+        if ( lt64( a.high<<1, a.low, b.high<<1, b.low ) ) return b;
+        if ( lt64( b.high<<1, b.low, a.high<<1, a.low ) ) return a;
+        return ( a.high < b.high ) ? a : b;
+    }
+    else {
+        return b;
+    }
 
 }
 
