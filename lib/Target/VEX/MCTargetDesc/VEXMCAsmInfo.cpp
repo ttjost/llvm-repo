@@ -31,7 +31,7 @@ VEXMCAsmInfo::VEXMCAsmInfo(const Triple &TT) {
     ZeroDirective               = "\t.skip\t";
     AscizDirective              = nullptr;
     
-    IsLittleEndian              = false;
+    IsLittleEndian              = true;
     
     // AUTHOR: Tiago Trevisan Jost
     // We need to set this to nullptr so we can generate correct code for VEX.
@@ -44,7 +44,7 @@ VEXMCAsmInfo::VEXMCAsmInfo(const Triple &TT) {
     Data8bitsDirective          = "\t.data1\t";
     Data16bitsDirective         = "\t.data2\t";
     Data32bitsDirective         = "\t.data4\t";
-    Data64bitsDirective         = "\t.data8\t";
+    Data64bitsDirective         = "\t.real8\t";
     PrivateGlobalPrefix         = "";
     CommentString               = "##";
     UseDataRegionDirectives     = true;

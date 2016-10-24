@@ -208,6 +208,8 @@ MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
     MachineFunction::iterator MBB = MI->getParent();
     MachineBasicBlock::iterator MII = MI;
 
+    DEBUG(MI->dump());
+
     unsigned idx = MI->getDesc().getSchedClass();
     unsigned Latency = II->getStageLatency(idx);
 
@@ -234,7 +236,7 @@ MachineBasicBlock::iterator VEXPacketizerList::addToPacket(MachineInstr *MI) {
         for (std::map<SUnit *, unsigned>::iterator Inst = DataHazards.begin(),
              E = DataHazards.end(); Inst != E; ++Inst) {
              SUnit* InstWithLatency = Inst->first;
-            //InstWithLatency->getInstr()->dump();
+            DEBUG(InstWithLatency->getInstr()->dump());
             if (InstWithLatency->isSucc(SUI))
                 for (SDep dep : InstWithLatency->Succs)
                     if (dep.getSUnit() == SUI) {

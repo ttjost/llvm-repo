@@ -103,7 +103,6 @@ VEXTargetLowering::VEXTargetLowering(const TargetMachine &TM,
       setMinFunctionAlignment(1);
 
     setBooleanContents(ZeroOrOneBooleanContent);
-
     addRegisterClass(MVT::i32, &VEX::GPRegsRegClass);
     addRegisterClass(MVT::i1, &VEX::BrRegsRegClass);
 
@@ -120,19 +119,19 @@ VEXTargetLowering::VEXTargetLowering(const TargetMachine &TM,
         setLibcallName(RTLIB::SINTTOFP_I32_F64, "int32_to_float64");
         setLibcallName(RTLIB::FPTOSINT_F32_I32, "float32_to_int32");
         setLibcallName(RTLIB::FPEXT_F32_F64, "float32_to_float64");
-        
+
         // Single-precision comparisons.
         setLibcallName(RTLIB::ADD_F32, "float32_add");
         setLibcallName(RTLIB::SUB_F32, "float32_sub");
         setLibcallName(RTLIB::MUL_F32, "float32_mul");
         setLibcallName(RTLIB::DIV_F32, "float32_div");
-        
+
         // Double-precision floating-point arithmetic.
         setLibcallName(RTLIB::ADD_F64, "float64_add");
         setLibcallName(RTLIB::SUB_F64, "float64_sub");
         setLibcallName(RTLIB::MUL_F64, "float64_mul");
         setLibcallName(RTLIB::DIV_F64, "float64_div");
-        
+
         setLibcallName(RTLIB::OEQ_F32, "float32_eq");
         setLibcallName(RTLIB::OEQ_F64, "float64_eq");
 
@@ -150,6 +149,25 @@ VEXTargetLowering::VEXTargetLowering(const TargetMachine &TM,
 
         setLibcallName(RTLIB::OGT_F32, "float32_gt");
         setLibcallName(RTLIB::OGT_F64, "float64_gt");
+
+        setCmpLibcallCC(RTLIB::OEQ_F32, ISD::SETNE);
+        setCmpLibcallCC(RTLIB::UNE_F32, ISD::SETNE);
+        setCmpLibcallCC(RTLIB::OLT_F32, ISD::SETNE);
+        setCmpLibcallCC(RTLIB::OLE_F32, ISD::SETNE);
+        setCmpLibcallCC(RTLIB::OGE_F32, ISD::SETNE);
+        setCmpLibcallCC(RTLIB::OGT_F32, ISD::SETNE);
+        setCmpLibcallCC(RTLIB::UO_F32,  ISD::SETNE);
+        setCmpLibcallCC(RTLIB::O_F32,   ISD::SETEQ);
+
+        setCmpLibcallCC(RTLIB::OEQ_F64, ISD::SETNE);
+        setCmpLibcallCC(RTLIB::UNE_F64, ISD::SETNE);
+        setCmpLibcallCC(RTLIB::OLT_F64, ISD::SETNE);
+        setCmpLibcallCC(RTLIB::OLE_F64, ISD::SETNE);
+        setCmpLibcallCC(RTLIB::OGE_F64, ISD::SETNE);
+        setCmpLibcallCC(RTLIB::OGT_F64, ISD::SETNE);
+        setCmpLibcallCC(RTLIB::UO_F64,  ISD::SETNE);
+        setCmpLibcallCC(RTLIB::O_F64,   ISD::SETEQ);
+
     }
     // *************************************************
 
@@ -770,11 +788,11 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
     // Assign locations to each value returned by this call.
     SmallVector<CCValAssign, 16> RetLocs;
     CCState RetCCInfo(CallConv, IsVarArg, MF, RetLocs, *DAG.getContext());
-    
+
     AnalyzeRetResult(RetCCInfo, Ins);
-    
+
     if (IsTailCall) {
-        
+
         // When we have tail calls, we can assume that both callee and caller
         // have the same number of return values. This is a known property of tail calls.
         if (GlobalNode != nullptr) {
@@ -792,7 +810,7 @@ VEXTargetLowering::LowerCall(CallLoweringInfo &CLI,
                 addFunctionReturn(std::string(ExtSymbNode->getSymbol()), (unsigned)RetLocs.size());
             }
         }
-        
+
         return DAG.getNode(VEXISD::PSEUDO_TAILCALL, DL, NodeTys, Ops);
     }
 

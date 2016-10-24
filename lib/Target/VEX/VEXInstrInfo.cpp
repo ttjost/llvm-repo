@@ -95,7 +95,8 @@ void VEXInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
                     llvm_unreachable("Impossible to Copy from Branch Register to Link register.");
             }
         }
-    BuildMI(MBB, MI, DL, get(Opc), DestReg).addReg(SrcReg, getKillRegState(KillSrc));
+//    BuildMI(MBB, MI, DL, get(Opc), DestReg).addReg(SrcReg, getKillRegState(KillSrc));
+    BuildMI(MBB, MI, DL, get(Opc), DestReg).addReg(SrcReg);
 
 }
 
@@ -170,6 +171,7 @@ bool VEXInstrInfo::expandPostRAPseudo(MachineBasicBlock::iterator MI) const {
             BuildMI(MBB, MI, MI->getDebugLoc(), get(VEX::LDW), DstRegFirst.getReg())
                     .addOperand(FrameIndex)
                     .addOperand(MemOperand);
+            DstRegFirst.setIsDef(false);
             BuildMI(MBB, MI, MI->getDebugLoc(), get(VEX::MTB), DstRegLast.getReg())
                     .addOperand(DstRegFirst);
             MBB.erase(MI);
