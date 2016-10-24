@@ -99,7 +99,6 @@ VEXTargetLowering::VEXTargetLowering(const TargetMachine &TM,
       setMinFunctionAlignment(1);
 
     setBooleanContents(ZeroOrOneBooleanContent);
-
     addRegisterClass(MVT::i32, &VEX::GPRegsRegClass);
     addRegisterClass(MVT::i1, &VEX::BrRegsRegClass);
 
@@ -144,7 +143,25 @@ VEXTargetLowering::VEXTargetLowering(const TargetMachine &TM,
     setLibcallName(RTLIB::OLE_F64, "float64_le");
 
     setLibcallName(RTLIB::OGT_F32, "float32_gt");
-    setLibcallName(RTLIB::OGT_F32, "float64_gt");
+    setLibcallName(RTLIB::OGT_F64, "float64_gt");
+
+    setCmpLibcallCC(RTLIB::OEQ_F32, ISD::SETNE);
+    setCmpLibcallCC(RTLIB::UNE_F32, ISD::SETNE);
+    setCmpLibcallCC(RTLIB::OLT_F32, ISD::SETNE);
+    setCmpLibcallCC(RTLIB::OLE_F32, ISD::SETNE);
+    setCmpLibcallCC(RTLIB::OGE_F32, ISD::SETNE);
+    setCmpLibcallCC(RTLIB::OGT_F32, ISD::SETNE);
+    setCmpLibcallCC(RTLIB::UO_F32,  ISD::SETNE);
+    setCmpLibcallCC(RTLIB::O_F32,   ISD::SETEQ);
+
+    setCmpLibcallCC(RTLIB::OEQ_F64, ISD::SETNE);
+    setCmpLibcallCC(RTLIB::UNE_F64, ISD::SETNE);
+    setCmpLibcallCC(RTLIB::OLT_F64, ISD::SETNE);
+    setCmpLibcallCC(RTLIB::OLE_F64, ISD::SETNE);
+    setCmpLibcallCC(RTLIB::OGE_F64, ISD::SETNE);
+    setCmpLibcallCC(RTLIB::OGT_F64, ISD::SETNE);
+    setCmpLibcallCC(RTLIB::UO_F64,  ISD::SETNE);
+    setCmpLibcallCC(RTLIB::O_F64,   ISD::SETEQ);
 
     // *************************************************
 
