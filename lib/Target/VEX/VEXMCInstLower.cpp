@@ -115,7 +115,7 @@ void VEXMCInstLower::Lower(const MachineInstr *MI,
                 InBundleMI.addOperand(MCOp);
         }
 
-        if (numValArgumentOrLane != 0) {
+        if (numValArgumentOrLane != 0 || (numValArgumentOrLane == 0 && numValReturn != 0)) {
             MachineOperand MO = MachineOperand::CreateImm(numValArgumentOrLane);
             MCOperand MCOp = LowerOperand(MO);
             InBundleMI.addOperand(MCOp);
