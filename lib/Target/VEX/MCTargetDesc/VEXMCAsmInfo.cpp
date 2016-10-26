@@ -31,7 +31,7 @@ VEXMCAsmInfo::VEXMCAsmInfo(const Triple &TT) {
     ZeroDirective               = "\t.skip\t";
     AscizDirective              = nullptr;
     
-    IsLittleEndian              = true;
+    IsLittleEndian              = false;
     
     // AUTHOR: Tiago Trevisan Jost
     // We need to set this to nullptr so we can generate correct code for VEX.

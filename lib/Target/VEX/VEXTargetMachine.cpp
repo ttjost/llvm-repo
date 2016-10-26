@@ -76,7 +76,7 @@ static std::string computeDataLayout() {
     
     // 8 and 16 bit integers only need no have natural alignment, but try to
     // align them to 32 bits. 64 bit integers have natural alignment.
-    Ret += "-i8:8:32-i16:16:32-i32:32-f64:32:64";
+    Ret += "-i8:8:32-i16:16:32-i32:32-f64:32";
     
     // 32 bit registers are always available and the stack is at least 64 bit
     // aligned.
