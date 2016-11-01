@@ -66,6 +66,61 @@ def brtarget : Operand<OtherVT> {
   let DecoderMethod = "DecodeBranchTarget";
 }
 
+
+// 128-bit load pattern fragments
+// NOTE: all 128-bit integer vector loads are promoted to v2i64
+def loadv4i32    : PatFrag<(ops node:$ptr), (v4i32 (load node:$ptr))>;
+
+// 256-bit load pattern fragments
+// NOTE: all 256-bit integer vector loads are promoted to v8i32
+def loadv8i32    : PatFrag<(ops node:$ptr), (v8i32 (load node:$ptr))>;
+
+// 512-bit load pattern fragments
+
+
+
+
+// Like 'store', but always requires 128-bit vector alignment.
+def alignedstore128 : PatFrag<(ops node:$val, node:$ptr),
+(store node:$val, node:$ptr), [{
+    return cast<StoreSDNode>(N)->getAlignment() >= 16;
+}]>;
+
+// Like 'store', but always requires 256-bit vector alignment.
+def alignedstore256 : PatFrag<(ops node:$val, node:$ptr),
+(store node:$val, node:$ptr), [{
+    return cast<StoreSDNode>(N)->getAlignment() >= 32;
+}]>;
+
+// Like 'store', but always requires 512-bit vector alignment.
+def alignedstore512 : PatFrag<(ops node:$val, node:$ptr),
+(store node:$val, node:$ptr), [{
+    return cast<StoreSDNode>(N)->getAlignment() >= 64;
+}]>;
+
+// Like 'load', but always requires 128-bit vector alignment.
+def alignedload : PatFrag<(ops node:$ptr), (load node:$ptr), [{
+    return cast<LoadSDNode>(N)->getAlignment() >= 16;
+}]>;
+
+// Like 'load', but always requires 256-bit vector alignment.
+def alignedload256 : PatFrag<(ops node:$ptr), (load node:$ptr), [{
+    return cast<LoadSDNode>(N)->getAlignment() >= 32;
+}]>;
+
+// Like 'load', but always requires 512-bit vector alignment.
+def alignedload512 : PatFrag<(ops node:$ptr), (load node:$ptr), [{
+    return cast<LoadSDNode>(N)->getAlignment() >= 64;
+}]>;
+
+// 128-bit aligned load pattern fragments
+// NOTE: all 128-bit integer vector loads are promoted to v2i64
+def alignedloadv4i32 : PatFrag<(ops node:$ptr),
+(v4i32 (alignedload node:$ptr))>;
+def alignedloadv8i32 : PatFrag<(ops node:$ptr),
+(v8i32 (alignedload node:$ptr))>;
+
+
 //===----------------------------------------------------------------------===//
 // HMCVEX Profiles and Nodes
 //===----------------------------------------------------------------------===//
@@ -714,11 +769,11 @@ defm CMPNE  : CMPInstr<"cmpne", 0b01001001, setne, IICmpBr, IICmpGr>;
 //===----------------------------------------------------------------------===//
 
 // Vector Instructions
-def LDWVec128       : LoadInstrVec<"ldwvec128", 0b00010000, HMCRegs128, load_a, IILoad>;
-def LDWVec256       : LoadInstrVec<"ldwvec256", 0b00010000, HMCRegs256, load_a, IILoad>;
+def LDWVec128       : LoadInstrVec<"ldwvec128", 0b00010000, HMCRegs128, load, IILoad>;
+def LDWVec256       : LoadInstrVec<"ldwvec256", 0b00010000, HMCRegs256, load, IILoad>;
 
-def STWVec128       : StoreInstrVec<"stwvec128", 0b00010101, HMCRegs128, store_a, IIStore>;
-def STWVec256       : StoreInstrVec<"stwvec256", 0b00010101, HMCRegs256, store_a, IIStore>;
+def STWVec128       : StoreInstrVec<"stwvec128", 0b00010101, HMCRegs128, store, IIStore>;
+def STWVec256       : StoreInstrVec<"stwvec256", 0b00010101, HMCRegs256, store, IIStore>;
 
 
 def LDW       : LoadInstr<"ldw", 0b00010000, load_a, IILoad>;
@@ -778,6 +833,27 @@ let isCall = 1 in {
 //===----------------------------------------------------------------------===//
 //                       Non-Instruction Patterns
 //===----------------------------------------------------------------------===//
+
+
+def : Pat<(alignedloadv4i32 ADDR:$src),
+            (LDWVec128 ADDR:$src)>;
+def : Pat<(loadv4i32 ADDR:$src),
+            (LDWVec128 ADDR:$src)>;
+
+def : Pat<(alignedloadv8i32 ADDR:$src),
+            (LDWVec256 ADDR:$src)>;
+def : Pat<(loadv8i32 ADDR:$src),
+            (LDWVec256 ADDR:$src)>;
+
+def : Pat<(alignedstore128 (v4i32 HMCRegs128:$src), ADDR:$dst),
+            (STWVec128 HMCRegs128:$src, ADDR:$dst)>;
+def : Pat<(alignedstore128 (v4i32 HMCRegs128:$src), ADDR:$dst),
+            (STWVec128 HMCRegs128:$src, ADDR:$dst)>;
+
+def : Pat<(alignedstore256 (v8i32 HMCRegs256:$src), ADDR:$dst),
+            (STWVec256 HMCRegs256:$src, ADDR:$dst)>;
+def : Pat<(alignedstore256 (v8i32 HMCRegs256:$src), ADDR:$dst),
+            (STWVec256 HMCRegs256:$src, ADDR:$dst)>;
 
 //def : Pat<(mul GPRegs:$lhs, GPRegs:$rhs), (ADDr (MPYLUr $lhs, $rhs), (MPYHSr $lhs, $rhs))>;
 //def : Pat<(mul GPRegs:$lhs, GPRegs:$rhs), (ADDr (MPYLUi $lhs, $rhs), (MPYHSi $lhs, $rhs))>;

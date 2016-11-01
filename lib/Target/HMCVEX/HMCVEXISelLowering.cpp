@@ -141,7 +141,19 @@ HMCVEXTargetLowering::HMCVEXTargetLowering(const TargetMachine &TM,
     // *************************************************
 
     setOperationAction(ISD::SIGN_EXTEND_INREG, MVT::i1, Expand);
-
+        
+    
+    setOperationAction(ISD::LOAD, MVT::v4i32, Legal);
+    setOperationAction(ISD::LOAD, MVT::v8i32, Legal);
+    setOperationAction(ISD::STORE, MVT::v4i32, Legal);
+    setOperationAction(ISD::STORE, MVT::v8i32, Legal);
+        
+    setOperationAction(ISD::MLOAD, MVT::v8i32, Legal);
+    setOperationAction(ISD::MSTORE, MVT::v8i32, Legal);
+        
+    setOperationAction(ISD::MLOAD, MVT::v4i32, Legal);
+    setOperationAction(ISD::MSTORE, MVT::v4i32, Legal);
+    
     setOperationAction(ISD::ADD, MVT::v4i32, Custom);
     setOperationAction(ISD::ADD, MVT::v8i32, Custom);
 //    setOperationAction(ISD::STORE, MVT::v4i32, Expand);
@@ -2036,4 +2048,14 @@ SDValue HMCVEXTargetLowering::LowerADDVec(SDValue Op, SelectionDAG &DAG) const {
         llvm_unreachable("Type is not yet supported");
 
     return DAG.getNode(Opcode, dl, ValueType, Op1, Op2);
+}
+
+bool
+HMCVEXTargetLowering::allowsMisalignedMemoryAccesses(EVT VT,
+                                                  unsigned,
+                                                  unsigned,
+                                                  bool *Fast) const {
+    if (Fast)
+        llvm_unreachable("Fast is set to true in allowsMisalignedMemoryAccesses Method. Not sure how to deal it right now, so abort execution.s");
+    return true;
 }

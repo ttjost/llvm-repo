@@ -59,7 +59,7 @@ let SubRegIndices = [sub0, sub1, sub2, sub3], CoveredBySubRegs = 1 in {
 
 let SubRegIndices = [sub0, sub1, sub2, sub3, sub4, sub5, sub6, sub7], CoveredBySubRegs = 1 in {
     foreach I = 0-63 in
-    def HMCReg256_#I : HMCVEXReg<!shl(I,2), "HMCReg"#I, [!cast<Register>("Reg"#!add(!shl(I,2), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,2), 1), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,2), 2), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,2), 3), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,2), 4), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,2), 5), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,2), 6), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,2), 7), 10))]>;
+    def HMCReg256_#I : HMCVEXReg<!shl(I,3), "HMCReg"#I, [!cast<Register>("Reg"#!add(!shl(I,3), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,3), 1), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,3), 2), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,3), 3), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,3), 4), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,3), 5), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,3), 6), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,3), 7), 10))]>;
 }
 
 def HMCRegs128 : RegisterClass<"HMCVEX", [v4i32], 128, (sequence "HMCReg128_%u", 0, 127)> {

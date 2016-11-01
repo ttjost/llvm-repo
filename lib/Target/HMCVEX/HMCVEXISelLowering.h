@@ -274,6 +274,11 @@ private:
                           SDValue True, SDValue False,
                           SDValue CC, SelectionDAG &DAG) const;
     
+    /// Returns true if the target allows unaligned memory accesses of the
+    /// specified type. Returns whether it is "fast" in the last argument.
+    bool allowsMisalignedMemoryAccesses(EVT VT, unsigned AS, unsigned Align,
+                                        bool *Fast) const override;
+    
 };
 
 }
