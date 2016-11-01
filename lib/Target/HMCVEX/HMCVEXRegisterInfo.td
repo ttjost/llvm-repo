@@ -3,9 +3,15 @@
 //===----------------------------------------------------------------------===//
 
 
-class HMCVEXReg<bits<16> Enc, string n> : Register<n> {
+class HMCVEXReg<bits<16> Enc, string n, list<Register> subregs = [] > : Register<n> {
   let HWEncoding = Enc;
   let Namespace = "HMCVEX";
+  let SubRegs = subregs;
+}
+
+let Namespace = "HMCVEX" in {
+    foreach I = 0-7 in
+        def sub#I       : SubRegIndex<32, !shl(I,5)>;
 }
 
 // Defining class for Registers
@@ -23,7 +29,7 @@ class Lr<bits<16> Enc, string n> : HMCVEXReg<Enc, n>;
 // Defining General Purpose registers
 // TODO: Make parametrizable
 // TODO: General purpose Registers
-foreach I = 0-511 in
+foreach I = 0-600 in
   def Reg#I : HMCVEXGPR<I, "r0."#I>, DwarfRegNum<[I]>;
 
 // Branch Registers
@@ -44,3 +50,22 @@ def BrRegs  : RegisterClass<"HMCVEX", [i1], 32, (sequence "BrReg%u", 0, 7)> {
 
 def LrReg   : RegisterClass<"HMCVEX", [i32], 32, (add Lr)> {
 }
+
+
+let SubRegIndices = [sub0, sub1, sub2, sub3], CoveredBySubRegs = 1 in {
+    foreach I = 0-127 in
+        def HMCReg128_#I : HMCVEXReg<!shl(I,2), "HMCReg"#I, [!cast<Register>("Reg"#!add(!shl(I,2), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,2), 1), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,2), 2), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,2), 3), 10))]>;
+}
+
+let SubRegIndices = [sub0, sub1, sub2, sub3, sub4, sub5, sub6, sub7], CoveredBySubRegs = 1 in {
+    foreach I = 0-63 in
+    def HMCReg256_#I : HMCVEXReg<!shl(I,2), "HMCReg"#I, [!cast<Register>("Reg"#!add(!shl(I,2), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,2), 1), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,2), 2), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,2), 3), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,2), 4), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,2), 5), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,2), 6), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,2), 7), 10))]>;
+}
+
+def HMCRegs128 : RegisterClass<"HMCVEX", [v4i32], 128, (sequence "HMCReg128_%u", 0, 127)> {
+}
+
+def HMCRegs256 : RegisterClass<"HMCVEX", [v8i32], 256, (sequence "HMCReg256_%u", 0, 63)> {
+}
+
+

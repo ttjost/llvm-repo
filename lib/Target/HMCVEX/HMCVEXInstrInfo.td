@@ -44,7 +44,7 @@ def ADDR : ComplexPattern<iPTR, 2, "SelectAddr", [frameindex], []>;
 def HMCVEXMEMriAsmOperand : AsmOperandClass {
   let Name = "MEMri";
   let ParserMethod = "parseMEMOperand";
-} 
+}
 
 def MEM : Operand<iPTR> {
   let PrintMethod = "printMemOperand";
@@ -83,6 +83,9 @@ def SDT_HMCVEXWrapper : SDTypeProfile <1, 1, [SDTCisSameAs<0, 1>,
 def SDT_HMCVEXMov : SDTypeProfile <1, 1, [SDTCisSameAs<0, 1>,
                                     SDTCisInt<0>]>;
 
+def SDT_HMCVEXAdd : SDTypeProfile <1, 2, [SDTCisSameAs<0, 1>,
+SDTCisInt<0>]>;
+
 def SDT_HMCVEXTWORESULT : SDTypeProfile<2, 3,
                                      [SDTCisSameAs<0, 2>,
                                      SDTCisSameAs<0, 3>,
@@ -109,6 +112,9 @@ def HMCVEXPseudoRet : SDNode<"HMCVEXISD::PSEUDO_RET", SDTNone,
                           [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
 
 def HMCVEXMov : SDNode<"HMCVEXISD::MOV", SDT_HMCVEXMov>;
+
+def HMCVEXAdd : SDNode<"HMCVEXISD::ADD", SDT_HMCVEXAdd>;
+
 
 def HMCVEXADDCG    : SDNode<"HMCVEXISD::ADDCG", SDT_HMCVEXTWORESULT>;
 def HMCVEXDIVS     : SDNode<"HMCVEXISD::DIVS", SDT_HMCVEXTWORESULT>;
@@ -192,8 +198,16 @@ multiclass ArithLogicInstr<string OpcStr, bits<8> Opcode, SDNode OpNode, InstrIt
                       (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                       !strconcat(OpcStr, " $dst = $s1, $s2"),
                       [(set GPRegs:$dst, (OpNode GPRegs:$s1, imm32:$s2))], Itin, isCommI>;
-    
+
 }
+
+multiclass ArithLogicInstrVec<string OpcStr, bits<8> Opcode, RegisterClass DstOp, RegisterClass SrcOp, SDNode OpNode, InstrItinClass Itin, bit isCommR = 0, bit isCommI = 0> {
+    def r  : ArithLogic_r <Opcode,
+    (outs DstOp:$dst), (ins SrcOp:$s1, SrcOp:$s2),
+    !strconcat(OpcStr, " $dst = $s1, $s2"),
+    [(set DstOp:$dst, (OpNode SrcOp:$s1, SrcOp:$s2))], Itin, isCommR>;
+}
+
 
 /// Type I
 multiclass SHIFTInstr<string OpcStr, bits<8> Opcode, SDNode OpNode, InstrItinClass Itin, bit isCommR = 0, bit isCommI = 0> {
@@ -262,6 +276,15 @@ class LoadInstrLr<string OpcStr, bits<8> OpVal, PatFrag OpNode, InstrItinClass I
     let mayLoad = 1;
 }
 
+class LoadInstrVec<string OpcStr, bits<8> OpVal, RegisterClass RC, PatFrag OpNode, InstrItinClass Itin>
+    : InstHMCVEX<(outs RC:$dst), (ins MEM:$addr),
+                !strconcat(OpcStr, " $dst = $addr"),
+                [(set RC:$dst, (OpNode ADDR:$addr))], Itin>{
+//    let DecoderMethod = "DecodeMem";
+    let canFoldAsLoad = 1;
+    let mayLoad = 1;
+}
+
 class StoreInstr<string OpcStr, bits<8> OpVal, PatFrag OpNode, InstrItinClass Itin>
     : InstHMCVEX<(outs), (ins GPRegs:$s1, MEM:$addr),
                 !strconcat(OpcStr, " $addr = $s1"),
@@ -274,6 +297,14 @@ class StoreInstrLr<string OpcStr, bits<8> OpVal, PatFrag OpNode, InstrItinClass 
     : InstHMCVEX<(outs), (ins LrReg:$s1, MEM:$addr),
                 !strconcat(OpcStr, " $addr = $s1"),
                 [(OpNode LrReg:$s1, ADDR:$addr)], Itin>{
+    //    let DecoderMethod = "DecodeMem";
+    let mayStore = 1;
+}
+
+class StoreInstrVec<string OpcStr, bits<8> OpVal, RegisterClass RC, PatFrag OpNode, InstrItinClass Itin>
+    : InstHMCVEX<(outs), (ins RC:$s1, MEM:$addr),
+                !strconcat(OpcStr, " $addr = $s1"),
+                [(OpNode RC:$s1, ADDR:$addr)], Itin>{
     //    let DecoderMethod = "DecodeMem";
     let mayStore = 1;
 }
@@ -344,7 +375,7 @@ def r  : InstHMCVEX<(outs GPRegs:$dst), (ins BrRegs:$cond, GPRegs:$s1, GPRegs:$s
 def i  : InstHMCVEX<(outs GPRegs:$dst), (ins BrRegs:$cond, GPRegs:$s1, imm32Op:$s2),
                  "slct $dst = $cond, $s1, $s2",
                  [(set GPRegs:$dst, (select BrRegs:$cond, GPRegs:$s1, imm32:$s2))], Itin>;
-                 
+
 def Fr  : InstHMCVEX<(outs GPRegs:$dst), (ins BrRegs:$cond, GPRegs:$s1, GPRegs:$s2),
                  "slctf $dst = $cond, $s1, $s2",
                  [(set GPRegs:$dst, (select (not BrRegs:$cond), GPRegs:$s1, GPRegs:$s2))], Itin>;
@@ -427,8 +458,12 @@ def ADJCALLSTACKUP : Pseudo<(outs), (ins imm32Op:$amt1, imm32Op:$amt2),
                               [(HMCVEXCallseq_end timm:$amt1, timm:$amt2)],
                               "#ADJCALLSTACKUP">;
 
+defm ADD128  : ArithLogicInstrVec<"add128", 0b00000000, HMCRegs128, HMCRegs128, HMCVEXAdd, IIAlu, 1, 1>;
+defm ADD256  : ArithLogicInstrVec<"add256", 0b00000000, HMCRegs256, HMCRegs256, HMCVEXAdd, IIAlu, 1, 1>;
+
 // ADD Instruction
 defm ADD    : ArithLogicInstr<"add", 0b01100010, add, IIAlu, 1, 1>;
+
 
 // AND Instruction
 defm AND    : ArithLogicInstr<"and", 0b01100011, and, IIAlu, 1, 1>;
@@ -445,10 +480,10 @@ def ANDCi      : ArithLogic_i<0b01100100,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                           "andc $dst = $s1, $s2",
                            [(set GPRegs:$dst, (and (not GPRegs:$s1), imm32:$s2))], IIAlu, 0>;
-           
+
 // MAX/MIN Instructions
 defm MAX    : ArithLogicInstr<"max", 0b01100101, HMCVEXMax, IIAlu>;
-                           
+
 defm MAXU   : ArithLogicInstr<"maxu", 0b01100110, HMCVEXMaxu, IIAlu>;
 
 defm MIN    : ArithLogicInstr<"min", 0b01100100, HMCVEXMin, IIAlu>;
@@ -507,7 +542,7 @@ def SH4ADDi      : ArithLogic_i<0b01101110,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, imm32Op:$s2),
                           "sh4add $dst = $s1, $s2",
                            [], IIAlu, 0>;
-                                                     
+
 // SHL Instruction
 def SHLr        : SHIFT_r<0b01101111,
                           (outs GPRegs:$dst), (ins GPRegs:$s1, GPRegs:$s2),
@@ -652,9 +687,9 @@ defm MPYLU      : ArithLogicInstr<"mpylu", 0b00000110, HMCVEXMPYLU, IIMultiply, 
 defm MPYH       : ArithLogicInstr<"mpyh", 0b00000111, HMCVEXMPYH, IIMultiply, 1, 1>;
 
 defm MPYHU      : ArithLogicInstr<"mpyhh", 0b00001001, HMCVEXMPYHU, IIMultiply, 1, 1>;
-                           
+
 defm MPYHS      : ArithLogicInstr<"mpyhs", 0b00001010, HMCVEXMPYHS, IIMultiply, 1, 1>;
-                           
+
 //===----------------------------------------------------------------------===//
 //                      Compare instructions
 //===----------------------------------------------------------------------===//
@@ -677,6 +712,14 @@ defm CMPNE  : CMPInstr<"cmpne", 0b01001001, setne, IICmpBr, IICmpGr>;
 //===----------------------------------------------------------------------===//
 //                      Memory instructions
 //===----------------------------------------------------------------------===//
+
+// Vector Instructions
+def LDWVec128       : LoadInstrVec<"ldwvec128", 0b00010000, HMCRegs128, load_a, IILoad>;
+def LDWVec256       : LoadInstrVec<"ldwvec256", 0b00010000, HMCRegs256, load_a, IILoad>;
+
+def STWVec128       : StoreInstrVec<"stwvec128", 0b00010101, HMCRegs128, store_a, IIStore>;
+def STWVec256       : StoreInstrVec<"stwvec256", 0b00010101, HMCRegs256, store_a, IIStore>;
+
 
 def LDW       : LoadInstr<"ldw", 0b00010000, load_a, IILoad>;
 def STW       : StoreInstr<"stw", 0b00010101, store_a, IIStore>;

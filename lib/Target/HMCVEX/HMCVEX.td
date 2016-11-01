@@ -35,13 +35,13 @@ include "HMCVEXCallingConv.td"
 
 def     HMCVEXInstrInfo    :   InstrInfo;
 
-// Without this will have error: 'hmc-vex' is not a recognized processor for
+// Without this will have error: 'hmc' is not a recognized processor for
 //  this target (ignoring processor)
 //===----------------------------------------------------------------------===//
 // HMCVEX Subtarget features                                                    //
 //===----------------------------------------------------------------------===//
 
-//def NoFeature     : SubtargetFeature<"hmc-vex", "HMCVEXArchVersion", "HMCVEX", "HMCVEX ISA Support", []>;
+//def NoFeature     : SubtargetFeature<"hmc", "HMCVEXArchVersion", "HMCVEX", "HMCVEX ISA Support", []>;
 
 //===----------------------------------------------------------------------===//
 // HMCVEX supported processors.

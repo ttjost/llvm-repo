@@ -16,8 +16,8 @@ Target llvm::TheHMCVEXTarget;
 Target llvm::TheHMCVEXNewTarget;
 
 extern "C" void LLVMInitializeHMCVEXTargetInfo() {
-    RegisterTarget<Triple::hmcvex,
-        /*HasJIT=*/false> X(TheHMCVEXTarget, "hmc-vex", "HMC VEX");
+    RegisterTarget<Triple::hmc,
+        /*HasJIT=*/false> X(TheHMCVEXTarget, "hmc", "HMC VEX");
     
 //    RegisterTarget<Triple::HMCVEXnew,
 //        /*HasJIT=*/false> Y(TheHMCVEXNewTarget,"HMCVEXnew", "HMCVEX New Scheduling");

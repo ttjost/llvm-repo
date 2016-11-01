@@ -78,7 +78,10 @@ namespace llvm {
 
             DYNALLOC,
             
-            SYNC
+            SYNC,
+
+            // HMC Vector Instructions
+            ADD
             
         };
     }
@@ -203,6 +206,8 @@ private:
     
     SDValue LowerMULHS(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerMULHU(SDValue Op, SelectionDAG &DAG) const;
+
+    SDValue LowerADDVec(SDValue Op, SelectionDAG &DAG) const;
 
     SDValue
     LowerCall(CallLoweringInfo &CLI,

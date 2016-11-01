@@ -83,6 +83,9 @@ const char *HMCVEXTargetLowering::getTargetNodeName(unsigned Opcode) const {
         case HMCVEXISD::MPYHU:         return "HMCVEXISD::MPYHU";
         case HMCVEXISD::MPYHS:         return "HMCVEXISD::MPYHS";
 
+        // HMC Vector Instructions
+        case HMCVEXISD::ADD:         return "HMCVEXISD::ADD";
+
         default:                return NULL;
     }
 }
@@ -102,7 +105,8 @@ HMCVEXTargetLowering::HMCVEXTargetLowering(const TargetMachine &TM,
 
     addRegisterClass(MVT::i32, &HMCVEX::GPRegsRegClass);
     addRegisterClass(MVT::i1, &HMCVEX::BrRegsRegClass);
-
+    addRegisterClass(MVT::v4i32, &HMCVEX::HMCRegs128RegClass);
+    addRegisterClass(MVT::v8i32, &HMCVEX::HMCRegs256RegClass);
 
     // *************************************************
     // Single-precision floating-point arithmetic.
@@ -137,6 +141,11 @@ HMCVEXTargetLowering::HMCVEXTargetLowering(const TargetMachine &TM,
     // *************************************************
 
     setOperationAction(ISD::SIGN_EXTEND_INREG, MVT::i1, Expand);
+
+    setOperationAction(ISD::ADD, MVT::v4i32, Custom);
+    setOperationAction(ISD::ADD, MVT::v8i32, Custom);
+//    setOperationAction(ISD::STORE, MVT::v4i32, Expand);
+//    setOperationAction(ISD::STORE, MVT::v8i32, Expand);
 
     // Load extented operations for i1 types must be promoted
     for (MVT VT : MVT::integer_valuetypes()) {
@@ -291,6 +300,7 @@ SDValue HMCVEXTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) cons
         case ISD::VASTART:              return LowerVASTART(Op, DAG);
         case ISD::RETURNADDR:         return LowerRETURNADDR(Op, DAG);
         case ISD::FRAMEADDR:          return LowerFRAMEADDR(Op, DAG);
+        case ISD::ADD:                  return LowerADDVec(Op, DAG);
         default:
             break;
     }
@@ -2004,4 +2014,26 @@ SDValue HMCVEXTargetLowering::PerformDAGCombine(SDNode *N,
     return SDValue();
 }
 
+SDValue HMCVEXTargetLowering::LowerADDVec(SDValue Op, SelectionDAG &DAG) const {
 
+    DEBUG(errs() << "Lower Add Vectorial: \n");
+    SDLoc dl(Op);
+    EVT ValueType = Op.getValueType();
+
+    if (ValueType != MVT::v4i32 && ValueType != MVT::v8i32) {
+        return SDValue();
+    }
+
+    SDValue Op1 = Op.getOperand(0);
+    SDValue Op2 = Op.getOperand(1);
+
+    unsigned Opcode;
+    if (ValueType == MVT::v4i32)
+        Opcode = HMCVEXISD::ADD;
+    else if (ValueType == MVT::v8i32)
+        Opcode = HMCVEXISD::ADD;
+    else
+        llvm_unreachable("Type is not yet supported");
+
+    return DAG.getNode(Opcode, dl, ValueType, Op1, Op2);
+}
