@@ -48,16 +48,16 @@ int huffman (UINT16 component, UINT8 output_ptr[], int k)
 	UINT16 numbits;
 	UINT32 data;
 
-	printf("huffman: %d\n",k);
+	// printf("huffman: %d\n",k);
 
 	Temp_Ptr = Temp;
 	Coeff = *Temp_Ptr++;
 
-	printf("Coeff: %d\n",Coeff);	
+	// printf("Coeff: %d\n",Coeff);	
 
 	if (component == 1)
 	{
-		printf("Component1\n");
+		// printf("Component1\n");
 		DcCodeTable = luminance_dc_code_table;
 		DcSizeTable = luminance_dc_size_table;
 		AcCodeTable = luminance_ac_code_table;
@@ -68,7 +68,7 @@ int huffman (UINT16 component, UINT8 output_ptr[], int k)
 	}
 	else
 	{
-			printf("Component2\n");
+			// printf("Component2\n");
 		DcCodeTable = chrominance_dc_code_table;
 		DcSizeTable = chrominance_dc_size_table;
 		AcCodeTable = chrominance_ac_code_table;
@@ -104,16 +104,16 @@ int huffman (UINT16 component, UINT8 output_ptr[], int k)
 	data = (HuffCode << DataSize) | Coeff;
 	numbits = HuffSize + DataSize;
 
-	printf("Huffsize: %d\n",HuffSize);
-	printf("DataSize: %d\n",DataSize);
+	// printf("Huffsize: %d\n",HuffSize);
+	// printf("DataSize: %d\n",DataSize);
 
-	printf("before putbits: %d\n",k);
-	printf("before bitindex: %d\n",bitindex);
-	printf("before numbits: %d\n",numbits);
+	// printf("before putbits: %d\n",k);
+	// printf("before bitindex: %d\n",bitindex);
+	// printf("before numbits: %d\n",numbits);
 	PUTBITS
-	printf("after putbits: %d\n\n",k);
-	printf("after bitindex: %d\n",bitindex);
-	printf("after numbits: %d\n",numbits);
+	// printf("after putbits: %d\n\n",k);
+	// printf("after bitindex: %d\n",bitindex);
+	// printf("after numbits: %d\n",numbits);
 
 	for (i=63; i>0; i--)
 	{

@@ -2268,3 +2268,118 @@ flag float64_lt_quiet( float64 a, float64 b )
 
 }
 
+
+/*Alterado por Pedro Henrique Exenberger Becker - phebecker@inf.ufrgs.br */
+/*----------------------------------------------------------------------------
+| Returns 1 if the single-precision floating-point value `a' is greater than
+| the corresponding value `b', and 0 otherwise.  The comparison is performed
+| according to the IEC/IEEE Standard for Binary Floating-Point Arithmetic.
+*----------------------------------------------------------------------------*/
+
+flag float32_gt( float32 a, float32 b )
+{
+    flag aSign, bSign;
+
+    if (    ( ( extractFloat32Exp( a ) == 0xFF ) && extractFloat32Frac( a ) )
+         || ( ( extractFloat32Exp( b ) == 0xFF ) && extractFloat32Frac( b ) )
+       ) {
+        float_raise( float_flag_invalid );
+        return 0;
+    }
+    aSign = extractFloat32Sign( a );
+    bSign = extractFloat32Sign( b );
+    if ( aSign != bSign ) return aSign && ( (bits32) ( ( a | b )<<1 ) != 0 );
+    return ( a != b ) && ( aSign ^ ( a > b ) );
+
+}
+
+/*----------------------------------------------------------------------------
+| Returns 1 if the single-precision floating-point value `a' is greater than
+| or equal to the corresponding value `b', and 0 otherwise.  The comparison
+| is performed according to the IEC/IEEE Standard for Binary Floating-Point
+| Arithmetic.
+*----------------------------------------------------------------------------*/
+
+flag float32_ge( float32 a, float32 b )
+{
+    flag aSign, bSign;
+
+    if (    ( ( extractFloat32Exp( a ) == 0xFF ) && extractFloat32Frac( a ) )
+         || ( ( extractFloat32Exp( b ) == 0xFF ) && extractFloat32Frac( b ) )
+       ) {
+        float_raise( float_flag_invalid );
+        return 0;
+    }
+    aSign = extractFloat32Sign( a );
+    bSign = extractFloat32Sign( b );
+    if ( aSign != bSign ) return aSign || ( (bits32) ( ( a | b )<<1 ) == 0 );
+    return ( a == b ) || ( aSign ^ ( a > b ) );
+
+}
+
+/*----------------------------------------------------------------------------
+| Returns 1 if the double-precision floating-point value `a' is greater than
+| the corresponding value `b', and 0 otherwise.  The comparison is performed
+| according to the IEC/IEEE Standard for Binary Floating-Point Arithmetic.
+
+*----------------------------------------------------------------------------*/
+
+flag float64_gt( float64 a, float64 b )
+{
+    flag aSign, bSign;
+
+    if (    (    ( extractFloat64Exp( a ) == 0x7FF )
+              && ( extractFloat64Frac0( a ) | extractFloat64Frac1( a ) ) )
+         || (    ( extractFloat64Exp( b ) == 0x7FF )
+              && ( extractFloat64Frac0( b ) | extractFloat64Frac1( b ) ) )
+       ) {
+        float_raise( float_flag_invalid );
+        return 0;
+    }
+    aSign = extractFloat64Sign( a );
+    bSign = extractFloat64Sign( b );
+    if ( aSign != bSign ) {
+        return
+               aSign
+            && (    ( ( (bits32) ( ( a.high | b.high )<<1 ) ) | a.low | b.low )
+                 != 0 );
+    }
+    return
+          aSign ? !(le64( b.high, b.low, a.high, a.low ))
+        : !(le64( a.high, a.low, b.high, b.low ));
+
+}
+
+/*----------------------------------------------------------------------------
+| Returns 1 if the double-precision floating-point value `a' is greater than
+| or equal to the corresponding value `b', and 0 otherwise.  The comparison
+| is performed according to the IEC/IEEE Standard for Binary Floating-Point
+| Arithmetic.
+*----------------------------------------------------------------------------*/
+
+flag float64_ge( float64 a, float64 b )
+{
+    flag aSign, bSign;
+
+    if (    (    ( extractFloat64Exp( a ) == 0x7FF )
+              && ( extractFloat64Frac0( a ) | extractFloat64Frac1( a ) ) )
+         || (    ( extractFloat64Exp( b ) == 0x7FF )
+              && ( extractFloat64Frac0( b ) | extractFloat64Frac1( b ) ) )
+       ) {
+        float_raise( float_flag_invalid );
+        return 0;
+    }
+    aSign = extractFloat64Sign( a );
+    bSign = extractFloat64Sign( b );
+    if ( aSign != bSign ) {
+        return
+               aSign
+            || (    ( ( (bits32) ( ( a.high | b.high )<<1 ) ) | a.low | b.low )
+                 == 0 );
+    }
+    return
+          aSign ? !(lt64( b.high, b.low, a.high, a.low ))
+        : !(lt64( a.high, a.low, b.high, b.low ));
+
+}
+

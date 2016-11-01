@@ -24,12 +24,12 @@ RgbImage srcImage;
 
 
 int main (int argc, const char* argv[]) {
-	char outputFileName[32];
+	// char outputFileName[32];
 	UINT32 qualityFactor;
 	UINT32 imageFormat;
 	FILE *fp;
 
-	strcpy(outputFileName, argv[1]);
+	// strcpy(outputFileName, argv[1]);
 
 	qualityFactor = 1024;
 	imageFormat = GRAY;
@@ -61,22 +61,21 @@ int main (int argc, const char* argv[]) {
 
 
 	
-	i = 0;
-	printf("%d",size);
-	fp = fopen(outputFileName, "wb");
-	if (fp != NULL) {
+	// i = 0;
+	// // printf("%d",size);
+	// fp = fopen(outputFileName, "wb");
+	// if (fp != NULL) {
 		
-		for(i=0;i<size;i++){
+	// 	for(i=0;i<size;i++){
 		
-			//printf("%d ", outputBuffer[i]);
-			//fprintf(fp, "%c" ,outputBuffer[i]);
-			//fprintf(fp, "%02x", outputBuffer[i]);
-			fputc(outputBuffer[i],fp);
-			//fwrite(outputBuffer, 1, 17898, fp);
-		}
-		fclose(fp);
-	}
+	// 		// printf("%d ", outputBuffer[i]);
+	// 		//fprintf(fp, "%c" ,outputBuffer[i]);
+	// 		//fprintf(fp, "%02x", outputBuffer[i]);
+	// 		fputc(outputBuffer[i],fp);
+	// 		//fwrite(outputBuffer, 1, 17898, fp);
+	// 	}
+	// 	fclose(fp);
+	// }
 	
 	return 0;
 }
-

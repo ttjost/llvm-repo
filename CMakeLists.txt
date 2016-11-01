@@ -190,7 +190,7 @@ set(LLVM_ALL_TARGETS
   X86
   XCore
   VEX
-  HMCVEX
+  HMC
   )
 
 # List of targets with JIT support:
