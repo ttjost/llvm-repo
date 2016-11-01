@@ -82,7 +82,9 @@ const char *HMCTargetLowering::getTargetNodeName(unsigned Opcode) const {
         case HMCISD::MPYH:          return "HMCISD::MPYH";
         case HMCISD::MPYHU:         return "HMCISD::MPYHU";
         case HMCISD::MPYHS:         return "HMCISD::MPYHS";
-
+            
+        case HMCISD::UNKNOWN:         return "HMCISD::UNKNOWN";
+            
         // HMC Vector Instructions
         case HMCISD::VEC_ADD:         return "HMCISD::VEC_ADD";
 
@@ -107,6 +109,7 @@ HMCTargetLowering::HMCTargetLowering(const TargetMachine &TM,
     addRegisterClass(MVT::i1, &HMC::BrRegsRegClass);
     addRegisterClass(MVT::v4i32, &HMC::HMCRegs128RegClass);
     addRegisterClass(MVT::v8i32, &HMC::HMCRegs256RegClass);
+    addRegisterClass(MVT::v16i32, &HMC::HMCRegs512RegClass);
 
     // *************************************************
     // Single-precision floating-point arithmetic.
@@ -127,35 +130,23 @@ HMCTargetLowering::HMCTargetLowering(const TargetMachine &TM,
     setLibcallName(RTLIB::FPTOSINT_F32_I32, "float32_to_int32");
 
     setLibcallName(RTLIB::FPEXT_F32_F64, "float32_to_float64");
-//    setLibcallName(RTLIB::FPEXT_F16_F32, "float64_to_float32");
-
-    // Single-precision comparisons.
-//    setLibcallName(RTLIB::OEQ_F32, "__eqsf2vfp");
-//    setLibcallName(RTLIB::UNE_F32, "__nesf2vfp");
-//    setLibcallName(RTLIB::OLT_F32, "__ltsf2vfp");
-//    setLibcallName(RTLIB::OLE_F32, "__lesf2vfp");
-//    setLibcallName(RTLIB::OGE_F32, "__gesf2vfp");
-//    setLibcallName(RTLIB::OGT_F32, "__gtsf2vfp");
-//    setLibcallName(RTLIB::UO_F32,  "__unordsf2vfp");
-//    setLibcallName(RTLIB::O_F32,   "__unordsf2vfp");
-    // *************************************************
 
     setOperationAction(ISD::SIGN_EXTEND_INREG, MVT::i1, Expand);
         
-    
-    setOperationAction(ISD::LOAD, MVT::v4i32, Legal);
-    setOperationAction(ISD::LOAD, MVT::v8i32, Legal);
-    setOperationAction(ISD::STORE, MVT::v4i32, Legal);
-    setOperationAction(ISD::STORE, MVT::v8i32, Legal);
-        
-    setOperationAction(ISD::MLOAD, MVT::v8i32, Legal);
-    setOperationAction(ISD::MSTORE, MVT::v8i32, Legal);
-        
-    setOperationAction(ISD::MLOAD, MVT::v4i32, Legal);
-    setOperationAction(ISD::MSTORE, MVT::v4i32, Legal);
+//    setOperationAction(ISD::LOAD, MVT::v4i32, Legal);
+//    setOperationAction(ISD::LOAD, MVT::v8i32, Legal);
+//    setOperationAction(ISD::STORE, MVT::v4i32, Legal);
+//    setOperationAction(ISD::STORE, MVT::v8i32, Legal);
+//        
+//    setOperationAction(ISD::MLOAD, MVT::v8i32, Legal);
+//    setOperationAction(ISD::MSTORE, MVT::v8i32, Legal);
+//        
+//    setOperationAction(ISD::MLOAD, MVT::v4i32, Legal);
+//    setOperationAction(ISD::MSTORE, MVT::v4i32, Legal);
     
     setOperationAction(ISD::ADD, MVT::v4i32, Custom);
     setOperationAction(ISD::ADD, MVT::v8i32, Custom);
+    setOperationAction(ISD::ADD, MVT::v16i32, Custom);
 //    setOperationAction(ISD::STORE, MVT::v4i32, Expand);
 //    setOperationAction(ISD::STORE, MVT::v8i32, Expand);
 
@@ -2035,16 +2026,19 @@ SDValue HMCTargetLowering::LowerADDVec(SDValue Op, SelectionDAG &DAG) const {
     if (ValueType != MVT::v4i32 && ValueType != MVT::v8i32) {
         return SDValue();
     }
+    
+    EVT ValueTypesSupported[] = {MVT::v4i32, MVT::v8i32, MVT::v16i32};
 
     SDValue Op1 = Op.getOperand(0);
     SDValue Op2 = Op.getOperand(1);
 
-    unsigned Opcode;
-    if (ValueType == MVT::v4i32)
-        Opcode = HMCISD::VEC_ADD;
-    else if (ValueType == MVT::v8i32)
-        Opcode = HMCISD::VEC_ADD;
-    else
+    unsigned Opcode = HMCISD::UNKNOWN;
+    
+    for (EVT VType : ValueTypesSupported) {
+        if (VType == ValueType)
+            Opcode = HMCISD::VEC_ADD;
+    }
+    if (Opcode == HMCISD::UNKNOWN)
         llvm_unreachable("Type is not yet supported");
 
     return DAG.getNode(Opcode, dl, ValueType, Op1, Op2);

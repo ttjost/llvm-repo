@@ -76,8 +76,7 @@ def loadv4i32    : PatFrag<(ops node:$ptr), (v4i32 (load node:$ptr))>;
 def loadv8i32    : PatFrag<(ops node:$ptr), (v8i32 (load node:$ptr))>;
 
 // 512-bit load pattern fragments
-
-
+def loadv16i32    : PatFrag<(ops node:$ptr), (v16i32 (load node:$ptr))>;
 
 
 // Like 'store', but always requires 128-bit vector alignment.
@@ -117,8 +116,12 @@ def alignedload512 : PatFrag<(ops node:$ptr), (load node:$ptr), [{
 // NOTE: all 128-bit integer vector loads are promoted to v2i64
 def alignedloadv4i32 : PatFrag<(ops node:$ptr),
 (v4i32 (alignedload node:$ptr))>;
+
 def alignedloadv8i32 : PatFrag<(ops node:$ptr),
 (v8i32 (alignedload node:$ptr))>;
+
+def alignedloadv16i32 : PatFrag<(ops node:$ptr),
+(v16i32 (alignedload node:$ptr))>;
 
 
 //===----------------------------------------------------------------------===//
@@ -520,6 +523,8 @@ def ADJCALLSTACKUP : Pseudo<(outs), (ins imm32Op:$amt1, imm32Op:$amt2),
 defm ADD128  : ArithLogicInstrVec<"add128", 0b00000000, HMCRegs128, HMCRegs128, HMCVecAdd, IIAlu, 1, 1>;
 defm ADD256  : ArithLogicInstrVec<"add256", 0b00000000, HMCRegs256, HMCRegs256, HMCVecAdd, IIAlu, 1, 1>;
 
+defm ADD512  : ArithLogicInstrVec<"add512", 0b00000000, HMCRegs512, HMCRegs512, HMCVecAdd, IIAlu, 1, 1>;
+
 // ADD Instruction
 defm ADD    : ArithLogicInstr<"add", 0b01100010, add, IIAlu, 1, 1>;
 
@@ -775,9 +780,11 @@ defm CMPNE  : CMPInstr<"cmpne", 0b01001001, setne, IICmpBr, IICmpGr>;
 // Vector Instructions
 def LDWVec128       : LoadInstrVec<"ldwvec128", 0b00010000, HMCRegs128, load, IILoad>;
 def LDWVec256       : LoadInstrVec<"ldwvec256", 0b00010000, HMCRegs256, load, IILoad>;
+def LDWVec512       : LoadInstrVec<"ldwvec512", 0b00010000, HMCRegs512, load, IILoad>;
 
 def STWVec128       : StoreInstrVec<"stwvec128", 0b00010101, HMCRegs128, store, IIStore>;
 def STWVec256       : StoreInstrVec<"stwvec256", 0b00010101, HMCRegs256, store, IIStore>;
+def STWVec512       : StoreInstrVec<"stwvec512", 0b00010101, HMCRegs512, store, IIStore>;
 
 
 def LDW       : LoadInstr<"ldw", 0b00010000, load_a, IILoad>;
@@ -849,6 +856,11 @@ def : Pat<(alignedloadv8i32 ADDR:$src),
 def : Pat<(loadv8i32 ADDR:$src),
             (LDWVec256 ADDR:$src)>;
 
+def : Pat<(alignedloadv16i32 ADDR:$src),
+            (LDWVec512 ADDR:$src)>;
+def : Pat<(loadv16i32 ADDR:$src),
+            (LDWVec512 ADDR:$src)>;
+
 def : Pat<(alignedstore128 (v4i32 HMCRegs128:$src), ADDR:$dst),
             (STWVec128 HMCRegs128:$src, ADDR:$dst)>;
 def : Pat<(alignedstore128 (v4i32 HMCRegs128:$src), ADDR:$dst),
@@ -858,6 +870,11 @@ def : Pat<(alignedstore256 (v8i32 HMCRegs256:$src), ADDR:$dst),
             (STWVec256 HMCRegs256:$src, ADDR:$dst)>;
 def : Pat<(alignedstore256 (v8i32 HMCRegs256:$src), ADDR:$dst),
             (STWVec256 HMCRegs256:$src, ADDR:$dst)>;
+
+def : Pat<(alignedstore512 (v16i32 HMCRegs512:$src), ADDR:$dst),
+            (STWVec512 HMCRegs512:$src, ADDR:$dst)>;
+def : Pat<(alignedstore512 (v16i32 HMCRegs512:$src), ADDR:$dst),
+            (STWVec512 HMCRegs512:$src, ADDR:$dst)>;
 
 //def : Pat<(mul GPRegs:$lhs, GPRegs:$rhs), (ADDr (MPYLUr $lhs, $rhs), (MPYHSr $lhs, $rhs))>;
 //def : Pat<(mul GPRegs:$lhs, GPRegs:$rhs), (ADDr (MPYLUi $lhs, $rhs), (MPYHSi $lhs, $rhs))>;

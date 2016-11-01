@@ -10,7 +10,7 @@ class HMCReg<bits<16> Enc, string n, list<Register> subregs = [] > : Register<n>
 }
 
 let Namespace = "HMC" in {
-    foreach I = 0-7 in
+    foreach I = 0-15 in
         def sub#I       : SubRegIndex<32, !shl(I,5)>;
 }
 
@@ -62,10 +62,19 @@ let SubRegIndices = [sub0, sub1, sub2, sub3, sub4, sub5, sub6, sub7], CoveredByS
     def HMCReg256_#I : HMCReg<!shl(I,3), "HMCReg"#I, [!cast<Register>("Reg"#!add(!shl(I,3), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,3), 1), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,3), 2), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,3), 3), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,3), 4), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,3), 5), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,3), 6), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,3), 7), 10))]>;
 }
 
+let SubRegIndices = [sub0, sub1, sub2, sub3, sub4, sub5, sub6, sub7, sub8, sub9, sub10, sub11, sub12, sub13, sub14, sub15], CoveredBySubRegs = 1 in {
+    foreach I = 0-31 in
+    def HMCReg512_#I : HMCReg<!shl(I,4), "HMCReg"#I, [!cast<Register>("Reg"#!add(!shl(I,4), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,4), 1), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,4), 2), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,4), 3), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,4), 4), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,4), 5), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,4), 6), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,4), 7), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,4), 8), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,4), 9), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,4), 10), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,4), 11), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,4), 12), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,4), 13), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,4), 14), 10)), !cast<Register>("Reg"#!add(!add(!shl(I,4), 15), 10))]>;
+}
+
 def HMCRegs128 : RegisterClass<"HMC", [v4i32], 128, (sequence "HMCReg128_%u", 0, 127)> {
 }
 
 def HMCRegs256 : RegisterClass<"HMC", [v8i32], 256, (sequence "HMCReg256_%u", 0, 63)> {
 }
+
+def HMCRegs512 : RegisterClass<"HMC", [v16i32], 512, (sequence "HMCReg256_%u", 0, 31)> {
+}
+
 
 

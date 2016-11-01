@@ -81,7 +81,9 @@ namespace llvm {
             SYNC,
 
             // HMC Vector Instructions
-            VEC_ADD
+            VEC_ADD,
+            
+            UNKNOWN
             
         };
     }
