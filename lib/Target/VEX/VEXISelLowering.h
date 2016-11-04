@@ -133,9 +133,14 @@ public:
     }
     
     void addFunctionReturn(std::string Function, unsigned numReturns) const {
-        if (FunctionReturns->info.find(Function) != FunctionReturns->info.end())
-            assert(FunctionReturns->info.find(Function)->second == numReturns && "Number of returns do not match. Something is wrong");
-        else
+        if (FunctionReturns->info.find(Function) != FunctionReturns->info.end()) {
+            // If it is 0, it may be better to replace for one with argument. It is safer this way.
+            if (FunctionReturns->info.find(Function)->second == 0) {
+                FunctionReturns->info.erase(FunctionReturns->info.find(Function));
+                FunctionReturns->info.insert(std::pair<std::string, unsigned>(Function, numReturns));
+            }
+            //assert(FunctionReturns->info.find(Function)->second == numReturns && "Number of returns do not match. Something is wrong");
+        } else
             FunctionReturns->info.insert(std::pair<std::string, unsigned>(Function, numReturns));
     }
     
