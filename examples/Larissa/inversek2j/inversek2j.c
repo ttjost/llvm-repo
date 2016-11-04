@@ -54,7 +54,7 @@ int main(int argc, const char* argv[])
 	for(i = 0 ; i < n * 2 * 2 ; i += 2 * 2)
 	{
 
-		fprintf(outputfile, "%f\t%f\n", t1t2xy[i], t1t2xy[i+1]);
+		fprintf(outputfile, "%f\n", t1t2xy[i]);
 
 		//fprintf(outputfile, "%d => %f\n", i+1, t1t2xy[i+1]);
 	}
