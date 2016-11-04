@@ -18355,6 +18355,266 @@ LBB76_18:
 ;;
 .endp
 
+#.globl float32_neq
+.section .text 
+.proc 
+.entry caller, sp=$r0.1, rl=$l0.0, asize=-0, arg($r0.3:u32, $r0.4:u32, $r0.5:u32, $r0.6:u32, $r0.7:u32, $r0.8:u32, $r0.9:u32, $r0.10:u32) ## @float32_neq
+float32_neq::
+## BB#0:                                ## %entry
+	c0	and $r0.2 = $r0.3, 2139095040
+;;
+	c0	cmpne $b0.0 = $r0.2, 2139095040
+;;
+;;
+	c0	br $b0.0, LBB77_2
+;;
+## BB#1:                                ## %entry
+	c0	and $r0.2 = $r0.3, 8388607
+;;
+	c0	cmpne $b0.0 = $r0.2, 0
+;;
+;;
+	c0	br $b0.0, LBB77_4
+;;
+LBB77_2:                                ## %lor.lhs.false
+	c0	and $r0.2 = $r0.4, 2139095040
+;;
+	c0	cmpne $b0.0 = $r0.2, 2139095040
+;;
+;;
+	c0	br $b0.0, LBB77_9
+;;
+## BB#3:                                ## %lor.lhs.false
+	c0	and $r0.2 = $r0.4, 8388607
+;;
+	c0	cmpeq $b0.0 = $r0.2, 0
+;;
+;;
+	c0	br $b0.0, LBB77_9
+;;
+LBB77_4:                                ## %if.then
+	c0	and $r0.2 = $r0.3, 2143289344
+;;
+	c0	cmpne $b0.0 = $r0.2, 2139095040
+;;
+;;
+	c0	br $b0.0, LBB77_6
+;;
+## BB#5:                                ## %if.then
+	c0	and $r0.2 = $r0.3, 4194303
+;;
+	c0	cmpne $b0.0 = $r0.2, 0
+;;
+;;
+	c0	br $b0.0, LBB77_8
+;;
+LBB77_6:                                ## %lor.lhs.false.9
+	c0	and $r0.2 = $r0.4, 2143289344
+;;
+	c0	mov $r0.3 = 1
+;;
+	c0	cmpne $b0.0 = $r0.2, 2139095040
+;;
+;;
+	c0	br $b0.0, LBB77_12
+;;
+## BB#7:                                ## %lor.lhs.false.9
+	c0	and $r0.2 = $r0.4, 4194303
+;;
+	c0	cmpeq $b0.0 = $r0.2, 0
+;;
+;;
+	c0	br $b0.0, LBB77_12
+;;
+LBB77_8:                                ## %if.then.13
+	c0	mov $r0.2 = float_exception_flags
+;;
+	c0	ldb $r0.4 = 0[$r0.2]
+	c0	mov $r0.3 = 1
+;;
+;;
+	c0	or $r0.4 = $r0.4, 1
+;;
+.return ret($r0.3:u32)
+	c0	stb 0[$r0.2] = $r0.4
+	c0	return $r0.1 = $r0.1, 0, $l0.0
+;;
+LBB77_9:                                ## %if.end.14
+	c0	cmpeq $b0.0 = $r0.3, $r0.4
+;;
+;;
+	c0	brf $b0.0, LBB77_11
+;;
+## BB#10:
+.return ret($r0.3:u32)
+	c0	mov $r0.3 = 0
+	c0	return $r0.1 = $r0.1, 0, $l0.0
+;;
+LBB77_11:                               ## %lor.rhs
+	c0	or $r0.2 = $r0.4, $r0.3
+;;
+	c0	and $r0.2 = $r0.2, 2147483647
+;;
+	c0	cmpne $b0.0 = $r0.2, 0
+;;
+;;
+	c0	mfb $r0.3 = $b0.0
+;;
+LBB77_12:                               ## %return
+.return ret($r0.3:u32)
+	c0	return $r0.1 = $r0.1, 0, $l0.0
+;;
+.endp
+
+#.globl float64_neq
+.section .text 
+.proc 
+.entry caller, sp=$r0.1, rl=$l0.0, asize=-0, arg($r0.3:u32, $r0.4:u32, $r0.5:u32, $r0.6:u32, $r0.7:u32, $r0.8:u32, $r0.9:u32, $r0.10:u32) ## @float64_neq
+float64_neq::
+## BB#0:                                ## %entry
+	c0	andc $r0.2 = $r0.3, 2146435072
+;;
+	c0	cmpne $b0.0 = $r0.2, 0
+;;
+;;
+	c0	br $b0.0, LBB78_2
+;;
+## BB#1:                                ## %land.lhs.true
+	c0	and $r0.2 = $r0.3, 1048575
+;;
+	c0	or $r0.2 = $r0.2, $r0.4
+;;
+	c0	cmpne $b0.0 = $r0.2, 0
+;;
+;;
+	c0	br $b0.0, LBB78_4
+;;
+LBB78_2:                                ## %lor.lhs.false
+	c0	andc $r0.2 = $r0.5, 2146435072
+;;
+	c0	cmpne $b0.0 = $r0.2, 0
+;;
+;;
+	c0	br $b0.0, LBB78_11
+;;
+## BB#3:                                ## %land.lhs.true.5
+	c0	and $r0.2 = $r0.5, 1048575
+;;
+	c0	or $r0.2 = $r0.2, $r0.6
+;;
+	c0	cmpeq $b0.0 = $r0.2, 0
+;;
+;;
+	c0	br $b0.0, LBB78_11
+;;
+LBB78_4:                                ## %if.then
+	c0	and $r0.2 = $r0.3, 2146959360
+;;
+	c0	xor $r0.2 = $r0.2, 2146435072
+;;
+	c0	cmpne $b0.0 = $r0.2, 0
+;;
+;;
+	c0	br $b0.0, LBB78_7
+;;
+## BB#5:                                ## %land.rhs.i.101
+	c0	cmpne $b0.0 = $r0.4, 0
+;;
+;;
+	c0	br $b0.0, LBB78_10
+;;
+## BB#6:                                ## %land.rhs.i.101
+	c0	and $r0.2 = $r0.3, 524287
+;;
+	c0	cmpne $b0.0 = $r0.2, 0
+;;
+;;
+	c0	br $b0.0, LBB78_10
+;;
+LBB78_7:                                ## %lor.lhs.false.12
+	c0	and $r0.3 = $r0.5, 2146959360
+;;
+	c0	mov $r0.2 = 1
+;;
+	c0	xor $r0.3 = $r0.3, 2146435072
+;;
+	c0	cmpne $b0.0 = $r0.3, 0
+;;
+;;
+	c0	br $b0.0, LBB78_16
+;;
+## BB#8:                                ## %land.rhs.i
+	c0	cmpne $b0.0 = $r0.6, 0
+;;
+;;
+	c0	br $b0.0, LBB78_10
+;;
+## BB#9:                                ## %land.rhs.i
+	c0	and $r0.3 = $r0.5, 524287
+;;
+	c0	cmpeq $b0.0 = $r0.3, 0
+;;
+;;
+	c0	br $b0.0, LBB78_16
+;;
+LBB78_10:                               ## %if.then.16
+	c0	mov $r0.3 = float_exception_flags
+;;
+	c0	ldb $r0.4 = 0[$r0.3]
+	c0	mov $r0.2 = 1
+;;
+;;
+	c0	or $r0.4 = $r0.4, 1
+;;
+	c0	stb 0[$r0.3] = $r0.4
+	c0	mov $r0.3 = $r0.2
+;;
+.return ret($r0.3:u32)
+	c0	return $r0.1 = $r0.1, 0, $l0.0
+;;
+LBB78_11:                               ## %if.end.17
+	c0	cmpne $b0.0 = $r0.4, $r0.6
+	c0	mov $r0.2 = 1
+;;
+;;
+	c0	br $b0.0, LBB78_16
+;;
+## BB#12:                               ## %land.rhs
+	c0	cmpeq $b0.0 = $r0.3, $r0.5
+;;
+;;
+	c0	brf $b0.0, LBB78_14
+;;
+## BB#13:
+	c0	mov $r0.2 = 0
+;;
+.return ret($r0.3:u32)
+	c0	mov $r0.3 = $r0.2
+	c0	return $r0.1 = $r0.1, 0, $l0.0
+;;
+LBB78_14:                               ## %lor.rhs
+	c0	cmpne $b0.0 = $r0.4, 0
+;;
+;;
+	c0	br $b0.0, LBB78_16
+;;
+## BB#15:                               ## %land.rhs.27
+	c0	or $r0.2 = $r0.5, $r0.3
+;;
+	c0	and $r0.2 = $r0.2, 2147483647
+;;
+	c0	cmpne $b0.0 = $r0.2, 0
+;;
+;;
+	c0	mfb $r0.2 = $b0.0
+;;
+LBB78_16:                               ## %return
+.return ret($r0.3:u32)
+	c0	mov $r0.3 = $r0.2
+	c0	return $r0.1 = $r0.1, 0, $l0.0
+;;
+.endp
+
 	.section	.bss,"aw",@nobits
 #.globl float_rounding_mode             ## @float_rounding_mode
 float_rounding_mode:

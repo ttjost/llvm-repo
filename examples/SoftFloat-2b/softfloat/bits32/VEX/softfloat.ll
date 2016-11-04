@@ -9345,6 +9345,148 @@ cleanup:                                          ; preds = %if.then.15, %lor.rh
   ret i8 %retval.0
 }
 
+; Function Attrs: nounwind
+define signext i8 @float32_neq(i32 zeroext %a, i32 zeroext %b) #2 {
+entry:
+  %and.i = and i32 %a, 2139095040
+  %cmp = icmp ne i32 %and.i, 2139095040
+  %and.i.38 = and i32 %a, 8388607
+  %tobool = icmp eq i32 %and.i.38, 0
+  %or.cond = or i1 %cmp, %tobool
+  br i1 %or.cond, label %lor.lhs.false, label %if.then
+
+lor.lhs.false:                                    ; preds = %entry
+  %and.i.37 = and i32 %b, 2139095040
+  %cmp3 = icmp ne i32 %and.i.37, 2139095040
+  %and.i.35 = and i32 %b, 8388607
+  %tobool6 = icmp eq i32 %and.i.35, 0
+  %or.cond39 = or i1 %cmp3, %tobool6
+  br i1 %or.cond39, label %if.end.14, label %if.then
+
+if.then:                                          ; preds = %lor.lhs.false, %entry
+  %and.i.30 = and i32 %a, 2143289344
+  %and1.i.32 = and i32 %a, 4194303
+  %tobool840 = icmp eq i32 %and1.i.32, 0
+  %not.cmp.i.31 = icmp ne i32 %and.i.30, 2139095040
+  %tobool8 = or i1 %not.cmp.i.31, %tobool840
+  br i1 %tobool8, label %lor.lhs.false.9, label %if.then.13
+
+lor.lhs.false.9:                                  ; preds = %if.then
+  %and.i.29 = and i32 %b, 2143289344
+  %and1.i = and i32 %b, 4194303
+  %tobool1241 = icmp eq i32 %and1.i, 0
+  %not.cmp.i = icmp ne i32 %and.i.29, 2139095040
+  %tobool12 = or i1 %not.cmp.i, %tobool1241
+  br i1 %tobool12, label %return, label %if.then.13
+
+if.then.13:                                       ; preds = %lor.lhs.false.9, %if.then
+  %0 = load i8, i8* @float_exception_flags, align 1, !tbaa !5
+  %or3.i = or i8 %0, 1
+  store i8 %or3.i, i8* @float_exception_flags, align 1, !tbaa !5
+  br label %return
+
+if.end.14:                                        ; preds = %lor.lhs.false
+  %cmp15 = icmp eq i32 %a, %b
+  br i1 %cmp15, label %return, label %lor.rhs
+
+lor.rhs:                                          ; preds = %if.end.14
+  %or = or i32 %b, %a
+  %shl.mask = and i32 %or, 2147483647
+  %phitmp = icmp ne i32 %shl.mask, 0
+  %phitmp28 = zext i1 %phitmp to i8
+  br label %return
+
+return:                                           ; preds = %if.end.14, %lor.rhs, %if.then.13, %lor.lhs.false.9
+  %retval.0 = phi i8 [ 1, %lor.lhs.false.9 ], [ 1, %if.then.13 ], [ 0, %if.end.14 ], [ %phitmp28, %lor.rhs ]
+  ret i8 %retval.0
+}
+
+; Function Attrs: nounwind
+define signext i8 @float64_neq(i64 %a.coerce, i64 %b.coerce) #2 {
+entry:
+  %a.sroa.0.0.extract.shift = lshr i64 %a.coerce, 32
+  %a.sroa.0.0.extract.trunc = trunc i64 %a.sroa.0.0.extract.shift to i32
+  %a.sroa.7.0.extract.trunc = trunc i64 %a.coerce to i32
+  %b.sroa.0.0.extract.shift = lshr i64 %b.coerce, 32
+  %b.sroa.0.0.extract.trunc = trunc i64 %b.sroa.0.0.extract.shift to i32
+  %b.sroa.7.0.extract.trunc = trunc i64 %b.coerce to i32
+  %a.sroa.0.0.insert.shift = shl nuw i64 %a.sroa.0.0.extract.shift, 32
+  %and.i = and i64 %a.coerce, 9218868437227405312
+  %cmp = icmp eq i64 %and.i, 9218868437227405312
+  br i1 %cmp, label %land.lhs.true, label %lor.lhs.false
+
+land.lhs.true:                                    ; preds = %entry
+  %and.i.115 = and i32 %a.sroa.0.0.extract.trunc, 1048575
+  %or = or i32 %and.i.115, %a.sroa.7.0.extract.trunc
+  %tobool = icmp eq i32 %or, 0
+  br i1 %tobool, label %lor.lhs.false, label %if.then
+
+lor.lhs.false:                                    ; preds = %land.lhs.true, %entry
+  %and.i.111 = and i64 %b.coerce, 9218868437227405312
+  %cmp4 = icmp eq i64 %and.i.111, 9218868437227405312
+  br i1 %cmp4, label %land.lhs.true.5, label %if.end.17
+
+land.lhs.true.5:                                  ; preds = %lor.lhs.false
+  %and.i.108 = and i32 %b.sroa.0.0.extract.trunc, 1048575
+  %or8 = or i32 %and.i.108, %b.sroa.7.0.extract.trunc
+  %tobool9 = icmp eq i32 %or8, 0
+  br i1 %tobool9, label %if.end.17, label %if.then
+
+if.then:                                          ; preds = %land.lhs.true, %land.lhs.true.5
+  %and.i.97 = and i64 %a.sroa.0.0.insert.shift, 9221120237041090560
+  %cmp.i.98 = icmp eq i64 %and.i.97, 9218868437227405312
+  br i1 %cmp.i.98, label %land.rhs.i.101, label %lor.lhs.false.12
+
+land.rhs.i.101:                                   ; preds = %if.then
+  %tobool.i.100 = icmp eq i32 %a.sroa.7.0.extract.trunc, 0
+  %and2.i.102 = and i64 %a.sroa.0.0.insert.shift, 2251795518717952
+  %tobool3.i.103 = icmp eq i64 %and2.i.102, 0
+  %or.cond = and i1 %tobool.i.100, %tobool3.i.103
+  br i1 %or.cond, label %lor.lhs.false.12, label %if.then.16
+
+lor.lhs.false.12:                                 ; preds = %land.rhs.i.101, %if.then
+  %b.sroa.0.0.insert.shift49 = shl nuw i64 %b.sroa.0.0.extract.shift, 32
+  %and.i.96 = and i64 %b.sroa.0.0.insert.shift49, 9221120237041090560
+  %cmp.i = icmp eq i64 %and.i.96, 9218868437227405312
+  br i1 %cmp.i, label %land.rhs.i, label %return
+
+land.rhs.i:                                       ; preds = %lor.lhs.false.12
+  %tobool.i = icmp eq i32 %b.sroa.7.0.extract.trunc, 0
+  %and2.i = and i64 %b.sroa.0.0.insert.shift49, 2251795518717952
+  %tobool3.i = icmp eq i64 %and2.i, 0
+  %or.cond122 = and i1 %tobool.i, %tobool3.i
+  br i1 %or.cond122, label %return, label %if.then.16
+
+if.then.16:                                       ; preds = %land.rhs.i, %land.rhs.i.101
+  %0 = load i8, i8* @float_exception_flags, align 1, !tbaa !5
+  %or3.i = or i8 %0, 1
+  store i8 %or3.i, i8* @float_exception_flags, align 1, !tbaa !5
+  br label %return
+
+if.end.17:                                        ; preds = %land.lhs.true.5, %lor.lhs.false
+  %cmp19 = icmp eq i32 %a.sroa.7.0.extract.trunc, %b.sroa.7.0.extract.trunc
+  br i1 %cmp19, label %land.rhs, label %return
+
+land.rhs:                                         ; preds = %if.end.17
+  %cmp22 = icmp eq i32 %a.sroa.0.0.extract.trunc, %b.sroa.0.0.extract.trunc
+  br i1 %cmp22, label %return, label %lor.rhs
+
+lor.rhs:                                          ; preds = %land.rhs
+  %cmp25 = icmp eq i32 %a.sroa.7.0.extract.trunc, 0
+  br i1 %cmp25, label %land.rhs.27, label %return
+
+land.rhs.27:                                      ; preds = %lor.rhs
+  %or3095 = or i64 %b.sroa.0.0.extract.shift, %a.sroa.0.0.extract.shift
+  %shl.mask = and i64 %or3095, 2147483647
+  %phitmp = icmp ne i64 %shl.mask, 0
+  %phitmp94 = zext i1 %phitmp to i8
+  br label %return
+
+return:                                           ; preds = %land.rhs.i, %lor.lhs.false.12, %if.end.17, %lor.rhs, %land.rhs.27, %land.rhs, %if.then.16
+  %retval.0 = phi i8 [ 1, %if.then.16 ], [ 1, %if.end.17 ], [ 0, %land.rhs ], [ 1, %lor.rhs ], [ %phitmp94, %land.rhs.27 ], [ 1, %lor.lhs.false.12 ], [ 1, %land.rhs.i ]
+  ret i8 %retval.0
+}
+
 attributes #0 = { inlinehint nounwind "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "stack-protector-buffer-size"="8" "unsafe-fp-math"="false" "use-soft-float"="false" }
 attributes #1 = { inlinehint nounwind readnone "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "stack-protector-buffer-size"="8" "unsafe-fp-math"="false" "use-soft-float"="false" }
 attributes #2 = { nounwind "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "stack-protector-buffer-size"="8" "unsafe-fp-math"="false" "use-soft-float"="false" }
