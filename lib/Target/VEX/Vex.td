@@ -55,6 +55,8 @@ def: Proc<"rvex-2issue", rVEX2IssueModel, []>;
 def: Proc<"rvex-4issue", rVEX4IssueModel, []>;
 def: Proc<"rvex-8issue", rVEX8IssueModel, []>;
 
+def: Proc<"rvex-8issue-2spm", rVEX8Issue2CycleSPMModel, []>;
+
 def: Proc<"rvex-2issue-1mem", rVEX2IssueModel, []>;
 def: Proc<"rvex-4issue-1mem", rVEX4IssueModel, []>;
 def: Proc<"rvex-8issue-1mem", rVEX8IssueModel, []>;
