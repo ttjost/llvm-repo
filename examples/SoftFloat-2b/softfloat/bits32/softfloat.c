@@ -2383,3 +2383,51 @@ flag float64_ge( float64 a, float64 b )
 
 }
 
+/*----------------------------------------------------------------------------
+| Returns 1 if the single-precision floating-point value `a' is equal to
+| the corresponding value `b', and 0 otherwise.  The comparison is performed
+| according to the IEC/IEEE Standard for Binary Floating-Point Arithmetic.
+*----------------------------------------------------------------------------*/
+
+flag float32_neq( float32 a, float32 b )
+{
+
+    if (    ( ( extractFloat32Exp( a ) == 0xFF ) && extractFloat32Frac( a ) )
+         || ( ( extractFloat32Exp( b ) == 0xFF ) && extractFloat32Frac( b ) )
+       ) {
+        if ( float32_is_signaling_nan( a ) || float32_is_signaling_nan( b ) ) {
+            float_raise( float_flag_invalid );
+        }
+        return 1;
+    }
+    return !(( a == b ) || ( (bits32) ( ( a | b )<<1 ) == 0 ));
+
+}
+
+/*----------------------------------------------------------------------------
+| Returns 1 if the double-precision floating-point value `a' is equal to
+| the corresponding value `b', and 0 otherwise.  The comparison is performed
+| according to the IEC/IEEE Standard for Binary Floating-Point Arithmetic.
+*----------------------------------------------------------------------------*/
+
+flag float64_neq( float64 a, float64 b )
+{
+
+    if (    (    ( extractFloat64Exp( a ) == 0x7FF )
+              && ( extractFloat64Frac0( a ) | extractFloat64Frac1( a ) ) )
+         || (    ( extractFloat64Exp( b ) == 0x7FF )
+              && ( extractFloat64Frac0( b ) | extractFloat64Frac1( b ) ) )
+       ) {
+        if ( float64_is_signaling_nan( a ) || float64_is_signaling_nan( b ) ) {
+            float_raise( float_flag_invalid );
+        }
+        return 1;
+    }
+    return
+           !(( a.low == b.low )
+        && (    ( a.high == b.high )
+             || (    ( a.low == 0 )
+                  && ( (bits32) ( ( a.high | b.high )<<1 ) == 0 ) )
+           ));
+
+}

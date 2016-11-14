@@ -234,6 +234,47 @@ InstrItinData<IILane6       , [InstrStage<1,  [IUnit6]>]>,
 InstrItinData<IILane7       , [InstrStage<1,  [IUnit7]>]>
 ]>;
 
+def rVEX8Issue2CycleSPMItineraries : ProcessorItineraries<[IUnit0, IUnit1, IUnit2, IUnit3,
+                                                  IUnit4, IUnit5, IUnit6, IUnit7], [], [
+InstrItinData<IIAll         , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+                                               IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IIAlu         , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+                                               IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IICmpBr       , [InstrStage<2,  [IUnit0, IUnit1, IUnit2, IUnit3,
+                                               IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IICmpGr       , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+                                               IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IISelect      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+                                               IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IIMultiply    , [InstrStage<2,  [IUnit1, IUnit2, IUnit5, IUnit6]>]>,
+InstrItinData<IILoad        , [InstrStage<2,  [IUnit0]>]>,
+InstrItinData<IILoadLr      , [InstrStage<4,  [IUnit0]>]>,
+InstrItinData<IIStore       , [InstrStage<1,  [IUnit0]>]>,
+InstrItinData<IIStoreLr     , [InstrStage<2,  [IUnit0]>]>,
+InstrItinData<IICpGrBr      , [InstrStage<2,  [IUnit0, IUnit1, IUnit2, IUnit3,
+                                               IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IICpBrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+                                               IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IICpLrGr      , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3,
+                                               IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IICpGrLr      , [InstrStage<2,  [IUnit0, IUnit1, IUnit2, IUnit3,
+                                               IUnit4, IUnit5, IUnit6, IUnit7]>]>,
+InstrItinData<IIBranch      , [InstrStage<1,  [IUnit3]>]>,
+
+// ScratchPad Memory Instructions
+// We separate them according to the their position.
+// Each lane has its own Itinerary, therefore,
+// we should define a diferent itinerary for each one of them.
+InstrItinData<IILane0       , [InstrStage<2,  [IUnit0]>]>,
+InstrItinData<IILane1       , [InstrStage<2,  [IUnit1]>]>,
+InstrItinData<IILane2       , [InstrStage<2,  [IUnit2]>]>,
+InstrItinData<IILane3       , [InstrStage<2,  [IUnit3]>]>,
+InstrItinData<IILane4       , [InstrStage<2,  [IUnit4]>]>,
+InstrItinData<IILane5       , [InstrStage<2,  [IUnit5]>]>,
+InstrItinData<IILane6       , [InstrStage<2,  [IUnit6]>]>,
+InstrItinData<IILane7       , [InstrStage<2,  [IUnit7]>]>
+]>;
+
 def rVEX4Issue2MemItineraries : ProcessorItineraries<[IUnit0, IUnit1, IUnit2, IUnit3], [], [
 InstrItinData<IIAll         , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
 InstrItinData<IIAlu         , [InstrStage<1,  [IUnit0, IUnit1, IUnit2, IUnit3]>]>,
@@ -610,6 +651,12 @@ def rVEX8IssueModel : SchedMachineModel {
     let IssueWidth = 8;
     let LoadLatency = 2;
     let Itineraries = rVEX8IssueItineraries;
+}
+
+def rVEX8Issue2CycleSPMModel : SchedMachineModel {
+    let IssueWidth = 8;
+    let LoadLatency = 2;
+    let Itineraries = rVEX8Issue2CycleSPMItineraries;
 }
 
 def rVEX4Issue2MemModel : SchedMachineModel {
