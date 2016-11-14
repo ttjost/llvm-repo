@@ -51,6 +51,8 @@ class Proc<string Name, SchedMachineModel Model, list<SubtargetFeature> Features
 
 def: Proc<"simple-64issue", Simple64Issue64MemModel, []>;
 
+//def: Proc<"simple-32issue", Simple32Issue32MemModel, []>;
+
 def HMCAsmParser : AsmParser {
     let ShouldEmitMatchRegisterName = 0;
 }

@@ -778,13 +778,13 @@ defm CMPNE  : CMPInstr<"cmpne", 0b01001001, setne, IICmpBr, IICmpGr>;
 //===----------------------------------------------------------------------===//
 
 // Vector Instructions
-def LDWVec128       : LoadInstrVec<"ldwvec128", 0b00010000, HMCRegs128, load, IILoad>;
-def LDWVec256       : LoadInstrVec<"ldwvec256", 0b00010000, HMCRegs256, load, IILoad>;
-def LDWVec512       : LoadInstrVec<"ldwvec512", 0b00010000, HMCRegs512, load, IILoad>;
+def LDBVec128       : LoadInstrVec<"ldbvec128", 0b00010000, HMCRegs128, load, IILoad>;
+def LDBVec256       : LoadInstrVec<"ldbvec256", 0b00010000, HMCRegs256, load, IILoad>;
+def LDBVec512       : LoadInstrVec<"ldbvec512", 0b00010000, HMCRegs512, load, IILoad>;
 
-def STWVec128       : StoreInstrVec<"stwvec128", 0b00010101, HMCRegs128, store, IIStore>;
-def STWVec256       : StoreInstrVec<"stwvec256", 0b00010101, HMCRegs256, store, IIStore>;
-def STWVec512       : StoreInstrVec<"stwvec512", 0b00010101, HMCRegs512, store, IIStore>;
+def STBVec128       : StoreInstrVec<"stbvec128", 0b00010101, HMCRegs128, store, IIStore>;
+def STBVec256       : StoreInstrVec<"stbvec256", 0b00010101, HMCRegs256, store, IIStore>;
+def STBVec512       : StoreInstrVec<"stbvec512", 0b00010101, HMCRegs512, store, IIStore>;
 
 
 def LDW       : LoadInstr<"ldw", 0b00010000, load_a, IILoad>;
