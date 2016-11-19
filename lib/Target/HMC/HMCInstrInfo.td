@@ -847,34 +847,34 @@ let isCall = 1 in {
 
 
 def : Pat<(alignedloadv4i32 ADDR:$src),
-            (LDWVec128 ADDR:$src)>;
+            (LDBVec128 ADDR:$src)>;
 def : Pat<(loadv4i32 ADDR:$src),
-            (LDWVec128 ADDR:$src)>;
+            (LDBVec128 ADDR:$src)>;
 
 def : Pat<(alignedloadv8i32 ADDR:$src),
-            (LDWVec256 ADDR:$src)>;
+            (LDBVec256 ADDR:$src)>;
 def : Pat<(loadv8i32 ADDR:$src),
-            (LDWVec256 ADDR:$src)>;
+            (LDBVec256 ADDR:$src)>;
 
 def : Pat<(alignedloadv16i32 ADDR:$src),
-            (LDWVec512 ADDR:$src)>;
+            (LDBVec512 ADDR:$src)>;
 def : Pat<(loadv16i32 ADDR:$src),
-            (LDWVec512 ADDR:$src)>;
+            (LDBVec512 ADDR:$src)>;
 
 def : Pat<(alignedstore128 (v4i32 HMCRegs128:$src), ADDR:$dst),
-            (STWVec128 HMCRegs128:$src, ADDR:$dst)>;
+            (STBVec128 HMCRegs128:$src, ADDR:$dst)>;
 def : Pat<(alignedstore128 (v4i32 HMCRegs128:$src), ADDR:$dst),
-            (STWVec128 HMCRegs128:$src, ADDR:$dst)>;
+            (STBVec128 HMCRegs128:$src, ADDR:$dst)>;
 
 def : Pat<(alignedstore256 (v8i32 HMCRegs256:$src), ADDR:$dst),
-            (STWVec256 HMCRegs256:$src, ADDR:$dst)>;
+            (STBVec256 HMCRegs256:$src, ADDR:$dst)>;
 def : Pat<(alignedstore256 (v8i32 HMCRegs256:$src), ADDR:$dst),
-            (STWVec256 HMCRegs256:$src, ADDR:$dst)>;
+            (STBVec256 HMCRegs256:$src, ADDR:$dst)>;
 
 def : Pat<(alignedstore512 (v16i32 HMCRegs512:$src), ADDR:$dst),
-            (STWVec512 HMCRegs512:$src, ADDR:$dst)>;
+            (STBVec512 HMCRegs512:$src, ADDR:$dst)>;
 def : Pat<(alignedstore512 (v16i32 HMCRegs512:$src), ADDR:$dst),
-            (STWVec512 HMCRegs512:$src, ADDR:$dst)>;
+            (STBVec512 HMCRegs512:$src, ADDR:$dst)>;
 
 //def : Pat<(mul GPRegs:$lhs, GPRegs:$rhs), (ADDr (MPYLUr $lhs, $rhs), (MPYHSr $lhs, $rhs))>;
 //def : Pat<(mul GPRegs:$lhs, GPRegs:$rhs), (ADDr (MPYLUi $lhs, $rhs), (MPYHSi $lhs, $rhs))>;
