@@ -53,6 +53,11 @@ static cl::opt<unsigned> NumMemories("num-memories",
                                 cl::Hidden, cl::init(0),
                                 cl::desc("Information about the number of iterations to be performed in preamble"));
 
+// Later, this will be known in compile time, with no hint.
+static cl::opt<bool> ForceDisablePreamble("force-disable-preamble",
+                                    cl::Hidden, cl::init(false),
+                                    cl::desc("Force the compiler not to include preamble code, because SPMs are filled by the application"));
+
 namespace llvm {
     MachineFunctionPass *createVEXDataReuseTracking(VEXTargetMachine &TM);
 }
@@ -1260,7 +1265,7 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
     std::vector<MachineBasicBlock *> Preambles;
     for (DataReuseInfo::iterator Var = DataInfo->begin(), VarE = DataInfo->end();
          Var != VarE; ++Var) {
-        if (Var->areLoadsRequired()) {
+        if (Var->areLoadsRequired() && !ForceDisablePreamble) {
             Preambles.push_back(CreatePreamble(MF, Var));
         }
     }
@@ -1396,7 +1401,7 @@ bool VEXDataReuseTracking::runOnMachineFunction(MachineFunction &MF) {
             analyzeMemoryInstruction(Inst, Lane, Offset, BaseReg);
         }
 
-        if (Var->areLoadsRequired()) {
+        if (Var->areLoadsRequired() && !ForceDisablePreamble) {
             DEBUG(dbgs() << "\nName:" << Var->getName()  << " requires previous Loads to scratchpads.\n");
             InsertPreamble(MF, Var, Preambles[PreambleIt++]);
         } else {
